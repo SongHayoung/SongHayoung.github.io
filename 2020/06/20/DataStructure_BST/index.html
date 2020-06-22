@@ -1,93 +1,0 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="description" content="[Data Structure] BST"><meta name="keywords" content="CS,Data Structure"><meta name="author" content="Song Hayoung"><meta name="copyright" content="Song Hayoung"><title>[Data Structure] BST | SUMFIのBlog</title><link rel="shortcut icon" href="/song-favicon.ico"><link rel="stylesheet" href="/css/index.css?version=1.7.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@latest/css/font-awesome.min.css?version=1.7.0"><meta name="format-detection" content="telephone=no"><meta http-equiv="x-dns-prefetch-control" content="on"><link rel="dns-prefetch" href="https://cdn.jsdelivr.net"><link rel="dns-prefetch" href="https://www.google-analytics.com"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
-
-ga('create', 'UA-169368422-1', 'auto');
-ga('send', 'pageview');</script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><script>var GLOBAL_CONFIG = { 
-  root: '/',
-  algolia: undefined,
-  localSearch: undefined,
-  copy: {
-    success: 'Copy successfully',
-    error: 'Copy error',
-    noSupport: 'The browser does not support'
-  }
-} </script><meta name="generator" content="Hexo 4.2.1"></head><body><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar" data-display="true"><div class="toggle-sidebar-info text-center"><span data-toggle="Toggle article">Toggle site</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">Catalog</div><div class="sidebar-toc__progress"><span class="progress-notice">You've read</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#BST"><span class="toc-number">1.</span> <span class="toc-text">BST</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Big-O-Notation"><span class="toc-number">2.</span> <span class="toc-text">Big-O Notation</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#BST-예시"><span class="toc-number">3.</span> <span class="toc-text">BST 예시</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Root"><span class="toc-number">3.1.</span> <span class="toc-text">Root</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Key"><span class="toc-number">3.2.</span> <span class="toc-text">Key</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Edge"><span class="toc-number">3.3.</span> <span class="toc-text">Edge</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Leaf-Node"><span class="toc-number">3.4.</span> <span class="toc-text">Leaf Node</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Sibilings"><span class="toc-number">3.5.</span> <span class="toc-text">Sibilings</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Parent"><span class="toc-number">3.6.</span> <span class="toc-text">Parent</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Child"><span class="toc-number">3.7.</span> <span class="toc-text">Child</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Sub-Tree"><span class="toc-number">3.8.</span> <span class="toc-text">Sub Tree</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Height"><span class="toc-number">3.9.</span> <span class="toc-text">Height</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Level"><span class="toc-number">3.10.</span> <span class="toc-text">Level</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#BST-Order-이진트리-순회"><span class="toc-number">4.</span> <span class="toc-text">BST Order(이진트리 순회)</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Preorder-전위순회"><span class="toc-number">4.1.</span> <span class="toc-text">Preorder(전위순회)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Inorder-중위순회"><span class="toc-number">4.2.</span> <span class="toc-text">Inorder(중위순회)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Postorder-후위순회"><span class="toc-number">4.3.</span> <span class="toc-text">Postorder(후위순회)</span></a></li></ol></li></ol></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="/img/avatar.png"></div><div class="author-info__name text-center">Song Hayoung</div><div class="author-info__description text-center"></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="/archives"><span class="pull-left">Articles</span><span class="pull-right">22</span></a><a class="author-info-articles__tags article-meta" href="/tags"><span class="pull-left">Tags</span><span class="pull-right">16</span></a><a class="author-info-articles__categories article-meta" href="/categories"><span class="pull-left">Categories</span><span class="pull-right">6</span></a></div></div></div><div id="content-outer"><div id="top-container" style="background-image: url(https://Noting.jpg)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="/">SUMFIのBlog</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus">   <a class="site-page" href="/">Home</a><a class="site-page" href="/archives">History</a><a class="site-page" href="/tags">Tags</a><a class="site-page" href="/categories">Categories</a></span><span class="pull-right"></span></div><div id="post-info"><div id="post-title">[Data Structure] BST</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2020-06-20</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/Computer-Science/">Computer Science</a><i class="fa fa-angle-right" aria-hidden="true"></i><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/Computer-Science/Data-Structure/">Data Structure</a><div class="post-meta-wordcount"><span>Word count: </span><span class="word-count">260</span><span class="post-meta__separator">|</span><span>Reading time: 1 min</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div class="article-container" id="post-content"><h2 id="BST"><a href="#BST" class="headerlink" title="BST"></a>BST</h2><a id="more"></a>  
-<p>Binary Search Tree란 각각의 노드가 최대 두 개의 자식 노드를 가지는 트리 자료구조이다<br>최악의 케이스의 경우 O(n)을 가진다<br>평균으로 O(log n)을 가진다<br><img src="/image/BST_WorstCase.png" alt="BST_WorstCase"><br><br><br></p>
-<h2 id="Big-O-Notation"><a href="#Big-O-Notation" class="headerlink" title="Big-O Notation"></a>Big-O Notation</h2><table>
-<thead>
-<tr>
-<th align="center">Algorithm</th>
-<th align="center">Average</th>
-<th align="center">Worst case</th>
-</tr>
-</thead>
-<tbody><tr>
-<td align="center">Space</td>
-<td align="center">O(n)</td>
-<td align="center">O(n)</td>
-</tr>
-<tr>
-<td align="center">Search</td>
-<td align="center">O(log n)</td>
-<td align="center">O(n)</td>
-</tr>
-<tr>
-<td align="center">Insert</td>
-<td align="center">O(log n)</td>
-<td align="center">O(n)</td>
-</tr>
-<tr>
-<td align="center">Delete</td>
-<td align="center">O(log n)</td>
-<td align="center">O(n)</td>
-</tr>
-</tbody></table>
-<p><br><br></p>
-<h2 id="BST-예시"><a href="#BST-예시" class="headerlink" title="BST 예시"></a>BST 예시</h2><p><img src="/image/BST.png" alt="BST"></p>
-<h3 id="Root"><a href="#Root" class="headerlink" title="Root"></a>Root</h3><p>최상위 노드</p>
-<h3 id="Key"><a href="#Key" class="headerlink" title="Key"></a>Key</h3><p>노드에 삽입된 Value</p>
-<h3 id="Edge"><a href="#Edge" class="headerlink" title="Edge"></a>Edge</h3><p>노드간 연결하는 간선</p>
-<h3 id="Leaf-Node"><a href="#Leaf-Node" class="headerlink" title="Leaf Node"></a>Leaf Node</h3><p>자식노드가 존재하지 않는 최하위 노드</p>
-<h3 id="Sibilings"><a href="#Sibilings" class="headerlink" title="Sibilings"></a>Sibilings</h3><p>한 부모노드가 가지는 두개의 자식노드의 관계</p>
-<h3 id="Parent"><a href="#Parent" class="headerlink" title="Parent"></a>Parent</h3><p>노드 11이 노드 3을 가리킬 때 노드 11을 노드 3의 부모노드라 한다</p>
-<h3 id="Child"><a href="#Child" class="headerlink" title="Child"></a>Child</h3><p>노드 3이 노드 11에게 가리켜질 때 노드 3을 노드 11의 자식노드라 한다</p>
-<h3 id="Sub-Tree"><a href="#Sub-Tree" class="headerlink" title="Sub Tree"></a>Sub Tree</h3><p>전체 트리구조에서 부차적으로 가지는 트리구조<br>부트리라고 한다</p>
-<h3 id="Height"><a href="#Height" class="headerlink" title="Height"></a>Height</h3><p>루트노드에서 최하위 리프노드까지의 단계의 수를 높이라 한다</p>
-<h3 id="Level"><a href="#Level" class="headerlink" title="Level"></a>Level</h3><p>루트노드는 레벨 0이다<br>루트노드부터 한단계씩 밑으로 내려갈수록 레벨이 1씩 증가한다<br><br><br></p>
-<h2 id="BST-Order-이진트리-순회"><a href="#BST-Order-이진트리-순회" class="headerlink" title="BST Order(이진트리 순회)"></a>BST Order(이진트리 순회)</h2><h3 id="Preorder-전위순회"><a href="#Preorder-전위순회" class="headerlink" title="Preorder(전위순회)"></a>Preorder(전위순회)</h3><ol>
-<li>노드를 방문한다  </li>
-<li>왼쪽 서브트리를 전위순회 한다  </li>
-<li>오른쪽 서브트리를 전위순회 한다  <blockquote>
-<p>56 -&gt; 30 -&gt; 22 -&gt; 11 -&gt; 3 -&gt; 16 -&gt; 40 -&gt; 70 -&gt; 60 -&gt; 65 -&gt; 63 -&gt; 67 -&gt; 95</p>
-</blockquote>
-</li>
-</ol>
-<br>
-
-
-<h3 id="Inorder-중위순회"><a href="#Inorder-중위순회" class="headerlink" title="Inorder(중위순회)"></a>Inorder(중위순회)</h3><ol>
-<li>왼쪽 서브트리를 중위순회 한다</li>
-<li>노드를 방문한다</li>
-<li>오른쪽 서브트리를 중위순회 한다  <blockquote>
-<p>3 -&gt; 11 -&gt; 16 -&gt; 22 -&gt; 30 -&gt; 40 -&gt; 56 -&gt; 63 -&gt; 65 -&gt; 67 -&gt; 60 -&gt; 70 -&gt; 95</p>
-</blockquote>
-</li>
-</ol>
-<br>
-
-
-<h3 id="Postorder-후위순회"><a href="#Postorder-후위순회" class="headerlink" title="Postorder(후위순회)"></a>Postorder(후위순회)</h3><ol>
-<li>왼쪽 서브트리를 후위순회 한다</li>
-<li>오른쪽 서브트리를 후위순회 한다</li>
-<li>노드를 방문한다<blockquote>
-<p>3 -&gt; 16 -&gt; 11 -&gt; 22 -&gt; 40 -&gt; 30 -&gt; 63 -&gt; 67 -&gt; 65 -&gt; 60 -&gt; 95 -&gt; 70 -&gt; 56</p>
-</blockquote>
-</li>
-</ol>
-</div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined">Song Hayoung</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="https://songhayoung.github.io/2020/06/20/DataStructure_BST/">https://songhayoung.github.io/2020/06/20/DataStructure_BST/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="noopener">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/CS/">CS</a><a class="post-meta__tags" href="/tags/Data-Structure/">Data Structure</a></div><nav id="pagination"><div class="prev-post pull-left"><a href="/2020/06/21/DataStructure_B-Tree/"><i class="fa fa-chevron-left">  </i><span>[Data Structure] B-Tree</span></a></div><div class="next-post pull-right"><a href="/2020/06/20/DB_SQL_Injection/"><span>[DB] SQL Injection</span><i class="fa fa-chevron-right"></i></a></div></nav></div></div><footer class="footer-bg" style="background-image: url(https://Noting.jpg)"><div class="layout" id="footer"><div class="copyright">&copy;2020 By Song Hayoung</div><div class="framework-info"><span>Driven - </span><a href="http://hexo.io" target="_blank" rel="noopener"><span>Hexo</span></a><span class="footer-separator">|</span><span>Theme - </span><a href="https://github.com/Molunerfinn/hexo-theme-melody" target="_blank" rel="noopener"><span>Melody</span></a></div><div class="footer_custom_text">be faituful to the BASICS</div><div class="busuanzi"><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><span id="busuanzi_container_page_pv"><i class="fa fa-file"></i><span id="busuanzi_value_page_pv"></span><span></span></span></div></div></footer><i class="fa fa-arrow-up" id="go-up" aria-hidden="true"></i><script src="https://cdn.jsdelivr.net/npm/animejs@latest/anime.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@latest/velocity.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-ui-pack@latest/velocity.ui.min.js"></script><script src="/js/utils.js?version=1.7.0"></script><script src="/js/fancybox.js?version=1.7.0"></script><script src="/js/sidebar.js?version=1.7.0"></script><script src="/js/copy.js?version=1.7.0"></script><script src="/js/fireworks.js?version=1.7.0"></script><script src="/js/transition.js?version=1.7.0"></script><script src="/js/scroll.js?version=1.7.0"></script><script src="/js/head.js?version=1.7.0"></script><script>if(/Android|webOS|iPhone|iPod|iPad|BlackBerry/i.test(navigator.userAgent)) {
-  $('#nav').addClass('is-mobile')
-  $('footer').addClass('is-mobile')
-  $('#top-container').addClass('is-mobile')
-}</script></body></html>
