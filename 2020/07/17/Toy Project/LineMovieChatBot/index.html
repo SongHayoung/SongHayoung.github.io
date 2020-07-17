@@ -58,6 +58,7 @@ with LINE DIALOGFLOW NGROK
 ==
 <!-- .slide: data-background="#7b868a" -->
 Dialog Flow에서는 WebHook을 하나만 지원
+
 플라스크에서 엔티티별로 분기를 나누는 기능이 필요
 
 ```python
@@ -71,6 +72,7 @@ class REQUESTS(enum.Enum):
 ==
 <!-- .slide: data-background="#7b868a" -->
 메세지는 Dialog Flow를 거쳐 LINE으로 들어간다
+
 Dialog Flow와 LINE을 모두 지원하는 메세지 포멧 필요
 
 ```python
@@ -178,7 +180,7 @@ Replicas: 1	Isr: 1
 ==
 <!-- .slide: data-background="#8e43e7" -->
 ## SERVICE
-현재 지원되는 영화관 회사가 많지 않아서 다양한 영화관에서 지원을 할 수 있도록 개선하면 좋겠다. 그리고 빠른 반응속도를 위해 지역 코드랑 극장 코드는 메모리에 저장해두는 형태로 두는 편이 좋을꺼 같다.
+현재 CGV만을 대상으로 해놔서 다양한 영화관 지원을 할 수 있도록 개선하면 좋겠다. 그리고 빠른 반응속도를 위해 지역 코드랑 극장 코드는 메모리에 저장해두는 형태로 두는 편이 좋을꺼 같다.
  
 다음엔 기회가 되면 대화형 봇으로 도전해보고 싶다.
 
