@@ -8,6 +8,20 @@
     </url>
 
     <url>
+        <loc>https://songhayoung.github.io/categories/Java/Effective-Java/</loc>
+        <lastmod>2020-08-13T17:05:32.396Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/categories/Java/</loc>
+        <lastmod>2020-08-13T17:05:32.396Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
         <loc>https://songhayoung.github.io/categories/Design-Pattern/</loc>
         <lastmod>2020-08-13T08:27:21.058Z</lastmod>
         <changefreq>weekly</changefreq>
@@ -17,20 +31,6 @@
     <url>
         <loc>https://songhayoung.github.io/categories/Java/Basic-Java/</loc>
         <lastmod>2020-08-13T07:11:42.055Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/categories/Java/</loc>
-        <lastmod>2020-08-13T07:11:42.055Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/categories/Java/Effective-Java/</loc>
-        <lastmod>2020-08-12T16:37:16.319Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
