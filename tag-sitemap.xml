@@ -3,6 +3,13 @@
 
 
     <url>
+        <loc>https://songhayoung.github.io/tags/Problem-Solving/</loc>
+        <lastmod>2020-08-14T18:49:58.350Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
         <loc>https://songhayoung.github.io/tags/JAVA/</loc>
         <lastmod>2020-08-13T17:05:32.396Z</lastmod>
         <changefreq>weekly</changefreq>
@@ -40,13 +47,6 @@
     <url>
         <loc>https://songhayoung.github.io/tags/Algorithm/</loc>
         <lastmod>2020-08-08T10:42:20.746Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/tags/Problem-Solving/</loc>
-        <lastmod>2020-08-07T14:06:15.288Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
