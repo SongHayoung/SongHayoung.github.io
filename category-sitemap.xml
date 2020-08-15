@@ -8,14 +8,21 @@
     </url>
 
     <url>
-        <loc>https://songhayoung.github.io/categories/PS/BOJ/</loc>
-        <lastmod>2020-08-15T07:37:13.138Z</lastmod>
+        <loc>https://songhayoung.github.io/categories/PS/JUNGOL/</loc>
+        <lastmod>2020-08-15T07:39:29.080Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
 
     <url>
         <loc>https://songhayoung.github.io/categories/PS/</loc>
+        <lastmod>2020-08-15T07:39:29.080Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/categories/PS/BOJ/</loc>
         <lastmod>2020-08-15T07:37:13.138Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
@@ -94,13 +101,6 @@
     <url>
         <loc>https://songhayoung.github.io/categories/CSharp/</loc>
         <lastmod>2020-08-04T13:36:15.203Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/categories/PS/JUNGOL/</loc>
-        <lastmod>2020-08-04T08:05:42.752Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
