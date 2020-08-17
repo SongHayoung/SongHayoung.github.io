@@ -8,6 +8,14 @@
     </url>
 
     <url>
+        <loc>https://songhayoung.github.io/2020/08/17/CompositePattern/</loc>
+        <lastmod>2020-08-17T08:36:49.628Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+
+    </url>
+
+    <url>
         <loc>https://songhayoung.github.io/2020/08/16/Effective%20JAVA/item47/</loc>
         <lastmod>2020-08-16T10:51:29.120Z</lastmod>
         <changefreq>weekly</changefreq>
