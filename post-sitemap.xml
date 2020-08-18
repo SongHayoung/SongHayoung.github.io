@@ -8,7 +8,23 @@
     </url>
 
     <url>
-        <loc>https://songhayoung.github.io/2020/08/18/diamondInheritance/</loc>
+        <loc>https://songhayoung.github.io/2020/08/18/Effective%20JAVA/item54/</loc>
+        <lastmod>2020-08-18T07:05:28.786Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/2020/08/18/Effective%20JAVA/item55/</loc>
+        <lastmod>2020-08-18T07:05:07.288Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/2020/08/18/Basic%20Cplusplus/diamondInheritance/</loc>
         <lastmod>2020-08-18T03:39:35.921Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.6</priority>
