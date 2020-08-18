@@ -3,6 +3,13 @@
 
 
     <url>
+        <loc>https://songhayoung.github.io/tags/Cplusplus/</loc>
+        <lastmod>2020-08-18T03:39:35.921Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
         <loc>https://songhayoung.github.io/tags/Design-Pattern/</loc>
         <lastmod>2020-08-18T02:04:37.793Z</lastmod>
         <changefreq>weekly</changefreq>
@@ -25,13 +32,6 @@
 
     <url>
         <loc>https://songhayoung.github.io/tags/STL/</loc>
-        <lastmod>2020-08-09T15:30:53.884Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/tags/Cplusplus/</loc>
         <lastmod>2020-08-09T15:30:53.884Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
