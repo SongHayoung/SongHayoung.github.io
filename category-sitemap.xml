@@ -9,14 +9,21 @@
 
     <url>
         <loc>https://songhayoung.github.io/categories/Java/Effective-Java/</loc>
-        <lastmod>2020-08-18T07:43:07.066Z</lastmod>
+        <lastmod>2020-08-18T11:23:13.576Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
 
     <url>
         <loc>https://songhayoung.github.io/categories/Java/</loc>
-        <lastmod>2020-08-18T07:43:07.066Z</lastmod>
+        <lastmod>2020-08-18T11:23:13.576Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/categories/Intermediate-Algorithm/</loc>
+        <lastmod>2020-08-18T07:44:48.247Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
@@ -80,13 +87,6 @@
     <url>
         <loc>https://songhayoung.github.io/categories/Clean-Code/</loc>
         <lastmod>2020-08-09T07:55:37.134Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/categories/Intermediate-Algorithm/</loc>
-        <lastmod>2020-08-08T10:42:20.746Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>

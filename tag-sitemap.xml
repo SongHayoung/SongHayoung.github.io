@@ -4,7 +4,21 @@
 
     <url>
         <loc>https://songhayoung.github.io/tags/JAVA/</loc>
-        <lastmod>2020-08-18T07:43:07.066Z</lastmod>
+        <lastmod>2020-08-18T11:23:13.576Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/tags/Mathematics/</loc>
+        <lastmod>2020-08-18T07:44:48.247Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/tags/Algorithm/</loc>
+        <lastmod>2020-08-18T07:44:48.247Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
@@ -40,13 +54,6 @@
     <url>
         <loc>https://songhayoung.github.io/tags/Clean-Code/</loc>
         <lastmod>2020-08-09T07:55:37.134Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/tags/Algorithm/</loc>
-        <lastmod>2020-08-08T10:42:20.746Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
@@ -96,13 +103,6 @@
     <url>
         <loc>https://songhayoung.github.io/tags/Security/</loc>
         <lastmod>2020-08-02T15:19:47.573Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/tags/Mathematics/</loc>
-        <lastmod>2020-08-01T02:43:35.385Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
