@@ -8,22 +8,43 @@
     </url>
 
     <url>
-        <loc>https://songhayoung.github.io/categories/Conference/</loc>
-        <lastmod>2020-08-21T11:39:58.221Z</lastmod>
+        <loc>https://songhayoung.github.io/categories/PS/BOJ/</loc>
+        <lastmod>2020-08-21T18:13:44.517Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/categories/PS/</loc>
+        <lastmod>2020-08-21T18:13:44.517Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/categories/Etc/</loc>
+        <lastmod>2020-08-21T15:45:50.822Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
 
     <url>
         <loc>https://songhayoung.github.io/categories/Java/Effective-Java/</loc>
-        <lastmod>2020-08-21T05:27:50.355Z</lastmod>
+        <lastmod>2020-08-21T15:09:35.711Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
 
     <url>
         <loc>https://songhayoung.github.io/categories/Java/</loc>
-        <lastmod>2020-08-21T05:27:50.355Z</lastmod>
+        <lastmod>2020-08-21T15:09:35.711Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/categories/Seminar/</loc>
+        <lastmod>2020-08-21T11:46:11.104Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
@@ -57,13 +78,6 @@
     </url>
 
     <url>
-        <loc>https://songhayoung.github.io/categories/Etc/</loc>
-        <lastmod>2020-08-19T17:30:01.616Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
         <loc>https://songhayoung.github.io/categories/Intermediate-Algorithm/</loc>
         <lastmod>2020-08-18T07:44:48.247Z</lastmod>
         <changefreq>weekly</changefreq>
@@ -80,20 +94,6 @@
     <url>
         <loc>https://songhayoung.github.io/categories/PS/JUNGOL/</loc>
         <lastmod>2020-08-15T07:39:29.080Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/categories/PS/</loc>
-        <lastmod>2020-08-15T07:39:29.080Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/categories/PS/BOJ/</loc>
-        <lastmod>2020-08-15T07:37:13.138Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>

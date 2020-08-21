@@ -8,8 +8,64 @@
     </url>
 
     <url>
-        <loc>https://songhayoung.github.io/2020/08/21/Conference/naverDeveloperOpenClass/</loc>
-        <lastmod>2020-08-21T11:39:58.221Z</lastmod>
+        <loc>https://songhayoung.github.io/2020/08/22/PS/BOJ/1509/</loc>
+        <lastmod>2020-08-21T18:13:44.517Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/2020/08/22/PS/BOJ/2854/</loc>
+        <lastmod>2020-08-21T17:27:27.812Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/2020/08/22/Etc/dateAndTime/</loc>
+        <lastmod>2020-08-21T15:45:50.822Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/2020/08/22/Etc/i18n/</loc>
+        <lastmod>2020-08-21T15:45:39.358Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/2020/08/21/Effective%20JAVA/item69/</loc>
+        <lastmod>2020-08-21T15:09:35.711Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/2020/08/21/Effective%20JAVA/item68/</loc>
+        <lastmod>2020-08-21T13:51:47.508Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/2020/08/20/Seminar/2020NaverTechConcert/</loc>
+        <lastmod>2020-08-21T11:46:11.104Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/2020/08/21/Seminar/naverDeveloperOpenClass/</loc>
+        <lastmod>2020-08-21T11:46:07.853Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.6</priority>
 
@@ -74,14 +130,6 @@
     <url>
         <loc>https://songhayoung.github.io/2020/08/21/Effective%20JAVA/item62/</loc>
         <lastmod>2020-08-20T15:53:55.358Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.6</priority>
-
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/2020/08/20/Conference/2020NaverTechConcert/</loc>
-        <lastmod>2020-08-20T08:20:53.658Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.6</priority>
 
