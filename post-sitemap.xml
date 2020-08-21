@@ -8,6 +8,38 @@
     </url>
 
     <url>
+        <loc>https://songhayoung.github.io/2020/08/21/Conference/naverDeveloperOpenClass/</loc>
+        <lastmod>2020-08-21T11:39:58.221Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/2020/08/21/Effective%20JAVA/item66/</loc>
+        <lastmod>2020-08-21T05:27:50.355Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/2020/08/21/Effective%20JAVA/item67/</loc>
+        <lastmod>2020-08-21T05:27:36.063Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/2020/08/17/Effective%20JAVA/item50/</loc>
+        <lastmod>2020-08-21T04:49:05.735Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+
+    </url>
+
+    <url>
         <loc>https://songhayoung.github.io/2020/08/21/Design%20Pattern/ChainOfResponsibilityPattern/</loc>
         <lastmod>2020-08-21T02:01:42.118Z</lastmod>
         <changefreq>weekly</changefreq>
@@ -250,14 +282,6 @@
     <url>
         <loc>https://songhayoung.github.io/2020/08/17/Effective%20JAVA/item52/</loc>
         <lastmod>2020-08-17T13:18:57.558Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.6</priority>
-
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/2020/08/17/Effective%20JAVA/item50/</loc>
-        <lastmod>2020-08-17T10:54:21.631Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.6</priority>
 
