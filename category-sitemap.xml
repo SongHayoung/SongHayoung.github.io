@@ -8,6 +8,13 @@
     </url>
 
     <url>
+        <loc>https://songhayoung.github.io/categories/Design-Pattern/</loc>
+        <lastmod>2020-08-22T05:25:37.230Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
         <loc>https://songhayoung.github.io/categories/PS/BOJ/</loc>
         <lastmod>2020-08-21T18:13:44.517Z</lastmod>
         <changefreq>weekly</changefreq>
@@ -45,13 +52,6 @@
     <url>
         <loc>https://songhayoung.github.io/categories/Seminar/</loc>
         <lastmod>2020-08-21T11:46:11.104Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/categories/Design-Pattern/</loc>
-        <lastmod>2020-08-21T02:01:42.118Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
