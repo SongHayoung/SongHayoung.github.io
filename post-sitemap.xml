@@ -8,6 +8,30 @@
     </url>
 
     <url>
+        <loc>https://songhayoung.github.io/2020/08/23/Etc/random/</loc>
+        <lastmod>2020-08-22T16:02:34.746Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/2020/08/23/Etc/uuid/</loc>
+        <lastmod>2020-08-22T15:38:02.589Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/2020/08/22/Etc/regularExpression/</loc>
+        <lastmod>2020-08-22T15:08:52.776Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+
+    </url>
+
+    <url>
         <loc>https://songhayoung.github.io/2020/08/22/Effective%20JAVA/item70/</loc>
         <lastmod>2020-08-22T11:52:59.726Z</lastmod>
         <changefreq>weekly</changefreq>
