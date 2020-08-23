@@ -8,8 +8,16 @@
     </url>
 
     <url>
+        <loc>https://songhayoung.github.io/2020/08/23/Effective%20JAVA/item81/</loc>
+        <lastmod>2020-08-23T12:02:34.426Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+
+    </url>
+
+    <url>
         <loc>https://songhayoung.github.io/2020/08/23/CSharp/developingBlockingQueue/</loc>
-        <lastmod>2020-08-23T11:44:15.050Z</lastmod>
+        <lastmod>2020-08-23T12:02:18.239Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.6</priority>
 
@@ -34,14 +42,6 @@
     <url>
         <loc>https://songhayoung.github.io/2020/08/23/Effective%20JAVA/item80/</loc>
         <lastmod>2020-08-23T10:49:28.584Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.6</priority>
-
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/2020/08/23/Effective%20JAVA/item81/</loc>
-        <lastmod>2020-08-23T10:48:56.560Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.6</priority>
 
