@@ -8,6 +8,27 @@
     </url>
 
     <url>
+        <loc>https://songhayoung.github.io/categories/Etc/</loc>
+        <lastmod>2020-08-23T14:23:49.595Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/categories/C/Intermediate-C/</loc>
+        <lastmod>2020-08-23T14:11:47.195Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/categories/C/</loc>
+        <lastmod>2020-08-23T14:11:47.195Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
         <loc>https://songhayoung.github.io/categories/Java/Effective-Java/</loc>
         <lastmod>2020-08-23T12:02:34.426Z</lastmod>
         <changefreq>weekly</changefreq>
@@ -36,13 +57,6 @@
     </url>
 
     <url>
-        <loc>https://songhayoung.github.io/categories/Etc/</loc>
-        <lastmod>2020-08-22T16:02:34.746Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
         <loc>https://songhayoung.github.io/categories/Java/Basic-Java/</loc>
         <lastmod>2020-08-22T09:23:36.579Z</lastmod>
         <changefreq>weekly</changefreq>
@@ -66,20 +80,6 @@
     <url>
         <loc>https://songhayoung.github.io/categories/Seminar/</loc>
         <lastmod>2020-08-21T11:46:11.104Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/categories/C/Intermediate-C/</loc>
-        <lastmod>2020-08-20T06:58:48.361Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/categories/C/</loc>
-        <lastmod>2020-08-20T06:58:48.361Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
