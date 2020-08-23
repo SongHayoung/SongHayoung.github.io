@@ -8,8 +8,29 @@
     </url>
 
     <url>
+        <loc>https://songhayoung.github.io/categories/CSharp/</loc>
+        <lastmod>2020-08-23T11:38:37.335Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/categories/Java/Effective-Java/</loc>
+        <lastmod>2020-08-23T10:49:57.673Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/categories/Java/</loc>
+        <lastmod>2020-08-23T10:49:57.673Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
         <loc>https://songhayoung.github.io/categories/Design-Pattern/</loc>
-        <lastmod>2020-08-23T05:33:58.531Z</lastmod>
+        <lastmod>2020-08-23T06:48:41.233Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
@@ -17,20 +38,6 @@
     <url>
         <loc>https://songhayoung.github.io/categories/Etc/</loc>
         <lastmod>2020-08-22T16:02:34.746Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/categories/Java/Effective-Java/</loc>
-        <lastmod>2020-08-22T11:52:59.726Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/categories/Java/</loc>
-        <lastmod>2020-08-22T11:52:59.726Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
@@ -115,13 +122,6 @@
     <url>
         <loc>https://songhayoung.github.io/categories/PS/SWEA/</loc>
         <lastmod>2020-08-07T14:02:55.981Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/categories/CSharp/</loc>
-        <lastmod>2020-08-04T13:36:15.203Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>

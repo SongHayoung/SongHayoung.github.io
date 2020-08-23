@@ -3,8 +3,22 @@
 
 
     <url>
+        <loc>https://songhayoung.github.io/tags/CSharp/</loc>
+        <lastmod>2020-08-23T11:38:37.335Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/tags/JAVA/</loc>
+        <lastmod>2020-08-23T10:49:57.673Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
         <loc>https://songhayoung.github.io/tags/Design-Pattern/</loc>
-        <lastmod>2020-08-23T05:33:58.531Z</lastmod>
+        <lastmod>2020-08-23T06:48:41.233Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
@@ -26,13 +40,6 @@
     <url>
         <loc>https://songhayoung.github.io/tags/Regular-Expression/</loc>
         <lastmod>2020-08-22T15:08:52.776Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/tags/JAVA/</loc>
-        <lastmod>2020-08-22T11:52:59.726Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
@@ -117,13 +124,6 @@
     <url>
         <loc>https://songhayoung.github.io/tags/Clean-Code/</loc>
         <lastmod>2020-08-09T07:55:37.134Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/tags/CSharp/</loc>
-        <lastmod>2020-08-04T13:36:15.203Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
