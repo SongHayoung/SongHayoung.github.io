@@ -8,7 +8,47 @@
     </url>
 
     <url>
-        <loc>https://songhayoung.github.io/2020/08/24/IteratorPattern/</loc>
+        <loc>https://songhayoung.github.io/2020/08/25/Effective%20JAVA/item86/</loc>
+        <lastmod>2020-08-24T16:23:32.462Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/2020/08/25/Effective%20JAVA/item85/</loc>
+        <lastmod>2020-08-24T16:23:07.508Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/2020/08/25/Effective%20JAVA/item84/</loc>
+        <lastmod>2020-08-24T16:22:54.245Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/2020/08/25/Effective%20JAVA/item83/</loc>
+        <lastmod>2020-08-24T16:22:36.526Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/2020/08/24/Effective%20JAVA/item82/</loc>
+        <lastmod>2020-08-24T16:22:20.054Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/2020/08/24/Design%20Pattern/IteratorPattern/</loc>
         <lastmod>2020-08-24T12:58:18.516Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.6</priority>
