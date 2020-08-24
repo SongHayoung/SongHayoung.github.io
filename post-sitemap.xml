@@ -9,7 +9,15 @@
 
     <url>
         <loc>https://songhayoung.github.io/2020/08/25/Effective%20JAVA/item86/</loc>
-        <lastmod>2020-08-24T17:18:25.492Z</lastmod>
+        <lastmod>2020-08-24T18:05:04.258Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/2020/08/08/Java/Inheritance/</loc>
+        <lastmod>2020-08-24T17:19:34.442Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.6</priority>
 
@@ -962,14 +970,6 @@
     <url>
         <loc>https://songhayoung.github.io/2020/08/03/STL/vector/</loc>
         <lastmod>2020-08-09T15:30:53.884Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.6</priority>
-
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/2020/08/08/Java/Inheritance/</loc>
-        <lastmod>2020-08-09T14:37:59.964Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.6</priority>
 

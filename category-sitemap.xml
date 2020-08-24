@@ -9,14 +9,21 @@
 
     <url>
         <loc>https://songhayoung.github.io/categories/Java/Effective-Java/</loc>
-        <lastmod>2020-08-24T16:23:07.508Z</lastmod>
+        <lastmod>2020-08-24T18:05:04.258Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
 
     <url>
         <loc>https://songhayoung.github.io/categories/Java/</loc>
-        <lastmod>2020-08-24T16:23:07.508Z</lastmod>
+        <lastmod>2020-08-24T18:05:04.258Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/categories/Java/Basic-Java/</loc>
+        <lastmod>2020-08-24T17:19:34.442Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
@@ -52,13 +59,6 @@
     <url>
         <loc>https://songhayoung.github.io/categories/CSharp/</loc>
         <lastmod>2020-08-23T12:02:18.239Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/categories/Java/Basic-Java/</loc>
-        <lastmod>2020-08-22T09:23:36.579Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
