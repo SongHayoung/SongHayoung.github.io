@@ -8,6 +8,13 @@
     </url>
 
     <url>
+        <loc>https://songhayoung.github.io/categories/Design-Pattern/</loc>
+        <lastmod>2020-08-24T12:58:18.516Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
         <loc>https://songhayoung.github.io/categories/Etc/</loc>
         <lastmod>2020-08-23T17:29:40.762Z</lastmod>
         <changefreq>weekly</changefreq>
@@ -45,13 +52,6 @@
     <url>
         <loc>https://songhayoung.github.io/categories/CSharp/</loc>
         <lastmod>2020-08-23T12:02:18.239Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/categories/Design-Pattern/</loc>
-        <lastmod>2020-08-23T06:48:41.233Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
