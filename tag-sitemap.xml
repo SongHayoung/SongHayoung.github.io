@@ -3,6 +3,13 @@
 
 
     <url>
+        <loc>https://songhayoung.github.io/tags/SUMFI%25E3%2581%25AE%25E4%25B8%2580%25E6%2597%25A5/</loc>
+        <lastmod>2020-08-25T16:44:48.113Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
         <loc>https://songhayoung.github.io/tags/xml/</loc>
         <lastmod>2020-08-25T16:42:44.012Z</lastmod>
         <changefreq>weekly</changefreq>
@@ -19,13 +26,6 @@
     <url>
         <loc>https://songhayoung.github.io/tags/Base64/</loc>
         <lastmod>2020-08-25T16:42:07.079Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/tags/LifeStyle/</loc>
-        <lastmod>2020-08-25T15:09:08.941Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>

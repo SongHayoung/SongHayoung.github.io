@@ -8,7 +8,15 @@
     </url>
 
     <url>
-        <loc>https://songhayoung.github.io/2020/08/26/xml/</loc>
+        <loc>https://songhayoung.github.io/2020/08/25/Etc/20200825/</loc>
+        <lastmod>2020-08-25T16:44:48.113Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/2020/08/26/Etc/xml/</loc>
         <lastmod>2020-08-25T16:42:44.012Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.6</priority>
@@ -16,7 +24,7 @@
     </url>
 
     <url>
-        <loc>https://songhayoung.github.io/2020/08/26/protocolBuffer/</loc>
+        <loc>https://songhayoung.github.io/2020/08/26/Etc/protocolBuffer/</loc>
         <lastmod>2020-08-25T16:42:23.177Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.6</priority>
@@ -24,16 +32,8 @@
     </url>
 
     <url>
-        <loc>https://songhayoung.github.io/2020/08/26/base64/</loc>
+        <loc>https://songhayoung.github.io/2020/08/26/Etc/base64/</loc>
         <lastmod>2020-08-25T16:42:07.079Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.6</priority>
-
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/2020/08/25/Etc/20200825/</loc>
-        <lastmod>2020-08-25T15:09:08.941Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.6</priority>
 
