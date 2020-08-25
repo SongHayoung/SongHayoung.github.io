@@ -3,6 +3,27 @@
 
 
     <url>
+        <loc>https://songhayoung.github.io/tags/LifeStyle/</loc>
+        <lastmod>2020-08-25T15:09:08.941Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/tags/Hash/</loc>
+        <lastmod>2020-08-25T14:22:11.481Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/tags/JAVA/</loc>
+        <lastmod>2020-08-25T14:16:26.365Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
         <loc>https://songhayoung.github.io/tags/Problem-Solving/</loc>
         <lastmod>2020-08-25T07:56:44.962Z</lastmod>
         <changefreq>weekly</changefreq>
@@ -17,22 +38,8 @@
     </url>
 
     <url>
-        <loc>https://songhayoung.github.io/tags/JAVA/</loc>
-        <lastmod>2020-08-24T18:05:04.258Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
         <loc>https://songhayoung.github.io/tags/JSON/</loc>
         <lastmod>2020-08-23T17:29:40.762Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/tags/Hash/</loc>
-        <lastmod>2020-08-23T14:23:36.409Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
