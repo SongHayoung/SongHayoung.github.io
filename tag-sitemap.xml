@@ -3,6 +3,27 @@
 
 
     <url>
+        <loc>https://songhayoung.github.io/tags/xml/</loc>
+        <lastmod>2020-08-25T16:42:44.012Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/tags/Protocol-Buffer/</loc>
+        <lastmod>2020-08-25T16:42:23.177Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/tags/Base64/</loc>
+        <lastmod>2020-08-25T16:42:07.079Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
         <loc>https://songhayoung.github.io/tags/LifeStyle/</loc>
         <lastmod>2020-08-25T15:09:08.941Z</lastmod>
         <changefreq>weekly</changefreq>
