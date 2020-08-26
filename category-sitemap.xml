@@ -8,15 +8,36 @@
     </url>
 
     <url>
-        <loc>https://songhayoung.github.io/categories/Design-Pattern/</loc>
-        <lastmod>2020-08-26T01:44:37.246Z</lastmod>
+        <loc>https://songhayoung.github.io/categories/PS/BOJ/</loc>
+        <lastmod>2020-08-26T04:26:17.866Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/categories/PS/</loc>
+        <lastmod>2020-08-26T04:26:17.866Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
 
     <url>
         <loc>https://songhayoung.github.io/categories/Etc/</loc>
-        <lastmod>2020-08-25T16:44:48.113Z</lastmod>
+        <lastmod>2020-08-26T02:23:26.206Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/categories/Conference/</loc>
+        <lastmod>2020-08-26T01:57:30.180Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/categories/Design-Pattern/</loc>
+        <lastmod>2020-08-26T01:44:37.246Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
@@ -31,20 +52,6 @@
     <url>
         <loc>https://songhayoung.github.io/categories/Java/</loc>
         <lastmod>2020-08-25T14:16:26.365Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/categories/PS/BOJ/</loc>
-        <lastmod>2020-08-25T07:56:44.962Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/categories/PS/</loc>
-        <lastmod>2020-08-25T07:56:44.962Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
@@ -73,13 +80,6 @@
     <url>
         <loc>https://songhayoung.github.io/categories/CSharp/</loc>
         <lastmod>2020-08-23T12:02:18.239Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/categories/Seminar/</loc>
-        <lastmod>2020-08-21T11:46:11.104Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
