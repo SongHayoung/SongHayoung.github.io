@@ -8,6 +8,27 @@
     </url>
 
     <url>
+        <loc>https://songhayoung.github.io/categories/Toy-Project/</loc>
+        <lastmod>2020-08-27T16:57:13.068Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/categories/PS/BOJ/</loc>
+        <lastmod>2020-08-27T11:00:35.828Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/categories/PS/</loc>
+        <lastmod>2020-08-27T11:00:35.828Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
         <loc>https://songhayoung.github.io/categories/Design-Pattern/</loc>
         <lastmod>2020-08-27T02:49:13.034Z</lastmod>
         <changefreq>weekly</changefreq>
@@ -31,20 +52,6 @@
     <url>
         <loc>https://songhayoung.github.io/categories/Conference/</loc>
         <lastmod>2020-08-26T09:56:29.969Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/categories/PS/BOJ/</loc>
-        <lastmod>2020-08-26T09:43:44.791Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/categories/PS/</loc>
-        <lastmod>2020-08-26T09:43:44.791Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
@@ -213,13 +220,6 @@
     <url>
         <loc>https://songhayoung.github.io/categories/Kafka/</loc>
         <lastmod>2020-07-17T15:32:34.055Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/categories/Toy-Project/</loc>
-        <lastmod>2020-07-17T08:46:59.023Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
