@@ -3,6 +3,13 @@
 
 
     <url>
+        <loc>https://songhayoung.github.io/tags/Problem-Solving/</loc>
+        <lastmod>2020-08-28T15:11:10.212Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
         <loc>https://songhayoung.github.io/tags/Toy-Project/</loc>
         <lastmod>2020-08-28T12:42:52.167Z</lastmod>
         <changefreq>weekly</changefreq>
@@ -12,13 +19,6 @@
     <url>
         <loc>https://songhayoung.github.io/tags/Conference/</loc>
         <lastmod>2020-08-28T12:36:41.778Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/tags/Problem-Solving/</loc>
-        <lastmod>2020-08-28T12:35:49.788Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
