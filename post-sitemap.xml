@@ -8,8 +8,32 @@
     </url>
 
     <url>
-        <loc>https://songhayoung.github.io/2020/08/27/WebChat/</loc>
-        <lastmod>2020-08-27T17:28:35.460Z</lastmod>
+        <loc>https://songhayoung.github.io/2020/08/28/Redis/SCAN/</loc>
+        <lastmod>2020-08-28T09:42:00.341Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/2020/08/27/Toy%20Project/WebChat/</loc>
+        <lastmod>2020-08-28T09:40:09.856Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/2020/08/28/Design%20Pattern/StatePattern/</loc>
+        <lastmod>2020-08-28T08:42:42.441Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/2020/08/20/Design%20Pattern/FlyWeightPattern/</loc>
+        <lastmod>2020-08-28T01:28:42.746Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.6</priority>
 
@@ -642,14 +666,6 @@
     <url>
         <loc>https://songhayoung.github.io/2020/07/26/Etc/delete_mysql/</loc>
         <lastmod>2020-08-19T17:29:38.779Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.6</priority>
-
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/2020/08/20/Design%20Pattern/FlyWeightPattern/</loc>
-        <lastmod>2020-08-19T16:23:02.508Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.6</priority>
 

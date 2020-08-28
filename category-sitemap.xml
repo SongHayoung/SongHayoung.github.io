@@ -8,8 +8,22 @@
     </url>
 
     <url>
+        <loc>https://songhayoung.github.io/categories/Redis/</loc>
+        <lastmod>2020-08-28T09:42:00.341Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
         <loc>https://songhayoung.github.io/categories/Toy-Project/</loc>
-        <lastmod>2020-08-27T17:28:35.460Z</lastmod>
+        <lastmod>2020-08-28T09:40:09.856Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/categories/Design-Pattern/</loc>
+        <lastmod>2020-08-28T08:42:42.441Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
@@ -24,13 +38,6 @@
     <url>
         <loc>https://songhayoung.github.io/categories/PS/</loc>
         <lastmod>2020-08-27T11:00:35.828Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/categories/Design-Pattern/</loc>
-        <lastmod>2020-08-27T02:49:13.034Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
@@ -206,13 +213,6 @@
     <url>
         <loc>https://songhayoung.github.io/categories/Docker/</loc>
         <lastmod>2020-07-26T12:23:14.597Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/categories/Redis/</loc>
-        <lastmod>2020-07-19T12:07:51.650Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
