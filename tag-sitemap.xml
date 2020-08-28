@@ -3,22 +3,22 @@
 
 
     <url>
-        <loc>https://songhayoung.github.io/tags/Problem-Solving/</loc>
-        <lastmod>2020-08-28T12:35:49.788Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
         <loc>https://songhayoung.github.io/tags/Toy-Project/</loc>
-        <lastmod>2020-08-28T10:23:32.554Z</lastmod>
+        <lastmod>2020-08-28T12:37:35.985Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
 
     <url>
         <loc>https://songhayoung.github.io/tags/Conference/</loc>
-        <lastmod>2020-08-28T10:17:50.749Z</lastmod>
+        <lastmod>2020-08-28T12:36:41.778Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/tags/Problem-Solving/</loc>
+        <lastmod>2020-08-28T12:35:49.788Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
