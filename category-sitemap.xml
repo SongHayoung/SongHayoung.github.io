@@ -8,6 +8,13 @@
     </url>
 
     <url>
+        <loc>https://songhayoung.github.io/categories/Conference/</loc>
+        <lastmod>2020-08-28T10:17:50.749Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
         <loc>https://songhayoung.github.io/categories/Toy-Project/</loc>
         <lastmod>2020-08-28T09:44:05.997Z</lastmod>
         <changefreq>weekly</changefreq>
@@ -52,13 +59,6 @@
     <url>
         <loc>https://songhayoung.github.io/categories/Computer-Science/</loc>
         <lastmod>2020-08-26T11:18:57.605Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/categories/Conference/</loc>
-        <lastmod>2020-08-26T09:56:29.969Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
