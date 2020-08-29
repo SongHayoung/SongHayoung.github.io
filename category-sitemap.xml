@@ -8,6 +8,20 @@
     </url>
 
     <url>
+        <loc>https://songhayoung.github.io/categories/Design-Pattern/</loc>
+        <lastmod>2020-08-29T16:02:27.635Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/categories/Redis/</loc>
+        <lastmod>2020-08-29T12:33:50.879Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
         <loc>https://songhayoung.github.io/categories/%25EA%25B8%25B0%25EB%25B3%25B8%25EA%25B8%25B0-%25EB%2590%2598%25EC%2584%25B8%25EA%25B9%2580%25EC%25A7%2588%25ED%2595%2598%25EA%25B8%25B0/</loc>
         <lastmod>2020-08-29T11:43:26.906Z</lastmod>
         <changefreq>weekly</changefreq>
@@ -52,20 +66,6 @@
     <url>
         <loc>https://songhayoung.github.io/categories/Conference/</loc>
         <lastmod>2020-08-28T12:36:41.778Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/categories/Redis/</loc>
-        <lastmod>2020-08-28T09:42:00.341Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/categories/Design-Pattern/</loc>
-        <lastmod>2020-08-28T08:42:42.441Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
