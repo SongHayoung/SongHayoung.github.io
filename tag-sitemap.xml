@@ -3,6 +3,27 @@
 
 
     <url>
+        <loc>https://songhayoung.github.io/tags/%25EA%25B8%25B0%25EB%25B3%25B8%25EA%25B8%25B0/</loc>
+        <lastmod>2020-08-29T11:41:16.032Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/tags/Web/</loc>
+        <lastmod>2020-08-28T16:44:17.922Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/tags/zip/</loc>
+        <lastmod>2020-08-28T15:51:00.136Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
         <loc>https://songhayoung.github.io/tags/Problem-Solving/</loc>
         <lastmod>2020-08-28T15:11:10.212Z</lastmod>
         <changefreq>weekly</changefreq>
@@ -383,13 +404,6 @@
     <url>
         <loc>https://songhayoung.github.io/tags/SHA/</loc>
         <lastmod>2020-07-13T15:29:12.017Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/tags/Web/</loc>
-        <lastmod>2020-07-12T07:28:23.515Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
