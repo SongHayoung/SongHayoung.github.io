@@ -8,6 +8,38 @@
     </url>
 
     <url>
+        <loc>https://songhayoung.github.io/2020/09/01/PS/BOJ/19235/</loc>
+        <lastmod>2020-08-31T18:27:21.540Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/2020/09/01/BackToBasic/network/</loc>
+        <lastmod>2020-08-31T16:27:58.407Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/2020/09/01/BackToBasic/http/</loc>
+        <lastmod>2020-08-31T16:19:23.654Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/2020/08/30/BackToBasic/hash/</loc>
+        <lastmod>2020-08-31T16:11:13.083Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+
+    </url>
+
+    <url>
         <loc>https://songhayoung.github.io/2020/08/31/PS/BOJ/1753/</loc>
         <lastmod>2020-08-31T08:54:14.485Z</lastmod>
         <changefreq>weekly</changefreq>
@@ -66,14 +98,6 @@
     <url>
         <loc>https://songhayoung.github.io/2020/08/31/BackToBasic/set/</loc>
         <lastmod>2020-08-30T19:02:42.229Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.6</priority>
-
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/2020/08/30/BackToBasic/hash/</loc>
-        <lastmod>2020-08-30T19:02:38.284Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.6</priority>
 
