@@ -8,15 +8,29 @@
     </url>
 
     <url>
+        <loc>https://songhayoung.github.io/categories/Mathematics/</loc>
+        <lastmod>2020-09-01T05:51:09.463Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/categories/Intermediate-Algorithm/</loc>
+        <lastmod>2020-09-01T05:50:40.909Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
         <loc>https://songhayoung.github.io/categories/PS/BOJ/</loc>
-        <lastmod>2020-09-01T04:25:20.668Z</lastmod>
+        <lastmod>2020-09-01T05:45:06.252Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
 
     <url>
         <loc>https://songhayoung.github.io/categories/PS/</loc>
-        <lastmod>2020-09-01T04:25:20.668Z</lastmod>
+        <lastmod>2020-09-01T05:45:06.252Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
@@ -127,13 +141,6 @@
     </url>
 
     <url>
-        <loc>https://songhayoung.github.io/categories/Intermediate-Algorithm/</loc>
-        <lastmod>2020-08-18T07:44:48.247Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
         <loc>https://songhayoung.github.io/categories/C/Basic-C/</loc>
         <lastmod>2020-08-18T03:39:35.921Z</lastmod>
         <changefreq>weekly</changefreq>
@@ -192,13 +199,6 @@
     <url>
         <loc>https://songhayoung.github.io/categories/Security/</loc>
         <lastmod>2020-08-02T15:19:47.573Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/categories/Mathematics/</loc>
-        <lastmod>2020-08-01T02:43:35.385Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
