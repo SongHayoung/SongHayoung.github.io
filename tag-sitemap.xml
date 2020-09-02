@@ -3,8 +3,29 @@
 
 
     <url>
+        <loc>https://songhayoung.github.io/tags/Problem-Solving/</loc>
+        <lastmod>2020-09-02T06:52:52.504Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/tags/DB/</loc>
+        <lastmod>2020-09-01T15:58:22.727Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/tags/CS/</loc>
+        <lastmod>2020-09-01T15:58:22.727Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
         <loc>https://songhayoung.github.io/tags/JAVA/</loc>
-        <lastmod>2020-09-01T11:47:17.126Z</lastmod>
+        <lastmod>2020-09-01T12:38:27.717Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
@@ -26,13 +47,6 @@
     <url>
         <loc>https://songhayoung.github.io/tags/String/</loc>
         <lastmod>2020-09-01T05:50:40.909Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/tags/Problem-Solving/</loc>
-        <lastmod>2020-09-01T05:45:06.252Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
@@ -88,13 +102,6 @@
 
     <url>
         <loc>https://songhayoung.github.io/tags/Data-Structure/</loc>
-        <lastmod>2020-08-26T11:18:57.605Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/tags/CS/</loc>
         <lastmod>2020-08-26T11:18:57.605Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
@@ -404,13 +411,6 @@
     <url>
         <loc>https://songhayoung.github.io/tags/SHA/</loc>
         <lastmod>2020-07-13T15:29:12.017Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/tags/DB/</loc>
-        <lastmod>2020-06-30T12:25:39.950Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>

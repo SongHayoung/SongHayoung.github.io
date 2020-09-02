@@ -8,15 +8,43 @@
     </url>
 
     <url>
+        <loc>https://songhayoung.github.io/categories/PS/BOJ/</loc>
+        <lastmod>2020-09-02T06:52:52.504Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/categories/PS/</loc>
+        <lastmod>2020-09-02T06:52:52.504Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/categories/Computer-Science/DB/</loc>
+        <lastmod>2020-09-01T15:58:22.727Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/categories/Computer-Science/</loc>
+        <lastmod>2020-09-01T15:58:22.727Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
         <loc>https://songhayoung.github.io/categories/Java/Basic-Java/</loc>
-        <lastmod>2020-09-01T11:47:17.126Z</lastmod>
+        <lastmod>2020-09-01T12:38:27.717Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
 
     <url>
         <loc>https://songhayoung.github.io/categories/Java/</loc>
-        <lastmod>2020-09-01T11:47:17.126Z</lastmod>
+        <lastmod>2020-09-01T12:38:27.717Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
@@ -31,20 +59,6 @@
     <url>
         <loc>https://songhayoung.github.io/categories/Intermediate-Algorithm/</loc>
         <lastmod>2020-09-01T05:50:40.909Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/categories/PS/BOJ/</loc>
-        <lastmod>2020-09-01T05:45:06.252Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/categories/PS/</loc>
-        <lastmod>2020-09-01T05:45:06.252Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
@@ -100,13 +114,6 @@
 
     <url>
         <loc>https://songhayoung.github.io/categories/Computer-Science/Data-Structure/</loc>
-        <lastmod>2020-08-26T11:18:57.605Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/categories/Computer-Science/</loc>
         <lastmod>2020-08-26T11:18:57.605Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
@@ -241,13 +248,6 @@
     <url>
         <loc>https://songhayoung.github.io/categories/JavaScript/</loc>
         <lastmod>2020-07-16T16:46:48.795Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/categories/Computer-Science/DB/</loc>
-        <lastmod>2020-06-30T12:25:39.950Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
