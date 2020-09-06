@@ -8,15 +8,29 @@
     </url>
 
     <url>
+        <loc>https://songhayoung.github.io/categories/C/Basic-C/</loc>
+        <lastmod>2020-09-06T15:32:48.618Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/categories/C/</loc>
+        <lastmod>2020-09-06T15:32:48.618Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
         <loc>https://songhayoung.github.io/categories/PS/BOJ/</loc>
-        <lastmod>2020-09-05T16:16:57.667Z</lastmod>
+        <lastmod>2020-09-06T09:37:41.584Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
 
     <url>
         <loc>https://songhayoung.github.io/categories/PS/</loc>
-        <lastmod>2020-09-05T16:16:57.667Z</lastmod>
+        <lastmod>2020-09-06T09:37:41.584Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
@@ -134,22 +148,8 @@
     </url>
 
     <url>
-        <loc>https://songhayoung.github.io/categories/C/</loc>
-        <lastmod>2020-08-23T14:11:47.195Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
         <loc>https://songhayoung.github.io/categories/CSharp/</loc>
         <lastmod>2020-08-23T12:02:18.239Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/categories/C/Basic-C/</loc>
-        <lastmod>2020-08-18T03:39:35.921Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
