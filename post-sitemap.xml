@@ -9,7 +9,15 @@
 
     <url>
         <loc>https://songhayoung.github.io/2020/12/04/DayLife/naver-interview2/</loc>
-        <lastmod>2020-12-03T15:49:59.983Z</lastmod>
+        <lastmod>2020-12-03T16:58:12.378Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/2020/12/02/DayLife/ebay-interview2/</loc>
+        <lastmod>2020-12-03T16:26:37.615Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.6</priority>
 
@@ -34,14 +42,6 @@
     <url>
         <loc>https://songhayoung.github.io/2020/12/04/DayLife/naver-interview1/</loc>
         <lastmod>2020-12-03T15:49:48.195Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.6</priority>
-
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/2020/12/02/DayLife/ebay-interview2/</loc>
-        <lastmod>2020-12-03T15:49:32.704Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.6</priority>
 
