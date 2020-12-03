@@ -8,6 +8,62 @@
     </url>
 
     <url>
+        <loc>https://songhayoung.github.io/categories/Etc/</loc>
+        <lastmod>2020-12-03T15:49:59.983Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/categories/Intermediate-Algorithm/</loc>
+        <lastmod>2020-12-03T15:42:42.417Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/categories/Java/Basic-Java/</loc>
+        <lastmod>2020-12-03T15:42:20.805Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/categories/Java/</loc>
+        <lastmod>2020-12-03T15:42:20.805Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/categories/Redis/</loc>
+        <lastmod>2020-12-03T15:41:59.756Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/categories/CSharp/</loc>
+        <lastmod>2020-12-03T15:41:44.086Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/categories/PS/BOJ/</loc>
+        <lastmod>2020-09-24T08:54:26.298Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/categories/PS/</loc>
+        <lastmod>2020-09-24T08:54:26.298Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
         <loc>https://songhayoung.github.io/categories/Server/</loc>
         <lastmod>2020-09-21T13:43:15.017Z</lastmod>
         <changefreq>weekly</changefreq>
@@ -16,21 +72,7 @@
 
     <url>
         <loc>https://songhayoung.github.io/categories/Web/</loc>
-        <lastmod>2020-09-21T09:41:34.382Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/categories/PS/BOJ/</loc>
-        <lastmod>2020-09-11T09:58:35.761Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/categories/PS/</loc>
-        <lastmod>2020-09-11T09:58:35.761Z</lastmod>
+        <lastmod>2020-09-21T13:19:05.738Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
@@ -71,27 +113,6 @@
     </url>
 
     <url>
-        <loc>https://songhayoung.github.io/categories/Java/Basic-Java/</loc>
-        <lastmod>2020-09-01T12:38:27.717Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/categories/Java/</loc>
-        <lastmod>2020-09-01T12:38:27.717Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/categories/Intermediate-Algorithm/</loc>
-        <lastmod>2020-09-01T05:50:40.909Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
         <loc>https://songhayoung.github.io/categories/%25EA%25B8%25B0%25EB%25B3%25B8%25EA%25B8%25B0-%25EB%2590%2598%25EC%2583%2588%25EA%25B9%2580%25EC%25A7%2588%25ED%2595%2598%25EA%25B8%25B0/</loc>
         <lastmod>2020-08-31T16:27:58.407Z</lastmod>
         <changefreq>weekly</changefreq>
@@ -101,20 +122,6 @@
     <url>
         <loc>https://songhayoung.github.io/categories/Design-Pattern/</loc>
         <lastmod>2020-08-30T18:57:19.376Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/categories/Redis/</loc>
-        <lastmod>2020-08-29T12:33:50.879Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/categories/Etc/</loc>
-        <lastmod>2020-08-28T15:51:00.136Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
@@ -150,13 +157,6 @@
     <url>
         <loc>https://songhayoung.github.io/categories/C/Intermediate-C/</loc>
         <lastmod>2020-08-23T14:11:47.195Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/categories/CSharp/</loc>
-        <lastmod>2020-08-23T12:02:18.239Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
