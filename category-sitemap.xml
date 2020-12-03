@@ -8,8 +8,8 @@
     </url>
 
     <url>
-        <loc>https://songhayoung.github.io/categories/Etc/</loc>
-        <lastmod>2020-12-03T16:58:12.378Z</lastmod>
+        <loc>https://songhayoung.github.io/categories/SUMFI%25E3%2581%25AE%25E4%25B8%2580%25E6%2597%25A5/</loc>
+        <lastmod>2020-12-03T16:59:54.786Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
@@ -122,6 +122,13 @@
     <url>
         <loc>https://songhayoung.github.io/categories/Design-Pattern/</loc>
         <lastmod>2020-08-30T18:57:19.376Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/categories/Etc/</loc>
+        <lastmod>2020-08-28T15:51:00.136Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
