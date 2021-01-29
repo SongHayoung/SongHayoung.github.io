@@ -17,21 +17,13 @@ ga('send', 'pageview');</script><meta http-equiv="Cache-Control" content="no-tra
 </head><body><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar" data-display="true"><div class="toggle-sidebar-info text-center"><span data-toggle="Toggle article">Toggle site</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">Catalog</div><div class="sidebar-toc__progress"><span class="progress-notice">You've read</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="https://avatars3.githubusercontent.com/u/37806785?s=460&amp;u=8c68d685faf7c5280cfbd736a6b1730b55fb4203&amp;v=4"></div><div class="author-info__name text-center">Song Hayoung</div><div class="author-info__description text-center"></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="/archives"><span class="pull-left">Articles</span><span class="pull-right">931</span></a><a class="author-info-articles__tags article-meta" href="/tags"><span class="pull-left">Tags</span><span class="pull-right">64</span></a><a class="author-info-articles__categories article-meta" href="/categories"><span class="pull-left">Categories</span><span class="pull-right">39</span></a></div></div></div><div id="content-outer"><div id="top-container" style="background-image: url(https://xxxx.jpg)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="/">SUMFIのBlog</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus">   <a class="site-page" href="/">Home</a><a class="site-page" href="/archives">Archives</a><a class="site-page" href="/tags">Tags</a><a class="site-page" href="/categories">Categories</a></span><span class="pull-right"><a class="site-page social-icon search"><i class="fa fa-search"></i><span> Search</span></a></span></div><div id="post-info"><div id="post-title">[LeetCode] Validate IP Address</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2021-01-18</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/PS/">PS</a><i class="fa fa-angle-right" aria-hidden="true"></i><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/PS/LeetCode/">LeetCode</a><div class="post-meta-wordcount"><span>Word count: </span><span class="word-count">494</span><span class="post-meta__separator">|</span><span>Reading time: 3 min</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div class="article-container" id="post-content"><p><a href="https://leetcode.com/problems/validate-ip-address/" target="_blank" rel="noopener">468. Validate IP Address</a></p>
 <blockquote>
 <p>Given a string IP, return “IPv4” if IP is a valid IPv4 address, “IPv6” if IP is a valid IPv6 address or “Neither” if IP is not a correct IP of any type.</p>
-</blockquote>
-<blockquote>
 <p>A valid IPv4 address is an IP in the form “x1.x2.x3.x4” where 0 &lt;= xi &lt;= 255 and xi cannot contain leading zeros. For example, “192.168.1.1” and “192.168.1.0” are valid IPv4 addresses but “192.168.01.1”, while “192.168.1.00” and “<a href="mailto:192.168@1.1">192.168@1.1</a>“ are invalid IPv4 addresses.</p>
-</blockquote>
-<blockquote>
 <p>A valid IPv6 address is an IP in the form “x1:x2:x3:x4:x5:x6:x7:x8” where:</p>
-</blockquote>
-<blockquote>
 <ul>
 <li>1 &lt;= xi.length &lt;= 4</li>
 <li>xi is a hexadecimal string which may contain digits, lower-case English letter (‘a’ to ‘f’) and upper-case English letters (‘A’ to ‘F’).</li>
 <li>Leading zeros are allowed in xi.</li>
 </ul>
-</blockquote>
-<blockquote>
 <p>For example, “2001:0db8:85a3:0000:0000:8a2e:0370:7334” and “2001:db8:85a3:0:0:8A2E:0370:7334” are valid IPv6 addresses, while “2001:0db8:85a3::8A2E:037j:7334” and “02001:0db8:85a3:0000:0000:8a2e:0370:7334” are invalid IPv6 addresses.</p>
 </blockquote>
 <a id="more"></a>
