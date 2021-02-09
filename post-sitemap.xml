@@ -8,6 +8,14 @@
     </url>
 
     <url>
+        <loc>https://songhayoung.github.io/2021/02/09/PS/LeetCode/water-and-jug-problem/</loc>
+        <lastmod>2021-02-09T10:17:07.580Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+
+    </url>
+
+    <url>
         <loc>https://songhayoung.github.io/2021/01/10/PS/LeetCode/Zigzag-Conversion/</loc>
         <lastmod>2021-02-08T12:12:22.512Z</lastmod>
         <changefreq>weekly</changefreq>
@@ -24,7 +32,7 @@
     </url>
 
     <url>
-        <loc>https://songhayoung.github.io/2021/02/08/number-of-ways-to-split-a-string/</loc>
+        <loc>https://songhayoung.github.io/2021/02/08/PS/LeetCode/number-of-ways-to-split-a-string/</loc>
         <lastmod>2021-02-08T11:55:11.390Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.6</priority>
