@@ -8,7 +8,39 @@
     </url>
 
     <url>
-        <loc>https://songhayoung.github.io/2021/02/13/sum-of-square-numbers/</loc>
+        <loc>https://songhayoung.github.io/2021/02/14/PS/LeetCode/minimum-degree-of-a-connected-trio-in-a-graph/</loc>
+        <lastmod>2021-02-14T05:21:18.974Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/2021/02/14/PS/LeetCode/minimum-changes-to-make-alternating-binary-string/</loc>
+        <lastmod>2021-02-14T04:52:46.185Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/2021/02/14/PS/LeetCode/count-number-of-homogenous-substrings/</loc>
+        <lastmod>2021-02-14T04:52:43.968Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/2021/02/14/PS/LeetCode/minimum-limit-of-balls-in-a-bag/</loc>
+        <lastmod>2021-02-14T04:52:40.664Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/2021/02/13/PS/LeetCode/sum-of-square-numbers/</loc>
         <lastmod>2021-02-13T10:50:11.021Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.6</priority>
