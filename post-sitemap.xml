@@ -8,6 +8,22 @@
     </url>
 
     <url>
+        <loc>https://songhayoung.github.io/2021/02/19/Spring/mybatisJavaConfig/</loc>
+        <lastmod>2021-02-18T16:48:31.052Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/2020/06/28/Spring/Spring-mobile/</loc>
+        <lastmod>2021-02-18T16:29:09.381Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+
+    </url>
+
+    <url>
         <loc>https://songhayoung.github.io/2021/02/17/PS/LeetCode/maximum-product-subarray/</loc>
         <lastmod>2021-02-17T10:29:22.539Z</lastmod>
         <changefreq>weekly</changefreq>
@@ -7322,14 +7338,6 @@
     <url>
         <loc>https://songhayoung.github.io/2020/07/13/kafka/ISR/</loc>
         <lastmod>2020-07-12T15:52:23.746Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.6</priority>
-
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/2020/06/28/Spring/Spring-mobile/</loc>
-        <lastmod>2020-07-12T14:54:11.172Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.6</priority>
 
