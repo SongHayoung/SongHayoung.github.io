@@ -8,22 +8,22 @@
     </url>
 
     <url>
-        <loc>https://songhayoung.github.io/categories/Spring/</loc>
-        <lastmod>2021-02-23T16:11:10.556Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
         <loc>https://songhayoung.github.io/categories/PS/LeetCode/</loc>
-        <lastmod>2021-02-22T11:38:33.705Z</lastmod>
+        <lastmod>2021-02-24T13:02:12.235Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
 
     <url>
         <loc>https://songhayoung.github.io/categories/PS/</loc>
-        <lastmod>2021-02-22T11:38:33.705Z</lastmod>
+        <lastmod>2021-02-24T13:02:12.235Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/categories/Spring/</loc>
+        <lastmod>2021-02-23T16:11:10.556Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
