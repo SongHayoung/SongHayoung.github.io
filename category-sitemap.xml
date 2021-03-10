@@ -8,15 +8,29 @@
     </url>
 
     <url>
+        <loc>https://songhayoung.github.io/categories/Java/Basic-Java/</loc>
+        <lastmod>2021-03-10T17:58:49.177Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/categories/Java/</loc>
+        <lastmod>2021-03-10T17:58:49.177Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
         <loc>https://songhayoung.github.io/categories/PS/LeetCode/</loc>
-        <lastmod>2021-03-08T11:17:49.488Z</lastmod>
+        <lastmod>2021-03-09T11:44:57.763Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
 
     <url>
         <loc>https://songhayoung.github.io/categories/PS/</loc>
-        <lastmod>2021-03-08T11:17:49.488Z</lastmod>
+        <lastmod>2021-03-09T11:44:57.763Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
@@ -52,20 +66,6 @@
     <url>
         <loc>https://songhayoung.github.io/categories/Intermediate-Algorithm/</loc>
         <lastmod>2020-12-03T15:42:42.417Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/categories/Java/Basic-Java/</loc>
-        <lastmod>2020-12-03T15:42:20.805Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/categories/Java/</loc>
-        <lastmod>2020-12-03T15:42:20.805Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
