@@ -8,6 +8,14 @@
     </url>
 
     <url>
+        <loc>https://songhayoung.github.io/2021/04/18/DayLife/leetcode2021418/</loc>
+        <lastmod>2021-04-18T10:29:31.037Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+
+    </url>
+
+    <url>
         <loc>https://songhayoung.github.io/2021/04/18/PS/LeetCode/single-threaded-cpu/</loc>
         <lastmod>2021-04-18T10:25:58.128Z</lastmod>
         <changefreq>weekly</changefreq>
@@ -42,14 +50,6 @@
     <url>
         <loc>https://songhayoung.github.io/2021/04/17/Modern%20Java/chapter7/</loc>
         <lastmod>2021-04-18T10:25:29.560Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.6</priority>
-
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/2021/04/18/leetcode2021418/</loc>
-        <lastmod>2021-04-18T04:15:25.137Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.6</priority>
 
