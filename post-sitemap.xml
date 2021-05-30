@@ -9,7 +9,39 @@
 
     <url>
         <loc>https://songhayoung.github.io/2021/05/30/20210530/</loc>
-        <lastmod>2021-05-30T06:43:30.579Z</lastmod>
+        <lastmod>2021-05-30T06:45:14.826Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/2021/05/30/process-tasks-using-servers/</loc>
+        <lastmod>2021-05-30T06:44:37.126Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/2021/05/30/minimum-skips-to-arrive-at-meeting-on-time/</loc>
+        <lastmod>2021-05-30T06:44:33.669Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/2021/05/30/maximum-value-after-insertion/</loc>
+        <lastmod>2021-05-30T06:44:28.992Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/2021/05/30/check-if-word-equals-summation-of-two-words/</loc>
+        <lastmod>2021-05-30T06:44:20.228Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.6</priority>
 
@@ -18,38 +50,6 @@
     <url>
         <loc>https://songhayoung.github.io/2021/05/02/DayLife/leetcode20210502/</loc>
         <lastmod>2021-05-30T06:39:12.021Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.6</priority>
-
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/2021/05/30/check-if-word-equals-summation-of-two-words/</loc>
-        <lastmod>2021-05-30T06:17:45.473Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.6</priority>
-
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/2021/05/30/maximum-value-after-insertion/</loc>
-        <lastmod>2021-05-30T06:16:38.909Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.6</priority>
-
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/2021/05/30/process-tasks-using-servers/</loc>
-        <lastmod>2021-05-30T06:15:29.349Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.6</priority>
-
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/2021/05/30/minimum-skips-to-arrive-at-meeting-on-time/</loc>
-        <lastmod>2021-05-30T06:14:30.011Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.6</priority>
 
