@@ -8,40 +8,8 @@
     </url>
 
     <url>
-        <loc>https://songhayoung.github.io/2021/05/30/20210530/</loc>
-        <lastmod>2021-05-30T06:45:14.826Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.6</priority>
-
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/2021/05/30/process-tasks-using-servers/</loc>
-        <lastmod>2021-05-30T06:44:37.126Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.6</priority>
-
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/2021/05/30/minimum-skips-to-arrive-at-meeting-on-time/</loc>
-        <lastmod>2021-05-30T06:44:33.669Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.6</priority>
-
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/2021/05/30/maximum-value-after-insertion/</loc>
-        <lastmod>2021-05-30T06:44:28.992Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.6</priority>
-
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/2021/05/30/check-if-word-equals-summation-of-two-words/</loc>
-        <lastmod>2021-05-30T06:44:20.228Z</lastmod>
+        <loc>https://songhayoung.github.io/2021/05/30/DayLife/20210530/</loc>
+        <lastmod>2021-05-30T06:54:16.513Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.6</priority>
 
@@ -49,7 +17,39 @@
 
     <url>
         <loc>https://songhayoung.github.io/2021/05/02/DayLife/leetcode20210502/</loc>
-        <lastmod>2021-05-30T06:39:12.021Z</lastmod>
+        <lastmod>2021-05-30T06:53:21.163Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/2021/05/30/PS/LeetCode/process-tasks-using-servers/</loc>
+        <lastmod>2021-05-30T06:44:37.126Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/2021/05/30/PS/LeetCode/minimum-skips-to-arrive-at-meeting-on-time/</loc>
+        <lastmod>2021-05-30T06:44:33.669Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/2021/05/30/PS/LeetCode/maximum-value-after-insertion/</loc>
+        <lastmod>2021-05-30T06:44:28.992Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/2021/05/30/PS/LeetCode/check-if-word-equals-summation-of-two-words/</loc>
+        <lastmod>2021-05-30T06:44:20.228Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.6</priority>
 
