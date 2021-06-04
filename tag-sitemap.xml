@@ -3,15 +3,22 @@
 
 
     <url>
-        <loc>https://songhayoung.github.io/tags/SUMFI%25E3%2581%25AE%25E4%25B8%2580%25E6%2597%25A5/</loc>
-        <lastmod>2021-06-01T13:53:02.636Z</lastmod>
+        <loc>https://songhayoung.github.io/tags/Redis/</loc>
+        <lastmod>2021-06-04T13:37:26.161Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
 
     <url>
         <loc>https://songhayoung.github.io/tags/Problem-Solving/</loc>
-        <lastmod>2021-05-30T06:44:37.126Z</lastmod>
+        <lastmod>2021-06-04T13:33:44.587Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/tags/SUMFI%25E3%2581%25AE%25E4%25B8%2580%25E6%2597%25A5/</loc>
+        <lastmod>2021-06-01T13:53:02.636Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
@@ -61,13 +68,6 @@
     <url>
         <loc>https://songhayoung.github.io/tags/Algorithm/</loc>
         <lastmod>2020-12-03T15:42:42.417Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/tags/Redis/</loc>
-        <lastmod>2020-12-03T15:41:59.756Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
