@@ -3,6 +3,13 @@
 
 
     <url>
+        <loc>https://songhayoung.github.io/tags/Problem-Solving/</loc>
+        <lastmod>2021-06-23T12:26:36.573Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
         <loc>https://songhayoung.github.io/tags/Spring/</loc>
         <lastmod>2021-06-23T12:23:17.081Z</lastmod>
         <changefreq>weekly</changefreq>
@@ -12,13 +19,6 @@
     <url>
         <loc>https://songhayoung.github.io/tags/JAVA/</loc>
         <lastmod>2021-06-23T12:23:17.081Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/tags/Problem-Solving/</loc>
-        <lastmod>2021-06-23T11:54:34.619Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
