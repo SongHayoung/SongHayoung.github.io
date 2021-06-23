@@ -8,6 +8,13 @@
     </url>
 
     <url>
+        <loc>https://songhayoung.github.io/categories/Etc/</loc>
+        <lastmod>2021-06-23T12:28:31.630Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
         <loc>https://songhayoung.github.io/categories/PS/LeetCode/</loc>
         <lastmod>2021-06-23T12:26:36.573Z</lastmod>
         <changefreq>weekly</changefreq>
@@ -31,13 +38,6 @@
     <url>
         <loc>https://songhayoung.github.io/categories/Redis/</loc>
         <lastmod>2021-06-04T15:40:46.539Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/categories/Etc/</loc>
-        <lastmod>2021-06-01T13:53:02.636Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
