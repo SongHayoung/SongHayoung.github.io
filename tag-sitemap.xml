@@ -3,6 +3,27 @@
 
 
     <url>
+        <loc>https://songhayoung.github.io/tags/Spring/</loc>
+        <lastmod>2021-06-23T11:57:26.295Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/tags/JAVA/</loc>
+        <lastmod>2021-06-23T11:57:26.295Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/tags/Problem-Solving/</loc>
+        <lastmod>2021-06-23T11:54:34.619Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
         <loc>https://songhayoung.github.io/tags/Redis/</loc>
         <lastmod>2021-06-04T15:40:46.539Z</lastmod>
         <changefreq>weekly</changefreq>
@@ -10,22 +31,8 @@
     </url>
 
     <url>
-        <loc>https://songhayoung.github.io/tags/Problem-Solving/</loc>
-        <lastmod>2021-06-04T13:33:44.587Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
         <loc>https://songhayoung.github.io/tags/SUMFI%25E3%2581%25AE%25E4%25B8%2580%25E6%2597%25A5/</loc>
         <lastmod>2021-06-01T13:53:02.636Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/tags/JAVA/</loc>
-        <lastmod>2021-05-19T10:55:27.923Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
@@ -47,13 +54,6 @@
     <url>
         <loc>https://songhayoung.github.io/tags/Server/</loc>
         <lastmod>2021-03-03T14:31:22.773Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/tags/Spring/</loc>
-        <lastmod>2021-02-23T16:11:10.556Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
