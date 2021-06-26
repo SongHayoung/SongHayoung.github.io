@@ -3488,30 +3488,6 @@
     </url>
 
     <url>
-        <loc>https://songhayoung.github.io/2020/09/01/BackToBasic/network/</loc>
-        <lastmod>2020-08-31T16:27:58.407Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.6</priority>
-
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/2020/09/01/BackToBasic/http/</loc>
-        <lastmod>2020-08-31T16:19:23.654Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.6</priority>
-
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/2020/08/30/BackToBasic/hash/</loc>
-        <lastmod>2020-08-31T16:11:13.083Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.6</priority>
-
-    </url>
-
-    <url>
         <loc>https://songhayoung.github.io/2020/08/31/PS/BOJ/1753/</loc>
         <lastmod>2020-08-31T08:54:14.485Z</lastmod>
         <changefreq>weekly</changefreq>
@@ -3536,14 +3512,6 @@
     </url>
 
     <url>
-        <loc>https://songhayoung.github.io/2020/08/30/BackToBasic/graph/</loc>
-        <lastmod>2020-08-31T07:45:55.684Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.6</priority>
-
-    </url>
-
-    <url>
         <loc>https://songhayoung.github.io/2020/08/31/PS/BOJ/1256/</loc>
         <lastmod>2020-08-31T06:53:55.435Z</lastmod>
         <changefreq>weekly</changefreq>
@@ -3554,30 +3522,6 @@
     <url>
         <loc>https://songhayoung.github.io/2020/08/31/PS/BOJ/1922/</loc>
         <lastmod>2020-08-31T03:26:34.478Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.6</priority>
-
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/2020/08/29/BackToBasic/sort/</loc>
-        <lastmod>2020-08-30T19:02:47.461Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.6</priority>
-
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/2020/08/31/BackToBasic/set/</loc>
-        <lastmod>2020-08-30T19:02:42.229Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.6</priority>
-
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/2020/08/29/BackToBasic/datastructure/</loc>
-        <lastmod>2020-08-30T19:02:29.264Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.6</priority>
 
