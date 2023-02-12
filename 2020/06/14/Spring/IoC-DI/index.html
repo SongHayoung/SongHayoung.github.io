@@ -1,0 +1,86 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="description" content="[Spring] IoC/DI"><meta name="keywords" content="JAVA,Spring"><meta name="author" content="Song Hayoung"><meta name="copyright" content="Song Hayoung"><title>[Spring] IoC/DI | SUMFIのBlog</title><link rel="shortcut icon" href="/songcon.ico"><link rel="stylesheet" href="/css/index.css?version=1.7.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@latest/css/font-awesome.min.css?version=1.7.0"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css?version=1.7.0"><meta name="format-detection" content="telephone=no"><meta http-equiv="x-dns-prefetch-control" content="on"><link rel="dns-prefetch" href="https://cdn.jsdelivr.net"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.css"><script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.js" defer></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@latest/dist/gitalk.min.js"></script><script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.10.0/js/md5.min.js"></script><link rel="dns-prefetch" href="https://www.google-analytics.com"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-169368422-1', 'auto');
+ga('send', 'pageview');</script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: {"appId":"7LZ6OJ4D6C","apiKey":"9a84e13f74ea78c3fd54512c10139c56","indexName":"git blog","hits":{"per_page":10},"languages":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}.","hits_stats":"${hits} results found in ${time} ms"}},
+  localSearch: undefined,
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  }
+} </script><meta name="generator" content="Hexo 6.3.0"></head><body><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar" data-display="true"><div class="toggle-sidebar-info text-center"><span data-toggle="Toggle article">Toggle site</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">Catalog</div><div class="sidebar-toc__progress"><span class="progress-notice">You've read</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#IoC-%EC%A0%9C%EC%96%B4%EC%9D%98-%EC%97%AD%EC%A0%84"><span class="toc-number">1.</span> <span class="toc-text">IoC(제어의 역전)</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Ioc%EB%9E%80"><span class="toc-number">1.1.</span> <span class="toc-text">Ioc란?</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%EC%8A%A4%ED%94%84%EB%A7%81%EC%9D%98-IoC"><span class="toc-number">1.2.</span> <span class="toc-text">스프링의 IoC</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Bean"><span class="toc-number">1.2.1.</span> <span class="toc-text">Bean</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Bean-Factory"><span class="toc-number">1.2.2.</span> <span class="toc-text">Bean Factory</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Application-Context"><span class="toc-number">1.2.3.</span> <span class="toc-text">Application Context</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#DI-%EC%9D%98%EC%A1%B4%EA%B4%80%EA%B3%84-%EC%A3%BC%EC%9E%85"><span class="toc-number">2.</span> <span class="toc-text">DI(의존관계 주입)</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#DI%EB%9E%80"><span class="toc-number">2.1.</span> <span class="toc-text">DI란?</span></a></li></ol></li></ol></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="https://avatars3.githubusercontent.com/u/37806785?s=460&amp;u=8c68d685faf7c5280cfbd736a6b1730b55fb4203&amp;v=4"></div><div class="author-info__name text-center">Song Hayoung</div><div class="author-info__description text-center"></div><div class="follow-button"><a target="_blank" rel="noopener" href="https://www.instagram.com/hayoung0_0/">Follow Me</a></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="/archives"><span class="pull-left">Articles</span><span class="pull-right">6438</span></a><a class="author-info-articles__tags article-meta" href="/tags"><span class="pull-left">Tags</span><span class="pull-right">183</span></a><a class="author-info-articles__categories article-meta" href="/categories"><span class="pull-left">Categories</span><span class="pull-right">66</span></a></div><hr><div class="author-info-links"><div class="author-info-links__title text-center">VISITED</div><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Seoul Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Jeju Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">British Columbia Canada</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Boracay Philippines</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">三重　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">大阪　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">名古屋　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">静岡　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">札幌　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">京都　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Bangkok Thailand</a></div></div></div><div id="content-outer"><div id="top-container" style="background-image: url(https://xxxx.jpg)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="/">SUMFIのBlog</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus">   <a class="site-page" href="/">Home</a><a class="site-page" href="/archives">Archives</a><a class="site-page" href="/tags">Tags</a><a class="site-page" href="/categories">Categories</a><a class="site-page" href="/about">About</a></span><span class="pull-right"><a class="site-page social-icon search"><i class="fa fa-search"></i><span> Search</span></a></span></div><div id="post-info"><div id="post-title">[Spring] IoC/DI</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2020-06-14</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/Spring/">Spring</a><div class="post-meta-wordcount"><span>Word count: </span><span class="word-count">212</span><span class="post-meta__separator">|</span><span>Reading time: 1 min</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div class="article-container" id="post-content"><h2 id="IoC-제어의-역전"><a href="#IoC-제어의-역전" class="headerlink" title="IoC(제어의 역전)"></a>IoC(제어의 역전)</h2><span id="more"></span>  
+<br>
+
+
+<h3 id="Ioc란"><a href="#Ioc란" class="headerlink" title="Ioc란?"></a>Ioc란?</h3><ul>
+<li>프로그램의 제어 흐름 구조가 뒤바끼는 것</li>
+<li>IoC에서는 오브젝트가 자신이 사용할 오브젝트를 스스로 선택하지도, 생성하지도 않는다</li>
+<li>또한 자신도 어떻게 만들어지고 어디서 사용되는지를 알 수 없다</li>
+<li>모든 제어 권한을 자신이 아닌 다른 대상**(컨테이너)**에게 위임하기 때문이다<br></li>
+</ul>
+<h3 id="스프링의-IoC"><a href="#스프링의-IoC" class="headerlink" title="스프링의 IoC"></a>스프링의 IoC</h3><p>IoC의 기본 개념은 어플리케이션을 구성하는 핵심 오브젝트를 코드가 아닌 <strong>컨테이너</strong>가 관리하는 것이다. 그렇기 때문에 의존관계 주입, 초기화, DI, DL, 제거까지 모든 오브젝트의 생명 주기를 컨테이너가 관리한다.  </p>
+<h4 id="Bean"><a href="#Bean" class="headerlink" title="Bean"></a>Bean</h4><ul>
+<li>제어권을 가지고 직접 만들고 관계를 부여하는 오브젝트</li>
+<li>기본적으로 스프링에서는 싱글톤으로 관리된다</li>
+</ul>
+<h4 id="Bean-Factory"><a href="#Bean-Factory" class="headerlink" title="Bean Factory"></a>Bean Factory</h4><ul>
+<li>빈의 생성과 관계설정 같은 제어를 담당하는 IoC 오브젝트</li>
+<li>빈을 생성하고 관계를 설정하는 IoC의 기본 기능에 초점을 둔다</li>
+</ul>
+<h4 id="Application-Context"><a href="#Application-Context" class="headerlink" title="Application Context"></a>Application Context</h4><ul>
+<li>빈 팩토리와 같은 의미를 지닌다</li>
+<li>애플리케이션 전반에 걸쳐 모든 구성요소의 제어 작업을 담당하는 IoC 엔진이라는 의미가 더 강하다</li>
+<li>싱글톤으로 빈 오브젝트를 생성하고 관리한다<br><br><br></li>
+</ul>
+<h2 id="DI-의존관계-주입"><a href="#DI-의존관계-주입" class="headerlink" title="DI(의존관계 주입)"></a>DI(의존관계 주입)</h2><br>
+
+<h3 id="DI란"><a href="#DI란" class="headerlink" title="DI란?"></a>DI란?</h3><ul>
+<li>런타임 시점의 의존관계를 컨테이너나 팩토리 같은 제3의 존재(Application Context)가 결정한다</li>
+<li>클래스 모델이나 코드에는 런타임 시점의 의존관계가 드러나지 않아야 하기 때문에 인터페이스에만 의존하여야 한다</li>
+<li>인터페이스를 사이에 두고 클래스 레벨에서는 의존관계가 고정되지 않게 하고 런타임에 의존할 오브젝트와의 관계를 맺어준다</li>
+<li>의존관계를 사용할 오브젝트에 대한 레퍼런스를 외부에서 제공해줌으로 써 만들어진다</li>
+<li>의존관계 주입에서는 자신이 스프링의 빈이여야 한다</li>
+<li>컨테이너가 오브젝트를 주입해 주려면 자신에 대한 생성과 초기화 권한을 가지고 있어야 하기 때문이다</li>
+<li>인터페이스를 통해 <strong>결합도가 낮은 코드</strong>를 만드는 장점이 있다(OOP 5원칙 - DIP)</li>
+</ul>
+</div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined">Song Hayoung</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="https://songhayoung.github.io/2020/06/14/Spring/IoC-DI/">https://songhayoung.github.io/2020/06/14/Spring/IoC-DI/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/JAVA/">JAVA</a><a class="post-meta__tags" href="/tags/Spring/">Spring</a></div><nav id="pagination"><div class="prev-post pull-left"><a href="/2020/06/14/Spring/AOP/"><i class="fa fa-chevron-left">  </i><span>[Spring] AOP</span></a></div><div class="next-post pull-right"><a href="/2020/06/14/OS/Deadlock/"><span>[OS] Deadlock</span><i class="fa fa-chevron-right"></i></a></div></nav><div id="gitalk-container"></div><script>var gitalk = new Gitalk({
+  clientID: '3604b61642355579f55e',
+  clientSecret: 'f552120f18ac5aee3f6297e05e97d94c0a25cd4b',
+  repo: 'SongHayoung.github.io',
+  owner: 'SongHayoung',
+  admin: 'SongHayoung',
+  id: md5(decodeURI(location.pathname)),
+  language: 'en'
+})
+gitalk.render('gitalk-container')</script></div></div><footer class="footer-bg" style="background-image: url(https://xxxx.jpg)"><div class="layout" id="footer"><div class="copyright">&copy;2020 - 2023 By Song Hayoung</div><div class="framework-info"><span>Driven - </span><a target="_blank" rel="noopener" href="http://hexo.io"><span>Hexo</span></a><span class="footer-separator">|</span><span>Theme - </span><a target="_blank" rel="noopener" href="https://github.com/Molunerfinn/hexo-theme-melody"><span>Melody</span></a></div><div class="footer_custom_text">Learning how to walk slowly to not miss important things</div><div class="busuanzi"><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><span id="busuanzi_container_page_pv"><i class="fa fa-file"></i><span id="busuanzi_value_page_pv"></span><span></span></span></div></div></footer><i class="fa fa-arrow-up" id="go-up" aria-hidden="true"></i><script src="https://cdn.jsdelivr.net/npm/animejs@latest/anime.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@latest/velocity.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-ui-pack@latest/velocity.ui.min.js"></script><script src="/js/utils.js?version=1.7.0"></script><script src="/js/fancybox.js?version=1.7.0"></script><script src="/js/sidebar.js?version=1.7.0"></script><script src="/js/copy.js?version=1.7.0"></script><script src="/js/fireworks.js?version=1.7.0"></script><script src="/js/transition.js?version=1.7.0"></script><script src="/js/scroll.js?version=1.7.0"></script><script src="/js/head.js?version=1.7.0"></script><script src="/js/search/algolia.js"></script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+    processEscapes: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  },
+  CommonHTML: {
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "HTML-CSS": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "SVG": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  }
+});
+</script><script type="text/x-mathjax-config">MathJax.Hub.Queue(function() {
+  var all = MathJax.Hub.getAllJax(), i;
+  for (i=0; i < all.length; i += 1) {
+    all[i].SourceElement().parentNode.className += ' has-jax';
+  }
+});
+</script><script src="https://cdn.jsdelivr.net/npm/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><script>if(/Android|webOS|iPhone|iPod|iPad|BlackBerry/i.test(navigator.userAgent)) {
+  $('#nav').addClass('is-mobile')
+  $('footer').addClass('is-mobile')
+  $('#top-container').addClass('is-mobile')
+}</script><div class="search-dialog" id="algolia-search"><div class="search-dialog__title" id="algolia-search-title">Algolia</div><div id="algolia-input-panel"><div id="algolia-search-input"></div></div><hr><div id="algolia-search-results"><div id="algolia-hits"></div><div id="algolia-pagination"></div><div id="algolia-stats"></div></div><span class="search-close-button"><i class="fa fa-times"></i></span></div><div class="search-mask"></div></body></html>

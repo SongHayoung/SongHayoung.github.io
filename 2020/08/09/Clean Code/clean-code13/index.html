@@ -1,0 +1,110 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="description" content="[Clean Code] 동시성"><meta name="keywords" content="Clean Code"><meta name="author" content="Song Hayoung"><meta name="copyright" content="Song Hayoung"><title>[Clean Code] 동시성 | SUMFIのBlog</title><link rel="shortcut icon" href="/songcon.ico"><link rel="stylesheet" href="/css/index.css?version=1.7.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@latest/css/font-awesome.min.css?version=1.7.0"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css?version=1.7.0"><meta name="format-detection" content="telephone=no"><meta http-equiv="x-dns-prefetch-control" content="on"><link rel="dns-prefetch" href="https://cdn.jsdelivr.net"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.css"><script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.js" defer></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@latest/dist/gitalk.min.js"></script><script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.10.0/js/md5.min.js"></script><link rel="dns-prefetch" href="https://www.google-analytics.com"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-169368422-1', 'auto');
+ga('send', 'pageview');</script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: {"appId":"7LZ6OJ4D6C","apiKey":"9a84e13f74ea78c3fd54512c10139c56","indexName":"git blog","hits":{"per_page":10},"languages":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}.","hits_stats":"${hits} results found in ${time} ms"}},
+  localSearch: undefined,
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  }
+} </script><meta name="generator" content="Hexo 6.3.0"></head><body><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar" data-display="true"><div class="toggle-sidebar-info text-center"><span data-toggle="Toggle article">Toggle site</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">Catalog</div><div class="sidebar-toc__progress"><span class="progress-notice">You've read</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%EB%8F%99%EC%8B%9C%EC%84%B1%EC%9D%B4-%ED%95%84%EC%9A%94%ED%95%9C-%EC%9D%B4%EC%9C%A0"><span class="toc-number">1.</span> <span class="toc-text">동시성이 필요한 이유</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%EB%8F%99%EC%8B%9C%EC%84%B1-%EB%B0%94%EB%A1%9C%EC%9E%A1%EA%B8%B0"><span class="toc-number">2.</span> <span class="toc-text">동시성 바로잡기</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%EB%8F%99%EC%8B%9C%EC%84%B1%EC%9D%80-%ED%95%AD%EC%83%81-%EC%84%B1%EB%8A%A5%EC%9D%84-%EB%86%92%EC%97%AC%EC%A4%80%EB%8B%A4"><span class="toc-number">2.1.</span> <span class="toc-text">동시성은 항상 성능을 높여준다</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%EB%8F%99%EC%8B%9C%EC%84%B1%EC%9D%84-%EA%B5%AC%ED%98%84%ED%95%B4%EB%8F%84-%EC%84%A4%EA%B3%84%EB%8A%94-%EB%B3%80%ED%95%98%EC%A7%80-%EC%95%8A%EB%8A%94%EB%8B%A4"><span class="toc-number">2.2.</span> <span class="toc-text">동시성을 구현해도 설계는 변하지 않는다</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%EC%9B%B9-%EB%98%90%EB%8A%94-EJB-%EC%BB%A8%ED%85%8C%EC%9D%B4%EB%84%88%EB%A5%BC-%EC%82%AC%EC%9A%A9%ED%95%98%EB%A9%B4-%EB%8F%99%EC%8B%9C%EC%84%B1%EC%9D%84-%EC%9D%B4%EC%95%A0%ED%95%A0-%ED%95%84%EC%9A%94%EA%B0%80-%EC%97%86%EB%8B%A4"><span class="toc-number">2.3.</span> <span class="toc-text">웹 또는 EJB 컨테이너를 사용하면 동시성을 이애할 필요가 없다</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%EB%8F%99%EC%8B%9C%EC%84%B1%EC%9D%B4-%EC%96%B4%EB%A0%A4%EC%9A%B4-%EC%9D%B4%EC%9C%A0"><span class="toc-number">3.</span> <span class="toc-text">동시성이 어려운 이유</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%EB%8F%99%EC%8B%9C%EC%84%B1-%EB%B0%A9%EC%96%B4-%EC%9B%90%EC%B9%99"><span class="toc-number">4.</span> <span class="toc-text">동시성 방어 원칙</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#SRP"><span class="toc-number">4.1.</span> <span class="toc-text">SRP</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%EB%94%B0%EB%A6%84-%EC%A0%95%EB%A6%AC-%EC%9E%90%EB%A3%8C-%EB%B2%94%EC%9C%84%EB%A5%BC-%EC%A0%9C%ED%95%9C%ED%95%98%EB%9D%BC"><span class="toc-number">4.2.</span> <span class="toc-text">따름 정리 : 자료 범위를 제한하라</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%EB%94%B0%EB%A6%84-%EC%A0%95%EB%A6%AC-%EC%9E%90%EB%A3%8C-%EC%82%AC%EB%B3%B8%EC%9D%84-%EC%82%AC%EC%9A%A9%ED%95%98%EB%9D%BC"><span class="toc-number">4.3.</span> <span class="toc-text">따름 정리 : 자료 사본을 사용하라</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%EB%94%B0%EB%A6%84-%EC%A0%95%EB%A6%AC-%EC%8A%A4%EB%A0%88%EB%93%9C%EB%8A%94-%EA%B0%80%EB%8A%A5%ED%95%9C-%EB%8F%85%EB%A6%BD%EC%A0%81%EC%9C%BC%EB%A1%9C-%EA%B5%AC%ED%98%84%ED%95%98%EB%9D%BC"><span class="toc-number">4.4.</span> <span class="toc-text">따름 정리 : 스레드는 가능한 독립적으로 구현하라</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%EB%9D%BC%EC%9D%B4%EB%B8%8C%EB%9F%AC%EB%A6%AC%EB%A5%BC-%EC%9D%B4%ED%95%B4%ED%95%98%EB%9D%BC"><span class="toc-number">5.</span> <span class="toc-text">라이브러리를 이해하라</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%EC%8B%A4%ED%96%89-%EB%AA%A8%EB%8D%B8%EC%9D%84-%EC%9D%B4%ED%95%B4%ED%95%98%EB%9D%BC"><span class="toc-number">6.</span> <span class="toc-text">실행 모델을 이해하라</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#producer-consumer"><span class="toc-number">6.1.</span> <span class="toc-text">producer-consumer</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#readers-writers"><span class="toc-number">6.2.</span> <span class="toc-text">readers-writers</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Dining-Philosophers"><span class="toc-number">6.3.</span> <span class="toc-text">Dining Philosophers</span></a></li></ol></li></ol></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="https://avatars3.githubusercontent.com/u/37806785?s=460&amp;u=8c68d685faf7c5280cfbd736a6b1730b55fb4203&amp;v=4"></div><div class="author-info__name text-center">Song Hayoung</div><div class="author-info__description text-center"></div><div class="follow-button"><a target="_blank" rel="noopener" href="https://www.instagram.com/hayoung0_0/">Follow Me</a></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="/archives"><span class="pull-left">Articles</span><span class="pull-right">6438</span></a><a class="author-info-articles__tags article-meta" href="/tags"><span class="pull-left">Tags</span><span class="pull-right">183</span></a><a class="author-info-articles__categories article-meta" href="/categories"><span class="pull-left">Categories</span><span class="pull-right">66</span></a></div><hr><div class="author-info-links"><div class="author-info-links__title text-center">VISITED</div><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Seoul Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Jeju Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">British Columbia Canada</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Boracay Philippines</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">三重　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">大阪　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">名古屋　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">静岡　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">札幌　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">京都　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Bangkok Thailand</a></div></div></div><div id="content-outer"><div id="top-container" style="background-image: url(https://xxxx.jpg)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="/">SUMFIのBlog</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus">   <a class="site-page" href="/">Home</a><a class="site-page" href="/archives">Archives</a><a class="site-page" href="/tags">Tags</a><a class="site-page" href="/categories">Categories</a><a class="site-page" href="/about">About</a></span><span class="pull-right"><a class="site-page social-icon search"><i class="fa fa-search"></i><span> Search</span></a></span></div><div id="post-info"><div id="post-title">[Clean Code] 동시성</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2020-08-09</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/Clean-Code/">Clean Code</a><div class="post-meta-wordcount"><span>Word count: </span><span class="word-count">625</span><span class="post-meta__separator">|</span><span>Reading time: 3 min</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div class="article-container" id="post-content"><p>해당 포스트는 <a target="_blank" rel="noopener" href="http://ebook.insightbook.co.kr/">Clean Code</a>의 내용을 참고하여 작성되었습니다.</p>
+<span id="more"></span>
+<h2 id="동시성이-필요한-이유"><a href="#동시성이-필요한-이유" class="headerlink" title="동시성이 필요한 이유"></a>동시성이 필요한 이유</h2><p>동시성은 결합을 없애는 전략이다. 즉, <strong>무엇</strong>과 <strong>언제</strong>를 분리하는 전략이다. 무엇과 언제를 분리하면 어플리케이션 구조와 효율이 극적으로 나아진다. 구조적인 관점에서 프로그램은 거대한 루프가 아닌 작은 협력 프로그램 여럿으로 보인다.</p>
+<p>서블릿은 웹 혹은 EJB 컨테이너에서 돌아가는데 이 컨테이너들은 동시성을 부분적으로 관리한다. 매 요청바다 웹 서버는 비동기식으로 서블릿을 실행하고 서블릿 프로그래머는 들어오는 모든 웹 요청을 관리할 필요가 없다.</p>
+<p>이런 구조적 개선만을 위한 동시성 뿐만 아니라 시스템에 따라서 응답 시간과 작업 처리량 개선이라는 요구사항으로 인해 동시성을 구현해야 하는 경우도 있다. 이런 경우에는 병렬로 처리를 하는것이 성능의 향상을 가져온다.</p>
+<h2 id="동시성-바로잡기"><a href="#동시성-바로잡기" class="headerlink" title="동시성 바로잡기"></a>동시성 바로잡기</h2><p>다음은 동시성과 관련된 타당한 생각 몇가지이다.</p>
+<ol>
+<li>동시성은 다소 부하를 유발한다</li>
+<li>동시성은 복잡하다</li>
+<li>일반적으로 동시성 버그는 재현하기 어렵다</li>
+<li>동시성을 구현하려면 흔히 근본적인 설계 전략을 재고해야 한다</li>
+</ol>
+<p>다음은 동시성과 관련된 일반적인 오해이다.</p>
+<h3 id="동시성은-항상-성능을-높여준다"><a href="#동시성은-항상-성능을-높여준다" class="headerlink" title="동시성은 항상 성능을 높여준다"></a>동시성은 항상 성능을 높여준다</h3><p>동시성은 <strong>때로</strong> 성능을 높여준다. 대기 시간이아주 길어 여러 스레드가 프로세서를 공유할 수 있거나 여러 프로세서가 동시에 처리할 독립적인 계산이 충분히 많은 경우에만 성능이 높아진다.</p>
+<h3 id="동시성을-구현해도-설계는-변하지-않는다"><a href="#동시성을-구현해도-설계는-변하지-않는다" class="headerlink" title="동시성을 구현해도 설계는 변하지 않는다"></a>동시성을 구현해도 설계는 변하지 않는다</h3><p>아니다. 싱글 스레드 시스템과 멀티 스레드 시스템은 설계가 판이하게 다르다.</p>
+<h3 id="웹-또는-EJB-컨테이너를-사용하면-동시성을-이애할-필요가-없다"><a href="#웹-또는-EJB-컨테이너를-사용하면-동시성을-이애할-필요가-없다" class="headerlink" title="웹 또는 EJB 컨테이너를 사용하면 동시성을 이애할 필요가 없다"></a>웹 또는 EJB 컨테이너를 사용하면 동시성을 이애할 필요가 없다</h3><p>실제로 컨테이너가 어떻게 동작하는지, 어떻게 동시 수정, 데드락과 같은 문제를 회피하는지 알아야만 한다.</p>
+<h2 id="동시성이-어려운-이유"><a href="#동시성이-어려운-이유" class="headerlink" title="동시성이 어려운 이유"></a>동시성이 어려운 이유</h2><p>두 스레드가 같은 변수를 동시에 참조하면 경우에 따라 잘못된 결과를 도출할 수 있다. 두 스레드가 코드 한줄을 거쳐가는 경우는 수없이 많은데 그 중 일부 경로가 잘못된 결과를 내놓기 때문이다. JIT 컴파일러가 바이트 코드를 처리하는 방식과 자바 메모리 모델이 원자로 간주하는 최소 단위를 고려했을 때 잠재적인 경로는 최대 12870개 이상이다. 이 중 잘못된 결과를 내놓는 것은 일부이다.</p>
+<h2 id="동시성-방어-원칙"><a href="#동시성-방어-원칙" class="headerlink" title="동시성 방어 원칙"></a>동시성 방어 원칙</h2><h3 id="SRP"><a href="#SRP" class="headerlink" title="SRP"></a>SRP</h3><p>동시성 관련 코드는 SRP에 의거해 다른 코드와 분리해야 한다. 동시성을 구현할 때는 다음 몇가지를 고려한다.</p>
+<ol>
+<li>동시성 코드는 독자적인 개발, 변경, 조율 주기가 있다.</li>
+<li>동시성 코드에는 독자적인 난관이 있다. 다른 코드에서 겪는 난관과 다르며 매우 어렵다.</li>
+<li>잘못 구현한 동시성 코드는 별의별 방식으로 실패한다. 주변에 있는 다른 코드가 발목을 잡지 않더라도 동시성 하나만으로 충분히 어렵다.</li>
+</ol>
+<blockquote>
+<p>동시성 코드는 다른 코드와 분리하다</p>
+</blockquote>
+<h3 id="따름-정리-자료-범위를-제한하라"><a href="#따름-정리-자료-범위를-제한하라" class="headerlink" title="따름 정리 : 자료 범위를 제한하라"></a>따름 정리 : 자료 범위를 제한하라</h3><p>멀티 스레드의 문제를 예방하는 방법으로 critical section을 synchronized 키워드로 보호하라고 권장한다. 이런 critical section의 수를 줄이는 기술이 중요하다. 공유 자료를 수정하는 위치가 많을수록 다음 가능성도 커진다.</p>
+<ol>
+<li>보호할 critical section을 빼먹는다.</li>
+<li>모든 임계영역을 올바로 보호했는지(DRY 위반) 확인하느라 같은 노력과 수고를 반복한다.</li>
+<li>안그래도 찾기 힘든 버그가 더 찾기 힘들어진다.</li>
+</ol>
+<blockquote>
+<p>자료를 캡슐화하라. 공유 자료를 최대한 줄여라.</p>
+</blockquote>
+<h3 id="따름-정리-자료-사본을-사용하라"><a href="#따름-정리-자료-사본을-사용하라" class="headerlink" title="따름 정리 : 자료 사본을 사용하라"></a>따름 정리 : 자료 사본을 사용하라</h3><p>공유 자료를 줄이는 방법중에는 특정 경우에 객체 사본을복사해 읽기 전용으로 만드는 방법도 있다. 어떤 경우에는 각 스레드가 객체를 복사해 사용한 후 한 스레드가 해당 사본에서 결과를 가져오는 방법도 존재한다. 공유 객체를 피하는 방법이 있다면 코드가 문제를 일으킬 가능성도 아주 낮아진다.</p>
+<blockquote>
+<p>단 이 경우는 객체를 복사하는 비용과 부하와 동기화를 위한 내부 잠금에 따르는 비용과 부하를 검증하는 과정을 거쳐야 한다.</p>
+</blockquote>
+<h3 id="따름-정리-스레드는-가능한-독립적으로-구현하라"><a href="#따름-정리-스레드는-가능한-독립적으로-구현하라" class="headerlink" title="따름 정리 : 스레드는 가능한 독립적으로 구현하라"></a>따름 정리 : 스레드는 가능한 독립적으로 구현하라</h3><p>다른 스레드와 자료를 공유하지 않는 스레드를 구현하라. 각 스레드는 클라이언트 요청 하나를 처리한다. 모든 정보는 비공유 자료에서 가져오며 로컬 변수에 저장한다. 그러면 각 스레드는 세상에 자신만 있는 듯이 돌아갈 수 있다. 다른 스레드와 동기화할 필요가 없기 때문이다.</p>
+<blockquote>
+<p>독자적인 스레드로 가능하면 다른 프로세서에서 돌려도 괜찮도록 자료를 독립적인 단위로 분할하라.</p>
+</blockquote>
+<h2 id="라이브러리를-이해하라"><a href="#라이브러리를-이해하라" class="headerlink" title="라이브러리를 이해하라"></a>라이브러리를 이해하라</h2><p>자바로 스레드 코드를 구현한다면 다음을 고려해야 한다.</p>
+<ol>
+<li>스레드 환경에 안전한 컬렉션을 사용한다.</li>
+<li>서로 무관한 작업을 수행할 때는 executor 프레임워크를 사용한다.</li>
+<li>가능하다면 스레드가 blocking 되지 않는 방법을 사용한다.</li>
+<li>일부 클래스 라이브러리는 스레드에 안전하지 못하다.</li>
+</ol>
+<p>자바가 제공하는 동시성 설계를 위한 클래스는 다음과 같은 것이 있다.</p>
+<ul>
+<li>ReentrantLock : 한 메소드에서 잠그고 다른 메소드에서 푸는 lock</li>
+<li>Semaphore</li>
+<li>CountDownLatch : 지정한 수만큼 이벤트가 발생하고 난 뒤에야 대기중인 스레드를 모두 해제한다. 모든 스레드에게 동시에 공평하게 시작할 기회를 준다.</li>
+</ul>
+<h2 id="실행-모델을-이해하라"><a href="#실행-모델을-이해하라" class="headerlink" title="실행 모델을 이해하라"></a>실행 모델을 이해하라</h2><h3 id="producer-consumer"><a href="#producer-consumer" class="headerlink" title="producer-consumer"></a>producer-consumer</h3><p>producer-consumer 패턴에서는 서로에게 시그널을 보내게 된다. 이 때 잘못된 코드를 작성하게 되면 서로에게서 시그널을 기다리는 상황이 발생할 수 있다.</p>
+<h3 id="readers-writers"><a href="#readers-writers" class="headerlink" title="readers-writers"></a>readers-writers</h3><p>읽기와 쓰기를 효율적으로 처리하기 위해 적절한 균형이 필요하다. shared-lock과 exclusive-lock의 균형 유지를 생각해보면 된다.</p>
+<h3 id="Dining-Philosophers"><a href="#Dining-Philosophers" class="headerlink" title="Dining Philosophers"></a>Dining Philosophers</h3><p>너무 유명한 문제이지만 너무 많은 것을 배울 수 있는 문제이다. 주의해서 설계하지 않는다면 데드락, 라이브락, through put 저하, 효율성 저하 등의 문제를 겪는다.</p>
+</div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined">Song Hayoung</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="https://songhayoung.github.io/2020/08/09/Clean%20Code/clean-code13/">https://songhayoung.github.io/2020/08/09/Clean%20Code/clean-code13/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Clean-Code/">Clean Code</a></div><nav id="pagination"><div class="prev-post pull-left"><a href="/2020/08/09/Effective%20JAVA/item22/"><i class="fa fa-chevron-left">  </i><span>[Effective Java] 인터페이스는 타입을 정의하는 용도로만 사용하라</span></a></div><div class="next-post pull-right"><a href="/2020/08/08/Effective%20JAVA/item21/"><span>[Effective Java] 인터페이스는 구현하는 쪽을 생각해 설계하라</span><i class="fa fa-chevron-right"></i></a></div></nav><div id="gitalk-container"></div><script>var gitalk = new Gitalk({
+  clientID: '3604b61642355579f55e',
+  clientSecret: 'f552120f18ac5aee3f6297e05e97d94c0a25cd4b',
+  repo: 'SongHayoung.github.io',
+  owner: 'SongHayoung',
+  admin: 'SongHayoung',
+  id: md5(decodeURI(location.pathname)),
+  language: 'en'
+})
+gitalk.render('gitalk-container')</script></div></div><footer class="footer-bg" style="background-image: url(https://xxxx.jpg)"><div class="layout" id="footer"><div class="copyright">&copy;2020 - 2023 By Song Hayoung</div><div class="framework-info"><span>Driven - </span><a target="_blank" rel="noopener" href="http://hexo.io"><span>Hexo</span></a><span class="footer-separator">|</span><span>Theme - </span><a target="_blank" rel="noopener" href="https://github.com/Molunerfinn/hexo-theme-melody"><span>Melody</span></a></div><div class="footer_custom_text">Learning how to walk slowly to not miss important things</div><div class="busuanzi"><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><span id="busuanzi_container_page_pv"><i class="fa fa-file"></i><span id="busuanzi_value_page_pv"></span><span></span></span></div></div></footer><i class="fa fa-arrow-up" id="go-up" aria-hidden="true"></i><script src="https://cdn.jsdelivr.net/npm/animejs@latest/anime.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@latest/velocity.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-ui-pack@latest/velocity.ui.min.js"></script><script src="/js/utils.js?version=1.7.0"></script><script src="/js/fancybox.js?version=1.7.0"></script><script src="/js/sidebar.js?version=1.7.0"></script><script src="/js/copy.js?version=1.7.0"></script><script src="/js/fireworks.js?version=1.7.0"></script><script src="/js/transition.js?version=1.7.0"></script><script src="/js/scroll.js?version=1.7.0"></script><script src="/js/head.js?version=1.7.0"></script><script src="/js/search/algolia.js"></script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+    processEscapes: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  },
+  CommonHTML: {
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "HTML-CSS": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "SVG": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  }
+});
+</script><script type="text/x-mathjax-config">MathJax.Hub.Queue(function() {
+  var all = MathJax.Hub.getAllJax(), i;
+  for (i=0; i < all.length; i += 1) {
+    all[i].SourceElement().parentNode.className += ' has-jax';
+  }
+});
+</script><script src="https://cdn.jsdelivr.net/npm/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><script>if(/Android|webOS|iPhone|iPod|iPad|BlackBerry/i.test(navigator.userAgent)) {
+  $('#nav').addClass('is-mobile')
+  $('footer').addClass('is-mobile')
+  $('#top-container').addClass('is-mobile')
+}</script><div class="search-dialog" id="algolia-search"><div class="search-dialog__title" id="algolia-search-title">Algolia</div><div id="algolia-input-panel"><div id="algolia-search-input"></div></div><hr><div id="algolia-search-results"><div id="algolia-hits"></div><div id="algolia-pagination"></div><div id="algolia-stats"></div></div><span class="search-close-button"><i class="fa fa-times"></i></span></div><div class="search-mask"></div></body></html>
