@@ -13,55 +13,102 @@ ga('send', 'pageview');</script><meta http-equiv="Cache-Control" content="no-tra
     error: 'Copy error',
     noSupport: 'The browser does not support'
   }
-} </script><meta name="generator" content="Hexo 6.3.0"></head><body><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar" data-display="true"><div class="toggle-sidebar-info text-center"><span data-toggle="Toggle article">Toggle site</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">Catalog</div><div class="sidebar-toc__progress"><span class="progress-notice">You've read</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="https://avatars3.githubusercontent.com/u/37806785?s=460&amp;u=8c68d685faf7c5280cfbd736a6b1730b55fb4203&amp;v=4"></div><div class="author-info__name text-center">Song Hayoung</div><div class="author-info__description text-center"></div><div class="follow-button"><a target="_blank" rel="noopener" href="https://www.instagram.com/hayoung0_0/">Follow Me</a></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="/archives"><span class="pull-left">Articles</span><span class="pull-right">6438</span></a><a class="author-info-articles__tags article-meta" href="/tags"><span class="pull-left">Tags</span><span class="pull-right">183</span></a><a class="author-info-articles__categories article-meta" href="/categories"><span class="pull-left">Categories</span><span class="pull-right">66</span></a></div><hr><div class="author-info-links"><div class="author-info-links__title text-center">VISITED</div><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Seoul Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Jeju Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">British Columbia Canada</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Boracay Philippines</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">三重　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">大阪　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">名古屋　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">静岡　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">札幌　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">京都　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Bangkok Thailand</a></div></div></div><div id="content-outer"><div id="top-container" style="background-image: url(https://xxxx.jpg)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="/">SUMFIのBlog</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus">   <a class="site-page" href="/">Home</a><a class="site-page" href="/archives">Archives</a><a class="site-page" href="/tags">Tags</a><a class="site-page" href="/categories">Categories</a><a class="site-page" href="/about">About</a></span><span class="pull-right"><a class="site-page social-icon search"><i class="fa fa-search"></i><span> Search</span></a></span></div><div id="post-info"><div id="post-title">[LeetCode] Rectangle Area II</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2022-05-04</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/PS/">PS</a><i class="fa fa-angle-right" aria-hidden="true"></i><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/PS/LeetCode/">LeetCode</a><div class="post-meta-wordcount"><span>Word count: </span><span class="word-count">485</span><span class="post-meta__separator">|</span><span>Reading time: 3 min</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div class="article-container" id="post-content"><p><a target="_blank" rel="noopener" href="https://leetcode.com/problems/rectangle-area-ii/">850. Rectangle Area II</a></p>
+} </script><meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/rss2.xml" title="SUMFIのBlog" type="application/rss+xml">
+</head><body><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar" data-display="true"><div class="toggle-sidebar-info text-center"><span data-toggle="Toggle article">Toggle site</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">Catalog</div><div class="sidebar-toc__progress"><span class="progress-notice">You've read</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="https://avatars3.githubusercontent.com/u/37806785?s=460&amp;u=8c68d685faf7c5280cfbd736a6b1730b55fb4203&amp;v=4"></div><div class="author-info__name text-center">Song Hayoung</div><div class="author-info__description text-center"></div><div class="follow-button"><a target="_blank" rel="noopener" href="https://www.instagram.com/hayoung0_0/">Follow Me</a></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="/archives"><span class="pull-left">Articles</span><span class="pull-right">6438</span></a><a class="author-info-articles__tags article-meta" href="/tags"><span class="pull-left">Tags</span><span class="pull-right">183</span></a><a class="author-info-articles__categories article-meta" href="/categories"><span class="pull-left">Categories</span><span class="pull-right">66</span></a></div><hr><div class="author-info-links"><div class="author-info-links__title text-center">VISITED</div><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Seoul Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Jeju Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">British Columbia Canada</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Boracay Philippines</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">三重　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">大阪　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">名古屋　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">静岡　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">札幌　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">京都　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Bangkok Thailand</a></div></div></div><div id="content-outer"><div id="top-container" style="background-image: url(https://xxxx.jpg)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="/">SUMFIのBlog</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus">   <a class="site-page" href="/">Home</a><a class="site-page" href="/archives">Archives</a><a class="site-page" href="/tags">Tags</a><a class="site-page" href="/categories">Categories</a><a class="site-page" href="/about">About</a></span><span class="pull-right"><a class="site-page social-icon search"><i class="fa fa-search"></i><span> Search</span></a></span></div><div id="post-info"><div id="post-title">[LeetCode] Rectangle Area II</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2022-05-04</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/PS/">PS</a><i class="fa fa-angle-right" aria-hidden="true"></i><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/PS/LeetCode/">LeetCode</a><div class="post-meta-wordcount"><span>Word count: </span><span class="word-count">514</span><span class="post-meta__separator">|</span><span>Reading time: 3 min</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div class="article-container" id="post-content"><p><a target="_blank" rel="noopener" href="https://leetcode.com/problems/rectangle-area-ii/">850. Rectangle Area II</a></p>
 <blockquote>
-<p>You are given a 2D array of axis-aligned rectangles. Each rectangle[i] &#x3D; [xi1, yi1, xi2, yi2] denotes the ith rectangle where (xi1, yi1) are the coordinates of the bottom-left corner, and (xi2, yi2) are the coordinates of the top-right corner.</p>
+<p>You are given a 2D array of axis-aligned rectangles. Each rectangle[i] = [xi1, yi1, xi2, yi2] denotes the ith rectangle where (xi1, yi1) are the coordinates of the bottom-left corner, and (xi2, yi2) are the coordinates of the top-right corner.</p>
 <p>Calculate the total area covered by all rectangles in the plane. Any area covered by two or more rectangles should only be counted once.</p>
 <p>Return the total area. Since the answer may be too large, return it modulo 109 + 7.</p>
 </blockquote>
 <span id="more"></span>
+<pre><code class="lang-C++">#define MAX_N 505
+#define INF 987654321
+#define ll long long
+#define pll pair&lt;ll, ll&gt;
+#define vpll vector&lt;pll&gt;
+#define vall3 vector&lt;array&lt;ll,3&gt;&gt;
+#define all5 array&lt;ll,5&gt;
+#define vall5 vector&lt;all5&gt;
+#define vll vector&lt;ll&gt;
+#define vs vector&lt;string&gt;
+#define usll unordered_set&lt;ll&gt;
+#define vvs vector&lt;vs&gt;
+#define vvll vector&lt;vll&gt;
+#define all(a) begin(a), end(a)
 
-<p>&#96;&#96;&#96;C++<br>#define MAX_N 505<br>#define INF 987654321<br>#define ll long long<br>#define pll pair&lt;ll, ll&gt;<br>#define vpll vector<pll><br>#define vall3 vector&lt;array&lt;ll,3&gt;&gt;<br>#define all5 array&lt;ll,5&gt;<br>#define vall5 vector<all5><br>#define vll vector<ll><br>#define vs vector<string><br>#define usll unordered_set<ll><br>#define vvs vector<vs><br>#define vvll vector<vll><br>#define all(a) begin(a), end(a)</p>
-<p>using namespace std;<br>struct Seg {<br>    ll mi, ma, count;<br>    Seg *l, *r;<br>    Seg(vector<ll> A, int left, int right): count(0), l(nullptr), r(nullptr) {<br>        mi &#x3D; A[left], ma &#x3D; A[right];<br>        if(left &#x3D;&#x3D; right) return ;<br>        int m &#x3D; (left + right) &#x2F; 2;<br>        if(left + 1 &#x3D;&#x3D; right) {<br>            l &#x3D; new Seg(A, left, m);<br>            r &#x3D; new Seg(A, m + 1, right);<br>        } else {<br>            l &#x3D; new Seg(A, left, m);<br>            r &#x3D; new Seg(A, m, right);<br>        }<br>    }<br>    ll query(int from, int to) {<br>        if(mi &gt; to or ma &lt; from) return 0;<br>        if(count) return ma - mi;<br>        return (l ? l-&gt;query(from, to) : 0) + (r ? r-&gt;query(from, to) : 0);<br>    }</p>
-<pre><code>void update(int from, int to, int val) &#123;
-    if(mi &gt; to or ma &lt; from) return ;
-    if(from &lt;= mi and ma &lt;= to) &#123;
-        count += val;
+using namespace std;
+struct Seg &#123;
+    ll mi, ma, count;
+    Seg *l, *r;
+    Seg(vector&lt;ll&gt; A, int left, int right): count(0), l(nullptr), r(nullptr) &#123;
+        mi = A[left], ma = A[right];
+        if(left == right) return ;
+        int m = (left + right) / 2;
+        if(left + 1 == right) &#123;
+            l = new Seg(A, left, m);
+            r = new Seg(A, m + 1, right);
+        &#125; else &#123;
+            l = new Seg(A, left, m);
+            r = new Seg(A, m, right);
+        &#125;
     &#125;
-    if(l) l-&gt;update(from, to, val);
-    if(r) r-&gt;update(from, to, val);
-&#125;
-</code></pre>
-<p>};</p>
-<p>struct Line {<br>    ll x, y1, y2;<br>    bool eof;</p>
-<pre><code>bool operator &lt; (const Line&amp; other) &#123;
-    return x &lt; other.x;
-&#125;
-</code></pre>
-<p>};</p>
-<p>class Solution {<br>public:<br>    int rectangleArea(vector&lt;vector<int>&gt;&amp; R) {<br>        vector<Line> l;<br>        unordered_set<ll> yus;<br>        for(auto&amp; r : R) {<br>            int x1 &#x3D; r[0], y1 &#x3D; r[1], x2 &#x3D; r[2], y2 &#x3D; r[3];<br>            l.push_back({x1, y1, y2, false});<br>            l.push_back({x2, y1, y2, true});</p>
-<pre><code>        yus.insert(y1);
-        yus.insert(y2);
+    ll query(int from, int to) &#123;
+        if(mi &gt; to or ma &lt; from) return 0;
+        if(count) return ma - mi;
+        return (l ? l-&gt;query(from, to) : 0) + (r ? r-&gt;query(from, to) : 0);
     &#125;
 
-    vll y(all(yus));
-    sort(all(y));
-    sort(all(l));
-
-    Seg* seg = new Seg(y, 0, y.size() - 1);
-    ll res = 0, x = l[0].x, mod = 1e9 + 7;
-    seg-&gt;update(l[0].y1, l[0].y2, 1);
-    
-    for(int i = 1; i &lt; l.size(); i++) &#123;
-        res = (res + (l[i].x - x) * seg-&gt;query(y[0], y.back())) % mod;
-        seg-&gt;update(l[i].y1, l[i].y2, l[i].eof ? -1 : 1);
-        x = l[i].x;
+    void update(int from, int to, int val) &#123;
+        if(mi &gt; to or ma &lt; from) return ;
+        if(from &lt;= mi and ma &lt;= to) &#123;
+            count += val;
+        &#125;
+        if(l) l-&gt;update(from, to, val);
+        if(r) r-&gt;update(from, to, val);
     &#125;
+&#125;;
 
-    return res;
-&#125;
+struct Line &#123;
+    ll x, y1, y2;
+    bool eof;
+
+    bool operator &lt; (const Line&amp; other) &#123;
+        return x &lt; other.x;
+    &#125;
+&#125;;
+
+class Solution &#123;
+public:
+    int rectangleArea(vector&lt;vector&lt;int&gt;&gt;&amp; R) &#123;
+        vector&lt;Line&gt; l;
+        unordered_set&lt;ll&gt; yus;
+        for(auto&amp; r : R) &#123;
+            int x1 = r[0], y1 = r[1], x2 = r[2], y2 = r[3];
+            l.push_back(&#123;x1, y1, y2, false&#125;);
+            l.push_back(&#123;x2, y1, y2, true&#125;);
+
+            yus.insert(y1);
+            yus.insert(y2);
+        &#125;
+
+        vll y(all(yus));
+        sort(all(y));
+        sort(all(l));
+
+        Seg* seg = new Seg(y, 0, y.size() - 1);
+        ll res = 0, x = l[0].x, mod = 1e9 + 7;
+        seg-&gt;update(l[0].y1, l[0].y2, 1);
+
+        for(int i = 1; i &lt; l.size(); i++) &#123;
+            res = (res + (l[i].x - x) * seg-&gt;query(y[0], y.back())) % mod;
+            seg-&gt;update(l[i].y1, l[i].y2, l[i].eof ? -1 : 1);
+            x = l[i].x;
+        &#125;
+
+        return res;
+    &#125;
+&#125;;
 </code></pre>
-<p>};&#96;&#96;&#96;</p>
 </div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined">Song Hayoung</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="https://songhayoung.github.io/2022/05/04/PS/LeetCode/rectangle-area-ii/">https://songhayoung.github.io/2022/05/04/PS/LeetCode/rectangle-area-ii/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Segment-Tree/">Segment Tree</a><a class="post-meta__tags" href="/tags/Problem-Solving/">Problem Solving</a><a class="post-meta__tags" href="/tags/Line-Sweeping/">Line Sweeping</a></div><nav id="pagination"><div class="prev-post pull-left"><a href="/2022/05/04/PS/BOJ/2261/"><i class="fa fa-chevron-left">  </i><span>[BOJ] 2261 가장 가까운 두 점</span></a></div><div class="next-post pull-right"><a href="/2022/05/03/PS/LeetCode/custom-sort-string/"><span>[LeetCode] Custom Sort String</span><i class="fa fa-chevron-right"></i></a></div></nav><div id="gitalk-container"></div><script>var gitalk = new Gitalk({
   clientID: '3604b61642355579f55e',
   clientSecret: 'f552120f18ac5aee3f6297e05e97d94c0a25cd4b',
