@@ -1,0 +1,217 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="description" content="[Toy Project] 라인 영화 챗봇"><meta name="keywords" content="Toy Project"><meta name="author" content="Song Hayoung,undefined"><meta name="copyright" content="Song Hayoung"><title>[Toy Project] 라인 영화 챗봇 | SUMFIのBlog</title><link rel="shortcut icon" href="/songcon.ico"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@3.6.0/css/reveal.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@3.6.0/css/theme/night.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@3.6.0/lib/css/zenburn.min.css"><meta name="generator" content="Hexo 6.3.0"></head><body><div class="reveal"><div class="slides"><section data-markdown data-separator="===" data-separator-vertical="==" data-charset="utf-8"><script type="text/template">
+<!-- .slide: data-background="#00C300" -->
+### LINE MOVIE FINDER BOT <small>v1.0</small>
+#### Song Ha Young 6<small>th</small> Toy Project
+
+#### Development Period 2020.7.16 ~ 2020.7.17
+
+#### Tech Stack 
+
+FLASK v1.1.2
+
+KAFKA v2.5.0
+
+with LINE DIALOGFLOW NGROK
+
+===
+<!-- .slide: data-background="#fd5c63" -->
+## Introduction
+
+영화관의 영화 검색을 접근성이 좋은 라인 메신저를 통해 손쉽게 사용자가 사용할 수 있도록 돕는다
+
+챗봇을 통해 다양한 영화관의 상영 영화 정보와 시간, 잔여 좌석을 한번에 파악할 수 있도록 돕는다
+
+카프카를 통해 파이프라인을 구축하여 다중 서버에서 들어오는 데이터를 수집한다
+
+수집된 데이터를 기반으로한 실시간 인기 영화 목록을 구성한다
+
+
+===
+<!-- .slide: data-background="#49B1F5" -->
+## Architecture
+
+![Architecture](/image/ToyProject/6/architecture.png)
+
+===
+<!-- .slide: data-background="#c08660" -->
+## DIALOG FLOW
+==
+<!-- .slide: data-background="#333333" -->
+## Get Theater List
+![TheaterList](/image/ToyProject/6/TheaterList.png)
+==
+<!-- .slide: data-background="#333333" -->
+## Get Movie List
+![MovieList](/image/ToyProject/6/MovieList.png)
+==
+<!-- .slide: data-background="#333333" -->
+## Get Movie Detail
+![MovieDetail](/image/ToyProject/6/MovieDetail.png)
+==
+<!-- .slide: data-background="#333333" -->
+## Get Top 10
+![MovieTop10](/image/ToyProject/6/MovieTop10.png)
+
+===
+<!-- .slide: data-background="#7b868a" -->
+## FLASK
+==
+<!-- .slide: data-background="#7b868a" -->
+Dialog Flow에서는 WebHook을 하나만 지원
+
+플라스크에서 엔티티별로 분기를 나누는 기능이 필요
+
+```python
+class REQUESTS(enum.Enum):
+    THEATER_LIST = 'theaterList'
+    MOVEI_LIST = 'movieList'
+    MOVIE_DETAIL = 'movieDetail'
+    TOP_10 = 'rank'
+    REQUEST_INVALID = 'invalidRequest'
+```
+==
+<!-- .slide: data-background="#7b868a" -->
+메세지는 Dialog Flow를 거쳐 LINE으로 들어간다
+
+Dialog Flow와 LINE을 모두 지원하는 메세지 포멧 필요
+
+```python
+def buildMessage():
+    responseBody = getResults()
+    fulfillmentMessages = []
+    for item in responseBody:
+        fulfillmentMessages.append({'text': {'text': [item]}})
+    return {'fulfillmentMessages': fulfillmentMessages}
+```
+
+===
+<!-- .slide: data-background="#26313b" -->
+## KAFKA
+==
+<!-- .slide: data-background="#26313b" -->
+실시간 인기 검색어 산출을 위해 저장기간이 짧은 토픽이 필요
+
+```console
+kafka-topics  --describe --bootstrap-server
+localhost:9092 --topic movie
+
+Topic: movie	PartitionCount: 1	ReplicationFactor: 1
+Configs: segment.bytes=1073741824,retention.ms=3600000
+
+Topic: movie	Partition: 0	Leader: 1	
+Replicas: 1	Isr: 1
+```
+
+
+===
+<!-- .slide: data-background="#00C300" -->
+## LINE
+
+==
+<!-- .slide: data-background="#00C300" -->
+## Bot Introduction
+![Bot](/image/ToyProject/6/bot.jpeg)
+
+==
+<!-- .slide: data-background="#00C300" -->
+## Bot Greeting
+![helloUser](/image/ToyProject/6/helloUser.jpeg)
+
+==
+<!-- .slide: data-background="#00C300" -->
+## Menu Guide - 1
+![menuGuide1](/image/ToyProject/6/menuGuide1.jpeg)
+
+==
+<!-- .slide: data-background="#00C300" -->
+## Menu Guide - 2
+![menuGuide2](/image/ToyProject/6/menuGuide2.jpeg)
+
+==
+<!-- .slide: data-background="#00C300" -->
+## Get Theater List
+![theaterList](/image/ToyProject/6/theaterList.jpeg)
+
+==
+<!-- .slide: data-background="#00C300" -->
+## Get Movie List
+![movies1](/image/ToyProject/6/movies1.jpeg)
+
+==
+<!-- .slide: data-background="#00C300" -->
+## Get Movie List Exception - 1
+![movies2](/image/ToyProject/6/movies2.jpeg)
+
+==
+<!-- .slide: data-background="#00C300" -->
+## Get Movie List Exception - 2
+![movies3](/image/ToyProject/6/movies3.jpeg)
+
+==
+<!-- .slide: data-background="#00C300" -->
+## Get Movie TimeTable
+![movieTimeTable1](/image/ToyProject/6/movieTimeTable1.jpeg)
+
+==
+<!-- .slide: data-background="#00C300" -->
+## Get Movie TimeTable Exception
+![movieTimeTable1](/image/ToyProject/6/movieTimeTable2.jpeg)
+
+==
+<!-- .slide: data-background="#00C300" -->
+## Top 10
+![Top10](/image/ToyProject/6/Top101.jpeg)
+
+==
+<!-- .slide: data-background="#00C300" -->
+## Top 10 Exception
+![Top10](/image/ToyProject/6/Top102.jpeg)
+
+===
+<!-- .slide: data-background="#8e43e7" -->
+## INSIGHT
+
+==
+<!-- .slide: data-background="#8e43e7" -->
+## KAFKA
+
+카프카 클러스터를 안정적이게 구성했으면 좋았을꺼라는 생각이 들었다. 얼른 도커를 공부해서 다음 프로젝트에는 클러스터를 잘 구성해보고싶다. 또한 KSQL을 좀 더 알았더라면 좀 더 인기검색어 처리를 효율적으로 구성할 수 있었을꺼 같았다는 생각이 들었다. 
+
+==
+<!-- .slide: data-background="#8e43e7" -->
+## SERVICE
+현재 CGV만을 대상으로 해놔서 다양한 영화관 지원을 할 수 있도록 개선하면 좋겠다. 그리고 빠른 반응속도를 위해 지역 코드랑 극장 코드는 메모리에 저장해두는 형태로 두는 편이 좋을꺼 같다.
+ 
+다음엔 기회가 되면 대화형 봇으로 도전해보고 싶다.
+
+===
+<!-- .slide: data-background="#099d84" -->
+# 감사합니다</script></section></div></div><script src="https://cdn.jsdelivr.net/npm/reveal.js@3.6.0/lib/js/head.min.js"></script><script src="https://cdn.jsdelivr.net/npm/reveal.js@3.6.0/js/reveal.min.js"></script><script>Reveal.initialize({
+  mouseWheel: false,
+  transition: 'slide',
+  transitionSpeed: 'default',
+  parallaxBackgroundImage: '',
+  parallaxBackgroundSize: '',
+  parallaxBackgroundHorizontal: '',
+  parallaxBackgroundVertical: '',
+  markdown: {
+    smartypants: true
+  },
+  dependencies: [
+    { src: '/js/third-party/reveal/marked.min.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+    { src: '/js/third-party/reveal/markdown.min.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+    // Syntax highlight for <code> elements
+    { src: '/js/third-party/reveal/highlight.min.js', async: true, callback: function() {
+      // issue #218
+      setTimeout(function () {
+        hljs.initHighlighting();
+      }, 0)
+    } },
+    // Zoom in and out with Alt+click
+    { src: '/js/third-party/reveal/zoom.min.js', async: true },
+    // Speaker notes
+    { src: '/js/third-party/reveal/notes.min.js', async: true },
+    // MathJax
+    { src: '/js/third-party/reveal/math.min.js', async: true }
+  ]
+});</script></body></html>
