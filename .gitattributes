@@ -1,1 +1,1 @@
-rss2.xml filter=lfs diff=lfs merge=lfs -text
+# rss2.xml filter=lfs diff=lfs merge=lfs -text

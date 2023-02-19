@@ -1,0 +1,207 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="description" content="[데이터 중심 애플리케이션 설계] 저장소와 검색"><meta name="keywords" content="System Design"><meta name="author" content="Song Hayoung"><meta name="copyright" content="Song Hayoung"><title>[데이터 중심 애플리케이션 설계] 저장소와 검색 | SUMFIのBlog</title><meta name="robots" content="noindex"><link rel="shortcut icon" href="/songcon.ico"><link rel="stylesheet" href="/css/index.css?version=1.7.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@latest/css/font-awesome.min.css?version=1.7.0"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css?version=1.7.0"><meta name="format-detection" content="telephone=no"><meta http-equiv="x-dns-prefetch-control" content="on"><link rel="dns-prefetch" href="https://cdn.jsdelivr.net"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.css"><script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.js" defer></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@latest/dist/gitalk.min.js"></script><script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.10.0/js/md5.min.js"></script><link rel="dns-prefetch" href="https://www.google-analytics.com"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-169368422-1', 'auto');
+ga('send', 'pageview');</script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: {"appId":"7LZ6OJ4D6C","apiKey":"9a84e13f74ea78c3fd54512c10139c56","indexName":"git blog","hits":{"per_page":10},"languages":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}.","hits_stats":"${hits} results found in ${time} ms"}},
+  localSearch: undefined,
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  }
+} </script><meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/rss2.xml" title="SUMFIのBlog" type="application/rss+xml">
+</head><body><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar" data-display="true"><div class="toggle-sidebar-info text-center"><span data-toggle="Toggle article">Toggle site</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">Catalog</div><div class="sidebar-toc__progress"><span class="progress-notice">You've read</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%EC%A0%80%EC%9E%A5%EC%86%8C%EC%99%80-%EA%B2%80%EC%83%89"><span class="toc-number">1.</span> <span class="toc-text">저장소와 검색</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%EC%83%89%EC%9D%B8"><span class="toc-number">2.</span> <span class="toc-text">색인</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%ED%95%B4%EC%8B%9C-%EC%83%89%EC%9D%B8"><span class="toc-number">2.1.</span> <span class="toc-text">해시 색인</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Sorted-String-%ED%85%8C%EC%9D%B4%EB%B8%94-LSM%ED%8A%B8%EB%A6%AC"><span class="toc-number">2.2.</span> <span class="toc-text">Sorted String 테이블 LSM트리</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#fall-back"><span class="toc-number">2.2.1.</span> <span class="toc-text">fall back</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#pros-and-cons"><span class="toc-number">2.2.2.</span> <span class="toc-text">pros and cons</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#pros"><span class="toc-number">2.2.2.1.</span> <span class="toc-text">pros</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#cons"><span class="toc-number">2.2.2.2.</span> <span class="toc-text">cons</span></a></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#B-%ED%8A%B8%EB%A6%AC"><span class="toc-number">2.3.</span> <span class="toc-text">B 트리</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#fall-back-1"><span class="toc-number">2.3.1.</span> <span class="toc-text">fall back</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#optimization"><span class="toc-number">2.3.2.</span> <span class="toc-text">optimization</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#pros-and-cons-1"><span class="toc-number">2.3.3.</span> <span class="toc-text">pros and cons</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#pros-1"><span class="toc-number">2.3.3.1.</span> <span class="toc-text">pros</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#cons-1"><span class="toc-number">2.3.3.2.</span> <span class="toc-text">cons</span></a></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%EA%B8%B0%ED%83%80-%EC%83%89%EC%9D%B8-%EA%B5%AC%EC%A1%B0"><span class="toc-number">2.4.</span> <span class="toc-text">기타 색인 구조</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%EC%83%89%EC%9D%B8-%EC%95%88%EC%97%90-%EA%B0%92-%EC%A0%80%EC%9E%A5%ED%95%98%EA%B8%B0"><span class="toc-number">2.4.1.</span> <span class="toc-text">색인 안에 값 저장하기</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%EB%8B%A4%EC%A4%91-%EC%BB%AC%EB%9F%BC-%EC%83%89%EC%9D%B8"><span class="toc-number">2.4.2.</span> <span class="toc-text">다중 컬럼 색인</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%EC%A0%84%EB%AC%B8-%EA%B2%80%EC%83%89%EA%B3%BC-%ED%8D%BC%EC%A7%80%EC%83%89%EC%9D%B8"><span class="toc-number">2.4.3.</span> <span class="toc-text">전문 검색과 퍼지색인</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%EB%AA%A8%EB%93%A0-%EA%B2%83%EC%9D%84-%EB%A9%94%EB%AA%A8%EB%A6%AC%EC%97%90-%EB%B3%B4%EA%B4%80"><span class="toc-number">2.4.4.</span> <span class="toc-text">모든 것을 메모리에 보관</span></a></li></ol></li></ol></li></ol></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="https://avatars3.githubusercontent.com/u/37806785?s=460&amp;u=8c68d685faf7c5280cfbd736a6b1730b55fb4203&amp;v=4"></div><div class="author-info__name text-center">Song Hayoung</div><div class="author-info__description text-center"></div><div class="follow-button"><a target="_blank" rel="noopener" href="https://www.instagram.com/hayoung0_0/">Follow Me</a></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="/archives"><span class="pull-left">Articles</span><span class="pull-right">6516</span></a><a class="author-info-articles__tags article-meta" href="/tags"><span class="pull-left">Tags</span><span class="pull-right">179</span></a><a class="author-info-articles__categories article-meta" href="/categories"><span class="pull-left">Categories</span><span class="pull-right">61</span></a></div><hr><div class="author-info-links"><div class="author-info-links__title text-center">VISITED</div><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Seoul Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Jeju Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">British Columbia Canada</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Boracay Philippines</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">三重　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">大阪　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">名古屋　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">静岡　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">札幌　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">京都　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Bangkok Thailand</a></div></div></div><div id="content-outer"><div id="top-container" style="background-image: url(https://xxxx.jpg)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="/">SUMFIのBlog</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus">   <a class="site-page" href="/">Home</a><a class="site-page" href="/archives">Archives</a><a class="site-page" href="/tags">Tags</a><a class="site-page" href="/categories">Categories</a><a class="site-page" href="/about">About</a></span><span class="pull-right"><a class="site-page social-icon search"><i class="fa fa-search"></i><span> Search</span></a></span></div><div id="post-info"><div id="post-title">[데이터 중심 애플리케이션 설계] 저장소와 검색</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2022-10-03</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/">System Design</a><i class="fa fa-angle-right" aria-hidden="true"></i><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/Designing-Data-Intensive-Applications/">Designing Data-Intensive Applications</a><div class="post-meta-wordcount"><span>Word count: </span><span class="word-count">732</span><span class="post-meta__separator">|</span><span>Reading time: 4 min</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div class="article-container" id="post-content"><h2 id="저장소와-검색"><a href="#저장소와-검색" class="headerlink" title="저장소와 검색"></a>저장소와 검색</h2><span id="more"></span>
+<p>데이터를 효율적으로 검색하기 위한 색인의 일반적인 개념은 어떤 부가적인 메타데이터를 유지하는 것이다. 이 메타데이터를 이용해서 원하는 데이터를 찾는데 도움을 준다. 하지만 이런 추가적인 구조의 유지는 쓰기 과정에서 오버헤드가 발생한다. 데이터의 쓰기와 함께 색인도 갱신해야 하기 때문이다.</p>
+<h2 id="색인"><a href="#색인" class="headerlink" title="색인"></a>색인</h2><h3 id="해시-색인"><a href="#해시-색인" class="headerlink" title="해시 색인"></a>해시 색인</h3><ul>
+<li>해시 색인은 보통 해시맵으로 구현<ul>
+<li>따라서 빠르고 쉽게 레코드의 오프셋을 알 수 있음</li>
+</ul>
+</li>
+<li>해시 테이블은 메모리에 저장해야하므로 너무 커지면 문제가 됨<ul>
+<li>디스크상에 유지할 수 있지만, random access의 비용과 hash collision을 해결하는 비용이 비쌈</li>
+</ul>
+</li>
+<li>해시 테이블은 범위 질의에 효율적이지 못함</li>
+</ul>
+<p>실제 저장소의 구현에서 중요한 문제들은 아래와 같다.</p>
+<ul>
+<li>데이터 형식<ul>
+<li>바이너리를 사용하는 편이 빠르고 간단함</li>
+</ul>
+</li>
+<li>레코드 삭제</li>
+<li>고장 복구<ul>
+<li>고장으로 인해 인메모리 해시맵이 손상된 경우 기존 세그먼트를 전부 순회해서 해시맵을 재생성하는 비용은 큼</li>
+<li>해시맵의 스냅샷을 주기적으로 저장하면서 복구 속도를 높힘</li>
+</ul>
+</li>
+<li>부분적 레코드 쓰기<ul>
+<li>레코드를 쓰다가 고장이 날 수도 있다 이런 경우 체크섬을 통해 손상된 부분을 탐지</li>
+</ul>
+</li>
+<li>동시성 제어</li>
+</ul>
+<h3 id="Sorted-String-테이블-LSM트리"><a href="#Sorted-String-테이블-LSM트리" class="headerlink" title="Sorted String 테이블 LSM트리"></a>Sorted String 테이블 LSM트리</h3><ul>
+<li>여러 정렬된 세그먼트를 링크드 리스트 형식으로 관리</li>
+<li>주기적으로 세그먼트를 병합 (k-way merge sort)<ul>
+<li>compression과 함께 삭제되거나 덮어 쓰여진 키를 제거</li>
+</ul>
+</li>
+<li>신규 읽기 요청은 멤테이블에서 AVL 트리나 RB 트리같은 balanced tree로 관리</li>
+<li>멤테이블의 크기가 임계치를 넘어서면 디스크에 기록<ul>
+<li>새로운 쓰기 요청은 복사가 이루어지는 동안 새로운 멤테이블에 기록</li>
+</ul>
+</li>
+<li>읽기 요청은 멤테이블에서 키를 찾고 최신 세그먼트에서부터 탐색</li>
+<li>파일에서 특정 키를 찾기 위해 sparse index를 유지하며 binary search로 검색<ul>
+<li>sparse index는 디스크 블럭의 헤드 오프셋을 가리킴</li>
+</ul>
+</li>
+</ul>
+<h4 id="fall-back"><a href="#fall-back" class="headerlink" title="fall back"></a>fall back</h4><ul>
+<li>멤테이블이 손상될 경우를 대비해 쓰기 요청이 올 때 분리된 로그를 디스크상에 기록하고, 이를 통해 복원</li>
+<li>존재하지 않는 키를 찾기에는 비용이 많이 든다 이를 방지하기 위해 블룸 필터를 사용<ul>
+<li>최신 세그먼트부터 키를 찾기까지 마지막 세그먼트까지 올라가야 함</li>
+<li>블룸 필터는 집합 내용을 근사한 데이터 구조</li>
+</ul>
+</li>
+</ul>
+<h4 id="pros-and-cons"><a href="#pros-and-cons" class="headerlink" title="pros and cons"></a>pros and cons</h4><h5 id="pros"><a href="#pros" class="headerlink" title="pros"></a>pros</h5><ul>
+<li>쓰기 처리량이 높음</li>
+<li>데이터 압축률이 좋음<ul>
+<li>파편화 제거를 위해 컴팩션 및 주기적으로 가비지 키들을 제거함</li>
+</ul>
+</li>
+</ul>
+<h5 id="cons"><a href="#cons" class="headerlink" title="cons"></a>cons</h5><ul>
+<li>컴팩션이 진행중일때는 읽기와 쓰기 성능에 영향을 줌<ul>
+<li>지연 대기 현상 발생</li>
+</ul>
+</li>
+<li>높은 쓰기 처리량은 구조적인 강점이지만, 디스크 쓰기 대역폭이 낮으면 강점을 가져갈 수 없음<ul>
+<li>쓰기 로깅, 멤테이블 flush, 컴팩션이 모두 같은 대역폭을 공유해야 함</li>
+<li>저장소가 커질수록 컴팩션 비용이 비싸짐</li>
+<li>컴팩션 설정을 조절할 수 있지만, 쓰기 유입량에 비해 컴팩션률이 낮으면 세그먼트는 계속 증식함</li>
+<li>이는 많은 세그먼트를 확인해야하는 문제로 이어져 읽기 처리량이 낮아지는 원인</li>
+</ul>
+</li>
+</ul>
+<h3 id="B-트리"><a href="#B-트리" class="headerlink" title="B 트리"></a>B 트리</h3><ul>
+<li>정렬된 키-값 쌍 유지</li>
+<li>고정크기의 블록 혹은 페이지로 나눔</li>
+<li>검색 속도는 분기 계수(branching facotr)에 따라 정해짐</li>
+</ul>
+<h4 id="fall-back-1"><a href="#fall-back-1" class="headerlink" title="fall back"></a>fall back</h4><ul>
+<li>페이지 내에 데이터가 많아지면 두 페이지로 분할함<ul>
+<li>이 때 저장소가 다운되면 색인이 훼손되고 고아 페이지가 발생함</li>
+<li>이를 방지하기 위해 쓰기전 로그를 통해 변경사항을 추적하고 복구함</li>
+</ul>
+</li>
+<li>페이지 데이터가 변경되는 순간과 동시성은 래치(latch)로 해결</li>
+</ul>
+<h4 id="optimization"><a href="#optimization" class="headerlink" title="optimization"></a>optimization</h4><ul>
+<li>일부 저장소는 copy-on-write로 고정 및 복구, 동시성 문제를 해결 함<ul>
+<li>변경 페이지의 사본을 다른 위치에 기록하고 참조를 변경함</li>
+</ul>
+</li>
+<li>브릿지 노드들에 키를 축약하는 방식으로 공간 문제 해결<ul>
+<li>키는 최소한의 역할인 범위의 경계 역할을 수행할 수 있어야 함</li>
+</ul>
+</li>
+<li>리프 노드는 디스크상의 연속된 공간에 위치할 수 있도록 배치</li>
+<li>리프 노드에 다음 노드 포인터 추가<ul>
+<li>범위 질의에 장점이 생김</li>
+</ul>
+</li>
+</ul>
+<h4 id="pros-and-cons-1"><a href="#pros-and-cons-1" class="headerlink" title="pros and cons"></a>pros and cons</h4><h5 id="pros-1"><a href="#pros-1" class="headerlink" title="pros"></a>pros</h5><ul>
+<li>각 키가 색인의 한곳에만 존재</li>
+<li>트랜잭션 시멘틱에는 B 트리가 dntn gka</li>
+</ul>
+<h5 id="cons-1"><a href="#cons-1" class="headerlink" title="cons"></a>cons</h5><ul>
+<li>데이터 파편화로 인해 저장하지 않는 잉여 공간이 생김</li>
+<li>몇 바이트만 변경되어도 페이지 전체를 새로 기록해야 함</li>
+</ul>
+<h3 id="기타-색인-구조"><a href="#기타-색인-구조" class="headerlink" title="기타 색인 구조"></a>기타 색인 구조</h3><h4 id="색인-안에-값-저장하기"><a href="#색인-안에-값-저장하기" class="headerlink" title="색인 안에 값 저장하기"></a>색인 안에 값 저장하기</h4><ul>
+<li>clustered index로 알려진 방식은 색인 안에 row를 전부 저장</li>
+<li>clustered index와 non-clustered index의 절충안인 covering index나 index with included column 방식도 있음</li>
+<li>이런 보조 색인 방식은 추가 저장소를 필요로 하고 쓰기 성능을 떨어트림</li>
+<li>어플리케이션에서 복제 불일치를 감지하기 어렵게 만듬</li>
+</ul>
+<h4 id="다중-컬럼-색인"><a href="#다중-컬럼-색인" class="headerlink" title="다중 컬럼 색인"></a>다중 컬럼 색인</h4><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">from</span> restaurants <span class="keyword">WHERE</span> latitude <span class="operator">&gt;</span> <span class="number">51.4946</span> <span class="keyword">AND</span> latitude <span class="operator">&lt;</span> <span class="number">51.5079</span></span><br><span class="line">	<span class="keyword">AND</span> longitude <span class="operator">&gt;</span> <span class="number">-0.1162</span> <span class="keyword">AND</span> longitude <span class="operator">&lt;</span> <span class="number">-0.1004</span>;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>공간 채움 곡선을 이용해 해결하는 방법이 있음</li>
+<li>다중 컬럼 색인은 데이터 도메인에 특수한 경우가 많기에 (RGB, Geometry 등..) 구현에 따라 천차만별</li>
+</ul>
+<h4 id="전문-검색과-퍼지색인"><a href="#전문-검색과-퍼지색인" class="headerlink" title="전문 검색과 퍼지색인"></a>전문 검색과 퍼지색인</h4><ul>
+<li>전문 검색같은 경우 역색인을 사용하기도 함</li>
+<li>입력값의 오탈자나 애매모호한(fuzzy) 입력을 하는 경우 퍼지 색인 사용<ul>
+<li>입력 단어를 동의어로 확장함</li>
+<li>루씬은 레벤슈타인 거리(edit distance algorithm)를 사용</li>
+<li>레벤슈타인 오토마톤도 있음</li>
+</ul>
+</li>
+</ul>
+<h4 id="모든-것을-메모리에-보관"><a href="#모든-것을-메모리에-보관" class="headerlink" title="모든 것을 메모리에 보관"></a>모든 것을 메모리에 보관</h4><ul>
+<li>RAM이 과거보다 저렴해지고 여러 장비간 분산 저장이 가능하기 때문에 인메모리 데이터베이스가 개발됨</li>
+<li>인메모리 데이터베이스는 휘발성의 단점이 있음 <ul>
+<li>주기적 스냅샷 저장</li>
+<li>특수 장비 사용</li>
+<li>변경사항 로그 기록</li>
+<li>다른 장비에 인메모리 상태를 복제하는 방식으로 해결<ul>
+<li>아키텍쳐가 Bipartite Graph 같은걸로 구성되어 있어야 할꺼 같음</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>인메모리 데이터베이스는 디스크에서 읽어오지 않아도 된다는 점만이 장점은 아님<ul>
+<li>디스크 기반 데이터베이스도 어느정도 캐싱을 지원</li>
+<li>인메모리 데이터베이스는 디스크 저장을 위한 부호화 오버헤드를 피할 수 있음</li>
+<li>즉, 전체 데이터의 in-memory access 가능과 디스크 IO 부호화 오버헤드 회피가 장점</li>
+</ul>
+</li>
+<li>처리과정 중 저장소의 메모리가 부족해지면 안티 캐싱 방식으로 어느정도 회피가 가능<ul>
+<li>사용률이 낮은 데이터를 디스크에 저장, 및 다시 사용할때 메모리로 복구하는 방식</li>
+</ul>
+</li>
+</ul>
+<!-- flag of hidden posts --></div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined">Song Hayoung</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="https://songhayoung.github.io/2022/10/03/System%20Design/Designing%20Data-Intensive%20Applications/designing-data-intensive-applications-3/">https://songhayoung.github.io/2022/10/03/System%20Design/Designing%20Data-Intensive%20Applications/designing-data-intensive-applications-3/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/System-Design/">System Design</a></div><nav id="pagination"></nav><div id="gitalk-container"></div><script>var gitalk = new Gitalk({
+  clientID: '3604b61642355579f55e',
+  clientSecret: 'f552120f18ac5aee3f6297e05e97d94c0a25cd4b',
+  repo: 'SongHayoung.github.io',
+  owner: 'SongHayoung',
+  admin: 'SongHayoung',
+  id: md5(decodeURI(location.pathname)),
+  language: 'en'
+})
+gitalk.render('gitalk-container')</script></div></div><footer class="footer-bg" style="background-image: url(https://xxxx.jpg)"><div class="layout" id="footer"><div class="copyright">&copy;2020 - 2023 By Song Hayoung</div><div class="framework-info"><span>Driven - </span><a target="_blank" rel="noopener" href="http://hexo.io"><span>Hexo</span></a><span class="footer-separator">|</span><span>Theme - </span><a target="_blank" rel="noopener" href="https://github.com/Molunerfinn/hexo-theme-melody"><span>Melody</span></a></div><div class="footer_custom_text">Learning how to walk slowly to not miss important things</div><div class="busuanzi"><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><span id="busuanzi_container_page_pv"><i class="fa fa-file"></i><span id="busuanzi_value_page_pv"></span><span></span></span></div></div></footer><i class="fa fa-arrow-up" id="go-up" aria-hidden="true"></i><script src="https://cdn.jsdelivr.net/npm/animejs@latest/anime.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@latest/velocity.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-ui-pack@latest/velocity.ui.min.js"></script><script src="/js/utils.js?version=1.7.0"></script><script src="/js/fancybox.js?version=1.7.0"></script><script src="/js/sidebar.js?version=1.7.0"></script><script src="/js/copy.js?version=1.7.0"></script><script src="/js/fireworks.js?version=1.7.0"></script><script src="/js/transition.js?version=1.7.0"></script><script src="/js/scroll.js?version=1.7.0"></script><script src="/js/head.js?version=1.7.0"></script><script src="/js/search/algolia.js"></script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+    processEscapes: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  },
+  CommonHTML: {
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "HTML-CSS": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "SVG": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  }
+});
+</script><script type="text/x-mathjax-config">MathJax.Hub.Queue(function() {
+  var all = MathJax.Hub.getAllJax(), i;
+  for (i=0; i < all.length; i += 1) {
+    all[i].SourceElement().parentNode.className += ' has-jax';
+  }
+});
+</script><script src="https://cdn.jsdelivr.net/npm/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><script>if(/Android|webOS|iPhone|iPod|iPad|BlackBerry/i.test(navigator.userAgent)) {
+  $('#nav').addClass('is-mobile')
+  $('footer').addClass('is-mobile')
+  $('#top-container').addClass('is-mobile')
+}</script><div class="search-dialog" id="algolia-search"><div class="search-dialog__title" id="algolia-search-title">Algolia</div><div id="algolia-input-panel"><div id="algolia-search-input"></div></div><hr><div id="algolia-search-results"><div id="algolia-hits"></div><div id="algolia-pagination"></div><div id="algolia-stats"></div></div><span class="search-close-button"><i class="fa fa-times"></i></span></div><div class="search-mask"></div></body></html>
