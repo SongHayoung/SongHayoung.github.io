@@ -9,7 +9,7 @@
 
 
     <url>
-        <loc>https://songhayoung.github.io/2023/03/05/20230305/</loc>
+        <loc>https://songhayoung.github.io/2023/03/05/DayLife/20230305/</loc>
         <lastmod>2023-03-04T15:12:57.000Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.6</priority>
@@ -83,6 +83,14 @@
     <url>
         <loc>https://songhayoung.github.io/2023/03/04/PS/AtCoder/zone2021-f/</loc>
         <lastmod>2023-03-04T07:25:44.000Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/2023/03/04/PS/Codeforces/div1-359-a/</loc>
+        <lastmod>2023-03-04T06:31:02.000Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.6</priority>
 
