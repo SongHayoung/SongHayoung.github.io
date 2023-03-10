@@ -1,0 +1,195 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="description" content="[System Design] Scale From Zero To Millions Of Users"><meta name="keywords" content="System Design"><meta name="author" content="Song Hayoung"><meta name="copyright" content="Song Hayoung"><title>[System Design] Scale From Zero To Millions Of Users | SUMFIのBlog</title><link rel="shortcut icon" href="/songcon.ico"><link rel="stylesheet" href="/css/index.css?version=1.7.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@latest/css/font-awesome.min.css?version=1.7.0"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css?version=1.7.0"><meta name="format-detection" content="telephone=no"><meta http-equiv="x-dns-prefetch-control" content="on"><link rel="dns-prefetch" href="https://cdn.jsdelivr.net"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.css"><script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.js" defer></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@latest/dist/gitalk.min.js"></script><script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.10.0/js/md5.min.js"></script><link rel="dns-prefetch" href="https://www.google-analytics.com"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-169368422-1', 'auto');
+ga('send', 'pageview');</script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: {"appId":"7LZ6OJ4D6C","apiKey":"9a84e13f74ea78c3fd54512c10139c56","indexName":"git blog","hits":{"per_page":10},"languages":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}.","hits_stats":"${hits} results found in ${time} ms"}},
+  localSearch: undefined,
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  }
+} </script><meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/rss2.xml" title="SUMFIのBlog" type="application/rss+xml">
+</head><body><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar" data-display="true"><div class="toggle-sidebar-info text-center"><span data-toggle="Toggle article">Toggle site</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">Catalog</div><div class="sidebar-toc__progress"><span class="progress-notice">You've read</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Scale-From-Zero-To-Millions-Of-Users"><span class="toc-number">1.</span> <span class="toc-text">Scale From Zero To Millions Of Users</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Single-server-setup"><span class="toc-number">2.</span> <span class="toc-text">Single server setup</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Database"><span class="toc-number">3.</span> <span class="toc-text">Database</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Which-database-to-use"><span class="toc-number">3.1.</span> <span class="toc-text">Which database to use?</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Vertical-scaling-vs-Horizontal-scaling"><span class="toc-number">4.</span> <span class="toc-text">Vertical scaling vs Horizontal scaling</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Load-balancer"><span class="toc-number">5.</span> <span class="toc-text">Load balancer</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Database-Replication"><span class="toc-number">6.</span> <span class="toc-text">Database Replication</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Advantages-of-database-replication"><span class="toc-number">6.1.</span> <span class="toc-text">Advantages of database replication</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Cache"><span class="toc-number">7.</span> <span class="toc-text">Cache</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Considerations-for-using-cache"><span class="toc-number">7.1.</span> <span class="toc-text">Considerations for using cache</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Content-delivery-network-CDN"><span class="toc-number">8.</span> <span class="toc-text">Content delivery network (CDN)</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Considerations-of-using-a-CDN"><span class="toc-number">8.1.</span> <span class="toc-text">Considerations of using a CDN</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Stateless-Webtier"><span class="toc-number">9.</span> <span class="toc-text">Stateless Webtier</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Stateful-architecture"><span class="toc-number">9.1.</span> <span class="toc-text">Stateful architecture</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Stateless-architecture"><span class="toc-number">9.2.</span> <span class="toc-text">Stateless architecture</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Data-centers"><span class="toc-number">10.</span> <span class="toc-text">Data centers</span></a></li></ol></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="https://avatars3.githubusercontent.com/u/37806785?s=460&amp;u=8c68d685faf7c5280cfbd736a6b1730b55fb4203&amp;v=4"></div><div class="author-info__name text-center">Song Hayoung</div><div class="author-info__description text-center"></div><div class="follow-button"><a target="_blank" rel="noopener" href="https://www.instagram.com/hayoung0_0/">Follow Me</a></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="/archives"><span class="pull-left">Articles</span><span class="pull-right">6772</span></a><a class="author-info-articles__tags article-meta" href="/tags"><span class="pull-left">Tags</span><span class="pull-right">185</span></a><a class="author-info-articles__categories article-meta" href="/categories"><span class="pull-left">Categories</span><span class="pull-right">67</span></a></div><hr><div class="author-info-links"><div class="author-info-links__title text-center">VISITED</div><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Seoul Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Jeju Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">British Columbia Canada</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Boracay Philippines</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">三重　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">大阪　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">名古屋　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">静岡　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">札幌　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">京都　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Bangkok Thailand</a></div></div></div><div id="content-outer"><div id="top-container" style="background-image: url(https://xxxx.jpg)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="/">SUMFIのBlog</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus">   <a class="site-page" href="/">Home</a><a class="site-page" href="/archives">Archives</a><a class="site-page" href="/tags">Tags</a><a class="site-page" href="/categories">Categories</a><a class="site-page" href="/about">About</a></span><span class="pull-right"><a class="site-page social-icon search"><i class="fa fa-search"></i><span> Search</span></a></span></div><div id="post-info"><div id="post-title">[System Design] Scale From Zero To Millions Of Users</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2023-03-06</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/">System Design</a><i class="fa fa-angle-right" aria-hidden="true"></i><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/System-Design-Interview/">System Design Interview</a><div class="post-meta-wordcount"><span>Word count: </span><span class="word-count">1.5k</span><span class="post-meta__separator">|</span><span>Reading time: 9 min</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div class="article-container" id="post-content"><h2 id="Scale-From-Zero-To-Millions-Of-Users"><a href="#Scale-From-Zero-To-Millions-Of-Users" class="headerlink" title="Scale From Zero To Millions Of Users"></a>Scale From Zero To Millions Of Users</h2><span id="more"></span>
+<h2 id="Single-server-setup"><a href="#Single-server-setup" class="headerlink" title="Single server setup"></a>Single server setup</h2><p>웹 앱, 데이터베이스, 캐시 등 모든 것이 하나의 서버에서 실행되는 간단한 구조다.</p>
+<p><img src="/image/bytebytego/2023-03-06-01.png" alt=""></p>
+<p>요청 흐름과 트래픽 소스를 살펴보면 이 구조를 이해할 수 있다.</p>
+<ol>
+<li>사용자는 <code>api.mysite.com</code>과 같은 도메인 이름을 통해 웹사이트에 엑세스한다. 일반적으로 DNS는 당서 서버에서 호스팅하지 않고 타사에서 제공하는 유료 서비스이다.</li>
+<li>IP 주소는 브라우저 또는 모바일 앱으로 반환된다.</li>
+<li>IP 주소가 확보되면 HTTP 요청이 웹 서버로 직접 전송된다.</li>
+<li>웹 서버는 렌더링을 위해 HTML 페이지 또는 JSON 응답을 반환한다.</li>
+</ol>
+<p>웹 서버로 유입되는 트래픽은 웹 애플리케이션과 모바일 애플레키에션 두 가지 소스에서 발생한다.</p>
+<ul>
+<li>웹 애플리케이션<ul>
+<li>비즈니스 로직, 저장소 등을 처리하기 위해 서버측 언어와 프레젠테이션을 위한 클라이언트 측 언어의 조합을 사용한다.</li>
+</ul>
+</li>
+<li>모바일 애플리케이션<ul>
+<li>HTTP 프로토콜은 모바일 앱과 웹 서버간의 통신 프로토콜이다. JSON은 단순성 때문에 데이터를 전송하는데 일반적으로 사용되는 API 응답 형식이다.</li>
+</ul>
+</li>
+</ul>
+<h2 id="Database"><a href="#Database" class="headerlink" title="Database"></a>Database</h2><p>사용자가 증가함에 따라 단일 서버로 충분하지 않고 웹/모바일 트래픽을 위한 서버와 데이터베이스를 위한 서버 등 목적에 따라 분리되어 필요하게 된다. 서버가 분리되면 각각 독립적으로 확장할 수 있다.</p>
+<p><img src="/image/bytebytego/2023-03-06-02.png" alt=""></p>
+<h3 id="Which-database-to-use"><a href="#Which-database-to-use" class="headerlink" title="Which database to use?"></a>Which database to use?</h3><p>관계형 데이터베이스와 비관계형 데이터베이스 중에서 선택할 수 있다.</p>
+<p>관계형 데이터베이스는 테이블과 행으로 데이터를 저장한다. 서로 다른 테이블에서 SQL을 통해 조인 작업을 수행할 수 있다.</p>
+<p>비관계형 데이터베이스는 키-값 저장소, 그래프 저장소, 컬럼 저장소, 문서 저장소의 네 가지 범주로 나뉜다. 비관계형 데이터베이스에서는 일반적으로 조인이 지원되지 않는다.</p>
+<p>관계형 데이터베이스는 오랫동안 적극적으로 사용되어 왔기 때문에 최선의 선택일 수 있다. 하지만 특정 사용 사례에 따라 비관계형 데이터베이스가 더 좋은 선택이 될 수 있다.</p>
+<ul>
+<li>애플리케이션 지연시간</li>
+<li>데이터가 비정형이거나 관계가 없음</li>
+<li>데이터의 직렬화만 수행하면 됨</li>
+<li>방대한 양의 데이터 저장 필요</li>
+</ul>
+<h2 id="Vertical-scaling-vs-Horizontal-scaling"><a href="#Vertical-scaling-vs-Horizontal-scaling" class="headerlink" title="Vertical scaling vs Horizontal scaling"></a>Vertical scaling vs Horizontal scaling</h2><p>스케일 업은 서버에 더 많은 리소스를 추가하는 방식이다. 스케일 아웃은 리소스 풀에 더 많은 서버를 추가하여 확장한다. 트래픽이 적을때는 수평 확장이 가지는 단순성 때문에 좋은 옵션이 된다. 하지만 단일 서버에 CPU나 메모리를 무제한적으로 추가하는것은 불가능하며 failover와 이중화가 없기 때문에 서버가 single fault failure가 된다. 수직 확장의 한계로 수평 확장이 더 바람직하다. </p>
+<h2 id="Load-balancer"><a href="#Load-balancer" class="headerlink" title="Load balancer"></a>Load balancer</h2><p>이전 디자인에서는 사용자가 웹 서버에 직접 연결되고 웹 서버가 오프라인 상태라면 사용자는 웹사이트에 엑세스할 수 없다. 또한 많은 사용자가 동시에 웹 서버에 접속하여 부하가 가중되면 느린 응답을 경험하거나 서버에 연결할 수 없다. 이런 문제를 로드 밸런서는 효과적으로 처리한다.</p>
+<p><img src="/image/bytebytego/2023-03-06-03.png" alt=""></p>
+<p>로드 밸런서는 서버에 들어오는 부하를 균등하게 처리한다. 사용자는 로드 밸런서의 공인 IP에 접근하게 되고 클라이언트는 웹 서버가 아닌 로드 밸런서로 연결된다. 보안을 위해 로드 밸런서는 사설 IP를 통해 웹 서버와 통신한다.</p>
+<p>로드 밸런서를 통해 서버1이 오프라인 상태가 되면 트래픽이 서버2로 라우팅 된다. 또한 트래픽이 증가하여 두 대의 서버로 부하를 처리하기 충분하기 않을때 서버 풀에 새로운 정상 웹 서버를 추가하여 부하를 분산시킨다. </p>
+<h2 id="Database-Replication"><a href="#Database-Replication" class="headerlink" title="Database Replication"></a>Database Replication</h2><p>데이터베이스 계층도 웹 계층과 마찬가지로 이중화와 장애조치가 필요하다. 데이터베이스 복제는 일반적으로 <code>master - slave</code> 구조로 이루어진다. 마스터는 일반적으로 쓰기 작업만 지원한다. 슬레이브는 마스터에서 데이터의 복사본을 가져오고 읽기 작업만 지원한다. 데이터를 수정하는 요청은 모두 마스터로 보내야하고 대부분의 애플리케이션은 쓰기보다 읽기 비율이 높기 때문에 일반적으로 슬레이브의 수가 마스터보다 많다.</p>
+<p><img src="/image/bytebytego/2023-03-06-04.png" alt=""></p>
+<h3 id="Advantages-of-database-replication"><a href="#Advantages-of-database-replication" class="headerlink" title="Advantages of database replication"></a>Advantages of database replication</h3><ul>
+<li>성능 향상<ul>
+<li><code>master - slave</code> 모델에서는 데이터를 수정하는 요청이 마스터에서 이루어지지만 읽기는 슬레이브 노드에 분산된다.</li>
+</ul>
+</li>
+<li>안정성<ul>
+<li>여러 IDC에 걸쳐 데이터베이스를 복제하므로 IDC failure와 같은 장애에도 대응 가능하다.</li>
+</ul>
+</li>
+<li>고가용성<ul>
+<li>여러 위치에 데이터를 복제하면 다른 데이터베이스 서버에 저장된 데이터에 엑세스할 수 있으므로 데이터베이스가 오프라인 상태에서도 서비스가 운영된다.</li>
+</ul>
+</li>
+</ul>
+<p>실제로 데이터베이스가 오프라인이 되면 발생하는 상황을 살펴보면 도움이 된다.</p>
+<p>슬레이브가 다운되었을 경우 읽기 작업이 마스터로 이동한다. 문제가 발견되면 즉시 새 슬레이브가 이전 슬레이브를 대체한다. 여러 개의 슬레이브를 사용 중인 경우 읽기 작업은 다른 정상 슬레이브로 리디렉션 된다.</p>
+<p>마스터가 다운되면 슬레이브중 하나가 마스터로 승격된다. 이 과정에서 지연 복제로 인한 데이터 불일치는 복구되어야 하며 어떤 슬레이브를 승격시킬지에 대한 합의 문제도 필요하다. <code>multi master</code> 및 <code>circular replication</code>과 같은 다른 복제 방식도 도움이 될 수 있다.</p>
+<p><img src="/image/bytebytego/2023-03-06-05.png" alt=""></p>
+<h2 id="Cache"><a href="#Cache" class="headerlink" title="Cache"></a>Cache</h2><p>별도의 캐시 계층을 통해 시스템 성능 향상, 데이터베이스 부하 감소, 캐시 계층을 독립적으로 확장할 수 있는 기능 등의 이점이 있다.</p>
+<p><img src="/image/bytebytego/2023-03-06-06.png" alt=""></p>
+<p>요청을 받은 웹 서버는 먼저 캐시에 사용 가능한 응답이 있는지 확인한다. 응답이 있으면 클라이언트로 데이터를 보내고 그렇지 않다면 데이터베이스에 질의해 응답을 캐시에 저장한 후 클라이언트로 다시 보낸다. 이런 캐싱 전략을 읽기 캐시라고 하며 데이터 유형, 크기, 액세스 패턴에 따라 다른 전략을 사용할 수 있다.</p>
+<h3 id="Considerations-for-using-cache"><a href="#Considerations-for-using-cache" class="headerlink" title="Considerations for using cache"></a>Considerations for using cache</h3><ul>
+<li>캐시 적용 대상<ul>
+<li>자주 읽지만 수정 빈도가 낮은 경우 캐시 사용을 고려한다. 캐시 데이터 메모리에 저장되기에 휘발성 특성이 있어 영속적인 저장이 필요하다면 영구 데이터 저장소에 저장해야 한다.</li>
+</ul>
+</li>
+<li>만료 정책<ul>
+<li>캐시된 데이터가 만료되면 캐시에서 제거된다. 만료 정책이 없는 경우 캐시된 데이터는 메모리에 영구적으로 저장된다. 만료일이 너무 짧다면 시스템이 데이터베이스에서 데이터를 너무 자주 로드할 수 있으므로 좋지 않다. 만료일이 너무 길다면 원본 데이터와 불일치가 발생할 수 있다.</li>
+</ul>
+</li>
+<li>일관성<ul>
+<li>데이터 저장소와 캐시를 동기화 상태로 유지하는 것은 어렵다. 이종 저장소 간에 수정 작업이 단일 트랜잭션에 포함되지 않기 때문에 불일치가 발생할 수 있다. 여러 지역으로 확장할 때 데이터 저장소와 캐시 간의 일관성을 유지하는 일은 쉽지 않다.</li>
+</ul>
+</li>
+<li>장애 완화<ul>
+<li>단일 캐시 서버는 단일 장애 지점(SPOF)이 된다. SPOF를 방지하기 위해선 여러 데이터센터에 걸쳐 캐시를 배치해 두는것이 좋다. 또 다른 권장하는 접근 방식은 필요한 메모리를 특정 비율만큼 오버프로비저닝 해두어 메모리 사용량의 증가에 따라 버퍼가 제공되도록 하는 방법이다.</li>
+</ul>
+</li>
+<li>퇴거 정책<ul>
+<li>캐시가 가득 차면 캐시에 항목을 추가하려는 요청으로 인해 기존 항목이 제거될 수 있다. LRU는 가장 많이 사용되는 정책이다. 그외에도 LFU나 FIFO같은 다양한 방식을 고려할 수 있다.</li>
+</ul>
+</li>
+</ul>
+<h2 id="Content-delivery-network-CDN"><a href="#Content-delivery-network-CDN" class="headerlink" title="Content delivery network (CDN)"></a>Content delivery network (CDN)</h2><p>CDN은 정적 콘텐츠를 전송하는데 사용되는 지리적으로 분산된 서버다. CDN은 이미지, 동영상, CSS, JavaScript 파일 등과 같은 정적 콘텐츠를 캐시한다. 사용자가 웹사이트를 방문하면 사용자와 가장 가까운 CDN 서버가 정적 콘텐츠를 전송하는 것이 CDN의 기본적인 작동 방식이다. 사용자가 CDN 서버에서 멀어질수록 웹사이트 로딩 속도가 느려진다.</p>
+<p><img src="/image/bytebytego/2023-03-06-07.png" alt=""></p>
+<p><img src="/image/bytebytego/2023-03-06-08.png" alt=""></p>
+<ol>
+<li>사용자 A가 이미지 URL을 사용해 image.png를 가져오려 한다. URL의 도메인은 CDN 제공 업체에서 제공한다.</li>
+<li>CDN 서버의 캐시에 image.png가 없는 경우 CDN 서버는 원본에서 파일을 요청한다.</li>
+<li>오리진은 이미지가 캐시되는 시간을 설명하는 선택적 HTTP 혜더 TTL이 포함된 image.png를 CDN 서버로 반환한다.</li>
+<li>CDN이 이미지를 캐싱하여 사용자 A에게 반환한다. 이미지는 TTL이 만료될 때까지 CDN에 캐싱된 상태로 유지된다.</li>
+<li>사용자 B가 동일한 이미지 가져오기 요청을 보낸다.</li>
+<li>TTL이 만료되지 않는 한 이미지가 캐시에서 반환된다.</li>
+</ol>
+<h3 id="Considerations-of-using-a-CDN"><a href="#Considerations-of-using-a-CDN" class="headerlink" title="Considerations of using a CDN"></a>Considerations of using a CDN</h3><ul>
+<li>비용<ul>
+<li>CDN은 타사 제공 업체에서 운영하며 CDN을 오가는 데이터 전송에 대한 요금이 부과된다. 자주 사용하지 않는 에셋을 캐싱하는 것은 큰 이점을 제공하지 않으므로 CDN 외부로 옮기는 것을 고려해야 한다.</li>
+</ul>
+</li>
+<li>적절한 캐시 만료 설정<ul>
+<li>시간에 민감한 콘텐츠의 경우 캐시 만료 시간을 설정하는 것이 중요하다. 캐시 만료 시간은 너무 길지도 짧지도 않아야 한다. 너무 길면 콘텐츠가 더 이상 최신 상태가 아닐 수 있다. 너무 짧으면 원본 서버에서 CDN으로 콘텐츠가 반복적으로 다시 로드될 수 있다.</li>
+</ul>
+</li>
+<li>CDN fallback<ul>
+<li>웹 사이트 / 애플리케이션이 CDN 장애에 어떻게 대처하는지 고려해야 한다. 일시적인 CDN 중단이 발생하는 경우 클라이언트가 문제를 감지하고 오리진에 리소스를 요청할 수 있어야 한다.</li>
+</ul>
+</li>
+<li>파일 무효화<ul>
+<li>만료되기 전에 CDN에서 파일을 제거할 수 있어야 한다.<ul>
+<li>CDN 공급 업체에서 제공하는 API를 사용해 CDN 개체 무효화</li>
+<li>오브젝트 버전 관리를 사용하여 다른 버전의 오브젝트 제공 <code>ex) image.png?v=2</code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p><img src="/image/bytebytego/2023-03-06-09.png" alt=""></p>
+<h2 id="Stateless-Webtier"><a href="#Stateless-Webtier" class="headerlink" title="Stateless Webtier"></a>Stateless Webtier</h2><p>웹 계층의 수평적 확장을 고려해야 한다. 이를 위해서는 상태(사용자 세션 등..)을 웹 계층 밖으로 이동해야 한다. 세션 데이터를 관계형 데이터베이스나 NoSQL과 같은 영구 저장소에 저장하는 것이 좋다. 클러스터의 각 웹 서버는 데이터베이스에서 상태 데이터에 엑세스할 수 있다. 이를 stateless web tier라고 한다.</p>
+<h3 id="Stateful-architecture"><a href="#Stateful-architecture" class="headerlink" title="Stateful architecture"></a>Stateful architecture</h3><p>Stateful server와 stateless server에는 몇 가지 주요 차이점이 있다. Stateful server는 한 요청에서 다음 요청까지 클라이언트 데이터를 기억한다. Stateless 서버는 저장하지 않는다.</p>
+<p><img src="/image/bytebytego/2023-03-06-10.png" alt=""></p>
+<p>사용자 A의 정보는 서버 1에 저장되어 있다. 사용자 A를 인증하려면 HTTP 요청이 서버 1로 라우팅 되어야 한다. 요청이 서버 2와 같은 다른 서버로 전송되면 사용자 A의 세션 데이터가 포함되어 있지 않기 때문에 인증이 실패한다. 이 방식의 문제는 동일한 클라이언트로부터의 모든 요청이 동일한 서버로 라우팅되어야 한다는 것이다. 이는 대부분의 로드 밸런서의 sticky session을 통해 수행할 수 있지만 오버헤드가 추가된다. 이 아키텍쳐에서는 서버를 추가하거나 제거하는것이 훨씬 어렵고 서버 장애를 처리하는 것도 어렵다.</p>
+<h3 id="Stateless-architecture"><a href="#Stateless-architecture" class="headerlink" title="Stateless architecture"></a>Stateless architecture</h3><p>Stateless 아키텍쳐에서는 사용자의 HTTP 요청을 모든 웹 서버로 전송할 수 있으며 이 서버는 공유 데이터 저장소에서 상태 데이터를 가져온다. 상태 데이터는 공유 데이터 저장소에 저장되며 웹 서버에 저장되지 않는다. Stateless 시스템은 더 간단하고 안정적이며 확장성이 뛰어나다.</p>
+<p><img src="/image/bytebytego/2023-03-06-11.png" alt=""></p>
+<p><img src="/image/bytebytego/2023-03-06-12.png" alt=""></p>
+<h2 id="Data-centers"><a href="#Data-centers" class="headerlink" title="Data centers"></a>Data centers</h2><p>가용성을 개선하고 더 넓은 지역에서 더 나은 사용자 경험을 제공하려면 여러 데이터 센터를 지원하는 것이 중요하다. 아래는 두 데이터 센터가 있는 설정의 예를 보여준다. 정상 작동 시 사용자는 지리적 라우팅이라고 하는 geoDNS 라우팅을 통해 가장 가까운 데이터 센터로 라우팅되며 트래픽은 미국 동부에서는 x% 미국 서부에서는 (100-x)%로 분할된다. geoDNS는 사용자의 위치를 기반으로 도메인 이름을 IP 주소로 확인할 수 있는 DNS 서비스다.</p>
+<p><img src="/image/bytebytego/2023-03-06-13.png" alt=""></p>
+<p>데이터센터에 심각한 장애가 발생하면 모든 트래픽을 정상 데이터센터로 라우팅한다.</p>
+<p><img src="/image/bytebytego/2023-03-06-14.png" alt=""></p>
+<p>다중 데이터 센터를 구축하려면 몇 가지 기술적 과제를 해결해야 한다.</p>
+<ul>
+<li>트래픽 리디렉션<ul>
+<li>트래픽을 올바른 데이터 센터로 리디렉션 하려면 효과적인 도구가 필요하다. GeoDNS는 사용자의 위치에 따라 가장 가까운 데이터 센터로 트래픽을 리디렉션 하는데 사용할 수 있다.</li>
+</ul>
+</li>
+<li>데이터 동기화<ul>
+<li>서로 다른 지역의 사용자는 서로 다른 로컬 데이터베이스 또는 캐시를 사용할 수 있다. 장애 조치의 경우 데이터를 사용할 수 없는 데이터 센터로 트래픽이 라우팅될 수 있다. 일반적인 전략은 여러 데이터 센터에 데이터를 복제하는 것이다.</li>
+</ul>
+</li>
+<li>테스트 및 배포<ul>
+<li>다중 데이터 센터에서는 여러 위치에서 웹사이트 / 애플리케이션을 테스트하는 것이 중요하다. 자동화된 배포 도구는 모든 데이터 센터에서 서비스의 일관성을 유지하는데 필수적이다.</li>
+</ul>
+</li>
+</ul>
+</div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined">Song Hayoung</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="https://songhayoung.github.io/2023/03/06/System%20Design/ByteByteGo/book/scale-from-zero-to-millions-of-users/">https://songhayoung.github.io/2023/03/06/System%20Design/ByteByteGo/book/scale-from-zero-to-millions-of-users/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/System-Design/">System Design</a></div><nav id="pagination"><div class="prev-post pull-left"><a href="/2023/03/07/PS/Codeforces/div2-342-a/"><i class="fa fa-chevron-left">  </i><span>[Codeforces] Round 342 (Div. 2) A. Guest From the Past</span></a></div><div class="next-post pull-right"><a href="/2023/03/06/PS/CSAcademy/aisimok/"><span>[CS Academy] Aisimok</span><i class="fa fa-chevron-right"></i></a></div></nav><div id="gitalk-container"></div><script>var gitalk = new Gitalk({
+  clientID: '3604b61642355579f55e',
+  clientSecret: 'f552120f18ac5aee3f6297e05e97d94c0a25cd4b',
+  repo: 'SongHayoung.github.io',
+  owner: 'SongHayoung',
+  admin: 'SongHayoung',
+  id: md5(decodeURI(location.pathname)),
+  language: 'en'
+})
+gitalk.render('gitalk-container')</script></div></div><footer class="footer-bg" style="background-image: url(https://xxxx.jpg)"><div class="layout" id="footer"><div class="copyright">&copy;2020 - 2023 By Song Hayoung</div><div class="framework-info"><span>Driven - </span><a target="_blank" rel="noopener" href="http://hexo.io"><span>Hexo</span></a><span class="footer-separator">|</span><span>Theme - </span><a target="_blank" rel="noopener" href="https://github.com/Molunerfinn/hexo-theme-melody"><span>Melody</span></a></div><div class="footer_custom_text">Learning how to walk slowly to not miss important things</div><div class="busuanzi"><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><span id="busuanzi_container_page_pv"><i class="fa fa-file"></i><span id="busuanzi_value_page_pv"></span><span></span></span></div></div></footer><i class="fa fa-arrow-up" id="go-up" aria-hidden="true"></i><script src="https://cdn.jsdelivr.net/npm/animejs@latest/anime.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@latest/velocity.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-ui-pack@latest/velocity.ui.min.js"></script><script src="/js/utils.js?version=1.7.0"></script><script src="/js/fancybox.js?version=1.7.0"></script><script src="/js/sidebar.js?version=1.7.0"></script><script src="/js/copy.js?version=1.7.0"></script><script src="/js/fireworks.js?version=1.7.0"></script><script src="/js/transition.js?version=1.7.0"></script><script src="/js/scroll.js?version=1.7.0"></script><script src="/js/head.js?version=1.7.0"></script><script src="/js/search/algolia.js"></script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+    processEscapes: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  },
+  CommonHTML: {
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "HTML-CSS": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "SVG": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  }
+});
+</script><script type="text/x-mathjax-config">MathJax.Hub.Queue(function() {
+  var all = MathJax.Hub.getAllJax(), i;
+  for (i=0; i < all.length; i += 1) {
+    all[i].SourceElement().parentNode.className += ' has-jax';
+  }
+});
+</script><script src="https://cdn.jsdelivr.net/npm/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><script>if(/Android|webOS|iPhone|iPod|iPad|BlackBerry/i.test(navigator.userAgent)) {
+  $('#nav').addClass('is-mobile')
+  $('footer').addClass('is-mobile')
+  $('#top-container').addClass('is-mobile')
+}</script><div class="search-dialog" id="algolia-search"><div class="search-dialog__title" id="algolia-search-title">Algolia</div><div id="algolia-input-panel"><div id="algolia-search-input"></div></div><hr><div id="algolia-search-results"><div id="algolia-hits"></div><div id="algolia-pagination"></div><div id="algolia-stats"></div></div><span class="search-close-button"><i class="fa fa-times"></i></span></div><div class="search-mask"></div></body></html>
