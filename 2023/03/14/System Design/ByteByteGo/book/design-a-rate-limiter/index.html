@@ -1,0 +1,304 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="description" content="[System Design] Design A Rate Limiter"><meta name="keywords" content="System Design"><meta name="author" content="Song Hayoung"><meta name="copyright" content="Song Hayoung"><title>[System Design] Design A Rate Limiter | SUMFIのBlog</title><meta name="robots" content="noindex"><link rel="shortcut icon" href="/songcon.ico"><link rel="stylesheet" href="/css/index.css?version=1.7.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@latest/css/font-awesome.min.css?version=1.7.0"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css?version=1.7.0"><meta name="format-detection" content="telephone=no"><meta http-equiv="x-dns-prefetch-control" content="on"><link rel="dns-prefetch" href="https://cdn.jsdelivr.net"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.css"><script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.js" defer></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@latest/dist/gitalk.min.js"></script><script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.10.0/js/md5.min.js"></script><link rel="dns-prefetch" href="https://www.google-analytics.com"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-169368422-1', 'auto');
+ga('send', 'pageview');</script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: {"appId":"7LZ6OJ4D6C","apiKey":"9a84e13f74ea78c3fd54512c10139c56","indexName":"git blog","hits":{"per_page":10},"languages":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}.","hits_stats":"${hits} results found in ${time} ms"}},
+  localSearch: undefined,
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  }
+} </script><meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/rss2.xml" title="SUMFIのBlog" type="application/rss+xml">
+</head><body><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar" data-display="true"><div class="toggle-sidebar-info text-center"><span data-toggle="Toggle article">Toggle site</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">Catalog</div><div class="sidebar-toc__progress"><span class="progress-notice">You've read</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Design-A-Rate-Limiter"><span class="toc-number">1.</span> <span class="toc-text">Design A Rate Limiter</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Step-1-Understand-the-problem-and-establish-design-scope"><span class="toc-number">2.</span> <span class="toc-text">Step 1 - Understand the problem and establish design scope</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Step-2-Propose-high-level-design-and-get-buy-in"><span class="toc-number">3.</span> <span class="toc-text">Step 2 - Propose high-level design and get buy-in</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Where-to-put-the-rate-limiter"><span class="toc-number">3.1.</span> <span class="toc-text">Where to put the rate limiter?</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Algorithms-for-rate-limiting"><span class="toc-number">3.2.</span> <span class="toc-text">Algorithms for rate limiting</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Token-bucket-algorithm"><span class="toc-number">3.2.1.</span> <span class="toc-text">Token bucket algorithm</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Leaking-bucket-algorithm"><span class="toc-number">3.2.2.</span> <span class="toc-text">Leaking bucket algorithm</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Fixed-window-counter-algorithm"><span class="toc-number">3.2.3.</span> <span class="toc-text">Fixed window counter algorithm</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Sliding-window-log-algorithm"><span class="toc-number">3.2.4.</span> <span class="toc-text">Sliding window log algorithm</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Sliding-window-counter-algorithm"><span class="toc-number">3.2.5.</span> <span class="toc-text">Sliding window counter algorithm</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#High-level-architecture"><span class="toc-number">3.3.</span> <span class="toc-text">High-level architecture</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Step-3-Design-deep-dive"><span class="toc-number">4.</span> <span class="toc-text">Step 3 - Design deep dive</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Rate-limiting-rules"><span class="toc-number">4.1.</span> <span class="toc-text">Rate limiting rules</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Exceeding-the-rate-limit"><span class="toc-number">4.2.</span> <span class="toc-text">Exceeding the rate limit</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Rate-limiter-headers"><span class="toc-number">4.3.</span> <span class="toc-text">Rate limiter headers</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Detailed-design"><span class="toc-number">4.4.</span> <span class="toc-text">Detailed design</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Rate-limiter-in-a-distributed-environment"><span class="toc-number">4.5.</span> <span class="toc-text">Rate limiter in a distributed environment</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Race-condition"><span class="toc-number">4.5.1.</span> <span class="toc-text">Race condition</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Synchronization-issue"><span class="toc-number">4.5.2.</span> <span class="toc-text">Synchronization issue</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Performance-optimization"><span class="toc-number">4.6.</span> <span class="toc-text">Performance optimization</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Monitoring"><span class="toc-number">4.7.</span> <span class="toc-text">Monitoring</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Step-4-Wrap-up"><span class="toc-number">5.</span> <span class="toc-text">Step 4 - Wrap up</span></a></li></ol></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="https://avatars3.githubusercontent.com/u/37806785?s=460&amp;u=8c68d685faf7c5280cfbd736a6b1730b55fb4203&amp;v=4"></div><div class="author-info__name text-center">Song Hayoung</div><div class="author-info__description text-center"></div><div class="follow-button"><a target="_blank" rel="noopener" href="https://www.instagram.com/hayoung0_0/">Follow Me</a></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="/archives"><span class="pull-left">Articles</span><span class="pull-right">6862</span></a><a class="author-info-articles__tags article-meta" href="/tags"><span class="pull-left">Tags</span><span class="pull-right">187</span></a><a class="author-info-articles__categories article-meta" href="/categories"><span class="pull-left">Categories</span><span class="pull-right">64</span></a></div><hr><div class="author-info-links"><div class="author-info-links__title text-center">VISITED</div><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Seoul Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Jeju Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">British Columbia Canada</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Boracay Philippines</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">三重　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">大阪　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">名古屋　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">静岡　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">札幌　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">京都　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Bangkok Thailand</a></div></div></div><div id="content-outer"><div id="top-container" style="background-image: url(https://xxxx.jpg)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="/">SUMFIのBlog</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus">   <a class="site-page" href="/">Home</a><a class="site-page" href="/archives">Archives</a><a class="site-page" href="/tags">Tags</a><a class="site-page" href="/categories">Categories</a><a class="site-page" href="/about">About</a></span><span class="pull-right"><a class="site-page social-icon search"><i class="fa fa-search"></i><span> Search</span></a></span></div><div id="post-info"><div id="post-title">[System Design] Design A Rate Limiter</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2023-03-14</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/">System Design</a><i class="fa fa-angle-right" aria-hidden="true"></i><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/System-Design-Interview/">System Design Interview</a><div class="post-meta-wordcount"><span>Word count: </span><span class="word-count">1.7k</span><span class="post-meta__separator">|</span><span>Reading time: 10 min</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div class="article-container" id="post-content"><h2 id="Design-A-Rate-Limiter"><a href="#Design-A-Rate-Limiter" class="headerlink" title="Design A Rate Limiter"></a>Design A Rate Limiter</h2><span id="more"></span>
+<p>네트워크에서의 rate limiter는 클라이언트가 전송하고자 하는 트래픽의 속도를 제어하는데 사용된다. HTTP에서의 rate limiter는 지정된 시간 동안 전송할 수 있는 클라이언트의 요청 수를 제한한다. API 요청 수가 rate limiter에 정의된 임계값을 초과하면 초과된 모든 호출이 차단된다. API rate limiter를 사용할 때의 이점은 다음과 같다.</p>
+<ul>
+<li>DoS 공격으로 인한 리소스 고갈 방지</li>
+<li>비용 절감</li>
+<li>서버 과부하 방지</li>
+</ul>
+<h2 id="Step-1-Understand-the-problem-and-establish-design-scope"><a href="#Step-1-Understand-the-problem-and-establish-design-scope" class="headerlink" title="Step 1 - Understand the problem and establish design scope"></a>Step 1 - Understand the problem and establish design scope</h2><p>속도 제한은 각각 장단점이 있는 알고리즘들을 사용하여 구성할 수 있다. 면접관과 지원자가 상호 작용하여 구축하려는 속도 제한 알고리즘의 유형을 명확히 파악해야 한다. 요구사항은 다음과 같다.</p>
+<ul>
+<li>과도한 요청을 정확하게 제한</li>
+<li>짧은 지연시간<ul>
+<li>Rate limiter로 인해 HTTP 응답이 느려지지 않아야 함</li>
+</ul>
+</li>
+<li>가능한 적은 메모리 사용</li>
+<li>분산 환경에서의 속도 제한</li>
+<li>예외 처리<ul>
+<li>요청이 스로툴링될 때 사용자에게 명확한 예외 표시</li>
+</ul>
+</li>
+<li>높은 내결함성<ul>
+<li>Rate limiter에 문제가 발생해도 전체 시스템에 영향을 미치지 않음</li>
+</ul>
+</li>
+</ul>
+<h2 id="Step-2-Propose-high-level-design-and-get-buy-in"><a href="#Step-2-Propose-high-level-design-and-get-buy-in" class="headerlink" title="Step 2 - Propose high-level design and get buy-in"></a>Step 2 - Propose high-level design and get buy-in</h2><h3 id="Where-to-put-the-rate-limiter"><a href="#Where-to-put-the-rate-limiter" class="headerlink" title="Where to put the rate limiter?"></a>Where to put the rate limiter?</h3><p>클라이언트 측에 rate limiter를 배치하면 공격자가 클라이언트 요청을 쉽게 위조할 수 있어 rate limiter에 대한 신뢰성이 떨어진다. 또한 우리는 클라이언트의 rate limiter를 제어할 수 없어진다.</p>
+<p>서버측에 rate limiter를 배치하는 구조는 아래와 같다.</p>
+<p><img src="/image/bytebytego/23031501.png" alt=""></p>
+<p>서버측이나 클라이언트측 말고도 rate limiter를 하나의 미들웨어로써 배치하는 방법도 있다.</p>
+<p><img src="/image/bytebytego/23031502.png" alt=""></p>
+<p>API가 초당 2개의 요청을 허용하고 클라이언트가 1초에 3개의 요청을 보낸다고 가정하자. 처음 두 요청은 API 서버로 라우팅 될 것이지만 마지막 요청은 스로툴링하고 <code>HTTP 429</code>를 반환한다.</p>
+<p><img src="/image/bytebytego/23031503.png" alt=""></p>
+<p>Rate limiter를 설계할 때 중효한 질문은 서버와 API 게이트웨이중 어디에 구현해야 하는가 이다. 절대적인 정답은 없고 우선순위나 목표에 따라 달라질 수 있다.</p>
+<ul>
+<li>프로그래밍 언어, 캐시 등 현재 기술 스택을 판단하고 현재 사용중인 언어가 서버 측에서 속도 제한을 구현하는데 효율적인지 확인</li>
+<li>비즈니스 요구사항에 맞는 속도 제한 알고리즘 파악</li>
+<li>이미 마이크로 서비스 아키텍쳐를 사용하며, 인증, IP 화이트 리스트 등을 위한 API 게이트웨이를 사용중이라면 API 게이트웨이에 rate limiter를 포함할 수 도 있음</li>
+</ul>
+<h3 id="Algorithms-for-rate-limiting"><a href="#Algorithms-for-rate-limiting" class="headerlink" title="Algorithms for rate limiting"></a>Algorithms for rate limiting</h3><h4 id="Token-bucket-algorithm"><a href="#Token-bucket-algorithm" class="headerlink" title="Token bucket algorithm"></a>Token bucket algorithm</h4><p>토큰 버킷 알고리즘은 속도 제한에 널리 사용중인 알고리즘이다.</p>
+<ul>
+<li>토큰 버킷은 미리 정의된 용량은 가진 컨테이너다</li>
+<li>토큰은 주기적으로 미리 설정된 비율로 버킷에 추가된다</li>
+<li>버킷이 가득 차면 토큰은 추가 되지 않는다</li>
+</ul>
+<p><img src="/image/bytebytego/23031504.png" alt=""></p>
+<ul>
+<li>각 요청은 하나의 토큰을 소비한다</li>
+<li>요청이 도착하면 버킷에 토큰이 충분한지 확인한다</li>
+<li>토큰이 충분하면 각 요청에 대해 토큰을 하나씩 꺼내어 요청이 처리된다</li>
+<li>토큰이 충분하지 않으면 요청이 삭제된다</li>
+</ul>
+<p><img src="/image/bytebytego/23031505.png" alt=""></p>
+<p>토큰 버킷의 크기가 4이고 리필 속도가 4 per 1 min. 일때 예 이다.</p>
+<p><img src="/image/bytebytego/23031506.png" alt=""></p>
+<p>토큰 버킷 알고리즘은 두 가지 매개변수를 사용한다</p>
+<ul>
+<li>버킷 크기 : 버킷에 허용되는 최대 토큰 수</li>
+<li>리필 속도 : 초당 버킷에 넣는 토큰 수</li>
+</ul>
+<p>얼마나 많은 버킷이 필요한지는 요구사항에 따라 달라진다.</p>
+<ul>
+<li>한 사용자가 API A, B ,C를 사용하는 경우 버킷은 3 per user</li>
+<li>IP를 기반으로한 스로툴링이 필요한 경우 IP별로 버킷이 할당</li>
+<li>초당 10000개가 넘는 시스템이라면 글로벌 공유 버킷을 사용하는 것도 고려해볼 만 함</li>
+</ul>
+<p>Pros:</p>
+<ul>
+<li>구현이 매우 쉬움</li>
+<li>메모리 효율적</li>
+<li>토큰 버킷은 짧은 기간 동안의 트래픽 폭주를 허용함<ul>
+<li>토큰이 남아있는 한 요청을 처리하기 때문</li>
+</ul>
+</li>
+</ul>
+<p>Cons:</p>
+<ul>
+<li>알고리즘의 두 매개변수를 적절하게 조절하는 것은 매우 어려움</li>
+</ul>
+<h4 id="Leaking-bucket-algorithm"><a href="#Leaking-bucket-algorithm" class="headerlink" title="Leaking bucket algorithm"></a>Leaking bucket algorithm</h4><p>누수 버킷 알고리즘은 요청이 고정된 속도로 처리된다. 일반적으로 FIFO 대기열로 구성된다.</p>
+<ul>
+<li>요청이 도착하면 시스템은 대기열이 가득 찼는지 확인</li>
+<li>대기열이 가득 차 있지 않으면 요청을 대기열에 추가</li>
+<li>그렇지 않다면 요청을 삭제</li>
+<li>요청은 대기열에서 가져와 고정된 속도로 처리됨</li>
+</ul>
+<p><img src="/image/bytebytego/23031507.png" alt=""></p>
+<p>누수 버킷 알고리즘은 두 가지 매개변수를 사용한다</p>
+<ul>
+<li>버킷 크기 : 대기열 크기</li>
+<li>유출 속도 : 고정된 속도로 처리할 수 있는 요청의 수</li>
+</ul>
+<p>Pros:</p>
+<ul>
+<li>제한된 대기열 크기를 고려할 때 메모리 효율적</li>
+<li>요청이 고정된 속도로 처리되므로 안정적인 유출 속도가 필요한 사례에 적합</li>
+</ul>
+<p>Cons: </p>
+<ul>
+<li>트래픽이 폭주하면 오래된 요청으로 대기열이 가득 차고, 제시간에 처리되지 않으면 최근의 요청 속도가 제한됨</li>
+<li>알고리즘의 두 매개변수를 적절하게 조절하는 것은 매우 어려움</li>
+</ul>
+<h4 id="Fixed-window-counter-algorithm"><a href="#Fixed-window-counter-algorithm" class="headerlink" title="Fixed window counter algorithm"></a>Fixed window counter algorithm</h4><ul>
+<li>타임라인을 고정된 크기의 윈도우로 분할하고 각 윈도우에 카운터를 할당</li>
+<li>요청할 때마다 카운터가 하나씩 증가</li>
+<li>카운터가 임계값에 도달하면 새 윈도우가 시작될 때 까지 요청을 삭제</li>
+</ul>
+<p>카운터가 3이고 타임라인이 1초인 경우에 예 이다.</p>
+<p><img src="/image/bytebytego/23031508.png" alt=""></p>
+<p>이 알고리즘의 주요 문제점은 타임라인의 가장자리에서 트래픽이 폭증하면 허용된 할당량보다 많은 요청이 처리될 수 있는 점이다. 할당량의 최대 2배 까지 요청이 증가할 수 있다.</p>
+<p><img src="/image/bytebytego/23031509.png" alt=""></p>
+<p>Pros:</p>
+<ul>
+<li>메모리 효율적</li>
+<li>간단한 알고리즘</li>
+<li>단위 시간 윈도우가 끝날 때 사용 가능한 할당량을 재설정 하는 것이 특정 사용 사례에 적합</li>
+</ul>
+<p>Cons:</p>
+<ul>
+<li>타임라인의 가장자리에서 트래픽이 급증하면 허용된 할당량 보다 더 많은 요청이 처리될 수 있음</li>
+</ul>
+<h4 id="Sliding-window-log-algorithm"><a href="#Sliding-window-log-algorithm" class="headerlink" title="Sliding window log algorithm"></a>Sliding window log algorithm</h4><p>고정 윈도우 카운터 알고리즘에는 윈도우 엣지에서 더 많은 요청 부하를 받을 수 있는 주요 문제가 있다. 슬라이딩 윈도우 로그 알고리즘은 이 문제를 해결한다.</p>
+<ul>
+<li>알고리즘은 요청 타임스탬프를 추적함<ul>
+<li>타임스탬프 데이터는 일반적으로 redis의 sorted set과 같은 캐시에 보관</li>
+</ul>
+</li>
+<li>새 요청이 들어오면 오래된 타임스탬프는 전부 제거<ul>
+<li>오래된 타임스탬프는 현재 시간 윈도우의 시작보다 오래된 타임스탬프로 정의</li>
+</ul>
+</li>
+<li>새 요청의 타임스탬프를 로그에 추가</li>
+<li>로그의 크기가 허용된 개수보다 작거나 같으면 요청이 수락됨</li>
+<li>그렇지 않다면 요청을 제거함</li>
+</ul>
+<p>분당 2건의 요청을 허용하는 예 이다.</p>
+<p><img src="/image/bytebytego/23031510.png" alt=""></p>
+<ul>
+<li><code>1:00:01</code>에 도착한 요청은 허용된다</li>
+<li><code>1:00:30</code>에 도착한 요청은 삽입 후 로그의 사이즈가 2이기 때문에 허용된다</li>
+<li><code>1:00:50</code>에 도착한 요청은 삽입 후 로그의 사이즈가 3이기 때문에 거부된다</li>
+<li><code>1:01:40</code>에 도착한 요청은 <code>[1:00:40, 1:01:40)</code>의 윈도우를 가지고 판단하므로 앞에 두건의 로그를 제거하고 삽입한다. 삽입 후 로그의 사이즈가 2이기 때문에 허용된다.</li>
+</ul>
+<p>Pros:</p>
+<ul>
+<li>매우 정확하다<ul>
+<li>윈도우 롤링 과정중 어떤 상황에서도 요청 비율 제한을 초과하지 않음</li>
+</ul>
+</li>
+</ul>
+<p>Cons:</p>
+<ul>
+<li>요청이 거부되더라도 타임스탬프가 메모리에 저장될 수 있으므로 많은 메모리를 잡아먹음</li>
+</ul>
+<h4 id="Sliding-window-counter-algorithm"><a href="#Sliding-window-counter-algorithm" class="headerlink" title="Sliding window counter algorithm"></a>Sliding window counter algorithm</h4><p>슬라이딩 윈도우 카운터 알고리즘은 고정 윈도우 카운터와 슬라이딩 윈도우 로그를 조합한 알고리즘이다. Rate limiter가 분당 최대 7건의 요청을 허용하고 이전 분에 5건, 현재 분에 3건의 요청이 있다고 가정한다. 롤링 윈도우의 크기는 고정 윈도우의 크기와 같다고 가정한다. 현재 1분 동안 30% 위치에 도착하는 새 요청의 경우 롤링 윈도우의 요청 수는 <code>현재 창의 요청 수 + 이전 창의 요청 수 * 롤링 윈도우와 이전 창의 겹친 비율</code>로 계산된다.</p>
+<p>이 예에서 요청 수는 <code>3 + 5 * 0.7 ~= 6</code>으로 계산된다.</p>
+<p><img src="/image/bytebytego/23031511.png" alt=""></p>
+<p>Rate limiter는 분당 최대 7건의 요청을 허용하므로 현재 요청은 통과하지만 다음 요청은 제한에 걸리게 된다.</p>
+<p>Pros:</p>
+<ul>
+<li>이전 창의 평균 속도를 기반으로 동작하기 때문에 트래픽 급증을 완화 함</li>
+<li>메모리 효율적</li>
+</ul>
+<p>Cons:</p>
+<ul>
+<li>look back window가 엄격하지 않은 경우에만 정상 동작</li>
+<li>이전 윈도우의 요청이 균등하게 분산되어 있다고 가정하기 때문에 실제 속도와 근사치임<ul>
+<li>실제 실험 결과를 확인하면 잘못된 요청이거나 속도가 제한되는 요청은 0.003%에 불과</li>
+</ul>
+</li>
+</ul>
+<h3 id="High-level-architecture"><a href="#High-level-architecture" class="headerlink" title="High-level architecture"></a>High-level architecture</h3><p>속도 제한 알고리즘의 기본 개념은 간단하다. 상위 수준에서는 동일 사용자, IP 주소 등으로 부터 전송되는 요청 수를 추적하기 위한 카운터가 필요하다. 데이터베이스를 사용하는 것은 디스크 액세스 속도가 느리므로 좋은 선택이 아니다. 인메모리 캐시는 빠르고 TTL 전략을 구사하기 때문에 좋은 선택지이다.</p>
+<p><img src="/image/bytebytego/23031512.png" alt=""></p>
+<ul>
+<li>클라이언트가 rate limiter 미들 웨어에 요청을 보낸다</li>
+<li>Rate limiter는 redis의 해당 버킷에서 카운터를 가져와 제한에 도달했는지 여부를 확인한다</li>
+<li>한도에 도달하면 요청을 거부한다</li>
+<li>한도에 도달하지 않으면 요청이 API 서버로 전송되고, 그 동안 시스템은 카운터를 증가시키고 redis에 다시 저장한다</li>
+</ul>
+<h2 id="Step-3-Design-deep-dive"><a href="#Step-3-Design-deep-dive" class="headerlink" title="Step 3 - Design deep dive"></a>Step 3 - Design deep dive</h2><p>고수준 아키텍쳐에서 처리하지 못한 요구사항들을 처리할 차례이다.</p>
+<h3 id="Rate-limiting-rules"><a href="#Rate-limiting-rules" class="headerlink" title="Rate limiting rules"></a>Rate limiting rules</h3><p>Lyft의 rate limiter 오픈소스를 통해 rate limiting rules의 예를 살펴보자.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">domain: messaging</span><br><span class="line">descriptors:</span><br><span class="line">  - key: message_type</span><br><span class="line">    value: marketing</span><br><span class="line">    rate_limit:</span><br><span class="line">      unit: day</span><br><span class="line">      requests_per_unit: 5</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">domain: auth</span><br><span class="line">descriptors:</span><br><span class="line">  - key: auth_type</span><br><span class="line">    value: login</span><br><span class="line">    rate_limit:</span><br><span class="line">      unit: minute</span><br><span class="line">      requests_per_unit: 5</span><br></pre></td></tr></table></figure>
+<h3 id="Exceeding-the-rate-limit"><a href="#Exceeding-the-rate-limit" class="headerlink" title="Exceeding the rate limit"></a>Exceeding the rate limit</h3><p>요청 제한인 경우 API는 클라이언트에 <code>HTTP 429</code>를 반환한다. 사례에 따라 요청을 나중에 처리하기 위해 대기열에 넣을 수 도 있다. </p>
+<h3 id="Rate-limiter-headers"><a href="#Rate-limiter-headers" class="headerlink" title="Rate limiter headers"></a>Rate limiter headers</h3><p>클라이언트에 스로툴링 여부나 스로툴링 전 남은 허용되는 요청 수를 보내는 것도 좋은 방법일 수 있다. HTTP 헤더를 사용하면 된다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">X-Ratelimit-Remaining: 윈도우 내에서 허용된 요청의 남은 수</span><br><span class="line"></span><br><span class="line">X-Ratelimit-Limit: 클라이언트의 호출양</span><br><span class="line"></span><br><span class="line">X-Ratelimit-Retry-After: 스로툴링 되지 않고 다시 요청을 할 수 있을 때 까지 대기해야 하는 시간</span><br></pre></td></tr></table></figure>
+<h3 id="Detailed-design"><a href="#Detailed-design" class="headerlink" title="Detailed design"></a>Detailed design</h3><p><img src="/image/bytebytego/23031513.png" alt=""></p>
+<ul>
+<li>rate limiting rule은 디스크에 저장된다<ul>
+<li>워커 노드는 디스크에서 룰을 가져와 캐시에 저장한다</li>
+</ul>
+</li>
+<li>클라이언트가 서버에 요청을 보내면 요청이 먼저 rate limiter로 전송된다</li>
+<li>rate limiter를 캐시에서 규칙을 로드한다</li>
+<li>redis에서 카운터와 마지막 요청 타임스탬프를 가져온다</li>
+<li>요청이 제한에 도달하지 않은 경우 API 서버로 전달된다</li>
+<li>요청이 제한에 도달한 경우 429 오류를 반환하고 요청은 삭제되거나 대기열로 전달된다</li>
+</ul>
+<h3 id="Rate-limiter-in-a-distributed-environment"><a href="#Rate-limiter-in-a-distributed-environment" class="headerlink" title="Rate limiter in a distributed environment"></a>Rate limiter in a distributed environment</h3><p>분산 환경에서 rate limiter를 구축하기 전에는 race condition과 동기화 문제를 해결해야 한다. </p>
+<h4 id="Race-condition"><a href="#Race-condition" class="headerlink" title="Race condition"></a>Race condition</h4><p>고수준 디자인에서 rate limiter는 아래와 같이 동작한다.</p>
+<ul>
+<li>redis에서 카운터를 읽기</li>
+<li>카운터 + 1이 임계치를 넘는지 확인하기</li>
+<li>넘지 않는다면 카운터를 증가시키기</li>
+</ul>
+<p>아래는 race condition이 발생할 수 있는 시나리오 중 하나이다.<br><img src="/image/bytebytego/23031514.png" alt=""></p>
+<p>잠금은 race condition을 해결할 수 있는 가장 확실한 해결책이다. 하지만 잠금은 시스템 속도를 상당히 느리게 만든다. 이 문제를 해결하기 위한 일반적인 두 방법은 Lua 스크립트를 사용하거나 redis의 sorted set을 사용하는 것이다.</p>
+<h4 id="Synchronization-issue"><a href="#Synchronization-issue" class="headerlink" title="Synchronization issue"></a>Synchronization issue</h4><p>동기화 문제는 분산 환경에서 고려해야 할 중요한 요소 중 하나이다. 여러 대의 전송률 제한 서버를 사용하는 경우 동기화가 필요하다. 아래의 시나리오는 동기화가 없는 경우 rate limiter가 제대로 동작하지 않는 것을 보여준다.</p>
+<p><img src="/image/bytebytego/23031515.png" alt=""></p>
+<p>한 가지 해결책은 stick session을 사용하는 것이지만 확장성이나 유연성이 떨어지므로 권장되지 않는다. 더 나은 방식은 redis와 같은 중앙 집중식 데이터 저장소를 사용하는 것이다.</p>
+<h3 id="Performance-optimization"><a href="#Performance-optimization" class="headerlink" title="Performance optimization"></a>Performance optimization</h3><p>성능 최적화는 시스템 설계 면접에서 자주 등장하는 주제다.</p>
+<ol>
+<li>데이터 센터에서 멀리 떨어져 있는 사용자의 경우 지연시간이 길어지므로 속도 제한 장치에는 다중 데이터센터 설정이 중요하다. 트래픽은 대기 시간을 줄이기 위해 가장 가까운 엣지 서버로 자동 라우팅 된다.</li>
+<li>데이터를 eventual consistency 모델과 동기화 한다.</li>
+</ol>
+<p><img src="/image/bytebytego/23031516.png" alt=""></p>
+<h3 id="Monitoring"><a href="#Monitoring" class="headerlink" title="Monitoring"></a>Monitoring</h3><p>Rate limiter를 설정한 후에는 분석 데이터를 수집해 요청 제한이 효과적인지 확인하는 것이 중요하다.</p>
+<ul>
+<li>요청 제한 알고리즘이 효과적인지</li>
+<li>요청 제한 규칙이 효과적인지</li>
+</ul>
+<h2 id="Step-4-Wrap-up"><a href="#Step-4-Wrap-up" class="headerlink" title="Step 4 - Wrap up"></a>Step 4 - Wrap up</h2><p>다양한 속도 제한 알고리즘과 장단점에 대해 논의 했다.</p>
+<ul>
+<li>Token bucket</li>
+<li>Leaking bucket</li>
+<li>Fixed window</li>
+<li>Sliding window log</li>
+<li>Sliding window counter</li>
+</ul>
+<p>그 후 시스템 아키텍처, 분산 환경에서의 rate limiter, 성능 최적화 및 모니터링에 대해 논의했다. 만약 시간이 허락된다면 추가적으로 언급할 수 있는 주제가 있다.</p>
+<ul>
+<li><p>Hard vs soft rate limiting</p>
+<ul>
+<li>Hard : 요청 수가 임계값을 초과할 수 없음</li>
+<li>Soft : 요청이 짧은 기간 동안 임계값을 초과할 수 있음</li>
+</ul>
+</li>
+<li><p>다양한 레이어에서의 rate limiting</p>
+<ul>
+<li><p>layer 3에서 Iptable을 통해 주소별로 rate limit을 적용할 수 있다.</p>
+<pre><code><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">#!/bin/bash</span><br><span class="line">IPT=/sbin/iptables</span><br><span class="line"># Max connection in seconds</span><br><span class="line">TIME_PERIOD=100</span><br><span class="line"># Max connections per IP</span><br><span class="line">BLOCKCOUNT=100</span><br><span class="line"></span><br><span class="line"># default action can be DROP or REJECT</span><br><span class="line">DACTION=&quot;DROP&quot;</span><br><span class="line">$IPT -A INPUT -p tcp --dport 80 -i eth0 -m state --state NEW -m recent --set</span><br><span class="line">$IPT -A INPUT -p tcp --dport 80 -i eth0 -m state --state NEW -m recent --update --seconds $TIME_PERIOD --hitcount $BLOCKCOUNT -j $DACTION</span><br><span class="line"></span><br><span class="line">$IPT -A INPUT -p tcp --dport 443 -i eth0 -m state --state NEW -m recent --set</span><br><span class="line">$IPT -A INPUT -p tcp --dport 443 -i eth0 -m state --state NEW -m recent --update --seconds $TIME_PERIOD --hitcount $BLOCKCOUNT -j $DACTION</span><br></pre></td></tr></table></figure>
+</code></pre></li>
+</ul>
+</li>
+<li><p>rate limit을 회피하기 위한 모범 사례에 따른 클라이언트 설계</p>
+<ul>
+<li>클라이언트 캐시를 사용해 빈번한 API 호출 회피</li>
+<li>한계를 이해하고 너무 많은 요청 보내지 않기</li>
+<li>예외 또는 오류를 포착하는 코드를 포함시켜 클라이언트가 예외에서 정상적으로 복구할 수 있도록 처리</li>
+<li>로직을 재시도할 수 있도록 충분한 back off 시간 추가</li>
+</ul>
+</li>
+</ul>
+<!-- flag of hidden posts --></div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined">Song Hayoung</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="https://songhayoung.github.io/2023/03/14/System%20Design/ByteByteGo/book/design-a-rate-limiter/">https://songhayoung.github.io/2023/03/14/System%20Design/ByteByteGo/book/design-a-rate-limiter/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/System-Design/">System Design</a></div><nav id="pagination"></nav><div id="gitalk-container"></div><script>var gitalk = new Gitalk({
+  clientID: '3604b61642355579f55e',
+  clientSecret: 'f552120f18ac5aee3f6297e05e97d94c0a25cd4b',
+  repo: 'SongHayoung.github.io',
+  owner: 'SongHayoung',
+  admin: 'SongHayoung',
+  id: md5(decodeURI(location.pathname)),
+  language: 'en'
+})
+gitalk.render('gitalk-container')</script></div></div><footer class="footer-bg" style="background-image: url(https://xxxx.jpg)"><div class="layout" id="footer"><div class="copyright">&copy;2020 - 2023 By Song Hayoung</div><div class="framework-info"><span>Driven - </span><a target="_blank" rel="noopener" href="http://hexo.io"><span>Hexo</span></a><span class="footer-separator">|</span><span>Theme - </span><a target="_blank" rel="noopener" href="https://github.com/Molunerfinn/hexo-theme-melody"><span>Melody</span></a></div><div class="footer_custom_text">Learning how to walk slowly to not miss important things</div><div class="busuanzi"><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><span id="busuanzi_container_page_pv"><i class="fa fa-file"></i><span id="busuanzi_value_page_pv"></span><span></span></span></div></div></footer><i class="fa fa-arrow-up" id="go-up" aria-hidden="true"></i><script src="https://cdn.jsdelivr.net/npm/animejs@latest/anime.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@latest/velocity.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-ui-pack@latest/velocity.ui.min.js"></script><script src="/js/utils.js?version=1.7.0"></script><script src="/js/fancybox.js?version=1.7.0"></script><script src="/js/sidebar.js?version=1.7.0"></script><script src="/js/copy.js?version=1.7.0"></script><script src="/js/fireworks.js?version=1.7.0"></script><script src="/js/transition.js?version=1.7.0"></script><script src="/js/scroll.js?version=1.7.0"></script><script src="/js/head.js?version=1.7.0"></script><script src="/js/search/algolia.js"></script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+    processEscapes: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  },
+  CommonHTML: {
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "HTML-CSS": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "SVG": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  }
+});
+</script><script type="text/x-mathjax-config">MathJax.Hub.Queue(function() {
+  var all = MathJax.Hub.getAllJax(), i;
+  for (i=0; i < all.length; i += 1) {
+    all[i].SourceElement().parentNode.className += ' has-jax';
+  }
+});
+</script><script src="https://cdn.jsdelivr.net/npm/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><script>if(/Android|webOS|iPhone|iPod|iPad|BlackBerry/i.test(navigator.userAgent)) {
+  $('#nav').addClass('is-mobile')
+  $('footer').addClass('is-mobile')
+  $('#top-container').addClass('is-mobile')
+}</script><div class="search-dialog" id="algolia-search"><div class="search-dialog__title" id="algolia-search-title">Algolia</div><div id="algolia-input-panel"><div id="algolia-search-input"></div></div><hr><div id="algolia-search-results"><div id="algolia-hits"></div><div id="algolia-pagination"></div><div id="algolia-stats"></div></div><span class="search-close-button"><i class="fa fa-times"></i></span></div><div class="search-mask"></div></body></html>
