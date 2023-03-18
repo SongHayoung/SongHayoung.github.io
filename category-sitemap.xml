@@ -9,14 +9,28 @@
 
 
     <url>
-        <loc>https://songhayoung.github.io/categories/PS/CS-Academy/</loc>
-        <lastmod>2023-03-17T11:03:56.000Z</lastmod>
+        <loc>https://songhayoung.github.io/categories/Etc/</loc>
+        <lastmod>2023-03-18T15:00:02.000Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/categories/PS/LeetCode/</loc>
+        <lastmod>2023-03-18T14:44:35.000Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
 
     <url>
         <loc>https://songhayoung.github.io/categories/PS/</loc>
+        <lastmod>2023-03-18T14:44:35.000Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/categories/PS/CS-Academy/</loc>
         <lastmod>2023-03-17T11:03:56.000Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
@@ -46,20 +60,6 @@
     <url>
         <loc>https://songhayoung.github.io/categories/System-Design/</loc>
         <lastmod>2023-03-16T14:46:49.000Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/categories/PS/LeetCode/</loc>
-        <lastmod>2023-03-12T03:29:37.000Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/categories/Etc/</loc>
-        <lastmod>2023-03-05T03:00:23.000Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
