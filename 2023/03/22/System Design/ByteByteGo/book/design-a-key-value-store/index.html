@@ -1,0 +1,318 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="description" content="[System Design] Design A Key-value Store"><meta name="keywords" content="System Design"><meta name="author" content="Song Hayoung"><meta name="copyright" content="Song Hayoung"><title>[System Design] Design A Key-value Store | SUMFIのBlog</title><meta name="robots" content="noindex"><link rel="shortcut icon" href="/songcon.ico"><link rel="stylesheet" href="/css/index.css?version=1.7.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@latest/css/font-awesome.min.css?version=1.7.0"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css?version=1.7.0"><meta name="format-detection" content="telephone=no"><meta http-equiv="x-dns-prefetch-control" content="on"><link rel="dns-prefetch" href="https://cdn.jsdelivr.net"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.css"><script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.js" defer></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@latest/dist/gitalk.min.js"></script><script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.10.0/js/md5.min.js"></script><link rel="dns-prefetch" href="https://www.google-analytics.com"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-169368422-1', 'auto');
+ga('send', 'pageview');</script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: {"appId":"7LZ6OJ4D6C","apiKey":"9a84e13f74ea78c3fd54512c10139c56","indexName":"git blog","hits":{"per_page":10},"languages":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}.","hits_stats":"${hits} results found in ${time} ms"}},
+  localSearch: undefined,
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  }
+} </script><meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/rss2.xml" title="SUMFIのBlog" type="application/rss+xml">
+</head><body><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar" data-display="true"><div class="toggle-sidebar-info text-center"><span data-toggle="Toggle article">Toggle site</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">Catalog</div><div class="sidebar-toc__progress"><span class="progress-notice">You've read</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Design-A-Key-value-Store"><span class="toc-number">1.</span> <span class="toc-text">Design A Key-value Store</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Understand-the-problem-and-establish-design-scope"><span class="toc-number">2.</span> <span class="toc-text">Understand the problem and establish design scope</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Single-server-key-value-store"><span class="toc-number">3.</span> <span class="toc-text">Single server key-value store</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Distributed-key-value-store"><span class="toc-number">4.</span> <span class="toc-text">Distributed key-value store</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#CAP-theorem"><span class="toc-number">4.1.</span> <span class="toc-text">CAP theorem</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Ideal-situation"><span class="toc-number">4.1.1.</span> <span class="toc-text">Ideal situation</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Real-world-distributed-systems"><span class="toc-number">4.1.2.</span> <span class="toc-text">Real-world distributed systems</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#System-components"><span class="toc-number">5.</span> <span class="toc-text">System components</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Data-partition"><span class="toc-number">5.1.</span> <span class="toc-text">Data partition</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Data-replication"><span class="toc-number">5.2.</span> <span class="toc-text">Data replication</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Consistency"><span class="toc-number">5.3.</span> <span class="toc-text">Consistency</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Consistency-models"><span class="toc-number">5.3.1.</span> <span class="toc-text">Consistency models</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Inconsistency-resolution-versioning"><span class="toc-number">5.3.2.</span> <span class="toc-text">Inconsistency resolution: versioning</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Handling-failures"><span class="toc-number">5.4.</span> <span class="toc-text">Handling failures</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Failure-detection"><span class="toc-number">5.4.1.</span> <span class="toc-text">Failure detection</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Handling-temporary-failures"><span class="toc-number">5.4.2.</span> <span class="toc-text">Handling temporary failures</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Handling-permanent-failures"><span class="toc-number">5.4.3.</span> <span class="toc-text">Handling permanent failures</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Handling-data-center-outage"><span class="toc-number">5.4.4.</span> <span class="toc-text">Handling data center outage</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#System-architecture-diagram"><span class="toc-number">6.</span> <span class="toc-text">System architecture diagram</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Write-path"><span class="toc-number">7.</span> <span class="toc-text">Write path</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Read-path"><span class="toc-number">8.</span> <span class="toc-text">Read path</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Summary"><span class="toc-number">9.</span> <span class="toc-text">Summary</span></a></li></ol></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="https://avatars3.githubusercontent.com/u/37806785?s=460&amp;u=8c68d685faf7c5280cfbd736a6b1730b55fb4203&amp;v=4"></div><div class="author-info__name text-center">Song Hayoung</div><div class="author-info__description text-center"></div><div class="follow-button"><a target="_blank" rel="noopener" href="https://www.instagram.com/hayoung0_0/">Follow Me</a></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="/archives"><span class="pull-left">Articles</span><span class="pull-right">6944</span></a><a class="author-info-articles__tags article-meta" href="/tags"><span class="pull-left">Tags</span><span class="pull-right">188</span></a><a class="author-info-articles__categories article-meta" href="/categories"><span class="pull-left">Categories</span><span class="pull-right">64</span></a></div><hr><div class="author-info-links"><div class="author-info-links__title text-center">VISITED</div><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Seoul Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Jeju Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">British Columbia Canada</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Boracay Philippines</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">三重　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">大阪　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">名古屋　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">静岡　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">札幌　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">京都　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Bangkok Thailand</a></div></div></div><div id="content-outer"><div id="top-container" style="background-image: url(https://xxxx.jpg)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="/">SUMFIのBlog</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus">   <a class="site-page" href="/">Home</a><a class="site-page" href="/archives">Archives</a><a class="site-page" href="/tags">Tags</a><a class="site-page" href="/categories">Categories</a><a class="site-page" href="/about">About</a></span><span class="pull-right"><a class="site-page social-icon search"><i class="fa fa-search"></i><span> Search</span></a></span></div><div id="post-info"><div id="post-title">[System Design] Design A Key-value Store</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2023-03-22</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/">System Design</a><i class="fa fa-angle-right" aria-hidden="true"></i><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/System-Design-Interview/">System Design Interview</a><div class="post-meta-wordcount"><span>Word count: </span><span class="word-count">2.1k</span><span class="post-meta__separator">|</span><span>Reading time: 13 min</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div class="article-container" id="post-content"><h2 id="Design-A-Key-value-Store"><a href="#Design-A-Key-value-Store" class="headerlink" title="Design A Key-value Store"></a>Design A Key-value Store</h2><span id="more"></span>
+<p>키-값 저장소는 비관계형 데이터베이스다. 각 고유 식별자는 연관된 값과 함께 키로 저장된다. 이 데이터 쌍을 <code>키-값</code>쌍이라고 한다. 키-값 쌍에서 키는 고유해야하며 키를 통해 키와 연결된 값에 엑세스할 수 있어야 한다. 키는 일반 텍스트 혹은 해시값일 수 있다. 성능상의 이유로 짧은 키가 더 효과적이다. 값은 문자열, 목록, 객채 등이 될 수 있다. 값을 일반적으로 키-값 저장소에서 불투명 객체로 취급된다. 아래는 키-값 저장소의 데이터 스니펫이다.</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:left"><strong>key</strong></th>
+<th style="text-align:left"><strong>value</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">145</td>
+<td style="text-align:left">john</td>
+</tr>
+<tr>
+<td style="text-align:left">147</td>
+<td style="text-align:left">bob</td>
+</tr>
+<tr>
+<td style="text-align:left">160</td>
+<td style="text-align:left">julia</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>이 포스트에서는 <code>put(key, value)</code>와 <code>get(key)</code>의 연산을 지원하는 키-값 저장소를 설계한다.</p>
+<h2 id="Understand-the-problem-and-establish-design-scope"><a href="#Understand-the-problem-and-establish-design-scope" class="headerlink" title="Understand the problem and establish design scope"></a>Understand the problem and establish design scope</h2><p>완벽한 설계는 존재하지 않는다. 각 설계는 읽기, 쓰기, 메모리 사용량 등의 트레이드 오프에서 균형을 달성해야 한다. 또한 일관성과 가용성 사이에서 적절한 절충점을 찾아야 한다. 아래는 키-값 저장소의 요구사항이다.</p>
+<ul>
+<li>키-값 쌍의 크기가 10KB 미만으로 작음</li>
+<li>많은 양의 데이터 저장 가능</li>
+<li>고가용성<ul>
+<li>장애 발생시에도 빠른 응답이 요구됨</li>
+</ul>
+</li>
+<li>높은 확장성<ul>
+<li>대규모 데이터 집합을 지원하도록 시스템을 확장시킬 수 있음</li>
+</ul>
+</li>
+<li>자동 확장<ul>
+<li>트래픽에 따라 서버를 자동으로 추가 / 제거가 가능해야 함</li>
+</ul>
+</li>
+<li>조정 가능한 일관성</li>
+<li>짧은 지연시간</li>
+</ul>
+<h2 id="Single-server-key-value-store"><a href="#Single-server-key-value-store" class="headerlink" title="Single server key-value store"></a>Single server key-value store</h2><p>단일 서버에 해당하는 키-값 저장소 설계는 간단하다. 직관적인 접근은 키-값 쌍을 해시 테이블에 저장하여 모든것을 메모리에 보관하는 것이다. 메모리의 공간 제약으로 인해 모든 것을 메모리에 넣는게 불가능할 수 있다. 이 경우 두 가지 최적화를 시도할 수 있다.</p>
+<ul>
+<li>데이터 압축</li>
+<li>자주 사용하는 데이터만 메모리에 저장하고 나머지는 디스크에 저장</li>
+</ul>
+<p>하지만 단일 서버로 빅데이터를 지원하기는 어렵다. 빅데이터를 지원하기 위해 분산 키-값 저장소가 필요하다.</p>
+<h2 id="Distributed-key-value-store"><a href="#Distributed-key-value-store" class="headerlink" title="Distributed key-value store"></a>Distributed key-value store</h2><p>분산 키-값 저장소는 분산 해시 테이블이라고도 하며, 키-값 쌍을 여러 서버에 분산시킨다. 분산 시스템을 설계할때는 CAP 이론을 짚고 넘어가면 좋다.</p>
+<h3 id="CAP-theorem"><a href="#CAP-theorem" class="headerlink" title="CAP theorem"></a>CAP theorem</h3><p>CAP 정리는 분산 시스템이 일관성, 가용성, 파티션 허용 오차라는 세가지 보장 중 두 가지 보다 더 많은 것을 동시에 제공하는 것은 불가능하다는 것을 의미한다.</p>
+<ul>
+<li>일관성 : 어떤 노드에 연결하든 모든 클라이언트가 동시에 동일한 데이터를 볼 수 있음</li>
+<li>가용성 : 일부 노드가 다운되더라도 데이터를 요청하는 모든 클라이언트가 응답을 받을 수 있음</li>
+<li>파티션 허용 오차 : 파티션은 두 노드간의 통신 중단을 의미함. 파티션 허용 오차는 네트워크 파티션에도 불구하고 시스템이 계속 동작 함</li>
+</ul>
+<p><img src="/image/bytebytego/image-20230322224246951.png" alt="image-20230322224246951"></p>
+<p>현재의 키-값 저장소는 CAP 특성의 두가지를 지원할 수 있다.</p>
+<ul>
+<li>CP 시스템 : 가용성을 희생하면서 일관성 및 파티션 허용 오차를 지원</li>
+<li>AP 시스템 : 일관성을 희생하면서 가용성 및 파티션 허용 오차를 지원</li>
+<li>CA 시스템 : 파티션 허용 오차를 희생하면서 일관성과 가용성을 지원<ul>
+<li>네트워크 장애는 피할 수 없으므로 분산 시스템은 네트워크 파티션을 허용해야 하기 때문에 CA 시스템은 실제 분산 애플리케이션에 존재할 수 없음</li>
+</ul>
+</li>
+</ul>
+<p>데이터가 3개의 복제 노드인 n1, n2, n3에 복제되어 있는 시스템을 가정하자.</p>
+<h4 id="Ideal-situation"><a href="#Ideal-situation" class="headerlink" title="Ideal situation"></a>Ideal situation</h4><p>이상적인 상황에서는 네트워크 파티션은 발생하지 않는다. n1에 기록된 데이터는 n2와 n3에 자동으로 복제되며 일관성과 가용성이 모두 달성된다.</p>
+<p><img src="/image/bytebytego/image-20230322224706689.png" alt="image-20230322224706689"></p>
+<h4 id="Real-world-distributed-systems"><a href="#Real-world-distributed-systems" class="headerlink" title="Real-world distributed systems"></a>Real-world distributed systems</h4><p>분산 시스템에서 파티션은 피할수 없으며, 파티션이 발생하면 일관성과 가용성중 하나를 선택해야 한다. n3가 파티션되어 n1 및 n2가 통신할수 없는 상황에서 클라이언트가 n1 또는 n2에 데이터를 쓰면 n3에 데이터가 전파될 수 없다. 데이터가 n3에 쓰여졌지만 아직 n1과 n2에 전파되지 않은 경우, n1과 n2는 오래된 데이터를 갖게 된다.</p>
+<p><img src="/image/bytebytego/image-20230322224838604.png" alt="image-20230322224838604"></p>
+<p>CP 시스템을 사용하는 경우 세 서버간의 데이터 불일치를 방지하기 위해 모든 쓰기 작업을 차단해야 하고, 이로인해 시스템을 사용할 수 없게 된다. 은행과 같은 시스템에서는 매우 높은 일관성을 유지하는것이 중요하며, 네트워크 파티션으로 인해 불일치가 발생하면 은행 시스템은 불일치가 해결되기 전에 오류를 반환한다.</p>
+<p>AP 시스템은 시스템이 오래된 데이터를 반환할지라도 읽기를 허용한다. 쓰기의 경우는 n1과 n2는 쓰기를 계속 수락하고 파티션 문제가 해결되면 데이터가 n3에 동기화 된다. 사용 사례에 맞는 시스템을 선택하는것은 중요한 단계이며 면접관과 논의하고 그에 따라 시스템을 설계해야 한다.</p>
+<h2 id="System-components"><a href="#System-components" class="headerlink" title="System components"></a>System components</h2><p>키-값 저장소를 구축하는데 사용되는 핵심 구성요소와 기술들에 대해 알아본다.</p>
+<ul>
+<li>데이터 파티션</li>
+<li>데이터 복제</li>
+<li>일관성</li>
+<li>불일치 해결</li>
+<li>장애 처리</li>
+<li>시스템 아키텍쳐 다이어 그램</li>
+<li>쓰기 방식</li>
+<li>읽기 방식</li>
+</ul>
+<h3 id="Data-partition"><a href="#Data-partition" class="headerlink" title="Data partition"></a>Data partition</h3><p>대규모 어플리케이션에서는 단일 서버에 전체 데이터 집합을 저장하기란 불가능에 가깝다. 이를 해결하기 위한 간단한 방법은 데이터를 작은 파티션으로 분할하여 여러 서버에 저장하는 것이다. 데이터를 분할하기 전에 해결해야할 두 가지 문제가 있다.</p>
+<ul>
+<li>여러 서버에 데이터를 균등하게 분산</li>
+<li>노드를 추가 / 제거할때 데이터 이동의 최소화</li>
+</ul>
+<p>일관된 해싱은 이런 문제를 해결하기 위한 일반적인 방법이다. 먼저 서버는 해시 링에 배치된다. 다음으로 동일한 링에 키를 해시하고 시계방향으로 이동하며 처음 만나는 서버에 키를 저장한다.</p>
+<p><img src="/image/bytebytego/image-20230322225707351.png" alt="image-20230322225707351"></p>
+<p>일관된 해싱을 사용할 경우 아래와 같은 이점이 있다.</p>
+<ul>
+<li>자동 확장 : 부하에 따라 서버를 자동으로 추가 / 제거 가능</li>
+<li>이질성 : 서버의 가상 노드 수는 서버 용량에 비례함</li>
+</ul>
+<h3 id="Data-replication"><a href="#Data-replication" class="headerlink" title="Data replication"></a>Data replication</h3><p>고가용성과 안정성을 달성하려면 데이터를 N개의 서버에 비동기적으로 복제해야 한다. 키가 해시 링의 한 위치에 매핑된 후 해당 위치에서 시계 방향으로 이동하며 만나는 N개의 서버에 데이터 사본을 저장할 수 있다.</p>
+<p><img src="/image/bytebytego/image-20230322230016102.png" alt="image-20230322230016102"></p>
+<p>가상 노드를 사용하는 경우 처음 N개의 서버를 소유하는 물리적 서버가 N보다 적을 수 있다. 이 문제를 방지하기 위해 이동하며 만나는 고유한 물리서버만 선택한다. IDC내의 노드가 전부 장애를 맞는 상태가 될 수 있기 때문에 복제본을 서로 다른 데이터센터에 배치하고 데이터 센터를 고속 네트워크로 연결한다.</p>
+<h3 id="Consistency"><a href="#Consistency" class="headerlink" title="Consistency"></a>Consistency</h3><p>데이터는 여러 노드에 복제되므로 복제본간에 동기화가 되어야 한다. 쿼럼 합의는 읽기 및 쓰기 작업에서 일관성을 보장할 수 있다.</p>
+<ul>
+<li>N = 복제본의 수</li>
+<li>W = W 크기의 쓰기 쿼럼<ul>
+<li>쓰기 작업을 성공으로 간주하기 위해선 W개의 복제본으로 부터 승인을 받아야 함</li>
+</ul>
+</li>
+<li>R = R 크기의 읽기 쿼럼<ul>
+<li>읽기 작업을 성공으로 간주하기 위해선 R개의 복제본으로 부터 응답을 기다려야 함</li>
+</ul>
+</li>
+</ul>
+<p><img src="/image/bytebytego/image-20230322230356464.png" alt="image-20230322230356464"></p>
+<p>W, R, N 구성은 지연과 일관성 사이의 일반적인 트레이드 오프다. W = 1 또는 R = 1이라면 코디네이터는 어느 복제본의 응답만 기다리면 되므로 연산이 빠르게 수행된다. W &gt; 1 또는 R &gt; 1 이라면 시스템은 더 나은 일관성을 제공하지만 가장 느린 노드의 응답을 기다려야 하므로 쿼리 속도가 느려진다. W + R &gt; N인 경우 일관성을 보장하기 위해 최신 데이터를 가진 겹치는 노드가 최소 1개는 있어야 하므로 강력한 일관성이 보장된다.</p>
+<ul>
+<li>R = 1, W = N : 빠른 읽기</li>
+<li>R = N, W = 1 : 빠른 쓰기</li>
+<li>W + R &gt; N : 강력한 일관성</li>
+<li>W + R &lt;= N : 강력한 일관성이 보장되지 않음</li>
+</ul>
+<p>요구 사항에 따라 W, R, N의 값을 조정할 수 있다.</p>
+<h4 id="Consistency-models"><a href="#Consistency-models" class="headerlink" title="Consistency models"></a>Consistency models</h4><ul>
+<li>강력한 일관성 : 모든 읽기 작업은 가장 최근에 업데이트된 쓰기 데이터 항목의 결과와 일치하는 값을 반환</li>
+<li>약한 일관성 : 읽기 작업에서 최신 업데이트 값이 표시되지 않을 수 있음</li>
+<li>최종 일관성 : 충분한 시간이 주어지면 모든 업데이트가 전파되고 모든 복제본이 일관성을 유지</li>
+</ul>
+<p>강력한 일관성은 일반적으로 모든 복제본이 현재 쓰기에 동의할 때 까지 복제본이 새로운 읽기 / 쓰기를 수락하지 않도록 강제함으로 달성된다. 이런 방식은 새로운 작업을 차단할 수 있기 때문에 고가용성 시스템에는 적합하지 않다. Dynamo와 Cassandra는 키-값 저장소에 권장되는 모델인 최종 일관성을 사용한다. 동시 쓰기에서 최종 일관성을 사용하면 일관되지 않은 값이 시스템에 입력되어 값을 강제로 조정해야 하는 문제가 생긴다.</p>
+<h4 id="Inconsistency-resolution-versioning"><a href="#Inconsistency-resolution-versioning" class="headerlink" title="Inconsistency resolution: versioning"></a>Inconsistency resolution: versioning</h4><p>복제는 고가용성을 제공하지만 복제본 간에 불일치가 발생할 수 있다. Versioning과 벡터 잠금은 불일치 문제를 해결하는데 사용된다. Versioning은 각 데이터의 수정을 새로운 불변의 데이터 버전으로 취급하는 것을 의미한다. 먼저 예시를 통해 불일치가 어떻게 발생하는지 알아본다.</p>
+<p><img src="/image/bytebytego/image-20230322231338692.png" alt="image-20230322231338692"></p>
+<p>복제노드 n1과 n2는 모두 동일한 값을 가지고 있다. 따라서 서버 1과 서버 2는 <code>get(&quot;name&quot;)</code>에 대해 동일한 결과를 받는다. 그런 다음 서버 1과 서버 2가 서로 다른 값으로 데이터를 변경한다. 이 두 변경은 동시에 실행되고 v1과 v2라는 상충되는 값이 생성된다.</p>
+<p><img src="/image/bytebytego/image-20230322231539109.png" alt="image-20230322231539109"></p>
+<p>이 두 버전의 충돌을 해결하기 위해서는 충돌을 감지하고 충돌을 조정할 수 있는 버전 관리 시스템이 필요하다. 백터 시계는 이 문제를 해결하기 위한 일반적인 기술이다. 벡터 시계는 데이터 항목과 연결된 <code>[server, version]</code> 쌍이다. 한 버전이 다른 버전보다 선행하는지, 후행하는지, 충돌하는지 확인하는데 사용된다. 백터 시계는 <code>D([s1, v1], [s2, v2], ... , [sn, vn])</code>으로 표현된다. 데이터 D가 서버 Si에 기록되면 시스템은 다음 작업중 하나를 수행한다.</p>
+<ul>
+<li>[Si, vi]가 존재하면 vi를 1 증가시킨다.</li>
+<li>존재하지 않으면 [Si, 1]을 생성한다</li>
+</ul>
+<p><img src="/image/bytebytego/image-20230322231923444.png" alt="image-20230322231923444"></p>
+<ol>
+<li>클라이언트가 데이터 항목 D1을 쓰고 벡터 시계 <code>D1([Sx, 1])</code>을 가진 서버 Sx가 쓰기를 처리</li>
+<li>다른 클라이언트가 최신 D1을 읽고 D2로 업데이트한 뒤 다시 쓰기. 이 때 벡터 시계 <code>D2([Sx, 2])</code>를 가진 동일한 서버 Sx에서 쓰기를 처리한다고 가정</li>
+<li>다른 클라이언트가 최신 D2를 읽고 D3로 업데이트한 뒤 다시 쓰기. 이 때 백터 시계 <code>D3[(Sx, 2), (Sy, 1)]</code>를 가진 서버 Sy 가 쓰기를 처리한다고 가정</li>
+<li>다른 클라이언트가 최신 D2를 읽고 D4로 업데이트한 뒤 다시 쓰기. 이 때 백터 시계 <code>D4[(Sx, 2), (Sz, 1)]</code>를 가진 서버 Sz 가 쓰기를 처리한다고 가정</li>
+<li>다른 클라이언트가 D3와 D4를 읽을 때 데이터 항목 D2가 Sy와 Sz에 의해 수정되어 발생하는 충돌을 발견함. 충돌은 클라이언트에 의해 해결되고 업데이트된 데이터가 서버로 전송됨. 이제 <code>D5([Sx, 3]), [Sy, 1], [Sz, 1])</code>가 있는 Sx가 쓰기를 처리한다고 가정</li>
+</ol>
+<p>벡터 시계를 사용하면 Y 백터 시계에 포함된 각 참가자의 버전 카운터가 X 백터 시계에 포함된 버전 카운터보다 크거나 같으면 버전 X가 버전 Y의 조상임을 쉽게 알 수 있다. 예를 들어 <code>D([s0, 1], [s1, 1])]</code>은 <code>D([s0, 1], [s1, 2])</code>의 조상이다. 마찬가지로 Y 백터 시계에 X 백터 시계의 카운터보다 작은 카운터를 가진 참가자가 있으면 X가 Y와 충돌이 존재한다는 것을 알 수 있다. 예를 들어 <code>D([s0, 1], [s1, 2])</code> 와 <code>D([s0, 2], [s1, 1])</code>는 충돌이 존재한다. 백터 시계는 충돌을 해결할 수 있지만 두 가지 단점이 있다.</p>
+<ul>
+<li>백터 시계는 충돌 해결 로직을 구현해야 하므로 클라이언트에 복잡성을 더함</li>
+<li>백터 시계의 데이터 쌍이 빠르게 증가할 수 있음<ul>
+<li>이 문제를 해결하기 위해 길이의 임계값을 설정하고 한계를 초과하면 가장 오래된 쌍을 버리는 접근 방식을 채택할 수 있다. 이렇게 되면 자손 관계를 정확히 파악할 수 없기 때문에 조정의 비효율이 발생할 수 있다. 하지만 Dynamo 논문에 따르면 아마존은 아직 실제 운영에서 이 문제를 겪은 적이 없다.</li>
+</ul>
+</li>
+</ul>
+<h3 id="Handling-failures"><a href="#Handling-failures" class="headerlink" title="Handling failures"></a>Handling failures</h3><p>어떤 대규모 시스템에서도 장애는 피할수 없으며 흔한 일이다. 그렇기에 장애 시나리오를 처리하는 것은 매우 중요하다. </p>
+<h4 id="Failure-detection"><a href="#Failure-detection" class="headerlink" title="Failure detection"></a>Failure detection</h4><p>분산 시스템에서 서버 A가 서버 B가 다운되었다고 말하는 것만으로 믿는것은 충분하지 않다. 일반적으로 서버 다운을 표시하려면 적어도 두 개의 독립적인 정보 소스가 필요하다. 아래는 all to all 멀티캐스팅을 사용한 간단한 솔루션이지만, 시스템에 많은 서버가 있는 경우 이 방법은 비효율적이다.</p>
+<p><img src="/image/bytebytego/image-20230322233520895.png" alt="image-20230322233520895"></p>
+<p>더 나은 방법은 가십 프로토콜과 같은 탈중앙화 장애 감지 방법을 사용하는 것이다.</p>
+<ul>
+<li>각 노드는 멤버 ID와 하트비트 카운터가 포함된 노드 멤버쉽 목록을 유지</li>
+<li>각 노드는 주기적으로 하트비트 카운터를 증가시킴</li>
+<li>각 노드는 주기적으로 무작위 노드 집합에 하트비트를 보내고, 이 하트비트는 다시 다른 노드 집합으로 전파</li>
+<li>노드가 하트비트를 수신하면 멤버십 목록이 최신 정보로 업데이트 됨</li>
+<li>하트비트가 미리 정의된 기간 이상 증가하지 않으면 해당 멤버는 오프라인으로 간주</li>
+</ul>
+<p><img src="/image/bytebytego/image-20230322233800273.png" alt="image-20230322233800273"></p>
+<ul>
+<li>노드 s0은 노드 s2의 하트비트 카운터가 오랫동안 증가되지 않음을 감지</li>
+<li>노드 s0은 s2의 정보가 포함된 하트비트를 무작위 노드 집합에 전송</li>
+<li>다른 노드가 s2의 하트비트 카운터가 오랫동안 업데이트 되지 않았음을 확인하면 노드 s2가 마킹되고 이 정보가 다른 노드에 전파됨</li>
+</ul>
+<h4 id="Handling-temporary-failures"><a href="#Handling-temporary-failures" class="headerlink" title="Handling temporary failures"></a>Handling temporary failures</h4><p>가십 프로토콜을 통해 장애 감지를 시작하고 난 뒤 부터는 시스템에서 가용성을 보장하기 위해 다른 매커니즘을 사용해야 한다. <code>엄격한 쿼럼</code> 방식에서는 읽기 및 쓰기 작업이 차단될 수 있다. 이 문제를 개선하기 위해 <code>조잡한 쿼럼</code> 기법이 사용된다. 이 기법은 해시 링에서 쓰기를 위해 첫번째 W 정상 서버를, 읽기를 위해 첫번째 R 정상 서버를 선택하고 오프라인 서버는 무시된다. </p>
+<p>네트워크 또는 서버 장애로 인해 서버를 사용할 수 없는 경우 다른 서버가 요청을 임시로 처리한다. 다운된 서버가 복구되면 변경사항을 푸시백 받는다. 이 프로세스를 <code>hinted handoff</code>라 한다.</p>
+<p><img src="/image/bytebytego/image-20230322234406834.png" alt="image-20230322234406834"></p>
+<h4 id="Handling-permanent-failures"><a href="#Handling-permanent-failures" class="headerlink" title="Handling permanent failures"></a>Handling permanent failures</h4><p>암시적 핸드오프는 일시적인 장애를 처리하는데 사용한다. 복제본을 영구적으로 사용할 수 없는 경우에는 anti-entropy 프로토콜을 구현해 복제본을 동기화 상태로 유지한다. Anti-entropy 프로콜은 복제본의 각 데이터를 비교하고 각 복제본을 최신 버전으로 업데이트하는 과정을 포함한다. 이 과정에서 머클 트리(해시 트리)는 불일치를 감지하고 전송되는 데이터의 양을 최소화 하는데 사용된다.</p>
+<ul>
+<li>Step 1. 키 공간을 버킷으로 분리한다. 버킷은 트리의 제한된 깊이를 유지하기 위해 루트 레벨 노드로 사용된다.</li>
+</ul>
+<p><img src="/image/bytebytego/image-20230322235106482.png" alt="image-20230322235106482"></p>
+<ul>
+<li>Step 2. 버킷이 생성되면 균일한 해싱을 사용해 버킷의 각 키를 해싱한다.</li>
+</ul>
+<p><img src="/image/bytebytego/image-20230322235201500.png" alt="image-20230322235201500"></p>
+<ul>
+<li>Step 3. 버킷당 단일 해시 노드를 생성한다.</li>
+</ul>
+<p><img src="/image/bytebytego/image-20230322235230868.png" alt="image-20230322235230868"></p>
+<ul>
+<li>Step 4. 자식의 해시를 계산해 루트까지 위쪽으로 트리를 구축한다.</li>
+</ul>
+<p><img src="/image/bytebytego/image-20230322235255424.png" alt="image-20230322235255424"></p>
+<p>두 머클트리는 루트 해시부터 비교해나가며 일치하지 않는 해시를 기준으로 자식 노드로 계속 탐색해가며 해시를 비교한다. 트리를 탐색해서 동기화되지 않은 버킷을 찾아 해당 버킷만 동기화 시킬 수 있다. 머클 트리를 사용하면 동기화해야 하는 데이터 양은 복제본의 차이에 비례된다. </p>
+<h4 id="Handling-data-center-outage"><a href="#Handling-data-center-outage" class="headerlink" title="Handling data center outage"></a>Handling data center outage</h4><p>데이터 센터 중단은 정전, 네트워크 중단, 자연재해 등으로 발생할 수 있다. 데이터 센터 중단을 처리할 수 있는 시스템 구축을 위해 여러 데이터 센터에 데이터를 복제해 두는것이 중요하다. 데이터 센터가 오프라인이 되더라도 사용자는 다른 데이터 센터를 통해 데이터에 엑세스할 수 있다.</p>
+<h2 id="System-architecture-diagram"><a href="#System-architecture-diagram" class="headerlink" title="System architecture diagram"></a>System architecture diagram</h2><p><img src="/image/bytebytego/image-20230322235636907.png" alt="image-20230322235636907"></p>
+<ul>
+<li>클라이언트는 <code>get(key)</code>와 <code>put(key, value)</code>를 통해 키-값 저장소와 통신</li>
+<li>코디네이터는 클라이언트와 키-값 저장소 사이에 프록시 역할을 하는 노드</li>
+<li>노드는 일관된 해싱을 사용해 링에 분산되어 있음</li>
+<li>시스템은 완전히 탈중앙화되어 있어 노드 추가와 이동이 자동으로 이루어 짐</li>
+<li>데이터는 여러 노드에 복제</li>
+<li>모든 노드가 동일한 책임을 맡기 때문에 단일 장애 지점이 존재하지 않음</li>
+</ul>
+<p>설계가 탈중앙화 되어 있어 노드는 아래와 같이 많은 작업이 수행 가능하다.</p>
+<p><img src="/image/bytebytego/image-20230322235916315.png" alt="image-20230322235916315"></p>
+<h2 id="Write-path"><a href="#Write-path" class="headerlink" title="Write path"></a>Write path</h2><p><img src="/image/bytebytego/image-20230323000018670.png" alt="image-20230323000018670"></p>
+<ol>
+<li>쓰기 요청이 커밋 로그 파일에 유지</li>
+<li>데이터가 메모리 캐시에 저장됨</li>
+<li>메모리 캐시가 가득 차거나 임계값에 도달하면 데이터가 디스크의 SSTable로 플러시 됨</li>
+</ol>
+<h2 id="Read-path"><a href="#Read-path" class="headerlink" title="Read path"></a>Read path</h2><p>읽기 요청이 특정 노드로 전달되면 먼저 메모리에 데이터가 있는지 확인한다.</p>
+<p><img src="/image/bytebytego/image-20230323000138891.png" alt="image-20230323000138891"></p>
+<p>데이터가 메모리에 없는 경우 디스크에서 검색된다. SSTable이 키를 가지고있는지 효과적으로 확인하기 위해 블룸 필터를 사용한다.</p>
+<p><img src="/image/bytebytego/image-20230323000239749.png" alt="image-20230323000239749"></p>
+<h2 id="Summary"><a href="#Summary" class="headerlink" title="Summary"></a>Summary</h2><div class="table-container">
+<table>
+<thead>
+<tr>
+<th><strong>Goal/Problems</strong></th>
+<th><strong>Technique</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Ability to store big data</td>
+<td>Use consistent hashing to spread load across servers</td>
+</tr>
+<tr>
+<td>High availability reads</td>
+<td>Data replicationMulti-datacenter setup</td>
+</tr>
+<tr>
+<td>Highly available writes</td>
+<td>Versioning and conflict resolution with vector clocks</td>
+</tr>
+<tr>
+<td>Dataset partition</td>
+<td>Consistent Hashing</td>
+</tr>
+<tr>
+<td>Incremental scalability</td>
+<td>Consistent Hashing</td>
+</tr>
+<tr>
+<td>Heterogeneity</td>
+<td>Consistent Hashing</td>
+</tr>
+<tr>
+<td>Tunable consistency</td>
+<td>Quorum consensus</td>
+</tr>
+<tr>
+<td>Handling temporary failures</td>
+<td>Sloppy quorum and hinted handoff</td>
+</tr>
+<tr>
+<td>Handling permanent failures</td>
+<td>Merkle tree</td>
+</tr>
+<tr>
+<td>Handling data center outage</td>
+<td>Cross-datacenter replication</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- flag of hidden posts --></div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined">Song Hayoung</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="https://songhayoung.github.io/2023/03/22/System%20Design/ByteByteGo/book/design-a-key-value-store/">https://songhayoung.github.io/2023/03/22/System%20Design/ByteByteGo/book/design-a-key-value-store/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/System-Design/">System Design</a></div><nav id="pagination"></nav><div id="gitalk-container"></div><script>var gitalk = new Gitalk({
+  clientID: '3604b61642355579f55e',
+  clientSecret: 'f552120f18ac5aee3f6297e05e97d94c0a25cd4b',
+  repo: 'SongHayoung.github.io',
+  owner: 'SongHayoung',
+  admin: 'SongHayoung',
+  id: md5(decodeURI(location.pathname)),
+  language: 'en'
+})
+gitalk.render('gitalk-container')</script></div></div><footer class="footer-bg" style="background-image: url(https://xxxx.jpg)"><div class="layout" id="footer"><div class="copyright">&copy;2020 - 2023 By Song Hayoung</div><div class="framework-info"><span>Driven - </span><a target="_blank" rel="noopener" href="http://hexo.io"><span>Hexo</span></a><span class="footer-separator">|</span><span>Theme - </span><a target="_blank" rel="noopener" href="https://github.com/Molunerfinn/hexo-theme-melody"><span>Melody</span></a></div><div class="footer_custom_text">Learning how to walk slowly to not miss important things</div><div class="busuanzi"><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><span id="busuanzi_container_page_pv"><i class="fa fa-file"></i><span id="busuanzi_value_page_pv"></span><span></span></span></div></div></footer><i class="fa fa-arrow-up" id="go-up" aria-hidden="true"></i><script src="https://cdn.jsdelivr.net/npm/animejs@latest/anime.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@latest/velocity.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-ui-pack@latest/velocity.ui.min.js"></script><script src="/js/utils.js?version=1.7.0"></script><script src="/js/fancybox.js?version=1.7.0"></script><script src="/js/sidebar.js?version=1.7.0"></script><script src="/js/copy.js?version=1.7.0"></script><script src="/js/fireworks.js?version=1.7.0"></script><script src="/js/transition.js?version=1.7.0"></script><script src="/js/scroll.js?version=1.7.0"></script><script src="/js/head.js?version=1.7.0"></script><script src="/js/search/algolia.js"></script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+    processEscapes: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  },
+  CommonHTML: {
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "HTML-CSS": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "SVG": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  }
+});
+</script><script type="text/x-mathjax-config">MathJax.Hub.Queue(function() {
+  var all = MathJax.Hub.getAllJax(), i;
+  for (i=0; i < all.length; i += 1) {
+    all[i].SourceElement().parentNode.className += ' has-jax';
+  }
+});
+</script><script src="https://cdn.jsdelivr.net/npm/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><script>if(/Android|webOS|iPhone|iPod|iPad|BlackBerry/i.test(navigator.userAgent)) {
+  $('#nav').addClass('is-mobile')
+  $('footer').addClass('is-mobile')
+  $('#top-container').addClass('is-mobile')
+}</script><div class="search-dialog" id="algolia-search"><div class="search-dialog__title" id="algolia-search-title">Algolia</div><div id="algolia-input-panel"><div id="algolia-search-input"></div></div><hr><div id="algolia-search-results"><div id="algolia-hits"></div><div id="algolia-pagination"></div><div id="algolia-stats"></div></div><span class="search-close-button"><i class="fa fa-times"></i></span></div><div class="search-mask"></div></body></html>

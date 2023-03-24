@@ -1,0 +1,205 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="description" content="[System Design] Back of the envelope Estimation"><meta name="keywords" content="System Design"><meta name="author" content="Song Hayoung"><meta name="copyright" content="Song Hayoung"><title>[System Design] Back of the envelope Estimation | SUMFIのBlog</title><meta name="robots" content="noindex"><link rel="shortcut icon" href="/songcon.ico"><link rel="stylesheet" href="/css/index.css?version=1.7.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@latest/css/font-awesome.min.css?version=1.7.0"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css?version=1.7.0"><meta name="format-detection" content="telephone=no"><meta http-equiv="x-dns-prefetch-control" content="on"><link rel="dns-prefetch" href="https://cdn.jsdelivr.net"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.css"><script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.js" defer></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@latest/dist/gitalk.min.js"></script><script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.10.0/js/md5.min.js"></script><link rel="dns-prefetch" href="https://www.google-analytics.com"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-169368422-1', 'auto');
+ga('send', 'pageview');</script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: {"appId":"7LZ6OJ4D6C","apiKey":"9a84e13f74ea78c3fd54512c10139c56","indexName":"git blog","hits":{"per_page":10},"languages":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}.","hits_stats":"${hits} results found in ${time} ms"}},
+  localSearch: undefined,
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  }
+} </script><meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/rss2.xml" title="SUMFIのBlog" type="application/rss+xml">
+</head><body><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar" data-display="true"><div class="toggle-sidebar-info text-center"><span data-toggle="Toggle article">Toggle site</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">Catalog</div><div class="sidebar-toc__progress"><span class="progress-notice">You've read</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Design-Consistent-Hashing"><span class="toc-number">1.</span> <span class="toc-text">Design Consistent Hashing</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#The-rehashing-problem"><span class="toc-number">2.</span> <span class="toc-text">The rehashing problem</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Consistent-hashing"><span class="toc-number">3.</span> <span class="toc-text">Consistent hashing</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Hash-space-and-hash-ring"><span class="toc-number">3.1.</span> <span class="toc-text">Hash space and hash ring</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Hash-servers"><span class="toc-number">3.2.</span> <span class="toc-text">Hash servers</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Hash-keys"><span class="toc-number">3.3.</span> <span class="toc-text">Hash keys</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Server-lookup"><span class="toc-number">3.4.</span> <span class="toc-text">Server lookup</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Add-a-server"><span class="toc-number">3.5.</span> <span class="toc-text">Add a server</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Remove-a-server"><span class="toc-number">3.6.</span> <span class="toc-text">Remove a server</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Two-issues-in-the-basic-approach"><span class="toc-number">4.</span> <span class="toc-text">Two issues in the basic approach</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Virtual-nodes"><span class="toc-number">5.</span> <span class="toc-text">Virtual nodes</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Find-affected-keys"><span class="toc-number">6.</span> <span class="toc-text">Find affected keys</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Wrap-up"><span class="toc-number">7.</span> <span class="toc-text">Wrap up</span></a></li></ol></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="https://avatars3.githubusercontent.com/u/37806785?s=460&amp;u=8c68d685faf7c5280cfbd736a6b1730b55fb4203&amp;v=4"></div><div class="author-info__name text-center">Song Hayoung</div><div class="author-info__description text-center"></div><div class="follow-button"><a target="_blank" rel="noopener" href="https://www.instagram.com/hayoung0_0/">Follow Me</a></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="/archives"><span class="pull-left">Articles</span><span class="pull-right">6944</span></a><a class="author-info-articles__tags article-meta" href="/tags"><span class="pull-left">Tags</span><span class="pull-right">188</span></a><a class="author-info-articles__categories article-meta" href="/categories"><span class="pull-left">Categories</span><span class="pull-right">64</span></a></div><hr><div class="author-info-links"><div class="author-info-links__title text-center">VISITED</div><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Seoul Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Jeju Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">British Columbia Canada</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Boracay Philippines</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">三重　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">大阪　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">名古屋　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">静岡　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">札幌　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">京都　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Bangkok Thailand</a></div></div></div><div id="content-outer"><div id="top-container" style="background-image: url(https://xxxx.jpg)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="/">SUMFIのBlog</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus">   <a class="site-page" href="/">Home</a><a class="site-page" href="/archives">Archives</a><a class="site-page" href="/tags">Tags</a><a class="site-page" href="/categories">Categories</a><a class="site-page" href="/about">About</a></span><span class="pull-right"><a class="site-page social-icon search"><i class="fa fa-search"></i><span> Search</span></a></span></div><div id="post-info"><div id="post-title">[System Design] Back of the envelope Estimation</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2023-03-20</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/">System Design</a><i class="fa fa-angle-right" aria-hidden="true"></i><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/System-Design-Interview/">System Design Interview</a><div class="post-meta-wordcount"><span>Word count: </span><span class="word-count">666</span><span class="post-meta__separator">|</span><span>Reading time: 4 min</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div class="article-container" id="post-content"><h2 id="Design-Consistent-Hashing"><a href="#Design-Consistent-Hashing" class="headerlink" title="Design Consistent Hashing"></a>Design Consistent Hashing</h2><span id="more"></span>
+<p>수평적 확장을 달성하려면 요청을 서버에 효율적이고 균등하게 분산시키는 것이 중요하다. 일관된 해싱은 이 목표를 달성하기 위한 일반적인 기술이다. 먼저 문제에 대해 자세히 살펴본다.</p>
+<h2 id="The-rehashing-problem"><a href="#The-rehashing-problem" class="headerlink" title="The rehashing problem"></a>The rehashing problem</h2><p>캐시 서버가 N개인 경우 부하를 분산하는 일반적인 방법은 <code>serverIndex = hash(key) % N</code>을 사용하는 것이다. 키가 저장된 서버가 어떤것인지 알기 위해서는 <code>hash(key) % 4</code>를 수행한다. 아래는 N이 4일때 어느 해시값을 나타내는지에 대한 도표다.</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:left"><strong>key</strong></th>
+<th style="text-align:left"><strong>hash</strong></th>
+<th style="text-align:left"><strong>hash % 4</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">key0</td>
+<td style="text-align:left">18358617</td>
+<td style="text-align:left">1</td>
+</tr>
+<tr>
+<td style="text-align:left">key1</td>
+<td style="text-align:left">26143584</td>
+<td style="text-align:left">0</td>
+</tr>
+<tr>
+<td style="text-align:left">key2</td>
+<td style="text-align:left">18131146</td>
+<td style="text-align:left">2</td>
+</tr>
+<tr>
+<td style="text-align:left">key3</td>
+<td style="text-align:left">35863496</td>
+<td style="text-align:left">0</td>
+</tr>
+<tr>
+<td style="text-align:left">key4</td>
+<td style="text-align:left">34085809</td>
+<td style="text-align:left">1</td>
+</tr>
+<tr>
+<td style="text-align:left">key5</td>
+<td style="text-align:left">27581703</td>
+<td style="text-align:left">3</td>
+</tr>
+<tr>
+<td style="text-align:left">key6</td>
+<td style="text-align:left">38164978</td>
+<td style="text-align:left">2</td>
+</tr>
+<tr>
+<td style="text-align:left">key7</td>
+<td style="text-align:left">22530351</td>
+<td style="text-align:left">3</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><img src="/image/bytebytego/image-20230320233407582.png" alt=""></p>
+<p>이 접근 방식은 서버 풀의 크기가 고정되어 있고 데이터 분포가 균일할 때 잘 동작한다. 하지만 새 서버를 추가 / 제거할때 문제가 발생한다. 예를 들어 서버 1이 오프라인 상태가 되면 서버 풀의 크기는 3이 되며 키에 대한 해시값 또한 달라진다.</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:left"><strong>key</strong></th>
+<th style="text-align:left"><strong>hash</strong></th>
+<th style="text-align:left"><strong>hash % 3</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">key0</td>
+<td style="text-align:left">18358617</td>
+<td style="text-align:left">0</td>
+</tr>
+<tr>
+<td style="text-align:left">key1</td>
+<td style="text-align:left">26143584</td>
+<td style="text-align:left">0</td>
+</tr>
+<tr>
+<td style="text-align:left">key2</td>
+<td style="text-align:left">18131146</td>
+<td style="text-align:left">1</td>
+</tr>
+<tr>
+<td style="text-align:left">key3</td>
+<td style="text-align:left">35863496</td>
+<td style="text-align:left">2</td>
+</tr>
+<tr>
+<td style="text-align:left">key4</td>
+<td style="text-align:left">34085809</td>
+<td style="text-align:left">1</td>
+</tr>
+<tr>
+<td style="text-align:left">key5</td>
+<td style="text-align:left">27581703</td>
+<td style="text-align:left">0</td>
+</tr>
+<tr>
+<td style="text-align:left">key6</td>
+<td style="text-align:left">38164978</td>
+<td style="text-align:left">1</td>
+</tr>
+<tr>
+<td style="text-align:left">key7</td>
+<td style="text-align:left">22530351</td>
+<td style="text-align:left">0</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><img src="/image/bytebytego/image-20230320233722243.png" alt="image-20230320233722243"></p>
+<p>그림에서 볼 수 있듯이 서버1이 오프라인 상태가 되면 대부분의 키가 재분배된다. 이로 인해 캐시 미스가 매우 많이 발생하게 된다. 일관된 해싱은 이 문제를 완화하는 효과적인 기술이다.</p>
+<h2 id="Consistent-hashing"><a href="#Consistent-hashing" class="headerlink" title="Consistent hashing"></a>Consistent hashing</h2><p>일관된 해싱은 해시 테이블의 크기를 변경할때 k/n개의 키만 다시 매핑하면 되는 해싱으로, 여기서 k는 키의 수이고 n은 슬롯의 수이다.</p>
+<h3 id="Hash-space-and-hash-ring"><a href="#Hash-space-and-hash-ring" class="headerlink" title="Hash space and hash ring"></a>Hash space and hash ring</h3><p>SHA-1을 해시 함수로 사용하고 해시 함수의 출력 범위가 x0, x1, x2 … ,xn이라고 가정하자. 암호화에서 SHA-1의 해시 공간은 [0,2^160-1] 이다.</p>
+<p><img src="/image/bytebytego/image-20230320234416355.png" alt="image-20230320234416355"></p>
+<p>해시 공간의 양쪽 끝을 인접시키면 아래와 같은 해시 링을 얻을 수 있다.</p>
+<p><img src="/image/bytebytego/image-20230320234456410.png" alt="image-20230320234456410"></p>
+<h3 id="Hash-servers"><a href="#Hash-servers" class="headerlink" title="Hash servers"></a>Hash servers</h3><p>동일한 해시 함수 f를 사용해 서버 IP 또는 이름을 기반으로 서버를 링에 매핑시킨다.</p>
+<p><img src="/image/bytebytego/image-20230320234605897.png" alt="image-20230320234605897"></p>
+<h3 id="Hash-keys"><a href="#Hash-keys" class="headerlink" title="Hash keys"></a>Hash keys</h3><p>동일한 해시 함수 f를 사용해 키를 기반으로 링 위에 매핑시킨다.</p>
+<p><img src="/image/bytebytego/image-20230320234707352.png" alt="image-20230320234707352"></p>
+<h3 id="Server-lookup"><a href="#Server-lookup" class="headerlink" title="Server lookup"></a>Server lookup</h3><p>키가 어떤 서버에 저장되어 있는지 하기 위해 링의 키 위치에서 시계 방향으로 서버를 찾을 때까지 이동한다.</p>
+<p><img src="/image/bytebytego/image-20230320234809828.png" alt="image-20230320234809828"></p>
+<h3 id="Add-a-server"><a href="#Add-a-server" class="headerlink" title="Add a server"></a>Add a server</h3><p>아래 그림은 새 서버 4를 추가한 후 키 0만 재배포하면 되고 키 1, 키 2, 키 3은 동일한 서버에 남아있게 된다. 서버 4가 추가되기 전에는 키 0이 제일 먼저 만나는 서버는 서버 0이였지만, 서버 4가 추가된 후에는 키 0은 서버 4에 맵핑된다. 다른 키는 일관된 해싱 알고리즘에 따라 재분배되지 않는다.</p>
+<p><img src="/image/bytebytego/image-20230320235013347.png" alt="image-20230320235013347"></p>
+<h3 id="Remove-a-server"><a href="#Remove-a-server" class="headerlink" title="Remove a server"></a>Remove a server</h3><p>서버를 제거할 때 일관된 해싱으로 재분배가 필요한 키는 극히 일부에 불과하다.</p>
+<p><img src="/image/bytebytego/image-20230320235056453.png" alt="image-20230320235056453"></p>
+<h2 id="Two-issues-in-the-basic-approach"><a href="#Two-issues-in-the-basic-approach" class="headerlink" title="Two issues in the basic approach"></a>Two issues in the basic approach</h2><p>일관된 해싱 알고리즘의 기본 단계는 다음과 같다.</p>
+<ul>
+<li>균일하게 분산된 해시 함수를 사용해 서버와 키를 링에 매핑</li>
+<li>키가 어떤 서버에 매핑되어 잇는지 확인하기 위해 키 위치에서 시계방향으로 이동해 링의 첫 번째 서버를 탐색</li>
+</ul>
+<p>이 접근 방식에는 두 가지 문제가 있다. 첫째, 서버를 추가하거나 제거할 수 있으므로 모든 서버에 대해 링의 파티션 크기를 동일하게 유지하는 것이 불가능 하다. 아래 그림은 s1 서버를 제거 후 s2 서버의 파티션이 s3과 s0의 두배가 되는 모습이다.</p>
+<p><img src="/image/bytebytego/image-20230320235300760.png" alt="image-20230320235300760"></p>
+<p>둘째, 링에 키 분포가 균일하지 않을 수 있다.</p>
+<p><img src="/image/bytebytego/image-20230320235416679.png" alt="image-20230320235416679"></p>
+<p>이 두 문제를 해결하기 위해 가상 노드 혹은 복제 노드라는 개념이 일관된 해싱에 도입된다.</p>
+<h2 id="Virtual-nodes"><a href="#Virtual-nodes" class="headerlink" title="Virtual nodes"></a>Virtual nodes</h2><p>가상 노드는 실제 노드에서 나타나며 각 서버는 링에서 여러개의 가상 노드로 표현된다. 가상 노드를 사용하면 각 서버가 여러 파티션을 담당한다. 아래 그림은 각 서버가 0, 1, 2의 가상 노드를 가질 때 해시 링의 상태이다.</p>
+<p><img src="/image/bytebytego/image-20230320235658074.png" alt="image-20230320235658074"></p>
+<p>키가 어떤 서버에 저장되어 있는지 찾기 위해 키의 위치에서 시계 방향으로 이동해 링에서 처음 만나는 가상 노드를 찾는다.</p>
+<p><img src="/image/bytebytego/image-20230320235736223.png" alt="image-20230320235736223"></p>
+<p>가상 노드의 수가 증가함에 따라 키의 분포가 더욱 균형적으로 이루어진다. 가상 노드가 많은 수록 표준 편차가 작아져 균형 잡힌 데이터 분포로 이어지기 때문이다. 연구에 따르면 가상 노드가 100~200개 일때 표준 편차는 평균의 5%(200개) 에서 10%(100개) 사이로 나타난다. 가상 노드의 수를 늘리면 표준 편차는 더 작아지겠지만, 가상 노드에 대한 데이터를 저장하기 위한 더 많은 공간이 필요하게 된다. 가상노드 수에 따른 트레이드 오프가 생기므로 시스템 요구사항에 맞게 가상노드 수를 조정해야 한다.</p>
+<h2 id="Find-affected-keys"><a href="#Find-affected-keys" class="headerlink" title="Find affected keys"></a>Find affected keys</h2><p>서버가 추가 / 제거될 때 데이터의 일부에 대해 재분배가 필요하다. 아래 그림은  s4가 추가될 때 재분배가 필요한 데이터의 예이다.</p>
+<p><img src="/image/bytebytego/image-20230321000138806.png" alt="image-20230321000138806"></p>
+<p>아래 그림은 s1이 제거될 때 재분배가 필요한 데이터의 예이다.</p>
+<p><img src="/image/bytebytego/image-20230321000219360.png" alt="image-20230321000219360"></p>
+<h2 id="Wrap-up"><a href="#Wrap-up" class="headerlink" title="Wrap up"></a>Wrap up</h2><p>일관된 해싱의 장점</p>
+<ul>
+<li>서버를 추가 / 제거할 때 재분배할 키의 최소화</li>
+<li>데이터가 보다 균등하게 분산되므로 수평적 확장에 용이</li>
+<li>핫스팟 키 문제 완화</li>
+</ul>
+<!-- flag of hidden posts --></div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined">Song Hayoung</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="https://songhayoung.github.io/2023/03/20/System%20Design/ByteByteGo/book/design-consistent-hashing/">https://songhayoung.github.io/2023/03/20/System%20Design/ByteByteGo/book/design-consistent-hashing/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/System-Design/">System Design</a></div><nav id="pagination"></nav><div id="gitalk-container"></div><script>var gitalk = new Gitalk({
+  clientID: '3604b61642355579f55e',
+  clientSecret: 'f552120f18ac5aee3f6297e05e97d94c0a25cd4b',
+  repo: 'SongHayoung.github.io',
+  owner: 'SongHayoung',
+  admin: 'SongHayoung',
+  id: md5(decodeURI(location.pathname)),
+  language: 'en'
+})
+gitalk.render('gitalk-container')</script></div></div><footer class="footer-bg" style="background-image: url(https://xxxx.jpg)"><div class="layout" id="footer"><div class="copyright">&copy;2020 - 2023 By Song Hayoung</div><div class="framework-info"><span>Driven - </span><a target="_blank" rel="noopener" href="http://hexo.io"><span>Hexo</span></a><span class="footer-separator">|</span><span>Theme - </span><a target="_blank" rel="noopener" href="https://github.com/Molunerfinn/hexo-theme-melody"><span>Melody</span></a></div><div class="footer_custom_text">Learning how to walk slowly to not miss important things</div><div class="busuanzi"><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><span id="busuanzi_container_page_pv"><i class="fa fa-file"></i><span id="busuanzi_value_page_pv"></span><span></span></span></div></div></footer><i class="fa fa-arrow-up" id="go-up" aria-hidden="true"></i><script src="https://cdn.jsdelivr.net/npm/animejs@latest/anime.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@latest/velocity.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-ui-pack@latest/velocity.ui.min.js"></script><script src="/js/utils.js?version=1.7.0"></script><script src="/js/fancybox.js?version=1.7.0"></script><script src="/js/sidebar.js?version=1.7.0"></script><script src="/js/copy.js?version=1.7.0"></script><script src="/js/fireworks.js?version=1.7.0"></script><script src="/js/transition.js?version=1.7.0"></script><script src="/js/scroll.js?version=1.7.0"></script><script src="/js/head.js?version=1.7.0"></script><script src="/js/search/algolia.js"></script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+    processEscapes: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  },
+  CommonHTML: {
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "HTML-CSS": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "SVG": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  }
+});
+</script><script type="text/x-mathjax-config">MathJax.Hub.Queue(function() {
+  var all = MathJax.Hub.getAllJax(), i;
+  for (i=0; i < all.length; i += 1) {
+    all[i].SourceElement().parentNode.className += ' has-jax';
+  }
+});
+</script><script src="https://cdn.jsdelivr.net/npm/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><script>if(/Android|webOS|iPhone|iPod|iPad|BlackBerry/i.test(navigator.userAgent)) {
+  $('#nav').addClass('is-mobile')
+  $('footer').addClass('is-mobile')
+  $('#top-container').addClass('is-mobile')
+}</script><div class="search-dialog" id="algolia-search"><div class="search-dialog__title" id="algolia-search-title">Algolia</div><div id="algolia-input-panel"><div id="algolia-search-input"></div></div><hr><div id="algolia-search-results"><div id="algolia-hits"></div><div id="algolia-pagination"></div><div id="algolia-stats"></div></div><span class="search-close-button"><i class="fa fa-times"></i></span></div><div class="search-mask"></div></body></html>

@@ -1,0 +1,196 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="description" content="[ByteByteGo] A Crash Course in Caching - Part 2"><meta name="keywords" content="System Design"><meta name="author" content="Song Hayoung"><meta name="copyright" content="Song Hayoung"><title>[ByteByteGo] A Crash Course in Caching - Part 2 | SUMFIのBlog</title><meta name="robots" content="noindex"><link rel="shortcut icon" href="/songcon.ico"><link rel="stylesheet" href="/css/index.css?version=1.7.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@latest/css/font-awesome.min.css?version=1.7.0"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css?version=1.7.0"><meta name="format-detection" content="telephone=no"><meta http-equiv="x-dns-prefetch-control" content="on"><link rel="dns-prefetch" href="https://cdn.jsdelivr.net"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.css"><script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.js" defer></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@latest/dist/gitalk.min.js"></script><script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.10.0/js/md5.min.js"></script><link rel="dns-prefetch" href="https://www.google-analytics.com"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-169368422-1', 'auto');
+ga('send', 'pageview');</script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: {"appId":"7LZ6OJ4D6C","apiKey":"9a84e13f74ea78c3fd54512c10139c56","indexName":"git blog","hits":{"per_page":10},"languages":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}.","hits_stats":"${hits} results found in ${time} ms"}},
+  localSearch: undefined,
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  }
+} </script><meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/rss2.xml" title="SUMFIのBlog" type="application/rss+xml">
+</head><body><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar" data-display="true"><div class="toggle-sidebar-info text-center"><span data-toggle="Toggle article">Toggle site</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">Catalog</div><div class="sidebar-toc__progress"><span class="progress-notice">You've read</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Distributed-cache"><span class="toc-number">1.</span> <span class="toc-text">Distributed cache</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Modulus-sharding"><span class="toc-number">1.1.</span> <span class="toc-text">Modulus sharding</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Range-based-sharding"><span class="toc-number">1.2.</span> <span class="toc-text">Range-based sharding</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Consistent-hashing"><span class="toc-number">1.3.</span> <span class="toc-text">Consistent hashing</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Cache-strategies"><span class="toc-number">2.</span> <span class="toc-text">Cache strategies</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Read-Strategies"><span class="toc-number">2.1.</span> <span class="toc-text">Read Strategies</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Cache-aside"><span class="toc-number">2.1.1.</span> <span class="toc-text">Cache-aside</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Read-through"><span class="toc-number">2.1.2.</span> <span class="toc-text">Read-through</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Write-Strategies"><span class="toc-number">2.2.</span> <span class="toc-text">Write Strategies</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Write-around"><span class="toc-number">2.2.1.</span> <span class="toc-text">Write-around</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Write-through"><span class="toc-number">2.2.2.</span> <span class="toc-text">Write-through</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Write-back"><span class="toc-number">2.2.3.</span> <span class="toc-text">Write-back</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Exploring-Cache-Strategy-Combinations"><span class="toc-number">2.3.</span> <span class="toc-text">Exploring Cache Strategy Combinations</span></a></li></ol></li></ol></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="https://avatars3.githubusercontent.com/u/37806785?s=460&amp;u=8c68d685faf7c5280cfbd736a6b1730b55fb4203&amp;v=4"></div><div class="author-info__name text-center">Song Hayoung</div><div class="author-info__description text-center"></div><div class="follow-button"><a target="_blank" rel="noopener" href="https://www.instagram.com/hayoung0_0/">Follow Me</a></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="/archives"><span class="pull-left">Articles</span><span class="pull-right">6944</span></a><a class="author-info-articles__tags article-meta" href="/tags"><span class="pull-left">Tags</span><span class="pull-right">188</span></a><a class="author-info-articles__categories article-meta" href="/categories"><span class="pull-left">Categories</span><span class="pull-right">64</span></a></div><hr><div class="author-info-links"><div class="author-info-links__title text-center">VISITED</div><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Seoul Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Jeju Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">British Columbia Canada</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Boracay Philippines</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">三重　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">大阪　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">名古屋　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">静岡　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">札幌　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">京都　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Bangkok Thailand</a></div></div></div><div id="content-outer"><div id="top-container" style="background-image: url(https://xxxx.jpg)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="/">SUMFIのBlog</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus">   <a class="site-page" href="/">Home</a><a class="site-page" href="/archives">Archives</a><a class="site-page" href="/tags">Tags</a><a class="site-page" href="/categories">Categories</a><a class="site-page" href="/about">About</a></span><span class="pull-right"><a class="site-page social-icon search"><i class="fa fa-search"></i><span> Search</span></a></span></div><div id="post-info"><div id="post-title">[ByteByteGo] A Crash Course in Caching - Part 2</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2023-03-23</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/">System Design</a><i class="fa fa-angle-right" aria-hidden="true"></i><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/Byte-Byte-Go/">Byte Byte Go</a><div class="post-meta-wordcount"><span>Word count: </span><span class="word-count">1.2k</span><span class="post-meta__separator">|</span><span>Reading time: 7 min</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div class="article-container" id="post-content"><h2 id="Distributed-cache"><a href="#Distributed-cache" class="headerlink" title="Distributed cache"></a>Distributed cache</h2><span id="more"></span>
+<p>분산 캐시는 자주 액세스하는 데이터를 여러 노드에 걸쳐 메모리에 저장한다. 캐시된 데이터는 여러 노드에 걸쳐 분할되며, 각 노드는 캐시된 데이터의 일부만 저장한다. 노드는 데이터를 키-값 쌍으로 저장하며, 각 키는 특정 파티션 또는 샤드에 결정론적으로 할당된다. 클라이언트가 데이터를 요청하면 캐시 시스템은 적절한 노드에서 데이터를 검색해 백업 스토리지의 부하를 줄인다. 모듈러 기반, 범위 기반, 일관된 해싱 등 다양한 샤딩 전략이 있다.</p>
+<h3 id="Modulus-sharding"><a href="#Modulus-sharding" class="headerlink" title="Modulus sharding"></a>Modulus sharding</h3><p>모듈러 샤딩은 총 샤드 수에 모듈러 연산을 수행한 해시 값을 기반으로 샤드에 키를 할당한다. 이 전략은 간단하지만 샤드의 수가 변화할 때 많은 캐시 미스가 발생할 수 있다. 노드 풀의 크기가 조정되면 대부분의 키가 재분배 되야 하는 것이 원인이다.</p>
+<p><img src="/image/bytebytego/image-20230323232036665.png" alt="image-20230323232036665"></p>
+<h3 id="Range-based-sharding"><a href="#Range-based-sharding" class="headerlink" title="Range-based sharding"></a>Range-based sharding</h3><p>범위 기반 샤딩은 미리 정의된 키 범위에 따라 특정 샤드에 키를 할당한다. 이 전략을 사용하면 시스템이 키 공간을 특정 범위로 분할한 다음 각 범위를 특정 샤드에 매핑할 수 있다. 범위 기반 샤딩은 지리적 위치 기반 데이터 또는 특정 고객 세그먼트와 관련된 데이터와 같이 데이터가 특정 범위로 자연스럽게 그룹화되거나 분할되는 특정 비즈니스 시나리오에 유용할 수 있다.</p>
+<p><img src="/image/bytebytego/image-20230323232219740.png" alt="image-20230323232219740"></p>
+<p>그러나 이 접근 방식도 샤드의 수가 변경될 때 키 범위를 재정의 하고 데이터를 다시 매핑해야 하는 문제가 있다.</p>
+<h3 id="Consistent-hashing"><a href="#Consistent-hashing" class="headerlink" title="Consistent hashing"></a>Consistent hashing</h3><p>일관된 해싱은 널리 사용되는 샤딩 전략으로 다른 샤딩 전략보다 더 나은 로드 밸런싱과 내결함성을 제공한다. 일관된 해싱을 사용하면 키와 노드가 모두 고정된 크기의 링에 매핑되며 해시 함수를 사용하여 각 키와 노드에 링의 위치를 할당한다.</p>
+<p><img src="/image/bytebytego/image-20230323232414332.png" alt="image-20230323232414332"></p>
+<p>키가 요청되면 시스템은 동일한 해시 함수를 사용해 키를 링의 특정 위치에 매핑시키고, 시계방향으로 움직이며 만나는 첫 번째노드를 찾는다. 이 노드는 키와 관련된 데이터를 저장하는 역할을 한다. 시스템에 노드를 추가 / 제거할 때 변경된 노드에 할당되어있는 키만 재분배하면 되기 때문에 리해싱 문제에서 데이터의 양을 제한하여 샤드 수 변경에도 유리하다.</p>
+<h2 id="Cache-strategies"><a href="#Cache-strategies" class="headerlink" title="Cache strategies"></a>Cache strategies</h2><p>캐시 전략은 데이터 읽기 또는 쓰기를 처리하는 방식에 따라 분류할 수 있다.</p>
+<h3 id="Read-Strategies"><a href="#Read-Strategies" class="headerlink" title="Read Strategies"></a>Read Strategies</h3><h4 id="Cache-aside"><a href="#Cache-aside" class="headerlink" title="Cache-aside"></a>Cache-aside</h4><p>Lazy loading이라고도 불리는 이 전략은 애플리케이션이 캐시 및 스토리지 시스템과 직접 통신하는 전략이다.</p>
+<ol>
+<li>애플리케이션이 키를 요청</li>
+<li>캐시 히트인 경우 데이터가 애플리케이션으로 반환</li>
+<li>캐시 미스인 경우 스토리지에서 키를 요청</li>
+<li>저장소는 애플리케이션에 데이터를 반환</li>
+<li>애플리케이션은 향후 읽기를 위해 키와 데이터를 캐시에 씀</li>
+</ol>
+<p><img src="/image/bytebytego/image-20230324001232613.png" alt="image-20230324001232613"></p>
+<p>Cache-aside는 다양한 사용 사례에 적합하고 읽기량이 높은 작업에도 유용하기 때문에 다용도로 사용할 수 있다.</p>
+<p>Pros</p>
+<ul>
+<li>시스템이 스토리지에서 계속 읽을 수 있으므로 캐시 장애를 견딜 수 있음</li>
+<li>캐시의 데이터 모델은 스토리지의 데이터 모델과 다를 수 있으므로 다양한 사용 사례에 유연성을 제공</li>
+</ul>
+<p>Cons</p>
+<ul>
+<li>애플리케이션이 캐시와 스토리지를 모두 관리해야 하므로 복잡도 증가</li>
+<li>캐시 및 스토리지에 대한 원자적 연산이 없기 때문에 데이터 일관성 보장이 어려움</li>
+</ul>
+<p>Cache-aside를 사용할 때는 다른 잠재적인 데이터 일관성 문제를 고려하는 것이 중요하다. 예를 들어 데이터 스니펫이 캐시에 기록되고 나중에 스토리지의 값이 업데이트 되는 경우 애플리케이션은 캐시가 제거될 때까지 캐시에서 오래된 값만 읽을 수 있다. 이 문제에 대한 한 가지 해결책은 캐시된 각 레코드에 적절한 TTL을 설정해 오래된 데이터를 무효화 시키는 것이다. 더욱 엄격한 데이터 일관성이 필요한 경우 애플리케이션은 캐시와 함께 아래 설명될 쓰기 전략중 하나를 결합할 수 있다.</p>
+<h4 id="Read-through"><a href="#Read-through" class="headerlink" title="Read-through"></a>Read-through</h4><p>Read-through 전략은 캐시가 애플리케이션과 스토리지 사이에 중개자 역할을 하며 모든 읽기 요청을 처리하는 방식이다. 이 전략은 데이터 검색 책임을 캐시에 위임해 애플리케이션의 역할을 단순화 시킨다. Read-through 전략은 읽기 작업이 많은 워크로드에 적합하며 캐시 라이브러리 및 일부 독립형 캐시 공급업체에서 일반적으로 사용된다.</p>
+<ol>
+<li>애플리케이션이 캐시에서 키를 요청</li>
+<li>캐시 히트인 경우 데이터가 애플리케이션으로 반환</li>
+<li>캐시 미스인 경우 캐시가 스토리지에서 키를 요청</li>
+<li>캐시는 스토리지에서 데이터를 검색 후 키와 관련된 데이터를 캐시에 쓴 다음 애플리케이션에 반환</li>
+</ol>
+<p><img src="/image/bytebytego/image-20230324002007960.png" alt="image-20230324002007960"></p>
+<p>이 전략은 애플리케이션이 캐시에 데이터를 쓰는 cache-aside 전략과 달리 캐시가 데이터를 캐시에 쓴다.</p>
+<p>Pros</p>
+<ul>
+<li>애플리케이션은 읽기만 하면 되므로 코드가 간결해짐</li>
+</ul>
+<p>Cons</p>
+<ul>
+<li>캐시가 데이터 검색 프로세스에서 중요한 역할을 하므로 시스템이 캐시 장애를 견딜 수 없음</li>
+<li>캐시 및 스토리지 시스템은 동일한 데이터 모델을 공유해야 하므로 다양한 사례를 유연하게 처리하는데 한계가 있음</li>
+<li>데이터 일관성 문제가 발생함</li>
+</ul>
+<h3 id="Write-Strategies"><a href="#Write-Strategies" class="headerlink" title="Write Strategies"></a>Write Strategies</h3><h4 id="Write-around"><a href="#Write-around" class="headerlink" title="Write-around"></a>Write-around</h4><p>Write-around 전략은 애플리케이션이 캐시를 우회해 스토리지 시스템에 직접 데이터를 쓴다. 이 방식은 실제 시스템에서 cache-aside나 read-through와 같이 결합되어 사용되는 경우가 많다.</p>
+<ol>
+<li>애플리케이션이 스토리지 시스템에 직접 데이터를 씀</li>
+<li>데이터가 스토리지에 기록된 후 아래 단계중 하나를 수행<ol>
+<li>키-값 쌍을 캐시에 씀. 하지만 여러 스레드가 동일한 키를 업데이트 하는 경우 동시성 충돌이 발생할 수 있음</li>
+<li>캐시에서 키를 무효화. 동일한 키에 대해 후속 읽기 요청이 캐시 누락을 유도하고 업데이트된 값을 저장소에서 가져오도록 처리</li>
+<li>아무 작업도 하지 않고 TTL에 의존해 데이터 무효화</li>
+</ol>
+</li>
+</ol>
+<p><img src="/image/bytebytego/image-20230324002826724.png" alt="image-20230324002826724"></p>
+<p>Pros</p>
+<ul>
+<li>직관적이고 간단하게 캐시와 스토리지 시스템을 분리</li>
+</ul>
+<p>Cons</p>
+<ul>
+<li>데이터를 한번 쓰고 다시 읽으면 스토리지 시스템에 두 번 액세스하게 되어 성능 저하</li>
+<li>데이터를 자주 업데이트하고 읽으면 스토리지 시스템에 여러번 액세스하므로 캐시 작업의 효율성이 떨어짐<ul>
+<li>일관성과 성능 사이에 트레이드 오프 발생</li>
+</ul>
+</li>
+</ul>
+<h4 id="Write-through"><a href="#Write-through" class="headerlink" title="Write-through"></a>Write-through</h4><p>Write-through는 read-through와 유사하게 캐시가 중개자 역할을 하는 전략이다. 이 접근 방식에서 캐시는 데이터 스토리지에 데이터를 쓰고 그에 따라 캐시를 업데이트하는 역할을 담당한다. Read-through 방식과 결합하여 읽기 및 쓰기 작업 모두에 일관된 캐싱 솔루션을 제공하는 경우가 많다.</p>
+<ol>
+<li>애플리케이션이 캐시 엔드포인트에 씀</li>
+<li>캐시가 스토리지 시스템에 데이터를 쓰고 작업이 성공하면 캐시를 업데이트</li>
+</ol>
+<p><img src="/image/bytebytego/image-20230324003214821.png" alt="image-20230324003214821"></p>
+<p>Write-through는 데이터를 한 번 쓰고 여러 번 읽는 상황에 특히 적합하며 캐시에서 읽은 모든 데이터를 최신 상태로 유지한다.</p>
+<p>Pros</p>
+<ul>
+<li>애플리케이션은 캐시에 데이터를 쓰기만 하면 되므로 프로세스가 간소화되고 복잡성이 줄어듬</li>
+<li>데이터가 캐시에 처음 쓰여지면 캐시에서 모든 읽기 작업이 가장 최근 데이터를 검색하므로 데이터를 한 번 쓰고 여러번 읽는 시나리오에 적합</li>
+</ul>
+<p>Cons</p>
+<ul>
+<li>캐시 및 스토리지 시스템 둘 다 작업을 수행해야 하므로 추가 지연 시간이 생김</li>
+<li>데이터가 스토리지에 성공적으로 기록되었지만 캐시에 업데이트되지 않은 경우 캐시된 데이터가 부실한 상태로 남음<ul>
+<li>이 문제를 해결하기 위해 캐시는 먼저 키를 무효화 한 뒤 스토리지에 데이터 쓰기를 요청하고 쓰기 작업이 성공한 경우에만 캐시를 업데이트하는 방식을 통해 데이터 일관성 유지</li>
+</ul>
+</li>
+</ul>
+<h4 id="Write-back"><a href="#Write-back" class="headerlink" title="Write-back"></a>Write-back</h4><p>Write-back은 write-through와 유사하지만 스토리지 시스템에 대한 쓰기 작업이 비동기식이라는 점이 가장 큰 차이점이다. 이 방식은 업데이트된 레코드를 캐시에서 스토리지 시스템으로 주기적인 배치 프로세싱을 통해 기록해 쓰기 성능을 향상시킨다. Write-back은 포괄적인 캐싱 솔루션을 위해 read-through와 결합되는 경우가 많다.</p>
+<ol>
+<li>애플리케이션이 캐시에 데이터를 쓰고 데이터는 캐시에 유지</li>
+<li>캐시는 주기적으로 업데이트된 레코드를 스토리지 시스템에 일괄적으로 씀</li>
+</ol>
+<p><img src="/image/bytebytego/image-20230324003801136.png" alt="image-20230324003801136"></p>
+<p>Redis와 같은 일부 캐시 시스템은 write-back 전략을 사용해 주기적으로 AOF에 영속성을 부여한다.</p>
+<p>Pros</p>
+<ul>
+<li>Write-through에 비해 쓰기 지연 시간이 짧아 쓰기 작업의 성능 향상</li>
+<li>스토리지 시스템에 대한 전체 쓰기 횟수를 줄이고 스토리지 장애에 대한 복원력을 제공</li>
+</ul>
+<p>Cons</p>
+<ul>
+<li>캐시와 스토리지 시스템 간에 일시적인 데이터 불일치 발생<ul>
+<li>가용성 향상을 위한 필연적 트레이드 오프</li>
+</ul>
+</li>
+<li>스토리지에 데이터를 쓰기 전에 캐시가 실패하면 최신 업데이트 레코드가 손실될 수 있음<ul>
+<li>캐시 장애로 인한 데이터 손실 위험을 완화하기 위해 캐시 시스템은 캐시 측에서 쓰기 작업을 지속할 수 있음. 캐시가 다시 시작되면 완료되지 않은 작업을 재생하여 캐시를 복구하고 스토리지 시스템에 데이터를 쓸 수 있음. 이 방식은 캐시 시스템와 스토리지 시스템 사이에 최종적 데이터 일관성을 보장</li>
+</ul>
+</li>
+</ul>
+<h3 id="Exploring-Cache-Strategy-Combinations"><a href="#Exploring-Cache-Strategy-Combinations" class="headerlink" title="Exploring Cache Strategy Combinations"></a>Exploring Cache Strategy Combinations</h3><p>캐시 전략을 조합해 특정 사용 사례와 요구사항에 적합한 솔루션을 만들 수 있다.</p>
+<ul>
+<li>Cache-aside &amp; Write-around<ul>
+<li>Cache-aside의 읽기 기능과 write-around의 간단하고 효율적인 쓰기 작업의 이점을 활용</li>
+</ul>
+</li>
+<li>Read-through &amp; Write-through<ul>
+<li>캐시를 읽기 및 쓰기 작업의 중개자로 활용해 캐시와 스토리지 시스템 간의 데이터 일관성 보장</li>
+</ul>
+</li>
+<li>Read-through &amp; Write-back<ul>
+<li>데이터 읽기를 위한 read-through와 효율적인 쓰기 작업을 위한 write-back의 이점을 제공. Write-back의 비동기적 특성은 read-through와 결합해 데이터 일관성을 유지하며 쓰기 성능을 향상 시킴</li>
+</ul>
+</li>
+</ul>
+<p>아래와 같이 덜 일반적인 조합도 있다.</p>
+<ul>
+<li>Read-through &amp; Write-around<ul>
+<li>읽기에 read-through를 사용하고 쓰기에 write-around를 사용해 캐시 위임과 디커플링을 혼합하여 제공</li>
+</ul>
+</li>
+<li>Cache-aside &amp; Write-through<ul>
+<li>일관된 데이터 쓰기 보장</li>
+</ul>
+</li>
+</ul>
+<p>모든 시나리오에 적합한 단일 캐시 솔루션을 없다. 캐시 전략 조합의 선택은 트래픽 패턴, 데이터 엑세스 요구 사항, 시스템 설계 제약 등의 요인에 따라 달라진다. 특정 사용 사례에 가장 적합한 조합을 평가하고 선택하는 것은 시스템 성능을 최적화하고 데이터 일관성을 유지하는데 매우 중요하다.</p>
+<!-- flag of hidden posts --></div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined">Song Hayoung</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="https://songhayoung.github.io/2023/03/23/System%20Design/ByteByteGo/private/a-crash-course-in-caching-part-2/">https://songhayoung.github.io/2023/03/23/System%20Design/ByteByteGo/private/a-crash-course-in-caching-part-2/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/System-Design/">System Design</a></div><nav id="pagination"></nav><div id="gitalk-container"></div><script>var gitalk = new Gitalk({
+  clientID: '3604b61642355579f55e',
+  clientSecret: 'f552120f18ac5aee3f6297e05e97d94c0a25cd4b',
+  repo: 'SongHayoung.github.io',
+  owner: 'SongHayoung',
+  admin: 'SongHayoung',
+  id: md5(decodeURI(location.pathname)),
+  language: 'en'
+})
+gitalk.render('gitalk-container')</script></div></div><footer class="footer-bg" style="background-image: url(https://xxxx.jpg)"><div class="layout" id="footer"><div class="copyright">&copy;2020 - 2023 By Song Hayoung</div><div class="framework-info"><span>Driven - </span><a target="_blank" rel="noopener" href="http://hexo.io"><span>Hexo</span></a><span class="footer-separator">|</span><span>Theme - </span><a target="_blank" rel="noopener" href="https://github.com/Molunerfinn/hexo-theme-melody"><span>Melody</span></a></div><div class="footer_custom_text">Learning how to walk slowly to not miss important things</div><div class="busuanzi"><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><span id="busuanzi_container_page_pv"><i class="fa fa-file"></i><span id="busuanzi_value_page_pv"></span><span></span></span></div></div></footer><i class="fa fa-arrow-up" id="go-up" aria-hidden="true"></i><script src="https://cdn.jsdelivr.net/npm/animejs@latest/anime.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@latest/velocity.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-ui-pack@latest/velocity.ui.min.js"></script><script src="/js/utils.js?version=1.7.0"></script><script src="/js/fancybox.js?version=1.7.0"></script><script src="/js/sidebar.js?version=1.7.0"></script><script src="/js/copy.js?version=1.7.0"></script><script src="/js/fireworks.js?version=1.7.0"></script><script src="/js/transition.js?version=1.7.0"></script><script src="/js/scroll.js?version=1.7.0"></script><script src="/js/head.js?version=1.7.0"></script><script src="/js/search/algolia.js"></script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+    processEscapes: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  },
+  CommonHTML: {
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "HTML-CSS": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "SVG": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  }
+});
+</script><script type="text/x-mathjax-config">MathJax.Hub.Queue(function() {
+  var all = MathJax.Hub.getAllJax(), i;
+  for (i=0; i < all.length; i += 1) {
+    all[i].SourceElement().parentNode.className += ' has-jax';
+  }
+});
+</script><script src="https://cdn.jsdelivr.net/npm/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><script>if(/Android|webOS|iPhone|iPod|iPad|BlackBerry/i.test(navigator.userAgent)) {
+  $('#nav').addClass('is-mobile')
+  $('footer').addClass('is-mobile')
+  $('#top-container').addClass('is-mobile')
+}</script><div class="search-dialog" id="algolia-search"><div class="search-dialog__title" id="algolia-search-title">Algolia</div><div id="algolia-input-panel"><div id="algolia-search-input"></div></div><hr><div id="algolia-search-results"><div id="algolia-hits"></div><div id="algolia-pagination"></div><div id="algolia-stats"></div></div><span class="search-close-button"><i class="fa fa-times"></i></span></div><div class="search-mask"></div></body></html>
