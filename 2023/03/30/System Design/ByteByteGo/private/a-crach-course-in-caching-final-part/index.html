@@ -1,0 +1,229 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="description" content="[ByteByteGo] A Crash Course in Caching - Final Part"><meta name="keywords" content="System Design"><meta name="author" content="Song Hayoung"><meta name="copyright" content="Song Hayoung"><title>[ByteByteGo] A Crash Course in Caching - Final Part | SUMFIのBlog</title><meta name="robots" content="noindex"><link rel="shortcut icon" href="/songcon.ico"><link rel="stylesheet" href="/css/index.css?version=1.7.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@latest/css/font-awesome.min.css?version=1.7.0"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css?version=1.7.0"><meta name="format-detection" content="telephone=no"><meta http-equiv="x-dns-prefetch-control" content="on"><link rel="dns-prefetch" href="https://cdn.jsdelivr.net"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.css"><script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.js" defer></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@latest/dist/gitalk.min.js"></script><script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.10.0/js/md5.min.js"></script><link rel="dns-prefetch" href="https://www.google-analytics.com"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-169368422-1', 'auto');
+ga('send', 'pageview');</script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: {"appId":"7LZ6OJ4D6C","apiKey":"9a84e13f74ea78c3fd54512c10139c56","indexName":"git blog","hits":{"per_page":10},"languages":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}.","hits_stats":"${hits} results found in ${time} ms"}},
+  localSearch: undefined,
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  }
+} </script><meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/rss2.xml" title="SUMFIのBlog" type="application/rss+xml">
+</head><body><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar" data-display="true"><div class="toggle-sidebar-info text-center"><span data-toggle="Toggle article">Toggle site</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">Catalog</div><div class="sidebar-toc__progress"><span class="progress-notice">You've read</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Managing-Operational-Challenges-in-Caching"><span class="toc-number">1.</span> <span class="toc-text">Managing Operational Challenges in Caching</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Reliability-Challenges"><span class="toc-number">2.</span> <span class="toc-text">Reliability Challenges</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Mitigating-cache-avalanche-and-cache-stampede"><span class="toc-number">2.1.</span> <span class="toc-text">Mitigating cache avalanche and cache stampede</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Staggered-expiration"><span class="toc-number">2.1.1.</span> <span class="toc-text">Staggered expiration</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Consistent-hashing"><span class="toc-number">2.1.2.</span> <span class="toc-text">Consistent hashing</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Circuit-breakers"><span class="toc-number">2.1.3.</span> <span class="toc-text">Circuit breakers</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Request-rate-limiting-and-load-shedding"><span class="toc-number">2.1.4.</span> <span class="toc-text">Request rate limiting and load shedding</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Addressing-Cache-Penetration-Issues"><span class="toc-number">2.2.</span> <span class="toc-text">Addressing Cache Penetration Issues</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Traffic-Pattern-Challenges"><span class="toc-number">3.</span> <span class="toc-text">Traffic Pattern Challenges</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Hot-key-problem"><span class="toc-number">3.1.</span> <span class="toc-text">Hot key problem</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Large-key-problem"><span class="toc-number">3.2.</span> <span class="toc-text">Large key problem</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Consistency-Challenges"><span class="toc-number">4.</span> <span class="toc-text">Consistency Challenges</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Cache-system-without-replicas"><span class="toc-number">4.1.</span> <span class="toc-text">Cache system without replicas</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Multiple-cache-replicas"><span class="toc-number">4.2.</span> <span class="toc-text">Multiple cache replicas</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Writing-order-of-cache-and-storage"><span class="toc-number">4.3.</span> <span class="toc-text">Writing order of cache and storage</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Concurrent-cache-updates"><span class="toc-number">4.4.</span> <span class="toc-text">Concurrent cache updates</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Handling-Data-Inconsistency-in-Distributed-Cache-Systems-with-Consistent-Hashing"><span class="toc-number">4.5.</span> <span class="toc-text">Handling Data Inconsistency in Distributed Cache Systems with Consistent Hashing</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Production-and-operational-considerations"><span class="toc-number">5.</span> <span class="toc-text">Production and operational considerations</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Monitoring-amp-alerting"><span class="toc-number">5.1.</span> <span class="toc-text">Monitoring &amp; alerting</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Fault-tolerance"><span class="toc-number">5.2.</span> <span class="toc-text">Fault tolerance</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Consistent-hashing-1"><span class="toc-number">5.2.1.</span> <span class="toc-text">Consistent hashing</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Data-replication"><span class="toc-number">5.2.2.</span> <span class="toc-text">Data replication</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Scalability"><span class="toc-number">5.3.</span> <span class="toc-text">Scalability</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Summary"><span class="toc-number">6.</span> <span class="toc-text">Summary</span></a></li></ol></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="https://avatars3.githubusercontent.com/u/37806785?s=460&amp;u=8c68d685faf7c5280cfbd736a6b1730b55fb4203&amp;v=4"></div><div class="author-info__name text-center">Song Hayoung</div><div class="author-info__description text-center"></div><div class="follow-button"><a target="_blank" rel="noopener" href="https://www.instagram.com/hayoung0_0/">Follow Me</a></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="/archives"><span class="pull-left">Articles</span><span class="pull-right">7058</span></a><a class="author-info-articles__tags article-meta" href="/tags"><span class="pull-left">Tags</span><span class="pull-right">190</span></a><a class="author-info-articles__categories article-meta" href="/categories"><span class="pull-left">Categories</span><span class="pull-right">64</span></a></div><hr><div class="author-info-links"><div class="author-info-links__title text-center">VISITED</div><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Seoul Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Jeju Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">British Columbia Canada</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Boracay Philippines</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">三重　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">大阪　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">名古屋　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">静岡　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">札幌　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">京都　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Bangkok Thailand</a></div></div></div><div id="content-outer"><div id="top-container" style="background-image: url(https://xxxx.jpg)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="/">SUMFIのBlog</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus">   <a class="site-page" href="/">Home</a><a class="site-page" href="/archives">Archives</a><a class="site-page" href="/tags">Tags</a><a class="site-page" href="/categories">Categories</a><a class="site-page" href="/about">About</a></span><span class="pull-right"><a class="site-page social-icon search"><i class="fa fa-search"></i><span> Search</span></a></span></div><div id="post-info"><div id="post-title">[ByteByteGo] A Crash Course in Caching - Final Part</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2023-03-30</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/">System Design</a><i class="fa fa-angle-right" aria-hidden="true"></i><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/Byte-Byte-Go/">Byte Byte Go</a><div class="post-meta-wordcount"><span>Word count: </span><span class="word-count">2.5k</span><span class="post-meta__separator">|</span><span>Reading time: 15 min</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div class="article-container" id="post-content"><h2 id="Managing-Operational-Challenges-in-Caching"><a href="#Managing-Operational-Challenges-in-Caching" class="headerlink" title="Managing Operational Challenges in Caching"></a>Managing Operational Challenges in Caching</h2><span id="more"></span>
+<p>캐싱 시스템을 구현할 때는 최적의 캐시 전략을 선택하는것 만큼이나 운영상에 발생할 수 있는 문제도 해결하는 것이 중요하다. 이 포스트에서는 일반적인 캐싱 문제를 살펴보고 효과적으로 해결하는 방법에 대한 인사이트를 제공한다.</p>
+<h2 id="Reliability-Challenges"><a href="#Reliability-Challenges" class="headerlink" title="Reliability Challenges"></a>Reliability Challenges</h2><p>캐시 안정성은 시스템 성능을 안정적이게 유지하는데 중요한 역할을 한다. 일반적인 캐시 안정성 문제에는 캐시 아발란체, 캐시 스템피드, 캐시 침투가 있다.</p>
+<h3 id="Mitigating-cache-avalanche-and-cache-stampede"><a href="#Mitigating-cache-avalanche-and-cache-stampede" class="headerlink" title="Mitigating cache avalanche and cache stampede"></a>Mitigating cache avalanche and cache stampede</h3><p>캐싱 시스템은 높은 캐시 적중률을 유지하고 스토리지 시스템에 대한 트래픽을 줄임으로써 데이터베이스를 보호하는데 중요한 역할을 한다. 정상적인 상황에서 대부분의 읽기 요청은 캐시에 적중되며 일부만 캐시 누락으로 이어진다. 캐시가 대부분의 트래픽을 처리하므로 스토리지 시스템의 부하가 훨씬 적다.</p>
+<p>캐시 아발란체와 캐시 스탬피드는 서로 연관되어 있지만 대규모 시스템에서 발생할 수 있는 별개의 현상으로, 심각한 성능 저하 또는 시스템 전체 실패를 유발할 수 있다. 캐시 아발란체는 여러 캐시 항목 또는 모든 캐시 항목이 동시에 혹은 짧은 시간 내에 만료되어 기본 데이터 저장소에 대한 요청이 갑자기 급증할 때 발생한다.</p>
+<p><img src="/image/bytebytego/image-20230330222450364.png" alt="image-20230330222450364"></p>
+<p>Thundering herd problem이라고도 불리는 캐시 스탬피드 문제는 대규모 시스템에서 갑작스럽게 시스템을 압도하는 요청이 유입되어 성능이 저하되거나 시스템 전체가 중단될 때 발생한다. Hot key cache miss, 트래픽의 갑작스러운 급증, maintenance 이후 서비스 재시작 등 다양한 원인으로 인해 발생할 수 있다.</p>
+<p><img src="/image/bytebytego/image-20230330222811186.png" alt="image-20230330222811186"></p>
+<p>캐시 누락 또는 일부 노드에 장애가 발생하면 많은 읽기 요청으로 인해 스토리지 시스템에 많은 트래픽이 유입된다. 이런 갑작스러운 트래픽 증가는 스토리지 성능을 크게 저하시키거나 시스템 충돌로 이어질 수 있다. 이런 시나리오에서 캐시 장애는 캐시 아발란체와 캐시 스탬피드 두 가지 요소를 결합하는 트리거 역할을 하여 스토리지 시스템에 높은 스트레스를 부여하는 상황을 만든다.</p>
+<p>블랙 프라이데이 세일과 같이 트래픽이 급증하는 이벤트 기간에도 이런 현상이 발생할 수 있다. Hot key에 대한 수요 증가로 인해 단일 캐시 노드가 다운되고 이런 키가 다른 노드로 다시 해시되고 이 노드도 다운되어 결국 전체 캐시 시스템이 붕괴될 수 있다. 대규모 시스템의 안정성과 효율성을 유지하려면 캐시 아발란체와 캐시 스템피드 모두의 위험을 완화하는 전략을 구현하는 것이 필수적이다. 이런 이벤트의 영향을 예방하고 완하는데 도움이 되는 몇 가지 기술이 있다.</p>
+<h4 id="Staggered-expiration"><a href="#Staggered-expiration" class="headerlink" title="Staggered expiration"></a>Staggered expiration</h4><p>캐시 아발란체를 방지하려면 기본 TTL값과 함께 임의의 델타값을 결합해 시차를 두고 만료하는 방식을 사용한다. 이 접근 방식은 캐시된 항목의 만료 시간을 분산시켜 많은 항목이 한꺼번에 만료될 가능성을 줄여준다.</p>
+<p><img src="/image/bytebytego/image-20230330223358505.png" alt="image-20230330223358505"></p>
+<h4 id="Consistent-hashing"><a href="#Consistent-hashing" class="headerlink" title="Consistent hashing"></a>Consistent hashing</h4><p>일관된 해싱을 사용하면 여러 캐시 서버에 캐시 항목을 균등하게 분산시킬 수 있다. 이 기술은 나머지 서버간에 부하를 공유하고 단일 장애 지점을 방지해 캐시 아발란체 및 캐시 스템피드의 영향을 감소시킨다.</p>
+<h4 id="Circuit-breakers"><a href="#Circuit-breakers" class="headerlink" title="Circuit breakers"></a>Circuit breakers</h4><p>시스템에 서킷 브레이커를 구현하면 캐시 아발란체와 캐시 스템피드가 더 심각한 문제로 확대되는 것을 방지할 수 있다. 서킷 브레이커는 시스템의 상태를 모니터링하고 시스템이 높은 부하를 받고 있는 경우 캐시 및 데이터 저장소에 대한 과도한 요청을 중지해 과부하를 방지한다.</p>
+<h4 id="Request-rate-limiting-and-load-shedding"><a href="#Request-rate-limiting-and-load-shedding" class="headerlink" title="Request rate limiting and load shedding"></a>Request rate limiting and load shedding</h4><p>요청 속도 제한이나 부하 차단은 시스템의 요청 처리 속도를 제어하고 과부하를 방지해 캐시 스템피드 문제를 해결할 수 있다. 이런 기술은 사용자별, 클라이언트별, 또는 시스템 전체에 적용해 부하가 많은 상황에서도 안정성을 유지할 수 있다.</p>
+<h3 id="Addressing-Cache-Penetration-Issues"><a href="#Addressing-Cache-Penetration-Issues" class="headerlink" title="Addressing Cache Penetration Issues"></a>Addressing Cache Penetration Issues</h3><p>Cache miss attack이라 불리는 캐시 침투는 애플리케이션에 존재하지 않는 데이터에 엑세스하려고 시도할 때 발생하며, 캐시를 우회하여 잠재적인 성능 문제를 발생시킨다. 애플리케이션에 존재하지 않는 키를 요청하면 캐시 미스가 발생하고 스토리지 시스템으로 요청이 흘러가 빈 결과가 반환된다. 이렇게 캐시를 우회해 백업 스토리지에 도달하는 것을 캐시 침투라고 한다. 존재하지 않는 키 요청이 대량으로 발생하면 스토리지 계층의 성능에 영향을 미치고 전체 시스템을 불안정하게 만들 수 있다.</p>
+<p><img src="/image/bytebytego/image-20230330224125474.png" alt="image-20230330224125474"></p>
+<p>캐시 침투의 일반적인 상황은 수많은 사용자가 단기간에 웹사이트에 존재하지 않는 항목을 쿼리하려 시도할 때 발생한다. 대규모 웹사이트에서는 일반적으로 이 문제를 완화하기 위해 보호 조치를 구현해야 한다.</p>
+<p>이 문제를 완화하려면 존재하지 않는 데이터를 나타내는 placeholder 값을 캐시에 저장한다. 존재하지 않는 동일한 데이터에 대한 후속 요청은 데이터 저장소가 아닌 캐시에 저장된다. 이런 placeholder 항목에 적절한 TTL을 설정해 캐시 스토리지를 무기한 점유하지 않도록 처리해야 한다.</p>
+<p><img src="/image/bytebytego/image-20230330224338654.png" alt="image-20230330224338654"></p>
+<p>이 방법은 간단하고 효과적이지만 애플리케이션이 존재하지 않는 많은 수의 키를 자주 쿼리하는 경우 많은 캐시 리소스를 소모하게 된다.</p>
+<p>또 다른 해결책은 요소가 집합에 속하는지 여부를 테스트하는 확률적 데이터 구조인 블룸 필터를 사용하는 것이다. 블룸 필터를 사용하면 시스템이 존재하지 않는 데이터를 빠르게 식별해 캐시 침투와 불필요한 데이터 저장소 요청을 줄일 수 있다. 블룸 필터는 false positive를 기반으로 동작하므로 적은 수의 요청이 캐시 미스로 이어질 수 있다.</p>
+<p><img src="/image/bytebytego/image-20230330224920851.png" alt="image-20230330224920851"></p>
+<p>블룸 필터는 용량에 대한 제약이 있다. 오탐률이 1%인 10억 개의 키에는 약 1.2GB의 용량을 필요로 한다. 이 솔루션은 소규모 데이터 집합에 가장 적합하다.</p>
+<h2 id="Traffic-Pattern-Challenges"><a href="#Traffic-Pattern-Challenges" class="headerlink" title="Traffic Pattern Challenges"></a>Traffic Pattern Challenges</h2><h3 id="Hot-key-problem"><a href="#Hot-key-problem" class="headerlink" title="Hot key problem"></a>Hot key problem</h3><p>Hot key 또는 hot spot 문제로 불리는 이 문제는 단일 키에 트래픽이 많이 몰려 캐시 노드에 과도한 부하가 발생해 잠재적으로 성능 문제를 발생시킨다. 분산 캐시 시스템에서 키는 샤딩 전략에 따라 여러 노드에 공유된다. 각 키의 트래픽은 매우 다양할 수 있으며 일부 키는 매우 높은 트래픽을 가질 수 있다. 예를 들어 트윗이 ID 별로 캐시 시스템에 분산되어 있고 그 중 일부 트윗이 빠르게 인기를 얻으면 해당 캐시 노드의 트래픽이 증가하여 리소스 용량을 초과할 수 있다. Hot key문제는 운영상의 긴급 상황, 축제, 스포츠 경기, 반짝 세일 등과 같은 다양한 시나리오에서 발생할 수 있다. </p>
+<p><img src="/image/bytebytego/image-20230330225424187.png" alt="image-20230330225424187"></p>
+<p>이 문제를 해결하기 위해 두 단계가 필요하다.</p>
+<ol>
+<li>Hot key 식별</li>
+<li>Hot key에 대한 특별 조치를 통해 트래픽 압력 감소</li>
+</ol>
+<p>1단계 에서는 중요한 휴일이나 온라인 프로모션과 같이 예측 가능한 이벤트의 경우 잠재적인 hot key를 미리 식별할 수 있다. 그러나 긴급 상황에 경우 이런 대처가 불가능하다. 한 가지 해결책은 실시간 트래픽 분석을 통해 새로운 hot key를 감지하는 것이다.</p>
+<p>2단계 에서는 몇 가지 잠재적인 해결책이 있다. </p>
+<ul>
+<li><p>전체 캐시 시스템에 트래픽 부하를 분산시킨다. 예를 들어 <code>key12</code>를 <code>key12-1</code>, <code>key12-2</code> … <code>key12-N</code>으로 분할하고 이 n개의 키를 여러 노드에 분산시킨다. 애플리케이션이 hot key를 요청하면 접미사가 붙은 키 중 하나를 무작위로 선택해 여러 노드에서 트래픽을 공유하고 단일 노드에 과부하가 걸리는 것을 방지한다.</p>
+<p><img src="/image/bytebytego/image-20230330225800661.png" alt="image-20230330225800661"></p>
+</li>
+<li><p>많은 hot key가 존재하는 경우 실시간 모니터링을 통해 캐시 시스템을 빠르게 확장해 트래픽 영향을 줄일 수 있다.</p>
+</li>
+<li><p>최후의 수단으로 애플리케이션은 핫키를 로컬 캐시에 저장해 원격 캐시 시스템에 대한 트래픽을 줄일 수 있다. 이 접근 방식은 캐시 노드에 대한 부담을 줄이고 전반적인 시스템 성능을 유지하는데 도움이 된다.</p>
+</li>
+</ul>
+<h3 id="Large-key-problem"><a href="#Large-key-problem" class="headerlink" title="Large key problem"></a>Large key problem</h3><p>키의 값 크기가 크면 엑세스 시간 초과가 발생해 large key 문제가 발생할 수 있다. Large key 문제의 영향은 겉으로 보이는 것 보다 더 심각하다.</p>
+<ul>
+<li>Large key에 자주 액세스하면 네트워크 대역폭이 크게 소모되어 조회 성능이 느려진다.</li>
+<li>Large key를 부분적으로 업데이트하면 전체 값이 수정되어 성능 문제가 더욱 심해진다.</li>
+<li>Large key가 유효하지 않게 되거나 캐시에서 제거되면 스토리지에서 다시 로드하는데 많은 시간이 소요되어 쿼리 성능이 저하된다.</li>
+</ul>
+<p><img src="/image/bytebytego/image-20230330231411815.png" alt="image-20230330231411815"></p>
+<p>Large key 문제는 특정 시나리오에서 발생한다. 예를 들어 일부 게시물의 콘텐츠는 평균보다 훨씬 클 수 있으며, 이런 대용량 게시물에 엑세스하기 위해서는 많은 시간이 소요된다. Large key 문제를 해결하기 위해 몇 가지 방법을 사용할 수 있다.</p>
+<ul>
+<li>캐시에서 키를 압축해 데이터 크기를 줄인다.</li>
+<li>키의 TTL을 길게 설정해 무효화를 최소화 한다.</li>
+<li>키를 여러개의 작은 키로 분할해 시스템에서 large key의 존재를 최소화 한다.</li>
+<li>트윗 길이를 제한하는 등 비즈니스 요구사항을 수정해 large key가 생성되지 않도록 한다. 이 접근 방식은 처음부터 large key 문제를 방지하는데 도움이 된다.</li>
+</ul>
+<h2 id="Consistency-Challenges"><a href="#Consistency-Challenges" class="headerlink" title="Consistency Challenges"></a>Consistency Challenges</h2><p>캐시 일관성은 모든 캐싱 시스템에서 중요한 부분이다. 캐시 일관성은 두 가지 주요 관심사와 관련이 있다.</p>
+<ul>
+<li>캐시 시스템 내에서의 일관성</li>
+<li>캐시와 primary data storage 간의 일관성</li>
+</ul>
+<p>성능을 최적화 하기 위해 캐싱 시스템은 일관성과 속도 사이에서 절충점을 찾아야 한다. Eventual consistency는 이런 시스템에서 달성 가능한 최적의 일관성이다.</p>
+<h3 id="Cache-system-without-replicas"><a href="#Cache-system-without-replicas" class="headerlink" title="Cache system without replicas"></a>Cache system without replicas</h3><p>복제본이 없는 캐시 시스템에서는 캐시 데이터의 각 샤드가 단일 노드에 저장된다. 캐시 프로세스 혹은 노드가 재시작되면 캐시된 키가 모두 지워지므로 이런 키에 대한 요청으로 캐시 미스가 발생할 수 있다. 메모리에서 데이터 손실을 방지하기 위해 이론적으로는 디스크 백업을 사용할 수 있다. 디스크 백업을 사용하면 캐시 프로세스가 다시 시작된 후 메모리를 복구할 수 있다. 이런 디스크 백업에는 다양한 전략을 구현할 수 있으며, 각 전략에는 장단점이 존재한다.</p>
+<ul>
+<li>Write-through strategy<ul>
+<li>이 전략은 모든 메모리 업데이트와 함께 디스크도 동시에 업데이트를 수행한다. 메모리와 디스크 간에 데이터 일관성이 보장되지만 쓰기 성능이 저하되는 단점이 있다.</li>
+</ul>
+</li>
+<li>Write-back strategy<ul>
+<li>이 전략은 메모리가 업데이트된 후 디스크에 일괄적, 비동기적으로 업데이트한다. 캐싱 시스템이 속도를 우선시하기 때문에 일반적으로 더 나은 성능을 제공하지만 디스크에 쓰기 전에 캐시 쓰기를 승인하므로 이 과정에서 충돌이 발생하면 데이터가 손실될 수 있다.</li>
+</ul>
+</li>
+<li>Modified write-back strategy<ul>
+<li>이 전략은 디스크에 쓴 후에만 쓰기 요청을 승인한다. 요청 클라이언트가 적시에 응답을 받지 못하면 재시도하여 데이터 손실을 방지할 수 있다. 그러나 이 접근 방식은 전체 쓰기 배치 프로세싱으로 인해 단일 쓰기에 대한 응답 시간을 증가시킨다. 배치 프로세싱 기간은 매우 중요한 요소이며, 적절한 기한 설정을 한다면 이 전략은 효과적인 선택이 될 수 있다.</li>
+</ul>
+</li>
+</ul>
+<p><img src="/image/bytebytego/image-20230330233939479.png" alt="image-20230330233939479"></p>
+<p>실제 세계에서 충돌이 방샐한 후 디스크에서 방대한 양의 데이터가 포함된 대용량 캐시를 복원하는 데는 시간이 너무 오래 걸려 실용적이지 않을 수 있다. 대부분의 상황에서 복제본에 대한 운영은 데이터 내구성과 내결함성을 보장하기 위한 효율적이고 안정적인 접근 방식이다.</p>
+<h3 id="Multiple-cache-replicas"><a href="#Multiple-cache-replicas" class="headerlink" title="Multiple cache replicas"></a>Multiple cache replicas</h3><p>캐시된 데이터에 대해 둘 이상의 복제본이 있는 분산 캐시 시스템에서는 단일 노드의 장애를 견딜 수 있다. 그러나 이로 인해 동일한 키에 대한 서로 다른 복제 노드 간에 일관성을 보장해야 하는 새로운 문제를 만든다. 이 문제는 근본적으로 분산 시스템에성의 데이터 일관성 보장과 관련된 문제로 이야기된다. 캐싱 시스템은 일반적으로 속도를 우선시하기 때문에 엄격한 일관성을 달성하기 어렵다. 복제본이 있는 분산 캐시 시스템에서 캐시에 키를 쓸 때는 여러 가지 접근 방식이 있다.</p>
+<ul>
+<li>모든 복제본에 병렬 쓰기<ul>
+<li>애플리케이션이 모든 복제본에 병렬로 쓰면서 각 본제본의 응답을 기다린다. 응답 시간은 가장 느린 복제본에 의해 결정되지만, 하나의 복제본이라도 연결할 수 없는 경우 쓰기 작업이 차단된다.</li>
+</ul>
+</li>
+<li>쿼럼 기반 쓰기<ul>
+<li>이 방법은 쿼럼 값에 의존하는 쓰기를 수행한다. 쿼럼 기반으로 쓰기를 동작하게 하려면 일관성 보장을 위해 쿼럼 기반 읽기 작업과 결합해야 하므로 추가적인 복잡성을 만든다.</li>
+</ul>
+</li>
+<li>리더에 쓰기<ul>
+<li>이 방법에서는 모든 데이터가 리더에만 쓰여진 후 팔로워 노드에 비동기적으로 복제된다. 이 방식은 팔로워가 리더와 동기화되지 않았을 때 오래된 데이터를 읽는 문제를 발생시킨다. 따라서 업데이트가 빈번하지 않거나 없는 시나리오에서 잘 동작한다.</li>
+</ul>
+</li>
+</ul>
+<p><img src="/image/bytebytego/image-20230330234753746.png" alt="image-20230330234753746"></p>
+<h3 id="Writing-order-of-cache-and-storage"><a href="#Writing-order-of-cache-and-storage" class="headerlink" title="Writing order of cache and storage"></a>Writing order of cache and storage</h3><p>캐시와 스토리지 시스템은 일반적으로 별개이며 두 시스템을 동시에 업데이트할 수 있는 가능성은 거의 없다. 분산 트랙잭션도 옵션이 될 수 있지만 두 시스템이 트랜잭션을 지원해야 하고, 성능이 저하되는 경우가 많아 실용적이지 못하다. 결과적으로 캐시와 스토리지에 대한 쓰기 순서는 데이터 일관성에 큰 영향을 미친다.</p>
+<ul>
+<li><p>cache first, storage next</p>
+<ul>
+<li><p>데이터는 저장소에 쓰기 전에 캐시에 먼저 기록된다. 스토리지에 쓰기 전에 애플리케이션이 실패하면 캐시에는 내구성있는 스토리지에 없는 데이터가 포함되게 된다. 이런 상황은 데이터 불일치를 발생시키므로 부정적인 영향을 미칠 수 있다.</p>
+<p><img src="/image/bytebytego/image-20230330235320280.png" alt="image-20230330235320280"></p>
+</li>
+</ul>
+</li>
+<li><p>storage first, cache next</p>
+<ul>
+<li>데이터는 캐시보다 데이터 저장소에 먼저 기록된다. 캐시에 쓰기 전에 애플리케이션이 실패하더라도 캐시에 키가 포함되어 있지 않으면 아무런 문제가 발생하지 않는다. 하지만 키가 캐시된 경우 캐시된 값은 불안정한 값이 된다.</li>
+</ul>
+</li>
+</ul>
+<p>두 순서 모두 캐시와 스토리지 간에 데이터 불일치를 발생시킬 수 있지만, 일반적으로 후자의 경우가 더 안전하다. 후자의 경우 스토리지에 쓰기 전 캐시 항목을 무효화 하는 옵션을 추가할 수 있다. 이렇게 할 경우 데이터 불일치 문제를 제거할 수 있지만 hot key problem에서 문제를 가속 시킬 수 있다.</p>
+<h3 id="Concurrent-cache-updates"><a href="#Concurrent-cache-updates" class="headerlink" title="Concurrent cache updates"></a>Concurrent cache updates</h3><p>여러 작성자가 동시에 캐시를 업데이트 할 때 데이터 불일치가 발생할 수 있다.</p>
+<p><img src="/image/bytebytego/image-20230330235737258.png" alt="image-20230330235737258"></p>
+<ol>
+<li>스레드 A가 캐시에서 키를 읽어 캐시 미스가 발생한다.</li>
+<li>스레드 A는 스토리지에서 값 1을 읽어 이 값을 다시 캐시에 쓸 준비를 한다.</li>
+<li>스레드 B는 키에 대한 새 값 2를 스토리지에 쓴다.</li>
+<li>스레드 B는 캐시에 있는 키를 새 값 2로 업데이트 하거나 키를 무효화 한다.</li>
+<li>스레드 A는 처음에 읽은 값 1을 캐시에 다시 쓰므로 캐시와 스토리지 간에 불일치가 발생한다.</li>
+</ol>
+<p>이 고전적인 동시성 문제는 여러 작성자가 캐시를 업데이트 할 때 발생한다. 읽기 작업과 쓰기 작업 모두 캐시를 업데이트 할 수 있으므로 문제의 복잡성이 증가한다. 분산 잠금을 사용하는 방법도 있지만 읽기 작업에 무거운 작업 부하를 추가하므로 이상적이지 못하다. CAS 매커니즘을 사용하는 optimistic lock이 더 나은 옵션이다. 캐시에서 읽을 때 애플리케이션은 값이 변경될 때마다 증가하는 버전 번호화 함께 값을 검색한다. 캐시에서 다시 쓰려면 이전에 읽은 버전 번호가 필요하고, 버전 번호가 캐시의 현재 버전 번호와 일치하는 경우에만 값이 성공적으로 기록된다.</p>
+<p>각 키에 전용 버전 번호를 저장하려면 많은 추가 용량이 필요하다. 모든 키에 전역적인 버전 번호를 사용하면 잦은 업데이트로 인해 쓰기 실패 확률이 높아진다. 균형 잡힌 접근 방식은 각 키 샤드에 대해 버전 번호를 유지하는 것으로 허용 가능한 쓰기 실패율을 유지하면서 최소한의 공간을 필요로 하지만 추가적인 복잡성을 유발한다.</p>
+<h3 id="Handling-Data-Inconsistency-in-Distributed-Cache-Systems-with-Consistent-Hashing"><a href="#Handling-Data-Inconsistency-in-Distributed-Cache-Systems-with-Consistent-Hashing" class="headerlink" title="Handling Data Inconsistency in Distributed Cache Systems with Consistent Hashing"></a>Handling Data Inconsistency in Distributed Cache Systems with Consistent Hashing</h3><p>분산 캐시 시스템에서 일관된 해싱은 널리 사용되는 샤딩 전략이다. 캐시 노드에 장애가 발생하면 해당 노드의 데이터 파티션이 자동으로 다른 노드에 재해싱된다. 하지만 이 매커니즘은 아래 시나리오와 같이 데이터 불일치를 유발할 수 있다.</p>
+<p><img src="/image/bytebytego/image-20230331000556889.png" alt="image-20230331000556889"></p>
+<ul>
+<li>캐시 노드 1은 k1을 저장하고 노드 2는 k2를 저장</li>
+<li>노드 1이 실패하면 k1이 노드 2로 재해시됨</li>
+<li>노드 1이 재시작되고 k1이 노드 1에도 재해시되지만 노드 2에 있는 k1의 값은 그대로 유지됨</li>
+<li>k1의 값이 업데이트되어 노드 1과 스토리지에만 영향을 미침</li>
+<li>노드 1이 다시 실패하면 이전에 로드된 값이 존재하는 노드 2로 찾아가 노드 2와 스토리지 간에 데이터 불일치 발생</li>
+</ul>
+<p>이 문제는 한 노드에만 영향을 미치는 노드의 반복적인 실패와 재시작 및 업데이트로 인해 발생하며 이로 인해 다른 노드의 데이터가 불안정해진다. 이 문제를 해결하거나 영향을 최소화 하는데 도움이 되는 몇 가지 해결책이 있다.</p>
+<ul>
+<li>캐시된 데이터의 TTL을 단축해 데이터가 더 빨리 만료되고 스토리지에서 다시 로드될 수 있도록 처리</li>
+<li>자동 재해싱 기능을 비활성화해 캐시에서 데이터가 더러워지는 것을 방지. 이 경우 캐시 아발란체를 방지하기 위해 stand by 노드가 실패한 노드를 자동으로 대체해야 함</li>
+<li>자동 리해시 기능이 계속 활성화 되어 있으면 더티 데이터를 제거하거나 무효화 하는 방법을 찾아 볼 수 있음. 하지만 이 방식은 복잡도가 높으며 노력을 들인 만큼 효과적이지 못할 수 있음</li>
+</ul>
+<h2 id="Production-and-operational-considerations"><a href="#Production-and-operational-considerations" class="headerlink" title="Production and operational considerations"></a>Production and operational considerations</h2><h3 id="Monitoring-amp-alerting"><a href="#Monitoring-amp-alerting" class="headerlink" title="Monitoring &amp; alerting"></a>Monitoring &amp; alerting</h3><p>안정적인 캐싱 시스템을 유지하려면 효과적인 모니터링과 알림이 중요하다. 주요 지표에 대한 추적과 알람을 통해 문제가 확대되기 전에 신속하게 식별하고 해결할 수 있다.</p>
+<ul>
+<li>캐시 히트률 모니터링<ul>
+<li>캐시 적중률이 낮으면 캐싱 전략이 비효율적이거나 캐시 크기가 더 커야할 필요가 있다.</li>
+</ul>
+</li>
+<li>cache evictions 추적<ul>
+<li>잦은 cache eviction은 캐시가 너무 작거나 퇴거 정책이 사례에 최적화되어 있지 않다는 의미일 수 있다.</li>
+</ul>
+</li>
+<li>지연 시간 측정<ul>
+<li>지연 시간이 길면 시스템의 전반적인 성능에 영향을 미칠 수 있다.</li>
+</ul>
+</li>
+<li>이상 현상 알림<ul>
+<li>잠재적인 문제를 조기에 감지하고 수정 조치를 취하는 데 도움이 된다.</li>
+</ul>
+</li>
+</ul>
+<h3 id="Fault-tolerance"><a href="#Fault-tolerance" class="headerlink" title="Fault tolerance"></a>Fault tolerance</h3><p>분산 시스템에서 개별 노드에 장애가 발생하는 일은 아주 일반적이다. 데이터는 내구성 있는 스토리지에 보존되어 모든 캐시 노드가 다운되더라도 데이터 손실이 발생하지 않는 경우가 많지만, 최적의 성능을 유지하려면 고가용성을 갖춘 캐시 시스템을 설계하는 것이 중요하다. 아래 전략은 내결함성을 지닌 분산 캐시 시스템을 위해 사용되는 일반적인 전략이다.</p>
+<h4 id="Consistent-hashing-1"><a href="#Consistent-hashing-1" class="headerlink" title="Consistent hashing"></a>Consistent hashing</h4><p>일관된 해싱은 분산 캐시 시스템에서 널리 사용되는 샤딩 전략이다. 노드가 실패하면 적은 수의 키만 나머지 샤드에 재해싱된다. 이 접근 방식은 시스템이 노드 장애를 견디며 전체 성능에 미치는 영향을 최소화 할 수 있다.</p>
+<h4 id="Data-replication"><a href="#Data-replication" class="headerlink" title="Data replication"></a>Data replication</h4><p>각 데이터 샤드에 대해 여러 복제본을 생성하면 내결함성을 향상시킬 수 있다. 노드에 장애가 발생해도 복제본에서 해당 데이터에 계속 액세스할 수 있다. 그러나 복제본간에 데이터 일관성을 유지시키는 새로운 여러움을 만들어낸다. </p>
+<h3 id="Scalability"><a href="#Scalability" class="headerlink" title="Scalability"></a>Scalability</h3><p>분산 시스템에서 확장성은 핵심 고려 사항이다. 분산 캐시 시스템은 데이터 용량과 트래픽 증가를 지원하기 위해 필요에 따라 확장할 수 있도록 설계되어야 한다. 샤딩 전략은 전체 데이터 집합을 더 작고 관리하기 쉬운 샤드로 분할하기 때문에 확장성을 달성하는 데 중요한 역할을 한다. 샤드의 개수에 따라 사용할 수 있는 노드의 상한이 결정된다. 데이터 사용 사례에 맞는 적합한 샤딩 전략을 선택하는 것이 중요하다. 일관된 해싱은 노드를 추가 / 제거하는 동안에도 클러스터 가용성을 유지할 수 있기 때문에 널리 사용되는 샤딩 전략이다. 캐시 시스템을 다운 타임이나 성능 저하 없이 원활하게 확장할 수 있어 많은 분산 캐싱 시나리오에서 좋은 선택이 될 수 있다.</p>
+<h2 id="Summary"><a href="#Summary" class="headerlink" title="Summary"></a>Summary</h2><p>캐싱은 다양한 시나리오에서 데이터 엑세스를 최적화하고 스토리지 부하를 줄이기 위한 강력하지만 복잡한 기술이다. 캐싱을 효과적으로 사용하려면 주요 개념과 고려사항을 이해하는 것이 중요하다.</p>
+<ul>
+<li>캐시로 작업할 때 도움이 되는 핵심 사항<ul>
+<li>캐시는 일시적이고 빠르며 부분적인 데이터 집합을 저장하므로 데이터 엑세스 속도를 높이고 스토리지 트래픽을 줄이는데 이상적</li>
+<li>읽기 대 쓰기 비율이 높고 데이터 업데이트가 적은 시나리오에 가장 적합함</li>
+</ul>
+</li>
+<li>캐싱 솔루션을 설계할 때 고려 사항<ul>
+<li>로컬 또는 원격 캐시 사용 여부</li>
+<li>캐시 교체 및 무효화 전략</li>
+<li>캐시 용량 및 데이터 파티셔닝</li>
+<li>캐시 엑세스 전략</li>
+<li>캐시 관련 문제 식별 및 해결</li>
+</ul>
+</li>
+</ul>
+<p>캐시 효율을 측정하는 것은 필수적이며, 캐시 적중률은 유용한 지표로 사용된다. 분산 캐시 시스템에는 고가용성과 확장성이 필수적이며 이는 일관된 해싱이나 데이터 복제와 같은 전략으로 달성할 수 있다.</p>
+<!-- flag of hidden posts --></div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined">Song Hayoung</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="https://songhayoung.github.io/2023/03/30/System%20Design/ByteByteGo/private/a-crach-course-in-caching-final-part/">https://songhayoung.github.io/2023/03/30/System%20Design/ByteByteGo/private/a-crach-course-in-caching-final-part/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/System-Design/">System Design</a></div><nav id="pagination"></nav><div id="gitalk-container"></div><script>var gitalk = new Gitalk({
+  clientID: '3604b61642355579f55e',
+  clientSecret: 'f552120f18ac5aee3f6297e05e97d94c0a25cd4b',
+  repo: 'SongHayoung.github.io',
+  owner: 'SongHayoung',
+  admin: 'SongHayoung',
+  id: md5(decodeURI(location.pathname)),
+  language: 'en'
+})
+gitalk.render('gitalk-container')</script></div></div><footer class="footer-bg" style="background-image: url(https://xxxx.jpg)"><div class="layout" id="footer"><div class="copyright">&copy;2020 - 2023 By Song Hayoung</div><div class="framework-info"><span>Driven - </span><a target="_blank" rel="noopener" href="http://hexo.io"><span>Hexo</span></a><span class="footer-separator">|</span><span>Theme - </span><a target="_blank" rel="noopener" href="https://github.com/Molunerfinn/hexo-theme-melody"><span>Melody</span></a></div><div class="footer_custom_text">Learning how to walk slowly to not miss important things</div><div class="busuanzi"><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><span id="busuanzi_container_page_pv"><i class="fa fa-file"></i><span id="busuanzi_value_page_pv"></span><span></span></span></div></div></footer><i class="fa fa-arrow-up" id="go-up" aria-hidden="true"></i><script src="https://cdn.jsdelivr.net/npm/animejs@latest/anime.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@latest/velocity.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-ui-pack@latest/velocity.ui.min.js"></script><script src="/js/utils.js?version=1.7.0"></script><script src="/js/fancybox.js?version=1.7.0"></script><script src="/js/sidebar.js?version=1.7.0"></script><script src="/js/copy.js?version=1.7.0"></script><script src="/js/fireworks.js?version=1.7.0"></script><script src="/js/transition.js?version=1.7.0"></script><script src="/js/scroll.js?version=1.7.0"></script><script src="/js/head.js?version=1.7.0"></script><script src="/js/search/algolia.js"></script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+    processEscapes: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  },
+  CommonHTML: {
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "HTML-CSS": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "SVG": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  }
+});
+</script><script type="text/x-mathjax-config">MathJax.Hub.Queue(function() {
+  var all = MathJax.Hub.getAllJax(), i;
+  for (i=0; i < all.length; i += 1) {
+    all[i].SourceElement().parentNode.className += ' has-jax';
+  }
+});
+</script><script src="https://cdn.jsdelivr.net/npm/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><script>if(/Android|webOS|iPhone|iPod|iPad|BlackBerry/i.test(navigator.userAgent)) {
+  $('#nav').addClass('is-mobile')
+  $('footer').addClass('is-mobile')
+  $('#top-container').addClass('is-mobile')
+}</script><div class="search-dialog" id="algolia-search"><div class="search-dialog__title" id="algolia-search-title">Algolia</div><div id="algolia-input-panel"><div id="algolia-search-input"></div></div><hr><div id="algolia-search-results"><div id="algolia-hits"></div><div id="algolia-pagination"></div><div id="algolia-stats"></div></div><span class="search-close-button"><i class="fa fa-times"></i></span></div><div class="search-mask"></div></body></html>
