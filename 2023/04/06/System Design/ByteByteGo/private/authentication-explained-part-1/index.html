@@ -1,0 +1,126 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="description" content="[ByteByteGo] Password, Session, Cookie, Token, JWT, SSO, OAuth - Authentication Explained - Part 1"><meta name="keywords" content="System Design"><meta name="author" content="Song Hayoung"><meta name="copyright" content="Song Hayoung"><title>[ByteByteGo] Password, Session, Cookie, Token, JWT, SSO, OAuth - Authentication Explained - Part 1 | SUMFIのBlog</title><meta name="robots" content="noindex"><link rel="shortcut icon" href="/songcon.ico"><link rel="stylesheet" href="/css/index.css?version=1.7.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@latest/css/font-awesome.min.css?version=1.7.0"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css?version=1.7.0"><meta name="format-detection" content="telephone=no"><meta http-equiv="x-dns-prefetch-control" content="on"><link rel="dns-prefetch" href="https://cdn.jsdelivr.net"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.css"><script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.js" defer></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@latest/dist/gitalk.min.js"></script><script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.10.0/js/md5.min.js"></script><link rel="dns-prefetch" href="https://www.google-analytics.com"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-169368422-1', 'auto');
+ga('send', 'pageview');</script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: {"appId":"7LZ6OJ4D6C","apiKey":"9a84e13f74ea78c3fd54512c10139c56","indexName":"git blog","hits":{"per_page":10},"languages":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}.","hits_stats":"${hits} results found in ${time} ms"}},
+  localSearch: undefined,
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  }
+} </script><meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/rss2.xml" title="SUMFIのBlog" type="application/rss+xml">
+</head><body><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar" data-display="true"><div class="toggle-sidebar-info text-center"><span data-toggle="Toggle article">Toggle site</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">Catalog</div><div class="sidebar-toc__progress"><span class="progress-notice">You've read</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Password-Session-Cookie-Token-JWT-SSO-OAuth-Authentication-Explained-Part-1"><span class="toc-number">1.</span> <span class="toc-text">Password, Session, Cookie, Token, JWT, SSO, OAuth - Authentication Explained - Part 1</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Password-Authentication"><span class="toc-number">2.</span> <span class="toc-text">Password Authentication</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#HTTP-Basic-Access-Authentication"><span class="toc-number">2.1.</span> <span class="toc-text">HTTP Basic Access Authentication</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Session-Cookie-Authentication"><span class="toc-number">2.2.</span> <span class="toc-text">Session-Cookie Authentication</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Token-Based-Authentication"><span class="toc-number">2.3.</span> <span class="toc-text">Token-Based Authentication</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Basic-Token-Authentication"><span class="toc-number">2.3.1.</span> <span class="toc-text">Basic Token Authentication</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#JWT-JSON-Web-Token"><span class="toc-number">2.3.2.</span> <span class="toc-text">JWT (JSON Web Token)</span></a></li></ol></li></ol></li></ol></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="https://avatars3.githubusercontent.com/u/37806785?s=460&amp;u=8c68d685faf7c5280cfbd736a6b1730b55fb4203&amp;v=4"></div><div class="author-info__name text-center">Song Hayoung</div><div class="author-info__description text-center"></div><div class="follow-button"><a target="_blank" rel="noopener" href="https://www.instagram.com/hayoung0_0/">Follow Me</a></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="/archives"><span class="pull-left">Articles</span><span class="pull-right">7168</span></a><a class="author-info-articles__tags article-meta" href="/tags"><span class="pull-left">Tags</span><span class="pull-right">191</span></a><a class="author-info-articles__categories article-meta" href="/categories"><span class="pull-left">Categories</span><span class="pull-right">64</span></a></div><hr><div class="author-info-links"><div class="author-info-links__title text-center">VISITED</div><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Seoul Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Jeju Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">British Columbia Canada</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Boracay Philippines</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">三重　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">大阪　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">名古屋　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">静岡　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">札幌　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">京都　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Bangkok Thailand</a></div></div></div><div id="content-outer"><div id="top-container" style="background-image: url(https://xxxx.jpg)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="/">SUMFIのBlog</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus">   <a class="site-page" href="/">Home</a><a class="site-page" href="/archives">Archives</a><a class="site-page" href="/tags">Tags</a><a class="site-page" href="/categories">Categories</a><a class="site-page" href="/about">About</a></span><span class="pull-right"><a class="site-page social-icon search"><i class="fa fa-search"></i><span> Search</span></a></span></div><div id="post-info"><div id="post-title">[ByteByteGo] Password, Session, Cookie, Token, JWT, SSO, OAuth - Authentication Explained - Part 1</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2023-04-06</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/">System Design</a><i class="fa fa-angle-right" aria-hidden="true"></i><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/Byte-Byte-Go/">Byte Byte Go</a><div class="post-meta-wordcount"><span>Word count: </span><span class="word-count">1.2k</span><span class="post-meta__separator">|</span><span>Reading time: 7 min</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div class="article-container" id="post-content"><h2 id="Password-Session-Cookie-Token-JWT-SSO-OAuth-Authentication-Explained-Part-1"><a href="#Password-Session-Cookie-Token-JWT-SSO-OAuth-Authentication-Explained-Part-1" class="headerlink" title="Password, Session, Cookie, Token, JWT, SSO, OAuth - Authentication Explained - Part 1"></a>Password, Session, Cookie, Token, JWT, SSO, OAuth - Authentication Explained - Part 1</h2><span id="more"></span>
+<p>많은 애플리케이션이나 웹사이트를 사용할 때 세 가지 필수 보안 단계가 지속적으로 동작한다.</p>
+<ul>
+<li>Identicy</li>
+<li>Authentication</li>
+<li>Authorization</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230406220001538.png" alt=""></p>
+<p>2부로 구성된 이 시리즈는 비밀번호, 세션, 쿠키, 토큰, JWT, SSO, OAuth2 등 다양한 인증 방법에 대해서 각 인증 방법이 해결하는 문제와 필요에 맞는 인증 방법을 선택하는 법에 대해 설명한다.</p>
+<h2 id="Password-Authentication"><a href="#Password-Authentication" class="headerlink" title="Password Authentication"></a>Password Authentication</h2><p>비밀번호 인증은 웹사이트와 애플리케이션에서 사용자의 신원을 확인하기 위한 기본적이고 널리 사용되는 메커니즘이다. 이 방식에서는 사용자가 사용자 이름과 비밀번호 조합을 통해 보호된 리소스에 엑세스한다. 입력한 credentials을 시스템에 저장된 사용자 정보와 대조해 일치하면 사용자에게 엑세스 권한이 부여된다.</p>
+<p>비밀번호 인증은 가장 기본적이지만 몇 가지 한계가 있다. 비밀번호 분실, 여러 웹사이트에 걸친 ID와 비밀번호 관리 등이 이런 문제이다. 또한 비밀번호 기반 시스템은 적절한 보안 조치가 마련되지 않으면 무차별 대입 공격이나 dictionary attack과 같은 공격에 취약할 수 있다. 이런 문제를 해결하기 위해 최신 시스템에는 다단계 인증과 같은 추가 보안 조치나, 다른 인증 메커니즘을 사용해 보호된 리소스에 대한 후속 액세스를 위해 비밀번호 기반 인증을 보완하거나 대체하는 경우가 많다.</p>
+<h3 id="HTTP-Basic-Access-Authentication"><a href="#HTTP-Basic-Access-Authentication" class="headerlink" title="HTTP Basic Access Authentication"></a>HTTP Basic Access Authentication</h3><p>HTTP basic access authentication을 사용하려면 웹 브라우저가 보호된 리소스를 요청할 때 ID와 비밀번호를 제공해야 한다. Credentials은 Base64를 통해 인코딩되며 HTTP 헤더에 <code>Authorization: Basic</code>이란 필드에 추가된다.</p>
+<ol>
+<li>클라이언트가 서버의 보호된 리소스에 엑세스하기 위한 요청을 보낸다.</li>
+<li>클라이언트가 아직 인증 자격 증명을 제공하지 않은 경우 서버는 401 Unauthorized 상태 코드로 응답하며 <code>WWW-Authenticate: Basic</code> 헤더를 통해 인증이 필요함을 나타낸다.</li>
+<li>클라이언트는 사용자에게 ID와 비밀번호를 입력하라는 메세지를 표시하고, 이 문자열은 <code>ID:password</code> 형식의 단일 문자열로 결합된다.</li>
+<li>결합된 문자열은 Base64로 인코딩되어 이후 <code>Authroization: Basic</code> 헤더에 포함되어 후속 요청으로 서버에 보내진다.</li>
+<li>요청을 받은 서버는 Base64로 인코딩된 자격 증명을 디코딩하고 사용자 이름과 비밀번호를 분리한다. 그 뒤 서버는 제공된 자격증명을 사용자 데이터베이스 또는 인증 서비스를 통해 검증한다.</li>
+<li>자격 증명이 일치하면 서버는 요청된 리소스에 엑세스 권한을 부여하고, 그렇지 않다면 401 Unauthorized로 응답한다.</li>
+</ol>
+<p>HTTP basic access authentication에는 제약이 많다. Base64를 사용한 인코딩은 쉽게 해독된다. 대부분의 웹사이트는 TLS를 사용해 통신간 암호화를 사용하지만, 인증 정보는 여전히 중간자 공격에 노출될 수 있다. HTTP basic access authentication를 사용하면 브라우저는 각 요청에 필요한 자격 증명이 포함된 인증 헤더를 동일한 도메인 내의 보호된 리소스에 보낼 수 있어 반복적으로 사용자가 ID와 비밀번호를 입력할 필요는 없다. 하지만 각 웹사이트마다 고유한 ID와 비밀번호를 유지하므로 사용자가 자격 증명을 기억하기 어려울 수 있다. 이 인증 메커니즘은 더 이상 최신 웹 사이트에서 사용되지 않는다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230406223111322.png" alt=""></p>
+<h3 id="Session-Cookie-Authentication"><a href="#Session-Cookie-Authentication" class="headerlink" title="Session-Cookie Authentication"></a>Session-Cookie Authentication</h3><p>세션 쿠키 인증은 HTTP basic access authentication이 사용자 로그인 상태를 추적할 수 없는 문제를 해결한다. 웹 사이트를 방문하는 사용자의 상태를 추적하기 위해 세션 ID가 생성된다. 이 세션 ID는 서버 측과 클라이언트의 쿠키에 모두 기록되어 인증 메커니즘으로 사용된다. 세션 ID가 저장된 쿠키이기 때문에 세션 쿠키라고도 불린다. 사용자는 처음에 ID와 비밀번호를 제공한 뒤 서버는 사용자의 세션을 생성한다. 이후 요청에는 쿠키가 포함되므로 서버는 클라이언트 측과 서버 측 세션 ID를 비교할 수 있다.</p>
+<ol>
+<li>클라이언트가 보호된 리소스에 엑세스하기 위한 요청을 보낸다. 아직 인증이 안된 클라이언트라면 서버는 로그인 프롬포트로 응답하고, 사용자는 ID와 비밀번호를 서버에 제출한다.</li>
+<li>서버는 제공된 자격 증명을 사용자 데이터베이스 또는 인증 서비스에서 검증하고, 자격 증명이 일치하면 서버는 고유한 세션 ID를 생성하고 서버 측 저장소에 해당 세션을 생성한다.</li>
+<li>서버는 세션 ID를 쿠키로 클라이언트에 전송하며 일반적으로 <code>Set-Cookie</code> 헤더를 사용한다.</li>
+<li>클라이언트는 세션 쿠키를 저장한다.</li>
+<li>이후 요청마다 요청 헤더와 함께 쿠키를 전송한다.</li>
+<li>서버는 쿠키의 세션 ID를 저장된 세션 데이터와 대조해 사용자를 인증한다.</li>
+<li>인증이 완료되면 서버는 요청된 리소스에 대한 엑세스 권한을 부여한다. 사용자가 로그아웃하거나 미리 정해진 마료 시간이 지나면 서버는 세션을 무효화하고 클라이언트는 세션 쿠키를 삭제한다.</li>
+</ol>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230406223705071.png" alt=""></p>
+<p>세션 정보는 시스템의 확장성이나 안정성과 같은 요구 사항에 따라 서버 메모리 또는 독립 세션 서버에 저장할 수 있다. 세션을 서버 메모리에 저장하면 상당한 리소스가 소모되어 서버 성능에 영향을 미칠 수 있기 때문에 시스템 메트릭의 모니터링이 필요하다.</p>
+<p>세션 쿠키 인증에는 몇 가지 제한 사항이 있다. 세션 쿠키를 훔치는 공격인 하이재킹 공격에 취약할 수 있다. 주로 세션 쿠키가 보안되지 않은 네트워크를 통해 전송되거나 웹 사이트가 XSS 공격에 취약한 경우 이런 공격이 발생한다. 또한 세션 쿠키는 CSRF 공격에서도 노출될 수 있다. CSRF에 대응하기 위해서는 웹사이트는 CSRF 방지 토큰을 사용하거나, 민감한 작업에 재인증을 요구할 수 있다. 세션 쿠키는 각 세션마다 세션 상태를 저장해야 할 필요가 있기 때문에 이는 세션 수가 증가함에 따라 병목 현상이 발생할 수 있다. 또한 세션 쿠키는 모바일 네이티브 애플리케이션에서 사용하기 덜 편리하다. 모바일 플랫폼에서 쿠키 처리를 위한 API를 제공하긴 하지만, 웹 브라우저 처럼 쿠키를 자동으로 관리해주지는 않는다.</p>
+<h3 id="Token-Based-Authentication"><a href="#Token-Based-Authentication" class="headerlink" title="Token-Based Authentication"></a>Token-Based Authentication</h3><p>토큰 기반 인증은 웹과 네이티브 앱에서 사용자 엑세스를 보호하는 최신 접근 방식이다. 세션 쿠키 인증의 몇 가지 한계를 해결하고 server-side stateless 처리 및 다양한 플랫폼과의 호환성 향상과 같은 이점을 가진다.</p>
+<h4 id="Basic-Token-Authentication"><a href="#Basic-Token-Authentication" class="headerlink" title="Basic Token Authentication"></a>Basic Token Authentication</h4><p>토큰 기반 인증은 세션 쿠키 인증의 한계를 해결한다. 서버는 세션을 생성하는 대신 토큰을 발급해 클라이언트로 전송한다. 클라이언트는 토큰을 로컬 스토리지에 저장한다. 이후 요청은 유효성 검사를 위해 HTTP 헤더에 토큰을 전달해 사용자가 지정된 기간 동안 보호된 리소스에 엑세스 할 수 있도록 한다.</p>
+<ol>
+<li>클라이언트가 보호된 리소스에 엑세스하기 위한 요청을 보낸다. 아직 인증이 안된 클라이언트라면 서버는 로그인 프롬포트로 응답하고, 사용자는 ID와 비밀번호를 서버에 제출한다.</li>
+<li>서버는 제공된 자격 증명을 확인하고 유효한 경우 고유 토큰을 발급한다.</li>
+<li>토큰은 클라이언트로 다시 전송된다.</li>
+<li>클라이언트는 토큰을 로컬 저장소에 저장한다.</li>
+<li>이후 요청에는 HTTP 헤더에 토큰이 포함된다.</li>
+<li>서버는 수신된 토큰의 유효성을 검사한다.</li>
+<li>서버는 요청된 리소스에 대한 엑세스 권한을 부여한다.</li>
+</ol>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230406224902785.png" alt=""></p>
+<p>세션 인증과 토큰 인증의 주요 차이점은 다음과 같다.</p>
+<ul>
+<li>토큰 기반 인증은 쿠키에 의존하지 않으므로 쿠키가 제한되는 경우에도 지우너할 수 있다. 토큰은 쿠키와 동일한 제한을 받지 않으므로 웹 애플리케이션과 모바일 네이티브 앱에서도 사용할 수 있으며, 도메인간 액세스 및 CSRF 공격 등 쿠키 기반 인증의 한계를 완화할 수 있다.</li>
+<li>토큰은 일반적으로 요청할 때마다 전송되는 사용자 ID가 포함되므로 서버가 토큰 정보를 메모리에 저장할 필요가 없다. 이것이 토큰 기반 인증을 stateless authentication이라 부르는 이유다.</li>
+</ul>
+<p>Basic token authentication의 한가지 한계는 안전하지 않은 연결을 통해 전송되는 경우 토큰이 도난에 취약하다는 점이다. Basic token에는 만료 또는 해지를 위한 매커니즘이 내장되어 있지 않을 수 있으므로 보안 위험이 발생한다. 고수준의 토큰 구현은 향상된 보안 기능을 제공한다. 많은 애플리케이션은 토큰을 리프레쉬 시키며 일부는 계층화된 토큰 관리 기능을 제공하기도 한다. 아래는 Stripe의 API 키 관리 방식이다.</p>
+<ul>
+<li>Publishable key : 읽기 전용 메트릭 등 공개 웹사이트에 사용하기 위한 키</li>
+<li>Secret key : 모든 요청을 수행할 수 있는 이 키는 기밀로 유지해야 함</li>
+<li>Restricted key : 다양한 API 호출을 더 세밀하게 제어할 수 있다. 예를 들어 결제 방법에 대한 읽기 및 쓰기 엑세스를 허용하는 동시에 요금에 대한 엑세스는 읽기 전용으로 제한할 수 있다</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230406225717989.png" alt=""></p>
+<h4 id="JWT-JSON-Web-Token"><a href="#JWT-JSON-Web-Token" class="headerlink" title="JWT (JSON Web Token)"></a>JWT (JSON Web Token)</h4><p>JWT는 토큰 자체에 추가 정보를 전달해 토큰 기반 인증에 대한 더욱 강력한 솔루션을 제공한다. 토큰 생성 및 유효성 검사를 위한 표준화된 형식을 제공해 전반적인 보안을 개선하고 추가적인 서버 측 쿼리의 필요성을 줄여준다. JWT는 인증과 정보 교환 모두에 유용하다. 사용자 역할 및 권한과 같은 클레임을 포함할 수 있기에 인증 프로세스를 간소화 하는데 도움이 될 수 있다. 이 추가 기능을 통해 서버 측의 쿼리 필요성을 줄여 성능을 개선하고 부하를 줄인다.</p>
+<ol>
+<li>클라이언트가 보호된 리소스에 엑세스하기 위한 요청을 보낸다. 아직 인증이 안된 클라이언트라면 서버는 로그인 프롬포트로 응답하고, 사용자는 ID와 비밀번호를 서버에 제출한다.</li>
+<li>서버는 제공된 자격 증명을 확인하고 유효한 경우 클라이언트에 JWT를 발급한다.</li>
+<li>클라이언트는 JWT를 로컬 저장소에 저장하고 후속 요청을 위해 HTTP 헤더에 포함한다.</li>
+<li>서버는 JWT의 유효성을 검사하고 요청된 리소스에 대한 엑세스 권한을 부여한다.</li>
+</ol>
+<p>JWT는 세 부분으로 구성된다.</p>
+<ul>
+<li>Header : 토큰 유형(type)과 해시 알고리즘(alg)를 포함한다.</li>
+<li>Payload : 공개 클레임 및 비공개 클레임을 포함한 7개의 사전 정의된 클레임을 포함한다.</li>
+<li>Signature : 인코딩된 헤더, 인코딩된 페이로드 및 secret를 사용하여 생성된다.</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230406232246672.png" alt=""></p>
+<p>JWT의 한 가지 한계는 크기 관련 문제가 발생할 수 있다는 점이다. Payload에 너무 많은 정보가 포함되면 토큰 크기가 증가해 성능 문제와 네트워크 대역폭 샤용량 증가가 발생한다. 또한 JWT는 보안이 취약한 서명 키를 사용하거나 안전하지 않은 연결을 통해 전송하는 등 제대로 보호되지 않으면 공격에 취약할 수 있다.</p>
+<!-- flag of hidden posts --></div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined">Song Hayoung</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="https://songhayoung.github.io/2023/04/06/System%20Design/ByteByteGo/private/authentication-explained-part-1/">https://songhayoung.github.io/2023/04/06/System%20Design/ByteByteGo/private/authentication-explained-part-1/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/System-Design/">System Design</a></div><nav id="pagination"></nav><div id="gitalk-container"></div><script>var gitalk = new Gitalk({
+  clientID: '3604b61642355579f55e',
+  clientSecret: 'f552120f18ac5aee3f6297e05e97d94c0a25cd4b',
+  repo: 'SongHayoung.github.io',
+  owner: 'SongHayoung',
+  admin: 'SongHayoung',
+  id: md5(decodeURI(location.pathname)),
+  language: 'en'
+})
+gitalk.render('gitalk-container')</script></div></div><footer class="footer-bg" style="background-image: url(https://xxxx.jpg)"><div class="layout" id="footer"><div class="copyright">&copy;2020 - 2023 By Song Hayoung</div><div class="framework-info"><span>Driven - </span><a target="_blank" rel="noopener" href="http://hexo.io"><span>Hexo</span></a><span class="footer-separator">|</span><span>Theme - </span><a target="_blank" rel="noopener" href="https://github.com/Molunerfinn/hexo-theme-melody"><span>Melody</span></a></div><div class="footer_custom_text">Learning how to walk slowly to not miss important things</div><div class="busuanzi"><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><span id="busuanzi_container_page_pv"><i class="fa fa-file"></i><span id="busuanzi_value_page_pv"></span><span></span></span></div></div></footer><i class="fa fa-arrow-up" id="go-up" aria-hidden="true"></i><script src="https://cdn.jsdelivr.net/npm/animejs@latest/anime.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@latest/velocity.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-ui-pack@latest/velocity.ui.min.js"></script><script src="/js/utils.js?version=1.7.0"></script><script src="/js/fancybox.js?version=1.7.0"></script><script src="/js/sidebar.js?version=1.7.0"></script><script src="/js/copy.js?version=1.7.0"></script><script src="/js/fireworks.js?version=1.7.0"></script><script src="/js/transition.js?version=1.7.0"></script><script src="/js/scroll.js?version=1.7.0"></script><script src="/js/head.js?version=1.7.0"></script><script src="/js/search/algolia.js"></script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+    processEscapes: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  },
+  CommonHTML: {
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "HTML-CSS": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "SVG": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  }
+});
+</script><script type="text/x-mathjax-config">MathJax.Hub.Queue(function() {
+  var all = MathJax.Hub.getAllJax(), i;
+  for (i=0; i < all.length; i += 1) {
+    all[i].SourceElement().parentNode.className += ' has-jax';
+  }
+});
+</script><script src="https://cdn.jsdelivr.net/npm/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><script>if(/Android|webOS|iPhone|iPod|iPad|BlackBerry/i.test(navigator.userAgent)) {
+  $('#nav').addClass('is-mobile')
+  $('footer').addClass('is-mobile')
+  $('#top-container').addClass('is-mobile')
+}</script><div class="search-dialog" id="algolia-search"><div class="search-dialog__title" id="algolia-search-title">Algolia</div><div id="algolia-input-panel"><div id="algolia-search-input"></div></div><hr><div id="algolia-search-results"><div id="algolia-hits"></div><div id="algolia-pagination"></div><div id="algolia-stats"></div></div><span class="search-close-button"><i class="fa fa-times"></i></span></div><div class="search-mask"></div></body></html>
