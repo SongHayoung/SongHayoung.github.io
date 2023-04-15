@@ -1,0 +1,138 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="description" content="[ByteByteGo] Password, Session, Cookie, Token, JWT, SSO, OAuth - Authentication Explained - Part 2"><meta name="keywords" content="System Design"><meta name="author" content="Song Hayoung"><meta name="copyright" content="Song Hayoung"><title>[ByteByteGo] Password, Session, Cookie, Token, JWT, SSO, OAuth - Authentication Explained - Part 2 | SUMFIのBlog</title><meta name="robots" content="noindex"><link rel="shortcut icon" href="/songcon.ico"><link rel="stylesheet" href="/css/index.css?version=1.7.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@latest/css/font-awesome.min.css?version=1.7.0"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css?version=1.7.0"><meta name="format-detection" content="telephone=no"><meta http-equiv="x-dns-prefetch-control" content="on"><link rel="dns-prefetch" href="https://cdn.jsdelivr.net"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.css"><script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.js" defer></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@latest/dist/gitalk.min.js"></script><script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.10.0/js/md5.min.js"></script><link rel="dns-prefetch" href="https://www.google-analytics.com"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-169368422-1', 'auto');
+ga('send', 'pageview');</script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: {"appId":"7LZ6OJ4D6C","apiKey":"9a84e13f74ea78c3fd54512c10139c56","indexName":"git blog","hits":{"per_page":10},"languages":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}.","hits_stats":"${hits} results found in ${time} ms"}},
+  localSearch: undefined,
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  }
+} </script><meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/rss2.xml" title="SUMFIのBlog" type="application/rss+xml">
+</head><body><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar" data-display="true"><div class="toggle-sidebar-info text-center"><span data-toggle="Toggle article">Toggle site</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">Catalog</div><div class="sidebar-toc__progress"><span class="progress-notice">You've read</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Password-Session-Cookie-Token-JWT-SSO-OAuth-Authentication-Explained-Part-2"><span class="toc-number">1.</span> <span class="toc-text">Password, Session, Cookie, Token, JWT, SSO, OAuth - Authentication Explained - Part 2</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Passwordless-Authentication"><span class="toc-number">2.</span> <span class="toc-text">Passwordless Authentication</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#One-Time-Passwords-OTP"><span class="toc-number">3.</span> <span class="toc-text">One-Time Passwords(OTP)</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#SSO-Single-Sign-On"><span class="toc-number">4.</span> <span class="toc-text">SSO (Single Sign-On)</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#OAuth-2-0-and-OpenID-Connect-OIDC"><span class="toc-number">5.</span> <span class="toc-text">OAuth 2.0 and OpenID Connect (OIDC)</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Biometric-Authentication"><span class="toc-number">6.</span> <span class="toc-text">Biometric Authentication</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Multi-Factor-Authentication-MFA"><span class="toc-number">7.</span> <span class="toc-text">Multi-Factor Authentication (MFA)</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Time-based-OTP"><span class="toc-number">7.1.</span> <span class="toc-text">Time-based OTP</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Passwordless-Authentication-with-FIDO-WebAuthn-CTAP"><span class="toc-number">7.2.</span> <span class="toc-text">Passwordless Authentication with FIDO (WebAuthn, CTAP)</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Summary"><span class="toc-number">8.</span> <span class="toc-text">Summary</span></a></li></ol></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="https://avatars3.githubusercontent.com/u/37806785?s=460&amp;u=8c68d685faf7c5280cfbd736a6b1730b55fb4203&amp;v=4"></div><div class="author-info__name text-center">Song Hayoung</div><div class="author-info__description text-center"></div><div class="follow-button"><a target="_blank" rel="noopener" href="https://www.instagram.com/hayoung0_0/">Follow Me</a></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="/archives"><span class="pull-left">Articles</span><span class="pull-right">7248</span></a><a class="author-info-articles__tags article-meta" href="/tags"><span class="pull-left">Tags</span><span class="pull-right">191</span></a><a class="author-info-articles__categories article-meta" href="/categories"><span class="pull-left">Categories</span><span class="pull-right">64</span></a></div><hr><div class="author-info-links"><div class="author-info-links__title text-center">VISITED</div><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Seoul Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Jeju Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">British Columbia Canada</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Boracay Philippines</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">三重　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">大阪　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">名古屋　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">静岡　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">札幌　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">京都　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Bangkok Thailand</a></div></div></div><div id="content-outer"><div id="top-container" style="background-image: url(https://xxxx.jpg)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="/">SUMFIのBlog</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus">   <a class="site-page" href="/">Home</a><a class="site-page" href="/archives">Archives</a><a class="site-page" href="/tags">Tags</a><a class="site-page" href="/categories">Categories</a><a class="site-page" href="/about">About</a></span><span class="pull-right"><a class="site-page social-icon search"><i class="fa fa-search"></i><span> Search</span></a></span></div><div id="post-info"><div id="post-title">[ByteByteGo] Password, Session, Cookie, Token, JWT, SSO, OAuth - Authentication Explained - Part 2</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2023-04-13</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/">System Design</a><i class="fa fa-angle-right" aria-hidden="true"></i><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/Byte-Byte-Go/">Byte Byte Go</a><div class="post-meta-wordcount"><span>Word count: </span><span class="word-count">1.7k</span><span class="post-meta__separator">|</span><span>Reading time: 10 min</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div class="article-container" id="post-content"><h2 id="Password-Session-Cookie-Token-JWT-SSO-OAuth-Authentication-Explained-Part-2"><a href="#Password-Session-Cookie-Token-JWT-SSO-OAuth-Authentication-Explained-Part-2" class="headerlink" title="Password, Session, Cookie, Token, JWT, SSO, OAuth - Authentication Explained - Part 2"></a>Password, Session, Cookie, Token, JWT, SSO, OAuth - Authentication Explained - Part 2</h2><span id="more"></span>
+<h2 id="Passwordless-Authentication"><a href="#Passwordless-Authentication" class="headerlink" title="Passwordless Authentication"></a>Passwordless Authentication</h2><p>Http basic authentication, 세션 쿠키 인증, 토큰 기반 인증들은 비밀번호를 필요로 한다. 하지만 비밀번호 없이도 신원을 증명할 수 있는 다른 방법들이 있다. 먼저 인증과 관련해 고려해야 할 세 가지 요소가 있다.</p>
+<ul>
+<li>Knowledge factors : 비밀번호와 같이 알고있는 것 (something you know)</li>
+<li>Ownership factors : 디바이스나 휴대폰 번호와 같이 소유하고 있는 것 (something you own)</li>
+<li>Inherence factors : 생체 인식과 같이 본인에게 고유한 것 (something you are)</li>
+</ul>
+<p>비밀번호는 <code>알고 있는 것</code>에 해당된다. One-Time Passwords(OTP)는 사용자가 디바이스를 <code>소유하고 있음을 증명</code>하는 반면, 생체 인증은 <code>나만의 고유한 것</code>임을 증명한다.</p>
+<h2 id="One-Time-Passwords-OTP"><a href="#One-Time-Passwords-OTP" class="headerlink" title="One-Time Passwords(OTP)"></a>One-Time Passwords(OTP)</h2><p>OTP는 안전한 인증 수단으로 많이 사용된다. 재사용이 가능한 static한 비밀번호와 달리 OTP는 일반적으로 몇분이라는 제한된 시간 동안만 유효하다. 또한 OTP는 로그인을 하기 위해 <code>소유하고 있는 것</code> 과 <code>알고 있는 것</code>이 필요하다. 이는 사용자가 엑세스 할 수 있는 휴대폰 번호나 이메일 주소가 될 수 있으므로 해커가 도용하기 어렵게 만든다. 그러나 SMS를 통한 OTP 전달은 다른 방법보다 보안성이 떨어질 수 있다. 사용자의 휴대폰이 공격에 노출된 경우 공격자가 SMS 메세지를 가로채거나 리디렉션 할 수 있기 때문이다. 이런 공격은 새로운 SIM카드로 변경하도록 공격자가 유도해서 디바이스 제어권을 획득하게 된다. 따라서 가능하면 이메일이나 모바일 앱과 같은 대체 전송 방법을 사용하는 것이 좋다.</p>
+<ul>
+<li>Step 1 : 사용자가 웹사이트에 로그인하려고 할 때 사용자 이름, 휴대폰 번호 또는 이메일을 입력하라는 메세지가 표시된다.</li>
+<li>Step 2 : 서버에서 만료 시간이 있는 OTP를 생성한다.</li>
+<li>Step 3 : 서버가 SMS 또는 이메일을 통해 사용자의 장치로 OTP를 보낸다.</li>
+<li>Step 4 : 사용자가 받은 OTP를 input box에 입력한다.</li>
+<li>Step 5 ~ 6 : 서버는 생성된 OTP와 사용자가 입력한 OTP를 비교한다. 일치하면 로그인이 허용된다.</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230413224846195.png" alt=""></p>
+<h2 id="SSO-Single-Sign-On"><a href="#SSO-Single-Sign-On" class="headerlink" title="SSO (Single Sign-On)"></a>SSO (Single Sign-On)</h2><p>SSO는 한번의 자격 증명으로 여러 시스템이나 애플리케이션에 엑세스할 수 있는 인증 방법이다. SSO는 로그인 프로세스를 간소화해 다양한 플랫폼에서 원활한 사용자 경험을 제공한다. SSO 프로세스는 주로 Central Authentication Service(CAS) 서버에 의존한다. 아래는 SSO 프로세스의 단계별 분석이다.</p>
+<ul>
+<li>Gmail과 같은 애플리케이션에 로그인을 시도하면 CAS 서버로 리디렉션 된다.</li>
+<li>CAS 서버는 login credentials을 확인하고 Ticket Granting Ticket(TGT)를 생성한다. 이 TGT는 브라우저의 Ticket Granting Cookie(TGC)에 저장되어 글로벌 세션을 나타낸다.</li>
+<li>CAS는 Gmail 방문에 대한 Service Ticket(ST)을 생성하고 ST를 통해 사용자를 다시 Gmail로 리디렉션 시킨다.</li>
+<li>Gmail은 ST를 사용해 CAS 서버에 대한 로그인의 유효성을 검사한다. 인증이 완료되면 Gmail에 엑세스할 수 있다.</li>
+</ul>
+<p>YouTube와 같은 다른 애플리케이션에 엑세스하려는 경우 인증 프로세스가 단순화 된다.</p>
+<ul>
+<li>Gmail 로그인에서 이미 TGC를 가지고 있기 때문에 CAS는 인증 상태를 인식한다.</li>
+<li>CAS는 YouTube 엑세스를 위한 새 ST를 생성하고 credentials를 다시 입력하지 않고도 YouTube를 사용할 수 있다.</li>
+</ul>
+<p>이 프로세스를 통해 여러 애플리케이션에 대한 여러 인증 정보 집합을 기억하고 입력할 필요가 줄어든다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230413225708133.png" alt=""></p>
+<p>SSO를 용이하게 하는 다양한 프로토콜이 있다. SAML(Security Assertion Markup Language)는 인증 및 권한 부여 데이터를 XML 형식으로 전달한다. OIDC(OpenID Connect)는 JWT를 통해 인증을 처리하며 OAuth 2.0 프레임워크를 기반으로 한다. SSO는 간소화되고 안전한 인증 방법을 제공해 여러 애플리케이션에 대해 하나의 자격 증명을 요구함으로써 원활한 사용자 경험을 제공한다. 이 접근 방식은 강력하고 고유한 비밀번호를 사용하고 피싱 위험을 줄임으로써 보안을 강화한다.</p>
+<h2 id="OAuth-2-0-and-OpenID-Connect-OIDC"><a href="#OAuth-2-0-and-OpenID-Connect-OIDC" class="headerlink" title="OAuth 2.0 and OpenID Connect (OIDC)"></a>OAuth 2.0 and OpenID Connect (OIDC)</h2><p><a target="_blank" rel="noopener" href="https://www.rfc-editor.org/rfc/rfc6749">OAuth 2.0</a>은 인증 프레임워크지만, 인증을 목적으로 OIDC와 함께 사용될 수 도 있다. OIDC는 OAuth 2.0위에 구축된 인증 레이어로, 사용자의 신원과 보호된 리소스 중 허가된 리소스들의 접근권 확인을 가능하게 한다. “Sign in with Google”과 같은 기능에서 OAuth 2.0과 OIDC는 함께 작동하며 인증 프로세스를 간소화 한다. OIDC는 표준화된 JWT를 통해 사용자의 신원 정보를 제공한다. 이 토큰에는 인증된 사용자에 대한 정보가 포함되어 있어 서드 파티 애플리케이션이 별도의 등록 프로세스 없이도 사용자 프로필을 만들 수 있다.</p>
+<p>이 과정에서 OAuth 2.0은 비밀번호 대신 짧은 수명을 가진 토큰을 발급해 <strong>secure delegated access</strong>를 제공함으로써 서드 파티 서비스가 리소스 소유자가 허용한 보호된 리소스에 접근할 수 있게 된다. 이 방법은 서드 파티 서비스가 사용자의 비밀번호를 직접 처리하거나 저장하지 않으므로 보안이 강화된다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230413232932284.png" alt=""></p>
+<p>위의 예제에서 OAuth 2.0은 네 가지 역할을 정의한다.</p>
+<ul>
+<li>Resource owner : 개인 데이터에 대한 엑세스를 제어하는 최종 사용자.</li>
+<li>Resource server : 사용자 프로필을 보호된 리소스로 호스팅하는 서버. 리소스 서버는 엑세스 토큰을 사용해 보호된 리소스 요청에 응답하며, 권한이 부여된 서비스만 데이터에 엑세스할 수 있도록 한다.</li>
+<li>Client : 리소스 소유자를 대신해 요청을 하는 장치. 이 장치는 사용자 데이터에 엑세스 하려는 서드 파티 애플리케이션을 의미한다.</li>
+<li>Authorization server : 클라이언트에 토큰을 발급하고 리소스 서버와 클라이언트 간의 안정한 토큰 교환을 관리하는 인증 서버.</li>
+</ul>
+<p>OAuth 2.0은 다양한 상황에 맞게 네 가지 유형의 권한을 제공한다.</p>
+<ol>
+<li>Authorization code grant : 대부분의 애플리케이션 유형에 적합한 모드.</li>
+<li>Implicit grant : Single-page application이나 모바일 앱과 같이 프론트 엔드만 있는 애플리케이션을 위해 설계되었으나 더이상 권장되지 않는다.</li>
+<li>Resource owner password credentials grant : 사용자가 신뢰할 수 있는 모바일 앱과 같이 서드 파티 애플리케이션에 의한 자격 증명을 신뢰하는 경우에 사용한다.</li>
+<li>Client credentials grant : Server to server 통신과 같은 리소스 소유자와의 상호 작용이 필요하지 않는 경우에 적합하다.</li>
+</ol>
+<p>이 표준은 다양한 애플리케이션 시나리오와 요구 사항을 충족할 수 있는 여러 모드를 제공해 다양한 상황에 유연하게 대처할 수 있도록 한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230413234406529.png" alt=""></p>
+<p>다른 권한 부여 타입과 달리 authorization code grant는 인증 코드를 먼저 발급한 뒤, 클라이언트가 이를 사용해 엑세스 토큰을 얻는다. 이 프로세스는 다음 단계로 이루어진다.</p>
+<ul>
+<li>Step 1 : 클라이언트가 리소스 소유자의 user agent를 authorization server로 연결해 요청할 권한을 표시한다.</li>
+<li>Step 2 : 리소스 소유자는 서드 파티 애플리케이션의 신뢰도에 따라 리소스 엑세스 접근 요청을 허용하거나 거부한다.</li>
+<li>Step 3 : 리소스 소유자가 엑세스를 허용하면 authorization server는 인증 코드가 포함된 리디렉션 URI를 사용해 user agent를 클라이언트로 다시 리디렉션 시킨다.</li>
+<li>Step 4 : 클라이언트는 인증 코드를 사용해 authorization server에 엑세스 토큰을 요청한다. 이 요청이 적법한 요청인지 확인하려면 인증 코드와 리디렉션 URI가 3단계에서 발급된 것과 일치하는지 확인하면 된다.</li>
+<li>Step 5 : 유효성 검사에 성공하면 authorization server가 엑세스 토큰을 제공해 사용자가 허용한 범위의 보호된 리소스에 클라이언트가 엑세스 할 수 있도록 한다.</li>
+</ul>
+<p>Implicit grant는 내재된 보안 문제인 엑세스 토큰의 노출로 인해 더 이상 권장되지 않는다. Authorization Code grant는 Proof Key for Code Exchange(PKCE)의 추가 보안과 결합되어 프론트엔드 애플리케이션을 보호하는데 선호되는 접근 방식이 되었다. OIDC가 포함된 OAuth 2.0은 여전히 비밀번호 입력이 필요하지만, 사용자가 새 계정을 등록하거나 타사 웹사이트에 비밀번호를 만들 필요가 없다는 점에서 “비밀번호가 없는 것”으로 간주된다.</p>
+<h2 id="Biometric-Authentication"><a href="#Biometric-Authentication" class="headerlink" title="Biometric Authentication"></a>Biometric Authentication</h2><p>생체 인증은 얼굴 특징, 지문, 망막 패턴과 같이 사람의 고유한 신체적 특징을 사용해 신원을 확인한다. 정보를 등록하는 동안 사용자는 이러한 특징을 캡쳐하는 여러 장의 사진을 찍도록 요청 받으며, 이 사진은 추출되어 백엔드 시스템에 안전하게 저장된다. 사용자가 로그인하면 백엔드 시스템은 라이브 생체 인식 기능과 저장된 정보를 비교한다. 일치하면 사용자에게 엑세스 권한이 부여된다. 이 인증 방법은 비밀번호에 비해 보안을 한 층 더 강화하지만 완벽하지는 않다. 생체 인식 기능은 도난 당하거나 복제될 수 있으며, 일부 사람들은 생체 특징이 뚜렷하지 않거나 일관되지 않아 이 인증 방법을 수행하기 어려울 수 있다. 생체 인증을 유일한 인증 요소로 사용해서는 안되며, multi-factor authentication(MFA)이라 하는 비밀번호나 PIN과 같은 다른 요소와 결합해 사용해야 한다. 이렇게 하면 추가 보안 계층을 제공하고 무단 엑세스의 위험을 줄일 수 있다. 생체 인식 데이터가 도난당한 경우에도 MFA는 여전히 사용자의 계정을 보호한다. </p>
+<h2 id="Multi-Factor-Authentication-MFA"><a href="#Multi-Factor-Authentication-MFA" class="headerlink" title="Multi-Factor Authentication (MFA)"></a>Multi-Factor Authentication (MFA)</h2><p>MFA는 사용자가 보호된 리소스에 엑세스하기 위해 두 가지 이상의 신분증을 제공해야 하는 보안 조치다. 지금까지 살펴본 단일 인증은 보안이 취약할 수 있기 때문에 다중 요소 인증이 중요하다. MFA는 일반적으로 인증의 3요소인 <code>something you know</code>, <code>something you own</code>, <code>something you are</code> 중 두 가지를 사용한다. 여러 요소를 요구함으로써 MFA는 추가적인 보안 레이어를 제공하고 권한이 없는 사용자가 보호된 리소스에 엑세스하기 어렵게 만든다. 예를 들어 Google 2FA는 <code>something you own</code>(휴대폰)을 한 가지 요소로, <code>something you know</code>(비밀번호)를 다른 요소로 사용한다.</p>
+<h3 id="Time-based-OTP"><a href="#Time-based-OTP" class="headerlink" title="Time-based OTP"></a>Time-based OTP</h3><p>Google 2FA와 같은 시간 기반 정보를 사용하는 2FA는 TOTP(Time-based One-Time passwords)에 의존한다. 이 알고리즘은 seed와 changing factor를 사용해 결과를 생성한다. TOTP에서 변경 요소는 타임스탬프이며, HOTP(HMAC-based OTP)에서는 카운터와 같은 의미이다. 2FA는 OATH(Initiative for Open Authentication)의 표준을 사용해 개발되었다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230414002323106.png" alt=""></p>
+<ul>
+<li>Step 1 ~ 4 : 앱에서 2FA 설정하기</li>
+</ul>
+<p>먼저 사용자가 애플리케이션에서 2FA를 활성화 해야 한다. 서버는 secret key를 생성하고 발급자, 사용자, secret key가 포함된 QR 코드를 생성한다. 그런 다음 사용자가 2FA 앱으로 QR 코드를 스캔하면 secret key가 디바이스 로컬에 저장된다.</p>
+<ul>
+<li>Step 5 ~ 10 : 2FA를 사용해 보호된 리소스에 엑세스</li>
+</ul>
+<p>2FA를 설정한 후 사용자는 이를 사용해 보호된 리소스에 대한 엑세스를 요청할 수 있다. 2FA 앱은 30초 마다 저장된 secret key와 현재 타임 스탬프를 사용해 6자리 일회용 비밀번호를 생성한다. 사용자는 이 OTP를 애플리케이션에 입력하면 서버로 전송된다. 서버는 파일에 저장된 비밀 키를 사용해 자체 OTP를 생성하고 수신된 OTP와 비교한다. 둘이 일치하면 유효성 검사가 성공한 것이고 사용자는 엑세스 권한을 얻게 된다.</p>
+<h3 id="Passwordless-Authentication-with-FIDO-WebAuthn-CTAP"><a href="#Passwordless-Authentication-with-FIDO-WebAuthn-CTAP" class="headerlink" title="Passwordless Authentication with FIDO (WebAuthn, CTAP)"></a>Passwordless Authentication with FIDO (WebAuthn, CTAP)</h3><p>비밀번호를 사용하거나 사용하지 않는 인증 방법을 포함한 다양한 인증 방법을 다루었다. OAuth 2.0을 통해 엑세스 위임이 가능해졌지만 여전히 Google과 같은 플랫폼에 자격 증명을 등록해야 하므로 서버에 비밀번호가 계속 저장된다. 서버에 저장된 비밀번호에서 벗어나기 위해 FIDO 얼라이언스와 W3C에서는 이런 표준을 개발중이다. FIDO는 사용자의 생채 정보나 security key authentication을 사용해 여러 디바이스에서 비밀번호로써 사용자를 로그인 할 수 있게 한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230414003115570.png" alt=""></p>
+<p>FIDO2 프레임워크에는 WebAuthn이라 하는 웹 표준 API 와 함께 동작하는 디바이스 내에 생체 인식 또는 PIN과 같은 built-in 인증자(authenticators), CTAP(Client to Authenticator Protocols)라 하는 인증을 위한 external 인증자(모바일 장치, 웨어러블 등)가 포함된다. 기본 개념은 private key를 사용자가 소유하고 인증자가 관리한다는 것이다. 애플리케이션 서버는 공개 키만 저장하고 개인 키는 사용자의 디바이스를 벗어나지 않는다.</p>
+<ul>
+<li>Step 1 : 사용자가 애플리케이션에 등록하면 replying party(RP) 애플리케이션 서버가 WebAuthn을 사용해 RP 클라이언트 애플리케이션에 challenge를 보낸다.</li>
+<li>Step 2 : 클라이언트 애플리케이션은 선택한 인증 방법을 사용해 인증자에게 challenge를 전달한다.</li>
+<li>Step 3 ~ 4 : 사용자가 선택한 인증 방법을 사용해 요청을 승인한다. 새로운 키 쌍이 생성되며, private key는 인증자와 함께 저장되고 public key는 credential ID와 attestation과 함께 RP 클라이언트로 다시 전송된다.</li>
+<li>Step 5 : RP 클라이언트가 공개 키, 클라이언트 데이터 및 증명을 RP 서버로 보낸다.</li>
+<li>Step 6 : RP 서버가 응답의 유효성을 검사하고 사용자에 대한 public key를 등록한다.</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230414004334724.png" alt=""></p>
+<p>FIDO는 기존 연합 인증 프로토콜(SSO, OAuth)을 대체하기 위한 것이 아니라 함께 사용할 수 있다는 점에 유의해야 한다. <a target="_blank" rel="noopener" href="https://fidoalliance.org/fido-and-federation-protocols-tech-note/">refer to this document</a></p>
+<h2 id="Summary"><a href="#Summary" class="headerlink" title="Summary"></a>Summary</h2><p>2부로 구성된 이 시리즈에서는 온라인 엑세스를 안전하게 보호하는 다양한 방법에 대해 설명했다. HTTP Basic Access Authentication, 세션 쿠키 인증,  JWT와 Basic Token Authentication을 포함한 토큰 기반 인증과 같은 비밀번호를 사용하는 방법을 살펴봤다. 또한 OTP, SSO, OIDC를 포함한 OAuth 2.0, 생체 인증과 같은 비밀번호를 사용하지 않는 방법에 대해서도 살펴봤다. 또한 보안을 더욱 강력하게 만들어주는 MFA와 TOTP에 대해서도 확인했다. 그 다음 더 안전하고 사용하기 쉬운 방법을 향한 움직임인 WebAuthn와 CTAP를 포함한 FIDO를 사용한 인증 방법을 확인했다. 인증의 변화에 대한 타임라인 다이어그램을 첨부하며 이 시리즈를 마무리한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230414004855771.png" alt=""></p>
+<!-- flag of hidden posts --></div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined">Song Hayoung</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="https://songhayoung.github.io/2023/04/13/System%20Design/ByteByteGo/private/authentication-explained-part-2/">https://songhayoung.github.io/2023/04/13/System%20Design/ByteByteGo/private/authentication-explained-part-2/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/System-Design/">System Design</a></div><nav id="pagination"></nav><div id="gitalk-container"></div><script>var gitalk = new Gitalk({
+  clientID: '3604b61642355579f55e',
+  clientSecret: 'f552120f18ac5aee3f6297e05e97d94c0a25cd4b',
+  repo: 'SongHayoung.github.io',
+  owner: 'SongHayoung',
+  admin: 'SongHayoung',
+  id: md5(decodeURI(location.pathname)),
+  language: 'en'
+})
+gitalk.render('gitalk-container')</script></div></div><footer class="footer-bg" style="background-image: url(https://xxxx.jpg)"><div class="layout" id="footer"><div class="copyright">&copy;2020 - 2023 By Song Hayoung</div><div class="framework-info"><span>Driven - </span><a target="_blank" rel="noopener" href="http://hexo.io"><span>Hexo</span></a><span class="footer-separator">|</span><span>Theme - </span><a target="_blank" rel="noopener" href="https://github.com/Molunerfinn/hexo-theme-melody"><span>Melody</span></a></div><div class="footer_custom_text">Learning how to walk slowly to not miss important things</div><div class="busuanzi"><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><span id="busuanzi_container_page_pv"><i class="fa fa-file"></i><span id="busuanzi_value_page_pv"></span><span></span></span></div></div></footer><i class="fa fa-arrow-up" id="go-up" aria-hidden="true"></i><script src="https://cdn.jsdelivr.net/npm/animejs@latest/anime.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@latest/velocity.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-ui-pack@latest/velocity.ui.min.js"></script><script src="/js/utils.js?version=1.7.0"></script><script src="/js/fancybox.js?version=1.7.0"></script><script src="/js/sidebar.js?version=1.7.0"></script><script src="/js/copy.js?version=1.7.0"></script><script src="/js/fireworks.js?version=1.7.0"></script><script src="/js/transition.js?version=1.7.0"></script><script src="/js/scroll.js?version=1.7.0"></script><script src="/js/head.js?version=1.7.0"></script><script src="/js/search/algolia.js"></script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+    processEscapes: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  },
+  CommonHTML: {
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "HTML-CSS": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "SVG": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  }
+});
+</script><script type="text/x-mathjax-config">MathJax.Hub.Queue(function() {
+  var all = MathJax.Hub.getAllJax(), i;
+  for (i=0; i < all.length; i += 1) {
+    all[i].SourceElement().parentNode.className += ' has-jax';
+  }
+});
+</script><script src="https://cdn.jsdelivr.net/npm/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><script>if(/Android|webOS|iPhone|iPod|iPad|BlackBerry/i.test(navigator.userAgent)) {
+  $('#nav').addClass('is-mobile')
+  $('footer').addClass('is-mobile')
+  $('#top-container').addClass('is-mobile')
+}</script><div class="search-dialog" id="algolia-search"><div class="search-dialog__title" id="algolia-search-title">Algolia</div><div id="algolia-input-panel"><div id="algolia-search-input"></div></div><hr><div id="algolia-search-results"><div id="algolia-hits"></div><div id="algolia-pagination"></div><div id="algolia-stats"></div></div><span class="search-close-button"><i class="fa fa-times"></i></span></div><div class="search-mask"></div></body></html>
