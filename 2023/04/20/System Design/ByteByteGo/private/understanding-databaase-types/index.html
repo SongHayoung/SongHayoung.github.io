@@ -1,0 +1,124 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="description" content="[ByteByteGo] Understanding Database Types"><meta name="keywords" content="System Design"><meta name="author" content="Song Hayoung"><meta name="copyright" content="Song Hayoung"><title>[ByteByteGo] Understanding Database Types | SUMFIのBlog</title><meta name="robots" content="noindex"><link rel="shortcut icon" href="/songcon.ico"><link rel="stylesheet" href="/css/index.css?version=1.7.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@latest/css/font-awesome.min.css?version=1.7.0"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css?version=1.7.0"><meta name="format-detection" content="telephone=no"><meta http-equiv="x-dns-prefetch-control" content="on"><link rel="dns-prefetch" href="https://cdn.jsdelivr.net"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.css"><script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.js" defer></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@latest/dist/gitalk.min.js"></script><script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.10.0/js/md5.min.js"></script><link rel="dns-prefetch" href="https://www.google-analytics.com"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-169368422-1', 'auto');
+ga('send', 'pageview');</script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: {"appId":"7LZ6OJ4D6C","apiKey":"9a84e13f74ea78c3fd54512c10139c56","indexName":"git blog","hits":{"per_page":10},"languages":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}.","hits_stats":"${hits} results found in ${time} ms"}},
+  localSearch: undefined,
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  }
+} </script><meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/rss2.xml" title="SUMFIのBlog" type="application/rss+xml">
+</head><body><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar" data-display="true"><div class="toggle-sidebar-info text-center"><span data-toggle="Toggle article">Toggle site</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">Catalog</div><div class="sidebar-toc__progress"><span class="progress-notice">You've read</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Understanding-Database-Types"><span class="toc-number">1.</span> <span class="toc-text">Understanding Database Types</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Understanding-Database-Types-1"><span class="toc-number">2.</span> <span class="toc-text">Understanding Database Types</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Relational-Databases"><span class="toc-number">3.</span> <span class="toc-text">Relational Databases</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#NoSQL"><span class="toc-number">4.</span> <span class="toc-text">NoSQL</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#NewSQL"><span class="toc-number">5.</span> <span class="toc-text">NewSQL</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Time-series"><span class="toc-number">6.</span> <span class="toc-text">Time-series</span></a></li></ol></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="https://avatars3.githubusercontent.com/u/37806785?s=460&amp;u=8c68d685faf7c5280cfbd736a6b1730b55fb4203&amp;v=4"></div><div class="author-info__name text-center">Song Hayoung</div><div class="author-info__description text-center"></div><div class="follow-button"><a target="_blank" rel="noopener" href="https://www.instagram.com/hayoung0_0/">Follow Me</a></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="/archives"><span class="pull-left">Articles</span><span class="pull-right">7316</span></a><a class="author-info-articles__tags article-meta" href="/tags"><span class="pull-left">Tags</span><span class="pull-right">191</span></a><a class="author-info-articles__categories article-meta" href="/categories"><span class="pull-left">Categories</span><span class="pull-right">64</span></a></div><hr><div class="author-info-links"><div class="author-info-links__title text-center">VISITED</div><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Seoul Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Jeju Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">British Columbia Canada</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Boracay Philippines</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">三重　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">大阪　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">名古屋　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">静岡　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">札幌　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">京都　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Bangkok Thailand</a></div></div></div><div id="content-outer"><div id="top-container" style="background-image: url(https://xxxx.jpg)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="/">SUMFIのBlog</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus">   <a class="site-page" href="/">Home</a><a class="site-page" href="/archives">Archives</a><a class="site-page" href="/tags">Tags</a><a class="site-page" href="/categories">Categories</a><a class="site-page" href="/about">About</a></span><span class="pull-right"><a class="site-page social-icon search"><i class="fa fa-search"></i><span> Search</span></a></span></div><div id="post-info"><div id="post-title">[ByteByteGo] Understanding Database Types</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2023-04-20</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/">System Design</a><i class="fa fa-angle-right" aria-hidden="true"></i><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/Byte-Byte-Go/">Byte Byte Go</a><div class="post-meta-wordcount"><span>Word count: </span><span class="word-count">1.5k</span><span class="post-meta__separator">|</span><span>Reading time: 9 min</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div class="article-container" id="post-content"><h2 id="Understanding-Database-Types"><a href="#Understanding-Database-Types" class="headerlink" title="Understanding Database Types"></a>Understanding Database Types</h2><span id="more"></span>
+<p>소프트웨어 애플리케이션의 핵심은 종종 올바른 데이터베이스 선택에 달려있다. 개발자는 방대한 데이터베이스 옵션들에 직면하게 되는데, 이러한 옵션 간의 차이점을 이해하고 프로젝트의 요구 사항에 가장 적합한 옵션을 선택하는 방법을 이해하는 것이 중요하다. 복잡한 애플리케이션은 일반적으로 여러가지 데이터베이스를 사용하며, 각 데이터베이스는 애플리케이션 요구 사항의 특정 측면을 충족한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230420181512315.png" alt=""></p>
+<p>3부로 구성된 이 시리즈에서는 데이터베이스를 선택하는 법을 살펴본다. 애플리케이션의 다양한 구성요소를 바탕으로한 데이터베이스를 선택해야 하는 문제에 직면했을 때 지식에 입각한 결정을 내릴 수 있게 될 것이다. 다양한 유형의 데이터베이스를 살펴보고, 데이터베이스 성능과 비용에 영향을 미치는 요소에 대해 논의하고, 필수적인 장단점을 균형 있게 고려하면서 애플리케이션에 가장 적합한 데이터베이스를 선택할 수 있도록 안내하는 데이터베이스 선택 프로세스를 살펴볼 것이다.</p>
+<p>시리즈 전반에 걸쳐 데이터베이스 선택 프로세스의 주요 단계를 간략히 설명하고 실제로 성공적인 데이터베이스 선택을 보여주는 사례 연구를 검토할 것이다. 복잡한 애플리케이션에 적합한 데이터베이스 조합을 선택하는 기술을 습득하는데 필요한 지식을 갖추는 것을 이 시리즈에서는 목표로 한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230420184017714.png" alt=""></p>
+<h2 id="Understanding-Database-Types-1"><a href="#Understanding-Database-Types-1" class="headerlink" title="Understanding Database Types"></a>Understanding Database Types</h2><p>프로젝트에 가장 적합한 결정을 내리려면 시중에 나와있는 다향한 유형의 데이터베이스를 이해하는 것이 필수적이다. 이 섹션에서는 각 데이터베이스 유형별 주요 특징과 인기 있는 옵션을 살펴보고 사용 사례를 비교한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230420184224298.png" alt=""></p>
+<h2 id="Relational-Databases"><a href="#Relational-Databases" class="headerlink" title="Relational Databases"></a>Relational Databases</h2><p>관계형 데이터베이스는 행과 열이 있는 테이블로 데이터를 구성하는 관계형 모델을 기반으로 한다. 이런 데이터베이스는 강력한 일관성, 복잡한 쿼리 지원, ACID 속성을 준수하기 때문에 많은 애플리케이션에서 표준으로 선택되어 왔다.</p>
+<p>관계형 데이터베이스의 주요 특징과 장점</p>
+<ul>
+<li>구조화된 데이터 구성 : 관계형 데이터베이스의 데이터는 미리 정의된 스키마가 있는 테이블에 저장되어 데이터베이스 전체에 일관된 구조를 적용한다. 이러한 구조 덕분에 대량의 구조화된 데이터를 다룰 때 데이터를 더 쉽게 관리하고 유지 보수 할 수 있다.</li>
+<li>관계 및 참조 무결성 : 관계형 데이터베이스의 테이블간 관계는 기본 키와 외래 키로 정의되어 참조 무결성을 보장한다. 이 기능을 통해 관련 데이터를 효율적으로 쿼리할 수 있으며 복잡한 데이터 관계를 지원한다.</li>
+<li>SQL 지원 : 관계형 데이터베이스는 데이터를 쿼리, 조작 및 관리하기 위해 Structured Query Language(SQL)을 사용한다. SQL은 개발자가 복잡한 쿼리와 데이터 조작을 수행할 수 있게 해주는 강력하고 널리 채택된 언어다.</li>
+<li>트랜잭션 및 ACID 속성 : 관계형 데이터베이스는 전체적으로 성공하거나 실패하는 관련 작업의 집합인 트랜잭션을 지원한다. 이 기능은 ACID 속성이 유지되도록 하여 데이터 일관성과 무결성을 보장한다.</li>
+<li>인덱싱 및 최적화 : 관계형 데이터베이스는 다양한 인덱싱 기술과 쿼리 최적화 전략을 제공해 쿼리 성능을 개선하고 리소스 소비를 줄이는데 도움이 된다.</li>
+</ul>
+<p>관계형 데이터베이스의 단점</p>
+<ul>
+<li>제한된 확장성 : 관계형 데이터베이스를 수평적으로 확장하는 것은 분산 환경을 위해 설계된 일부 NoSQL 데이터베이스와 비교할 때 어려울 수 있다.</li>
+<li><p>경직성 : 관계형 데이터베이스의 사전 정의된 스키마를 변경하기 위해 기존 데이터와 애플리케이션을 크게 수정해야 할 수 있으므로 변화하는 요구사항에 적응하기 어려울 수 있다.</p>
+</li>
+<li><p>대용량 데이터 집합의 성능 문제 : 데이터의 양이 증가함에 따라 관계형 데이터베이스는 특히 복잡한 쿼리와 대규모 데이터 조작을 처리할 때 성능 문제를 경험할 수 있다.</p>
+</li>
+<li>Unstructed 또는 semi-structed 데이터에 비효율적 : 관계형 데이터베이스는 정형 데이터용으로 설계되었기 때문에 소셜 미디어 데이터나 센서 데이터와 같은 Unstructed 또는 semi-structed 데이터를 관리하기에는 적합하지 않을 수 있다.</li>
+</ul>
+<p>널리 사용되는 관계형 데이터베이스에는 MySQL, PostgreSQL, Microsoft SQL Server, Oracle 등이 있다. 이런 각 선택지는 고유한 기능, 장단점을 가지고 있어 다양한 사용 사례와 요구 사항에 적합하다. 관계형 데이터베이스를 고려할 때는 데이터 일관성, 복잡한 쿼리 지원, 확장성 등의 측면에서 애플리케이션의 특정 요구 사항을 평가하는 것이 중요하다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230420185755516.png" alt=""></p>
+<h2 id="NoSQL"><a href="#NoSQL" class="headerlink" title="NoSQL"></a>NoSQL</h2><p>NoSQL 데이터베이스는 특정 조건에서 확장성, 유연성 및 성능 면에서 관계형 데이터베이스의 한계에 대한 대응책으로 개발되었다. 관계형 데이터베이스와 달리 NoSQL 데이터베이스는 관계형 모델이나 기존의 테이블 기반 스토리지를 엄격하게 따르지 않는다. 다양한 형식으로 데이터를 저장할 수 있으므로 다양한 사용 사례에 적합하다. NoSQL 데이터베이스는 크게 4가지 하위 유형으로 분류할 수 있으며 각 유형마다 고유한 특성이 있다.</p>
+<ul>
+<li>문서 기반 데이터베이스는 JSON 또는 BSON과 같은 semi-structured 문서에 데이터를 저장한다. 이 형식은 데이터 모델링에 큰 유연성을 제공한다. 애플리케이션의 요구 사항이 변경됨에 따라 진화할 수 있는 보다 동적인 스키마가 가능하다. 문서 기반 데이터베이스는 콘텐츠 관리 시스템, 전자 상거래 플랫폼, 분석 애플리케이션과 같이 계층적 또는 중첩된 데이터 구조를 처리하는 애플리케이션에 적합하다. 널리 사용되는 문서 기반 데이터베이스로는 MongoDB와 Couchbase가 있다.</li>
+<li>Wide-cloumn 저장소, column-family 저장소 라고도 불리는 컬럼 기반 데이터베이스는 데이터를 행이 아닌 컬럼으로 구성한다. 이 구조는 컬럼 기반 쿼리를 최적화해 향상된 압축과 더 나은 읽기 성능을 제공한다. 컬럼 기반 데이터베이스는 여러 노드에 걸쳐 대량의 데이터를 저장하고 쿼리해야 하는 애플리케이션을 위해 설계되었기 때문에 빅데이터 및 분석 애플리케이션은 물론 쓰기 및 읽기 워크로드가 많은 애플리케이션에 널리 사용된다. 잘 알려진 컬럼 기반 데이터베이스로는 Apache Cassandra와 HBase가 있다.</li>
+<li>키-값 저장소는 데이터를 키-값 쌍으로 저장하는 간단하고 효율적인 방법을 제공한다. 이러한 데이터베이스는 고속 읽기 및 쓰기와 수평적 확장성이 필요한 사용 사례에 이상적이다. 키-값 저장소는 캐싱 레이어, 세션 저장소 또는 설정값 저장소 등의 용도로 사용할 수 있다. 키-값 저장소는 게임 플랫폼, 실시간 분석 시스템, 추천 엔진과 같이 성능과 저지연 데이터 엑세스가 중요한 애플리케이션에서 자주 사용된다. 널리 사용되는 키-값 저장소의 예로는 Redis와 Amazon DynamoDB가 있다.</li>
+<li>그래프 데이터베이스는 데이터를 그래프의 노드와 엣지로 저장하는데 중점을 둔다. 복잡한 관계, 순회 및 그래프 기반 알고리즘을 효율적으로 처리할 수 있다. 이러한 유형의 데이터베이스는 소셜 네트워크, 사기 탐지 시스템, 추천 엔진과 같이 개체 간의 복잡한 관계를 포함하는 애플리케이션에 특히 유용하다. 그래프 데이터베이스는 상호 연결된 데이터를 탐색하고 분석할 수 있는 강력한 쿼리 기능을 제공하므로 이러한 사용 사례에 적합한 선택이다. 그래프 데이터베이스의 예로는 Neo4j와 Amazon Neptune이 있다.</li>
+</ul>
+<p>NoSQL 데이터베이스에는 고유한 약점이 있다는 것을 인지하는 것이 중요하다.</p>
+<ul>
+<li><p>표준화 부족 : 표준화된 SQL 쿼리 언어를 따르는 관계형 데이터베이스와 달리 NoSQL 데이터베이스는 자체 쿼리 언어 또는 API를 사용하는 경우가 많다. 이로 인해 서로 다른 NoSQL 데이터베이스 간에 마이그레이션하거나 다른 시스템과 통합할 때 학습 곡선이 길어지고 어려움이 발생할 수 있다.</p>
+</li>
+<li><p>빈약한 일관성 : 많은 NoSQL 데이터베이스는 더 높은 성능과 가용성을 달성하기 위해 최종 일관성 모델을 사용한다. 이는 일부 애플리케이션에 적합할 수 있지만 엄격한 데이터 일관성이 요구되는 경우에는 문제를 일으킬 수 있다.</p>
+</li>
+<li><p>복잡한 쿼리 및 트랜잭션에 대한 지원이 제한적 : 키-값 저장소 및 컬럼 기반 데이터베이스와 같이 일부 NoSQL 데이터베이스는 복잡한 쿼리 또는 다중 레코드 트랜잭션용으로 설계되지 않았다. 따라서 특정 비즈니스 로직이나 보고 요구사항을 데이터베이스 내에서 직접 구현하기가 어려울 수 있다.</p>
+<p><img src="../../../Library/Application%20Support/typora-user-images/image-20230420191540611.png" alt=""></p>
+</li>
+</ul>
+<p>각 NoSQL 하위 유형에는 장단점이 있으므로 특정 요구사항에 따라 다양한 애플리케이션에 적합하다. NoSQL 데이터베이스를 고려할 때는 확장성, 데이터 모델링, 쿼리 패턴 및 성능 측면에서 애플리케이션의 특정 요구사항을 평가해 가장 적합한 것을 결정하는 것이 중요하다.</p>
+<h2 id="NewSQL"><a href="#NewSQL" class="headerlink" title="NewSQL"></a>NewSQL</h2><p>NewSQL 데이터베이스는 관계형 데이터베이스와 NoSQL 데이터베이스의 강점을 결합한 최신 접근 방식이다. 관계형 모델, ACID 속성, SQL 지원은 유지하면서 NoSQL 데이터베이스과 유사하게 확장성, 분산 아키텍처, 성능 향상을 제공한다. NewSQL 데이터베이스는 데이터 일관성과 무결성을 유지하면서 대규모 분산 환경에서 높은 동시성을 처리하는 최신 애플리케이션의 목표를 해결하도록 설계되었다.</p>
+<ul>
+<li>분산 아키텍처 : NewSQL 데이터베이스는 분산되어 있다. 여러 노드 또는 데이터센터에 걸쳐 데이터 파티셔닝과 복제를 활용한다. 이 아키텍처는 글로벌 규모에서 더 나은 내결함성, 고가용성을 지원한다.</li>
+<li>확장성 : NewSQL 데이터베이스는 수평적으로 확장할 수 있다. 시스템에 더 많은 노드를 추가해 워크로드 증가를 수용할 수 있다. 이 기능은 강력한 일관성과 대량의 트랜잭션 또는 사용자를 처리할 수 있는 기능이 필요한 애플리케이션에 적합하다.</li>
+<li>동시성 제어 : Multi version concurrency control(MVCC) 또는 낙관적 동시성 제어와 같은 고급 동시성 제어 메커니즘은 NewSQL 데이터베이스에서 사용된다. 이러한 메커니즘을 통해 많은 수의 동시 트랜잭션을 효율적으로 처리할 수 있다. 이는 높은 동시성 요구 사항을 가진 최신 애플리케이션에 매우 중요하다.</li>
+<li>SQL 지원 및 호환성 : 데이터를 쿼리하고 조작하는데 익숙한 SQL언어를 유지하는 NewSQL 데이터베이스는 개발자의 학습 곡선을 단순화한다. 또한 기존 관계형 데이터베이스 및 도구와의 호환성을 제공하므로 마이그레이션 프로세스가 쉬워진다.</li>
+</ul>
+<p>NewSQL의 단점을 이해하는 것 또한 중요하다.</p>
+<ul>
+<li>복잡성 : NewSQL 데이터베이스의 분산 아키텍처와 고급 기능은 기존 관계형 데이터베이스에 비해 구성, 유지 관리 및 문제 해결 측면에서 추가적인 복잡성을 초래할 수 있다.</li>
+<li>Vendor lock-in : 일부 NewSQL 데이터베이스는 특정 벤더에서 관리형 managed service로 제공되므로 벤더에 종속되어 벤더 전환에 대한 유연성이 제한된다.</li>
+<li>성숙도 부족 : 비교적 새로운 기술인 NewSQL 데이터베이스는 기존 관계형 데이터베이스의 성숙도와 광범위한 에코시스템이 부족할 수 있으며, 이로 인해 지원, 문서화 및 커뮤니티 리소스가 제한될 수 있다.</li>
+</ul>
+<p>널리 사용되는 NewSQL 데이터베이스에는 CockroachDB, Google Spanner, TiDB 등이 있다. 각 옵션은 고유한 기능을 제공하므로 다양한 사용 사례와 요구 사항에 적합하다. NewSQL 데이터베이스를 고려할 때는 확장성, 데이터 일관성, 성능 및 개발자 친숙도 측면에서 애플리케이션의 특정 요구 사항을 평가해 가장 적합한 데이터베이스를 결정하는 것이 필수적이다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230420205516856.png" alt=""></p>
+<h2 id="Time-series"><a href="#Time-series" class="headerlink" title="Time-series"></a>Time-series</h2><p>시계열 데이터베이스는 타임스탬프가 찍힌 데이터를 처리하는데 특화되어 있으며, 순차적 특서오가 시간 기반 순서화가 특징이다. 시계열 데이터는 금융 시장, IoT, 모니터링 시스템 등 다양한 영역에서 흔히 사용된다. 이러한 데이터베이스는 타임스탬프 데이터의 저장, 검색 및 분석을 최적화하도록 설계되었다. 특히 시계열 데이터의 고유한 문제를 해결하는 기능을 제공한다.</p>
+<ul>
+<li>뛰어난 쓰기 및 쿼리 성능 : 시계열 데이터베이스는 효율적인 쓰기 성능이 필요한 고석 데이터 스트림을 처리하는데 최적화되어 있다. 또한 빠른 쿼리 성능을 제공해 시계열 데이터를 실시간 또는 준실시간으로 분석할 수 있다.</li>
+<li>데이터 압축 : 시계열 워크로드에서 생성되는 대량의 데이터로 인해 시계열 데이터베이스는 스토리지 요구 사항을 줄이고 쿼리 성능을 개선하기 위해 다양한 데이터 압축 기술을 사용한다.</li>
+<li>시간 기반 데이터 보존 정책 : 시계열 데이터베이스를 사용하면 시간을 기준으로 데이터 보존 정책을 쉽게 관리할 수 있다. 이 기능을 사용하면 automatic data aging이 가능하므로 스토리지 효율성을 유지하고 데이터 관련성을 보장하는데 도움이 된다.</li>
+<li>내장 시계열 기능 : 시계열 데이터베이스에는 일반적으로 집계, 다운 샘플링 및 예측과 같은 시계열 데이터 분석을 용이하게 하는 기본 제공 기능과 도구가 포함되어 있다. 이러한 함수는 시계열 데이터로 작업하는 프로세스를 간소화하고 개발자가 보다 효율적인 애플리케이션을 구축하는 데 도움이 될 수 있다.</li>
+<li>확장성 : 시계열 데이터베이스는 수평적으로 확장할 수 있도록 설계되어 대량의 데이터와 높은 수집 속도를 처리할 수 있다. 이 기능은 IoT 애플리케이션이나 모니터링 시스템과 같이 방대한 양의 시계열 데이터를 저장하고 분석해야 하는 애플리케이션에 필수적이다.</li>
+</ul>
+<p>널리 사용되는 시계열 데이터베이스로는 InfluxDB와 TimescaleDB가 있다. 이러한 각 옵션은 시계열 데이터 관리 및 분석에 맞춘 고유한 기능을 제공하므로 다양한 사용 사례와 요구 사항에 적합하다. 시계열 데이터베이스를 고려할 때는 데이터 수집 속도, 쿼리 성능, 데이터 보존 및 확장성 측면에서 애플리케이션의 특정 요구사항을 평가하는 것이 중요하다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230420210136770.png" alt=""></p>
+<p>데이터베이스 유형과 사용 사례를 비교하려면 데이터의 유형, 확장성, 성능, 일관성, 복잡성 등 다양한 요소를 고려해야 한다. 예를 들어, 관계형 데이터베이스는 일반적으로 엄격한 데이터 일관성과 복잡한 쿼리가 필요한 애플리케이션에 더 적합하며, NoSQL 데이터베이스는 대량의 비정형 데이터를 처리하거나 높은 확장성이 필요한 프로젝트에 더 적합하다.</p>
+<!-- flag of hidden posts --></div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined">Song Hayoung</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="https://songhayoung.github.io/2023/04/20/System%20Design/ByteByteGo/private/understanding-databaase-types/">https://songhayoung.github.io/2023/04/20/System%20Design/ByteByteGo/private/understanding-databaase-types/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/System-Design/">System Design</a></div><nav id="pagination"></nav><div id="gitalk-container"></div><script>var gitalk = new Gitalk({
+  clientID: '3604b61642355579f55e',
+  clientSecret: 'f552120f18ac5aee3f6297e05e97d94c0a25cd4b',
+  repo: 'SongHayoung.github.io',
+  owner: 'SongHayoung',
+  admin: 'SongHayoung',
+  id: md5(decodeURI(location.pathname)),
+  language: 'en'
+})
+gitalk.render('gitalk-container')</script></div></div><footer class="footer-bg" style="background-image: url(https://xxxx.jpg)"><div class="layout" id="footer"><div class="copyright">&copy;2020 - 2023 By Song Hayoung</div><div class="framework-info"><span>Driven - </span><a target="_blank" rel="noopener" href="http://hexo.io"><span>Hexo</span></a><span class="footer-separator">|</span><span>Theme - </span><a target="_blank" rel="noopener" href="https://github.com/Molunerfinn/hexo-theme-melody"><span>Melody</span></a></div><div class="footer_custom_text">Learning how to walk slowly to not miss important things</div><div class="busuanzi"><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><span id="busuanzi_container_page_pv"><i class="fa fa-file"></i><span id="busuanzi_value_page_pv"></span><span></span></span></div></div></footer><i class="fa fa-arrow-up" id="go-up" aria-hidden="true"></i><script src="https://cdn.jsdelivr.net/npm/animejs@latest/anime.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@latest/velocity.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-ui-pack@latest/velocity.ui.min.js"></script><script src="/js/utils.js?version=1.7.0"></script><script src="/js/fancybox.js?version=1.7.0"></script><script src="/js/sidebar.js?version=1.7.0"></script><script src="/js/copy.js?version=1.7.0"></script><script src="/js/fireworks.js?version=1.7.0"></script><script src="/js/transition.js?version=1.7.0"></script><script src="/js/scroll.js?version=1.7.0"></script><script src="/js/head.js?version=1.7.0"></script><script src="/js/search/algolia.js"></script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+    processEscapes: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  },
+  CommonHTML: {
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "HTML-CSS": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "SVG": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  }
+});
+</script><script type="text/x-mathjax-config">MathJax.Hub.Queue(function() {
+  var all = MathJax.Hub.getAllJax(), i;
+  for (i=0; i < all.length; i += 1) {
+    all[i].SourceElement().parentNode.className += ' has-jax';
+  }
+});
+</script><script src="https://cdn.jsdelivr.net/npm/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><script>if(/Android|webOS|iPhone|iPod|iPad|BlackBerry/i.test(navigator.userAgent)) {
+  $('#nav').addClass('is-mobile')
+  $('footer').addClass('is-mobile')
+  $('#top-container').addClass('is-mobile')
+}</script><div class="search-dialog" id="algolia-search"><div class="search-dialog__title" id="algolia-search-title">Algolia</div><div id="algolia-input-panel"><div id="algolia-search-input"></div></div><hr><div id="algolia-search-results"><div id="algolia-hits"></div><div id="algolia-pagination"></div><div id="algolia-stats"></div></div><span class="search-close-button"><i class="fa fa-times"></i></span></div><div class="search-mask"></div></body></html>
