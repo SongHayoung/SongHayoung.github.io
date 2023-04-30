@@ -1,0 +1,131 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="description" content="[System Design] Rsync Algorithm"><meta name="keywords" content="System Design"><meta name="author" content="Song Hayoung"><meta name="copyright" content="Song Hayoung"><title>[System Design] Rsync Algorithm | SUMFIのBlog</title><link rel="shortcut icon" href="/songcon.ico"><link rel="stylesheet" href="/css/index.css?version=1.7.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@latest/css/font-awesome.min.css?version=1.7.0"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css?version=1.7.0"><meta name="format-detection" content="telephone=no"><meta http-equiv="x-dns-prefetch-control" content="on"><link rel="dns-prefetch" href="https://cdn.jsdelivr.net"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.css"><script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.js" defer></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@latest/dist/gitalk.min.js"></script><script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.10.0/js/md5.min.js"></script><link rel="dns-prefetch" href="https://www.google-analytics.com"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-169368422-1', 'auto');
+ga('send', 'pageview');</script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: {"appId":"7LZ6OJ4D6C","apiKey":"9a84e13f74ea78c3fd54512c10139c56","indexName":"git blog","hits":{"per_page":10},"languages":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}.","hits_stats":"${hits} results found in ${time} ms"}},
+  localSearch: undefined,
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  }
+} </script><meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/rss2.xml" title="SUMFIのBlog" type="application/rss+xml">
+</head><body><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar" data-display="true"><div class="toggle-sidebar-info text-center"><span data-toggle="Toggle article">Toggle site</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">Catalog</div><div class="sidebar-toc__progress"><span class="progress-notice">You've read</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Rsync-Algorithm"><span class="toc-number">1.</span> <span class="toc-text">Rsync Algorithm</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#The-Ploblem"><span class="toc-number">2.</span> <span class="toc-text">The Ploblem</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#The-rsync-algorithm"><span class="toc-number">3.</span> <span class="toc-text">The rsync algorithm</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Pipelining"><span class="toc-number">4.</span> <span class="toc-text">Pipelining</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Results"><span class="toc-number">5.</span> <span class="toc-text">Results</span></a></li></ol></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="https://avatars3.githubusercontent.com/u/37806785?s=460&amp;u=8c68d685faf7c5280cfbd736a6b1730b55fb4203&amp;v=4"></div><div class="author-info__name text-center">Song Hayoung</div><div class="author-info__description text-center"></div><div class="follow-button"><a target="_blank" rel="noopener" href="https://www.instagram.com/hayoung0_0/">Follow Me</a></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="/archives"><span class="pull-left">Articles</span><span class="pull-right">7417</span></a><a class="author-info-articles__tags article-meta" href="/tags"><span class="pull-left">Tags</span><span class="pull-right">191</span></a><a class="author-info-articles__categories article-meta" href="/categories"><span class="pull-left">Categories</span><span class="pull-right">64</span></a></div><hr><div class="author-info-links"><div class="author-info-links__title text-center">VISITED</div><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Seoul Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Jeju Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">British Columbia Canada</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Boracay Philippines</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">三重　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">大阪　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">名古屋　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">静岡　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">札幌　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">京都　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Bangkok Thailand</a></div></div></div><div id="content-outer"><div id="top-container" style="background-image: url(https://xxxx.jpg)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="/">SUMFIのBlog</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus">   <a class="site-page" href="/">Home</a><a class="site-page" href="/archives">Archives</a><a class="site-page" href="/tags">Tags</a><a class="site-page" href="/categories">Categories</a><a class="site-page" href="/about">About</a></span><span class="pull-right"><a class="site-page social-icon search"><i class="fa fa-search"></i><span> Search</span></a></span></div><div id="post-info"><div id="post-title">[System Design] Rsync Algorithm</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2023-04-30</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/">System Design</a><i class="fa fa-angle-right" aria-hidden="true"></i><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/Etc/">Etc</a><div class="post-meta-wordcount"><span>Word count: </span><span class="word-count">700</span><span class="post-meta__separator">|</span><span>Reading time: 4 min</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div class="article-container" id="post-content"><h2 id="Rsync-Algorithm"><a href="#Rsync-Algorithm" class="headerlink" title="Rsync Algorithm"></a>Rsync Algorithm</h2><span id="more"></span>
+<p>Rsync는 원격지에 있는 파일과 디렉토리를 동기화하기 위해 사용하는 알고리즘이다. 두 머신이 낮은 대역폭과 대기 시간이 긴 양방향 통신 링크로 연결되어 있다고 가정하자. 알고리즘은 소스 파일의 일부가 대상 파일의 일부와 동일한 부분을 식별하고, 일치하지 않는 부분만 전송한다. 이 알고리즘은 두 파일이 같은 머신에 존재하지 않아도 효과적으로 일치하지 않는 부분을 계산한다. 이 알고리즘은 파일이 유사할 때 가장 잘 동작하지만, 파일이 상당히 다른 경우에도 정확하고 합리적이며 효율적으로 동작한다.</p>
+<h2 id="The-Ploblem"><a href="#The-Ploblem" class="headerlink" title="The Ploblem"></a>The Ploblem</h2><p>A와 B라는 두 파일이 있고, B를 A와 동일하게 업데이트 하고 싶다고 가정하자. 가장 확실한 방법은 A를 B에 복사하는 것이다. 이 두 파일이 느린 네트워크 링크로 연결되어 있다고 가정하자. 그렇다면 A의 크기가 커질수록 복사하는 속도가 느려진다. 속도를 높이기 위해 A를 전송하기 전에 압축하는 방법도 있겠지만, 일반적으로 2~4의 계수배 정도만 증가한다.</p>
+<p>이제 A와 B가 매우 유사하고 둘 다 동일한 원본 파일에서 파생되었다고 가정하자. 실제 속도를 높이려면 이런 유사성을 활용해야 한다. 일반적인 방법은 링크를 통해 A와 B의 차이점만 전송한 다음 이 차이점 목록을 사용해 파일을 재구성하는 것이다. 문제는 두 파일 간의 차이점 집합을 만드는 일반적인 방법이 두 파일을 모두 읽을 수 있어야 한다는 것이다. 따라서 링크의 한쪽 끝에서 두 파일을 미리 사용할 수 있어야 한다. 동일한 노드에서 두 파일을 모두 사용할 수 없는 경우 위의 방법을 사용할 수 없다. 이 문제가 rsync가 해결하고자 하는 바이다.</p>
+<p>Rsync 알고리즘은 소스 파일의 어떤 부분이 기존 대상 파일의 어떤 부분과 일치하는지 효율적으로 계산한다. 이러한 부분은 링크를 통해 전송할 필요가 없이, 대상 파일의 일부에 대한 참조만 있으면 된다. 이러한 방식으로 일치하지 않는 소스 파일의 일부만 그대로 전송하면 된다. 그러면 수신자는 기존 대상 파일의 일부에 대한 참조와 축약된 데이터를 사용해 소스 파일의 복사본을 재구성할 수 있다.</p>
+<p>이런 데이터 전송과정에서는 다양한 일반적 압축 알고리즘을 사용해 속도를 더 향상시킬 수 있다.</p>
+<h2 id="The-rsync-algorithm"><a href="#The-rsync-algorithm" class="headerlink" title="The rsync algorithm"></a>The rsync algorithm</h2><p>느린 네트워크로 연결된 두 대의 컴퓨터 $\alpha$ 와 $\beta$가 있다고 가정하자.  $\alpha$ 는 파일 A를 소유하고 $\beta$는 파일 B를 소유하고 있다. 여기서 A와 B는 <code>유사한</code> 파일이다. Rsync 알고리즘은 아래와 같이 동작한다.</p>
+<ol>
+<li>$\beta$는 파일 B를 S바이트 크기의 겹치지 않는 고정 크기 블록으로 분할한다. 마지막 블록은 S바이트 보다 적을 수 있다.</li>
+<li>각 블록에 대해 $\beta$는 <code>weak rolling 32-bit checksum</code>와 <code>strong 128-bit MD4 checksum</code>의 계산을 수행한다.</li>
+<li>$\beta$는 이 checksum을 $\alpha$로 보낸다.</li>
+<li>$\alpha$는 A에서 B가 보낸 <code>weak rolling 32-bit checksum</code>과 동일한 S바이트 블록을 찾는다. 이 과정은 straight forward하게 single path로 진행할 수 있다. 그 뒤 일치하는 블록에서 <code>strong 128-bit MD4 checksum</code>과 일치하는 블록을 찾는다.</li>
+<li>$\alpha$는 A의 복사본을 구성하기 위해 필요한 블록 데이터를 B에 전송한다. 이 데이터는 일치하지 않는 섹션에 대해서만 전송하게 된다. 최종적으로 $\beta$가 A의 복사본을 구성할 수 있지만, B에서 찾을 수 없는 A의 일부분만을 링크로 전송하게 되기 때문에 링크 지연의 영향을 최소화 한다.</li>
+</ol>
+<p>이 알고리즘의 가장 중요한 핵심은 <code>rolling checksum</code>을 사용한 다중 블록 검색 메커니즘으로 이를 통해 오프셋 체크섬 검색을 빠르게 진행하는데 있다. 여기서 사용되는 <code>rolling checksum</code>은 단순성과 속도를 위해 적절한 modular 계수를 설정 해야한다. <code>Rolling checksum</code> (<a href="https://songhayoung.github.io/tags/Rolling-Hash/">RH</a> 알고리즘과 유사)을 통해서 일치하는 Hash block을 발견한 뒤엔, 해당 블록에서 <code>128-bit MD4 checksum</code>의 값이 일치하는지를 계산한다. 이를 통해 rolling hash algorithm에서 발생하는 확률을 매우 낮출 수 있게 된다. 일치하는 항목이 발생하면 이 전까지 일치했던 데이터의 오프셋부터 일치하는 블록의 시작 오프셋 까지의 데이터를 전송하게 된다. 일치하는 항목이 발생하지 않으면 다음 블록에 대한 계산을 동일하게 일치하는 항목이 발생할 때 까지 진행한다.</p>
+<h2 id="Pipelining"><a href="#Pipelining" class="headerlink" title="Pipelining"></a>Pipelining</h2><p>지금까지는 원격지 시스템에서 하나의 파일 복사본을 구성하는 프로세스를 살펴봤다. 다중 파일의 복사본을 구성할 때는 파이프라이닝을 통해 대기 시간의 이점을 얻을 수 있다. 프로세스 중 하나는 체크섬을 생성하고 전송하는 반면, 다른 프로세스는 파일에서 차이점 정보를 수신하고 파일을 재구성하는 방식으로 동작하게 된다.</p>
+<h2 id="Results"><a href="#Results" class="headerlink" title="Results"></a>Results</h2><p>약 24MB에서 진행한 rsync 알고리즘의 동작 결과는 아래와 같다. 많은 block들 중에서도 rolling hash checksum 으로 걸러낼 수 있는 false alarms는 일치 수의  $1/1000$ 미만으로 상당히 낮은 수치를 보여준다. 또한 300바이트로 분할된 블록에서는 매우 작은 부분(약 5%)의 데이터만 전송된 것을 확인할 수 있다.</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th><strong>block size</strong></th>
+<th><strong>matches</strong></th>
+<th><strong>tag hits</strong></th>
+<th><strong>false alarms</strong></th>
+<th><strong>data</strong></th>
+<th><strong>written</strong></th>
+<th><strong>read</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>300</td>
+<td>64247</td>
+<td>3817434</td>
+<td>948</td>
+<td>5312200</td>
+<td>5629158</td>
+<td>1632284</td>
+</tr>
+<tr>
+<td>500</td>
+<td>46989</td>
+<td>620013</td>
+<td>64</td>
+<td>1091900</td>
+<td>1283906</td>
+<td>979384</td>
+</tr>
+<tr>
+<td>700</td>
+<td>33255</td>
+<td>571970</td>
+<td>22</td>
+<td>1307800</td>
+<td>1444346</td>
+<td>699564</td>
+</tr>
+<tr>
+<td>900</td>
+<td>25686</td>
+<td>525058</td>
+<td>24</td>
+<td>1469500</td>
+<td>1575438</td>
+<td>544124</td>
+</tr>
+<tr>
+<td>1100</td>
+<td>20848</td>
+<td>496844</td>
+<td>21</td>
+<td>1654500</td>
+<td>1740838</td>
+<td>445204</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined">Song Hayoung</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="https://songhayoung.github.io/2023/04/30/System%20Design/etc/rsync-algorithm/">https://songhayoung.github.io/2023/04/30/System%20Design/etc/rsync-algorithm/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/System-Design/">System Design</a></div><nav id="pagination"><div class="next-post pull-right"><a href="/2023/04/30/PS/Codewars/simple-pig-latin/"><span>[Codewars] Simple Pig Latin</span><i class="fa fa-chevron-right"></i></a></div></nav><div id="gitalk-container"></div><script>var gitalk = new Gitalk({
+  clientID: '3604b61642355579f55e',
+  clientSecret: 'f552120f18ac5aee3f6297e05e97d94c0a25cd4b',
+  repo: 'SongHayoung.github.io',
+  owner: 'SongHayoung',
+  admin: 'SongHayoung',
+  id: md5(decodeURI(location.pathname)),
+  language: 'en'
+})
+gitalk.render('gitalk-container')</script></div></div><footer class="footer-bg" style="background-image: url(https://xxxx.jpg)"><div class="layout" id="footer"><div class="copyright">&copy;2020 - 2023 By Song Hayoung</div><div class="framework-info"><span>Driven - </span><a target="_blank" rel="noopener" href="http://hexo.io"><span>Hexo</span></a><span class="footer-separator">|</span><span>Theme - </span><a target="_blank" rel="noopener" href="https://github.com/Molunerfinn/hexo-theme-melody"><span>Melody</span></a></div><div class="footer_custom_text">Learning how to walk slowly to not miss important things</div><div class="busuanzi"><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><span id="busuanzi_container_page_pv"><i class="fa fa-file"></i><span id="busuanzi_value_page_pv"></span><span></span></span></div></div></footer><i class="fa fa-arrow-up" id="go-up" aria-hidden="true"></i><script src="https://cdn.jsdelivr.net/npm/animejs@latest/anime.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@latest/velocity.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-ui-pack@latest/velocity.ui.min.js"></script><script src="/js/utils.js?version=1.7.0"></script><script src="/js/fancybox.js?version=1.7.0"></script><script src="/js/sidebar.js?version=1.7.0"></script><script src="/js/copy.js?version=1.7.0"></script><script src="/js/fireworks.js?version=1.7.0"></script><script src="/js/transition.js?version=1.7.0"></script><script src="/js/scroll.js?version=1.7.0"></script><script src="/js/head.js?version=1.7.0"></script><script src="/js/search/algolia.js"></script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+    processEscapes: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  },
+  CommonHTML: {
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "HTML-CSS": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "SVG": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  }
+});
+</script><script type="text/x-mathjax-config">MathJax.Hub.Queue(function() {
+  var all = MathJax.Hub.getAllJax(), i;
+  for (i=0; i < all.length; i += 1) {
+    all[i].SourceElement().parentNode.className += ' has-jax';
+  }
+});
+</script><script src="https://cdn.jsdelivr.net/npm/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><script>if(/Android|webOS|iPhone|iPod|iPad|BlackBerry/i.test(navigator.userAgent)) {
+  $('#nav').addClass('is-mobile')
+  $('footer').addClass('is-mobile')
+  $('#top-container').addClass('is-mobile')
+}</script><div class="search-dialog" id="algolia-search"><div class="search-dialog__title" id="algolia-search-title">Algolia</div><div id="algolia-input-panel"><div id="algolia-search-input"></div></div><hr><div id="algolia-search-results"><div id="algolia-hits"></div><div id="algolia-pagination"></div><div id="algolia-stats"></div></div><span class="search-close-button"><i class="fa fa-times"></i></span></div><div class="search-mask"></div></body></html>

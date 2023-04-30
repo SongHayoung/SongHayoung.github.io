@@ -9,6 +9,14 @@
 
 
     <url>
+        <loc>https://songhayoung.github.io/2023/04/30/System%20Design/etc/rsync-algorithm/</loc>
+        <lastmod>2023-04-30T13:18:40.000Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+
+    </url>
+
+    <url>
         <loc>https://songhayoung.github.io/2023/04/30/PS/Codewars/simple-pig-latin/</loc>
         <lastmod>2023-04-30T08:36:07.000Z</lastmod>
         <changefreq>weekly</changefreq>
