@@ -1,0 +1,399 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="description" content="[System Design] Paxos"><meta name="keywords" content="System Design"><meta name="author" content="Song Hayoung"><meta name="copyright" content="Song Hayoung"><title>[System Design] Paxos | SUMFIのBlog</title><link rel="shortcut icon" href="/songcon.ico"><link rel="stylesheet" href="/css/index.css?version=1.7.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@latest/css/font-awesome.min.css?version=1.7.0"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css?version=1.7.0"><meta name="format-detection" content="telephone=no"><meta http-equiv="x-dns-prefetch-control" content="on"><link rel="dns-prefetch" href="https://cdn.jsdelivr.net"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.css"><script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.js" defer></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@latest/dist/gitalk.min.js"></script><script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.10.0/js/md5.min.js"></script><link rel="dns-prefetch" href="https://www.google-analytics.com"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-169368422-1', 'auto');
+ga('send', 'pageview');</script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: {"appId":"7LZ6OJ4D6C","apiKey":"9a84e13f74ea78c3fd54512c10139c56","indexName":"git blog","hits":{"per_page":10},"languages":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}.","hits_stats":"${hits} results found in ${time} ms"}},
+  localSearch: undefined,
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  }
+} </script><meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/rss2.xml" title="SUMFIのBlog" type="application/rss+xml">
+</head><body><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar" data-display="true"><div class="toggle-sidebar-info text-center"><span data-toggle="Toggle article">Toggle site</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">Catalog</div><div class="sidebar-toc__progress"><span class="progress-notice">You've read</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Paxos"><span class="toc-number">1.</span> <span class="toc-text">Paxos</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Problem"><span class="toc-number">2.</span> <span class="toc-text">Problem</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Solution"><span class="toc-number">3.</span> <span class="toc-text">Solution</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Flow-of-the-Protocol"><span class="toc-number">3.1.</span> <span class="toc-text">Flow of the Protocol</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Requests-don%E2%80%99t-need-to-be-rejected"><span class="toc-number">3.2.</span> <span class="toc-text">Requests don’t need to be rejected</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Competing-proposers-may-fail-to-choose"><span class="toc-number">3.3.</span> <span class="toc-text">Competing proposers may fail to choose</span></a></li></ol></li></ol></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="https://avatars3.githubusercontent.com/u/37806785?s=460&amp;u=8c68d685faf7c5280cfbd736a6b1730b55fb4203&amp;v=4"></div><div class="author-info__name text-center">Song Hayoung</div><div class="author-info__description text-center"></div><div class="follow-button"><a target="_blank" rel="noopener" href="https://www.instagram.com/hayoung0_0/">Follow Me</a></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="/archives"><span class="pull-left">Articles</span><span class="pull-right">7710</span></a><a class="author-info-articles__tags article-meta" href="/tags"><span class="pull-left">Tags</span><span class="pull-right">192</span></a><a class="author-info-articles__categories article-meta" href="/categories"><span class="pull-left">Categories</span><span class="pull-right">64</span></a></div><hr><div class="author-info-links"><div class="author-info-links__title text-center">VISITED</div><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Seoul Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Jeju Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">British Columbia Canada</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Boracay Philippines</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">三重　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">大阪　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">名古屋　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">静岡　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">札幌　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">京都　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Bangkok Thailand</a></div></div></div><div id="content-outer"><div id="top-container" style="background-image: url(https://xxxx.jpg)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="/">SUMFIのBlog</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus">   <a class="site-page" href="/">Home</a><a class="site-page" href="/archives">Archives</a><a class="site-page" href="/tags">Tags</a><a class="site-page" href="/categories">Categories</a><a class="site-page" href="/about">About</a></span><span class="pull-right"><a class="site-page social-icon search"><i class="fa fa-search"></i><span> Search</span></a></span></div><div id="post-info"><div id="post-title">[System Design] Paxos</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2023-05-16</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/">System Design</a><i class="fa fa-angle-right" aria-hidden="true"></i><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/Etc/">Etc</a><div class="post-meta-wordcount"><span>Word count: </span><span class="word-count">1.6k</span><span class="post-meta__separator">|</span><span>Reading time: 9 min</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div class="article-container" id="post-content"><h2 id="Paxos"><a href="#Paxos" class="headerlink" title="Paxos"></a>Paxos</h2><span id="more"></span>
+<p>두 가지 합의 구축 단계를 사용해 노드 연결이 끊어져도 안전한 합의에 도달할 수 있다.</p>
+<h2 id="Problem"><a href="#Problem" class="headerlink" title="Problem"></a>Problem</h2><p>여러 노드가 상태를 공유할 때는 특정 값에 대해 서로 합의해야 하는 경우가 많다. 리더와 팔로워가 있는 경우 리더가 값을 결정하여 팔로워에게 전달한다. 하지만 리더가 없는 경우 노드들이 직접 값을 결정해야 한다. 혹은 리더 - 팔로워 구조에서도 리더를 선출하기 위해 이 작업을 수행해야할 수 있다.</p>
+<p>리더는 2단계 커밋을 사용하여 복제본이 안전하게 업데이트를 받도록할 수 있지만, 리더가 없으면 경쟁 노드가 쿼럼을 모으려고 시도할 수 있다. 이 과정은 노드가 실패하거나 연결이 끊어질 수 있기 때문에 더욱 복잡해진다. 노드가 특정 값에 대한 쿼럼을 달성할 수 있지만 이 값을 전체 클러스터에 전달하기 전에 연결이 끊어질 수 있다.</p>
+<h2 id="Solution"><a href="#Solution" class="headerlink" title="Solution"></a>Solution</h2><p>Paxos 알고리즘은 3단계로 작동하여 네트워크 파티션 혹은 노드 장애에도 불구하고 여러 노드가 동일한 값에 동의하도록 한다. 처음 두 단계에서는 값에 대한 합의를 도출하고, 마지막 단계에서는 그 합의를 나머지 복제본에 전달한다.</p>
+<ul>
+<li>준비 단계 : Generation Clock을 설정하고 이미 허가된 값들을 수집한다.</li>
+<li>수락 단계 : 복제본에게 이 generation에 대한 값을 수락하도록 제안한다.</li>
+<li>커밋 단계 : 모든 레플리카에 값이 선택되었음을 알린다.</li>
+</ul>
+<p>첫 번째 단계에서 값을 제안하는 노드(제안자)는 클러스터의 모든 노드(수락자)에 연락하여 해당 값을 고려하겠다고 약속할지 묻는다. 정족수 이상의 수락자가 그러한 약속을 반환하면 제안자는 두 번째 단계로 이동한다. 두 번째 단계에서 제안자는 제안된 값을 전송하고, 노드의 정족수가 이 값을 수락하면 해당 값이 선택된다. 마지막 단계에서 제안자는 선택한 값을 클러스터의 모든 노드에 커밋할 수 있다.</p>
+<h3 id="Flow-of-the-Protocol"><a href="#Flow-of-the-Protocol" class="headerlink" title="Flow of the Protocol"></a>Flow of the Protocol</h3><p>먼저 Pxos 프로토콜의 일반적인 흐름에 대한 예시를 보여준 다음, 프로토콜의 작동 방식에 대해 자세히 살펴본다.</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>Proposer</th>
+<th>Acceptor</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Generation Clock에서 다음 generation number를 가져온다. 이 번호를 기반으로 모든 수락자에게 준비 요청을 전송한다.</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>준비 요청의 생성 번호가 노드가 알고있는 promised generation 변수보다 늦으면 이 값으로 promised generation을 업데이트하고 promise 응답을 반환한다. 이미 제안을 수락한 경우 수락한 제안을 반환한다.</td>
+</tr>
+<tr>
+<td>수락자 정족수로부터 응답을 받으면 응답에 이미 제안이 수락된 값이 포함되어 있는지 확인한다. 포함되어 있다면 자신의 제안 값을 가장 높은 generation number를 가진 응답으로 변경한다. 그리고 모든 수락자에게 해당 생성 번호와 제안된 값으로 수락 요청을 보낸다.</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>수락 요청의 generation number가 알고있는 promised generation 변수보다 늦으면 해당 제안을 수락된 제안으로 저장하고 요청을 수락했다고 응답한다.</td>
+</tr>
+<tr>
+<td>수락자 정족수로부터 성공적인 응답을 받으면 선택한 값을 기록하고 모든 노드에 커밋 메세지를 보낸다.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Paxos의 기본 규칙들을 살펴보았다. 이제 어떻게 작동하는지 예시를 살펴보자.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230516233945616.png" alt=""></p>
+<p>다섯개의 노드로 구성된 클러스터를 생각해보자. 클라이언트가 아테네 노드에 접속해 이름을 “alice”로 설정해달라고 요청한다. 이제 아테네 노드는 모든 노드가 이 변경에 동의하는지 확인하기 위해 Paxos 상호작용을 시작해야 한다. 아테네는 다른 모든 노드에게  이름을 “alice”로 변경할 것을 제안하므로 아테네를 제안자라고 한다. 아테네를 포함한 클러스터의 모든 노드는 제안을 수락할 수 있는 수락자다.</p>
+<p>아테네가 “alice”를 제안하는 동시에 노드 에페소스는 이름을 “elanor”로 설정하라는 요청을 받는다. 따라서 에페소스도 제안자가 된다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230516234247937.png" alt=""></p>
+<p>준비 단계에서 제안자는 몇 가지 준비 요청을 보내며 시작하는데, 요청에는 generation number가 포함된다. Paxos는 단일 장애 지점을 피하기 위한 것이므로 단일 generation clock에서 이 값을 가져가지 않는다. 대신 각 노드는 generation number와 노드 ID를 결합한 자체 generation clock을 유지한다. 노드 ID는 동률을 끊는데 사용되는데, <code>[2,a] &gt; [1,e] &gt; [1,a]</code> 순이다. 각 수락자는 지금까지 본 가장 최근의 promise를 기록한다.</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>Node</th>
+<th>Athens</th>
+<th>Byzantium</th>
+<th>Cyrene</th>
+<th>Delphi</th>
+<th>Ephesus</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>promised generation</td>
+<td>1,a</td>
+<td>1,a</td>
+<td>0</td>
+<td>1,e</td>
+<td>1,e</td>
+</tr>
+<tr>
+<td>accepted value</td>
+<td>none</td>
+<td>none</td>
+<td>none</td>
+<td>none</td>
+<td>none</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>그 이전에는 어떤 요청도 본 적 없으므로 모두 호출 제안자에게 promise를 반환한다. 반환된 값을 promise라고 부르는데, 이는 수락자가 약속된 generation clock보다 빠른 메세지를 고려하지 않겠다고 약속한다는 의미다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230516234623531.png" alt=""></p>
+<p>아테네는 준비 메세지를 키레네에게 보낸다. 아테네가 응답으로 promise를 받으면 이는 이제 쿼럼을 나타내는 5개의 노드 중 3개의 노드로부터 promise를 받았다는 것을 의미한다. 이제 아테네는 준비 메세지 전송에서 수락 메세지 전송으로 전환한다.</p>
+<p>아테네가 클러스터 노드 과반수로 부터 promise를 받지 못할 수도 있다. 이 경우 아테네는 generation clock을 증가시켜 준비 요청을 다시 시도한다.</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>Node</th>
+<th>Athens</th>
+<th>Byzantium</th>
+<th>Cyrene</th>
+<th>Delphi</th>
+<th>Ephesus</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>promised generation</td>
+<td>1,a</td>
+<td>1,a</td>
+<td>1,a</td>
+<td>1,e</td>
+<td>1,e</td>
+</tr>
+<tr>
+<td>accepted value</td>
+<td>none</td>
+<td>none</td>
+<td>none</td>
+<td>none</td>
+<td>none</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230516234826523.png" alt=""></p>
+<p>이제 아테네는 generation과 제안된 값이 포함된 수락 메세지를 전송하기 시작한다. 아테네와 비잔티움이 제안을 수락한다.</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>Node</th>
+<th>Athens</th>
+<th>Byzantium</th>
+<th>Cyrene</th>
+<th>Delphi</th>
+<th>Ephesus</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>promised generation</td>
+<td>1,a</td>
+<td>1,a</td>
+<td>1,a</td>
+<td>1,e</td>
+<td>1,e</td>
+</tr>
+<tr>
+<td>accepted value</td>
+<td>alice</td>
+<td>alice</td>
+<td>none</td>
+<td>none</td>
+<td>none</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230516234920098.png" alt=""></p>
+<p>에페소스는 이제 키레네에게 준비 메세지를 보낸다. 키레네는 아테네에게 promise를 보냈지만 에페소스의 요청이 더 높은 generation이므로 에페소스의 요청이 우선된다. 키레네가 에페소스에게 promise를 다시 보낸다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230516235010883.png" alt=""></p>
+<p>이제 키레네는 아테네로부터 수락 요청을 받지만 generation number가 에페소스와의 promise보다 뒤처져 있기 때문에 이를 거부한다.</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>Node</th>
+<th>Athens</th>
+<th>Byzantium</th>
+<th>Cyrene</th>
+<th>Delphi</th>
+<th>Ephesus</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>promised generation</td>
+<td>1,a</td>
+<td>1,a</td>
+<td>1,e</td>
+<td>1,e</td>
+<td>1,e</td>
+</tr>
+<tr>
+<td>accepted value</td>
+<td>alice</td>
+<td>alice</td>
+<td>none</td>
+<td>none</td>
+<td>none</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230516235147703.png" alt=""></p>
+<p>이제 에페소스는 준비 메세지에서 정족수를 확보했으므로 수락 단계로 넘어갈 수 있다. 자신과 델파이에게 수락 요청을 보냈지만 더 이상의 수락 요청을 보내기 전에 다운되어 버린다.</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>Node</th>
+<th>Athens</th>
+<th>Byzantium</th>
+<th>Cyrene</th>
+<th>Delphi</th>
+<th>Ephesus</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>promised generation</td>
+<td>1,a</td>
+<td>1,a</td>
+<td>1,e</td>
+<td>1,e</td>
+<td>1,e</td>
+</tr>
+<tr>
+<td>accepted value</td>
+<td>alice</td>
+<td>alice</td>
+<td>none</td>
+<td>elanor</td>
+<td>elanor</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>한편 아테네는 키레네의 수락 요청이 거부된 것을 처리해야 한다. 이는 더 이상 정족수를 채울 수 없음을 의미하며, 따라서 제안은 실패하게 된다. 이렇듯 제안자가 초기 쿼럼을 상실하는 경우는 항상 발생할 수 있다. 다른 제안자가 쿼럼을 달성하기 위해 초기 제안자중 하나 이상의 멤버가 이탈하는 경우이다.</p>
+<p>간단한 2단계 커밋이 있는 상황에서는 에페소스가 계속 진행되어 해당 값이 선택되기를 기대할 수 있지만, 에페소스가 다운되었기 때문에 이러한 계획은 이제 문제가 될 수 있다. 수락자 정족수에 제한이 있다면 에페소스의 충돌로 인해 전체 제안 프로세스가 교착 상태에 빠질 수 있다. 그러나 paxos는 이런 일이 일어날 것으로 예상했기 때문에 아테네는 이번에 더 높은 generation을 대상으로 재시도를 하게 된다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230516235732195.png" alt=""></p>
+<p>준비 메세지를 다시 보내지만 이번에는 generation number가 더 높다. 첫 번째 라운드와 마찬가지로 3가지 promise를 반환하지만 중요한 차이점이 있다. 아테네는 이미 “alice”를 수락했고, 델파이는 “elanor”를 수락했다. 이 두 수용자는 모두 promise를 반환하지만 이미 수락한 제안의 generation number와 함께 이미 수락한 값도 반환한다. 해당 값을 반환하면 아테네에 한 약속을 반영해 promised generation을 <code>[2,a]</code>로 업데이트 한다.</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>Node</th>
+<th>Athens</th>
+<th>Byzantium</th>
+<th>Cyrene</th>
+<th>Delphi</th>
+<th>Ephesus</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>promised generation</td>
+<td>2,a</td>
+<td>1,a</td>
+<td>2,a</td>
+<td>2,a</td>
+<td>1,e</td>
+</tr>
+<tr>
+<td>accepted value</td>
+<td>alice</td>
+<td>alice</td>
+<td>none</td>
+<td>elanor</td>
+<td>elanor</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>이제 정족수를 채운 아테네는 수락단계로 넘어가야 하는데, promised 응답에서 받은 이미 수락된 값 중 가장 높은 “elanor”를 제안해야 한다. 아테네가  <code>[1,a]</code>로 수락한 “alice”보다 더 큰 generation number를 가졌기 때문이다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230517000241012.png" alt=""></p>
+<p>아테네가 수락 요청을 보내기 시작하는데 이번에는 “elanor”와 함께 현재 generation number가 보내진다. 아테네가 자신에게 수락 요청을 보내고 이를 수락한다. 이는 중요한 수락인데, 이제 “elanor”를 수락하는 노드가 세 개가 되어 “elanor”에 대한 정족수가 충족되므로 “elanor”를 선택된 값으로 간주할 수 있기 때문이다.</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>Node</th>
+<th>Athens</th>
+<th>Byzantium</th>
+<th>Cyrene</th>
+<th>Delphi</th>
+<th>Ephesus</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>promised generation</td>
+<td>2,a</td>
+<td>1,a</td>
+<td>2,a</td>
+<td>2,a</td>
+<td>1,e</td>
+</tr>
+<tr>
+<td>accepted value</td>
+<td>elanor</td>
+<td>alice</td>
+<td>none</td>
+<td>elanor</td>
+<td>elanor</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>“elanor”가 선택된 값임에도 불구하고 아직 아무도 이를 인지하지 못하고 있다. 수락 단계에서 아테네는 정족수에 미달하고 에페소스는 오프라인 상태이므로 “elanor”가 값으로 선택되었다는 것만 인지하고 있다. 아테네는 수락 요청이 몇 개만 더 수락되면 커밋할 수 있다. 하지만 이제 아테네는 다운된다.</p>
+<p>이 시점에서 아테네와 에페소스는 크래시되었다. 그러나 클러스터에는 여전히 노드 정족수가 작동 중이므로 계속 작동할 수 있으며, 실제로 프로토콜을 따르면 “elanor”가 선택된 값이라는 것을 발견할 수 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230517002659055.png" alt=""></p>
+<p>키레네는 이름을 “carol”로 설정하라는 요청을 받으므로 제안자가 된다. [2,a] generation을 보았으므로 [3,c] generation으로 준비 단계를 시작한다. “carol”로 이름을 제안하고 싶지만 지금은 준비 요청만 발행하고 있다.</p>
+<p>키레네는 클러스터의 나머지 노드에 준비 메세지를 보낸다. 아테네의 이전 준비 단계와 마찬가지로 키레네는 수락된 값을 받환받으므로 “carol”은 값으로 제안되지 않는다. 이전과 마찬가지로 델파이의 “elanor”는 비잔티움의 “alice”보다 늦기 때문에 키레네는 “elanor”와 [3,c]로 수락 단계를 시작한다.</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>Node</th>
+<th>Athens</th>
+<th>Byzantium</th>
+<th>Cyrene</th>
+<th>Delphi</th>
+<th>Ephesus</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>promised generation</td>
+<td>2,a</td>
+<td>3,c</td>
+<td>3,c</td>
+<td>3,c</td>
+<td>1,e</td>
+</tr>
+<tr>
+<td>accepted value</td>
+<td>elanor</td>
+<td>alice</td>
+<td>none</td>
+<td>elanor</td>
+<td>elanor</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230517003116744.png" alt=""></p>
+<p>계속해서 노드를 크래시하고 깨울 수는 있지만, 이제 “elanor”가 승리할 것이 분명해졌다. 노드의 정족수가 충족되는 한, 적어도 하나 이상의 노드는 “elanor”를 값으로 사용할 것이며 준비를 시도하는 노드는 준비 단계에 대한 정족수를 확보하기 위해 “elanor”를 수락한 노드 한 곳에 연락해야 할 것이다. 키레네가 커밋을 보내면서 합의는 마무리된다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230517003228066.png" alt=""></p>
+<p>언젠가 아테네와 에페소스가 다시 온라인 상태가 되면 쿼럼이 무엇을 선택 했는지 알게 될 것이다.</p>
+<h3 id="Requests-don’t-need-to-be-rejected"><a href="#Requests-don’t-need-to-be-rejected" class="headerlink" title="Requests don’t need to be rejected"></a>Requests don’t need to be rejected</h3><p>위의 예시에서는 오래된 generation의 요청을 거부하는 수락자를 봤다. 하지만 프로토콜은 이와 같은 명시적 거부를 요구하지 않는다. 공식화된 대로 수락자는 오래된 요청을 무시할 수도 있다. 이 경우에도 프로토콜은 여전히 단일 합의 값으로 수렴한다. 이는 프로토콜의 중요한 특징인데, 분산 시스템이기 때문에 언제든지 연결이 끊어질 수 있으므로 프로토콜의 안전성을 보장하기 위해 거부에 의존하지 않는 것이 유리하기 때문이다. 여기서 안전성이란 프로토콜이 하나의 값만 선택하고, 한 번 선택된 값은 덮어쓰지 않는다는 것을 의미한다.</p>
+<p>그러나 거부를 보내는 것은 성능을 개선하기 때문에 여전히 유용하다. 제안자가 자신이 오래된 제안자라는 사실을 빨리 알면 알수록 더 높은 세대의 제안자들과 더 빨리 다른 라운드를 시작할 수 있다.</p>
+<h3 id="Competing-proposers-may-fail-to-choose"><a href="#Competing-proposers-may-fail-to-choose" class="headerlink" title="Competing proposers may fail to choose"></a>Competing proposers may fail to choose</h3><p>이 프로토콜이 잘못될 수 있는 한 가지 방법은 두 명 이상의 제안자가 한 사이클에 들어오는 경우이다.</p>
+<ul>
+<li>alice는 아테네와 비잔티움에 의해 수락된다.</li>
+<li>elanor는 모든 노드에 의해 준비되어 alice가 정족수를 확보하지 못한다.</li>
+<li>elanor는 델파이와 에페소스에 의해 수락된다.</li>
+<li>alice는 모든 노드에 의해 준비되어 elanor가 정족수를 확보하지 못한다.</li>
+<li>alice는 아테네와 비잔티움에 의해 승인된다.</li>
+<li>… 등등의 상황을 livelock이라 한다.</li>
+</ul>
+<p>FLP 불가능 결과는 결함이 있는 노드 하나만 있어도 클러스터가 값을 선택하지 못할 수 있음을 보여준다.</p>
+<p>제안자가 새로운 generation을 선택해야 할 때마다 무작위로 일정 시간을 기다리도록 함으로써 이러한 livelock이 발생할 가능성을 줄일 수 있다. 이러한 무작위성을 통해 다른 제안자가 전체 정족수에 준비 요청을 보내기 전에 정족수를 수락할 수 있을 가능성이 높아진다.</p>
+<p>하지만 livelock이 발생하지 않도록 보장할 수는 없다. 이는 근본적인 트레이드 오프이며, 안전과 livelock중 하나를 보장할 수는 있지만 둘 다 보장할 수는 없다. Paxos는 안전을 최우선으로 보장한다.</p>
+</div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined">Song Hayoung</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="https://songhayoung.github.io/2023/05/16/System%20Design/etc/paxos/">https://songhayoung.github.io/2023/05/16/System%20Design/etc/paxos/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/System-Design/">System Design</a></div><nav id="pagination"><div class="prev-post pull-left"><a href="/2023/05/17/PS/Codeforces/vkcup-2018-round-1-c/"><i class="fa fa-chevron-left">  </i><span>[Codeforces] VK Cup 2018 - Round 1 C. Perfect Security</span></a></div><div class="next-post pull-right"><a href="/2023/05/16/PS/CSAcademy/crypto/"><span>[CS Academy] Crypto</span><i class="fa fa-chevron-right"></i></a></div></nav><div id="gitalk-container"></div><script>var gitalk = new Gitalk({
+  clientID: '3604b61642355579f55e',
+  clientSecret: 'f552120f18ac5aee3f6297e05e97d94c0a25cd4b',
+  repo: 'SongHayoung.github.io',
+  owner: 'SongHayoung',
+  admin: 'SongHayoung',
+  id: md5(decodeURI(location.pathname)),
+  language: 'en'
+})
+gitalk.render('gitalk-container')</script></div></div><footer class="footer-bg" style="background-image: url(https://xxxx.jpg)"><div class="layout" id="footer"><div class="copyright">&copy;2020 - 2023 By Song Hayoung</div><div class="framework-info"><span>Driven - </span><a target="_blank" rel="noopener" href="http://hexo.io"><span>Hexo</span></a><span class="footer-separator">|</span><span>Theme - </span><a target="_blank" rel="noopener" href="https://github.com/Molunerfinn/hexo-theme-melody"><span>Melody</span></a></div><div class="footer_custom_text">Learning how to walk slowly to not miss important things</div><div class="busuanzi"><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><span id="busuanzi_container_page_pv"><i class="fa fa-file"></i><span id="busuanzi_value_page_pv"></span><span></span></span></div></div></footer><i class="fa fa-arrow-up" id="go-up" aria-hidden="true"></i><script src="https://cdn.jsdelivr.net/npm/animejs@latest/anime.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@latest/velocity.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-ui-pack@latest/velocity.ui.min.js"></script><script src="/js/utils.js?version=1.7.0"></script><script src="/js/fancybox.js?version=1.7.0"></script><script src="/js/sidebar.js?version=1.7.0"></script><script src="/js/copy.js?version=1.7.0"></script><script src="/js/fireworks.js?version=1.7.0"></script><script src="/js/transition.js?version=1.7.0"></script><script src="/js/scroll.js?version=1.7.0"></script><script src="/js/head.js?version=1.7.0"></script><script src="/js/search/algolia.js"></script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+    processEscapes: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  },
+  CommonHTML: {
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "HTML-CSS": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "SVG": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  }
+});
+</script><script type="text/x-mathjax-config">MathJax.Hub.Queue(function() {
+  var all = MathJax.Hub.getAllJax(), i;
+  for (i=0; i < all.length; i += 1) {
+    all[i].SourceElement().parentNode.className += ' has-jax';
+  }
+});
+</script><script src="https://cdn.jsdelivr.net/npm/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><script>if(/Android|webOS|iPhone|iPod|iPad|BlackBerry/i.test(navigator.userAgent)) {
+  $('#nav').addClass('is-mobile')
+  $('footer').addClass('is-mobile')
+  $('#top-container').addClass('is-mobile')
+}</script><div class="search-dialog" id="algolia-search"><div class="search-dialog__title" id="algolia-search-title">Algolia</div><div id="algolia-input-panel"><div id="algolia-search-input"></div></div><hr><div id="algolia-search-results"><div id="algolia-hits"></div><div id="algolia-pagination"></div><div id="algolia-stats"></div></div><span class="search-close-button"><i class="fa fa-times"></i></span></div><div class="search-mask"></div></body></html>
