@@ -1,0 +1,130 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="description" content="[ByteByteGo] API redesign: shopping cart and Stripe payment"><meta name="keywords" content="System Design"><meta name="author" content="Song Hayoung"><meta name="copyright" content="Song Hayoung"><title>[ByteByteGo] API redesign: shopping cart and Stripe payment | SUMFIのBlog</title><meta name="robots" content="noindex"><link rel="shortcut icon" href="/songcon.ico"><link rel="stylesheet" href="/css/index.css?version=1.7.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@latest/css/font-awesome.min.css?version=1.7.0"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css?version=1.7.0"><meta name="format-detection" content="telephone=no"><meta http-equiv="x-dns-prefetch-control" content="on"><link rel="dns-prefetch" href="https://cdn.jsdelivr.net"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.css"><script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.js" defer></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@latest/dist/gitalk.min.js"></script><script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.10.0/js/md5.min.js"></script><link rel="dns-prefetch" href="https://www.google-analytics.com"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-169368422-1', 'auto');
+ga('send', 'pageview');</script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: {"appId":"7LZ6OJ4D6C","apiKey":"9a84e13f74ea78c3fd54512c10139c56","indexName":"git blog","hits":{"per_page":10},"languages":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}.","hits_stats":"${hits} results found in ${time} ms"}},
+  localSearch: undefined,
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  }
+} </script><meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/rss2.xml" title="SUMFIのBlog" type="application/rss+xml">
+</head><body><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar" data-display="true"><div class="toggle-sidebar-info text-center"><span data-toggle="Toggle article">Toggle site</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">Catalog</div><div class="sidebar-toc__progress"><span class="progress-notice">You've read</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#API-redesign-shopping-cart-and-Stripe-payment"><span class="toc-number">1.</span> <span class="toc-text">API redesign: shopping cart and Stripe payment</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Example-2-Shopping-Cart"><span class="toc-number">2.</span> <span class="toc-text">Example 2 - Shopping Cart</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Step-1-Analyze-the-requirements-and-design-APIs"><span class="toc-number">2.1.</span> <span class="toc-text">Step 1 - Analyze the requirements and design APIs</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Step-2-Optimizations"><span class="toc-number">2.2.</span> <span class="toc-text">Step 2 - Optimizations</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-filtering"><span class="toc-number">2.2.1.</span> <span class="toc-text">1. filtering</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-sorting"><span class="toc-number">2.2.2.</span> <span class="toc-text">2. sorting</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-pagination"><span class="toc-number">2.2.3.</span> <span class="toc-text">3. pagination</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Step-3-Security"><span class="toc-number">2.3.</span> <span class="toc-text">Step 3 - Security</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Example-3-Stripe-API-Redesign"><span class="toc-number">3.</span> <span class="toc-text">Example 3 - Stripe API Redesign</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Design-Checklist"><span class="toc-number">4.</span> <span class="toc-text">Design Checklist</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Resource-URI"><span class="toc-number">4.1.</span> <span class="toc-text">Resource URI</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Parameters"><span class="toc-number">4.2.</span> <span class="toc-text">Parameters</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#HTTP-header"><span class="toc-number">4.3.</span> <span class="toc-text">HTTP header</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#URL"><span class="toc-number">4.4.</span> <span class="toc-text">URL</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#API-Lifecycle-Management"><span class="toc-number">5.</span> <span class="toc-text">API Lifecycle Management</span></a></li></ol></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="https://avatars3.githubusercontent.com/u/37806785?s=460&amp;u=8c68d685faf7c5280cfbd736a6b1730b55fb4203&amp;v=4"></div><div class="author-info__name text-center">Song Hayoung</div><div class="author-info__description text-center"></div><div class="follow-button"><a target="_blank" rel="noopener" href="https://www.instagram.com/hayoung0_0/">Follow Me</a></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="/archives"><span class="pull-left">Articles</span><span class="pull-right">7813</span></a><a class="author-info-articles__tags article-meta" href="/tags"><span class="pull-left">Tags</span><span class="pull-right">192</span></a><a class="author-info-articles__categories article-meta" href="/categories"><span class="pull-left">Categories</span><span class="pull-right">59</span></a></div><hr><div class="author-info-links"><div class="author-info-links__title text-center">VISITED</div><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Seoul Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Jeju Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">British Columbia Canada</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Boracay Philippines</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">三重　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">大阪　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">名古屋　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">静岡　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">札幌　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">京都　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Bangkok Thailand</a></div></div></div><div id="content-outer"><div id="top-container" style="background-image: url(https://xxxx.jpg)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="/">SUMFIのBlog</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus">   <a class="site-page" href="/">Home</a><a class="site-page" href="/archives">Archives</a><a class="site-page" href="/tags">Tags</a><a class="site-page" href="/categories">Categories</a><a class="site-page" href="/about">About</a></span><span class="pull-right"><a class="site-page social-icon search"><i class="fa fa-search"></i><span> Search</span></a></span></div><div id="post-info"><div id="post-title">[ByteByteGo] API redesign: shopping cart and Stripe payment</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2023-05-25</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/">System Design</a><i class="fa fa-angle-right" aria-hidden="true"></i><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/Byte-Byte-Go/">Byte Byte Go</a><div class="post-meta-wordcount"><span>Word count: </span><span class="word-count">1k</span><span class="post-meta__separator">|</span><span>Reading time: 6 min</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div class="article-container" id="post-content"><h2 id="API-redesign-shopping-cart-and-Stripe-payment"><a href="#API-redesign-shopping-cart-and-Stripe-payment" class="headerlink" title="API redesign: shopping cart and Stripe payment"></a>API redesign: shopping cart and Stripe payment</h2><span id="more"></span>
+<p>이번 포스트에서는 나머지 두 가지 API 디자인 예제에 대한 연습을 진행한다.</p>
+<h2 id="Example-2-Shopping-Cart"><a href="#Example-2-Shopping-Cart" class="headerlink" title="Example 2 - Shopping Cart"></a>Example 2 - Shopping Cart</h2><h3 id="Step-1-Analyze-the-requirements-and-design-APIs"><a href="#Step-1-Analyze-the-requirements-and-design-APIs" class="headerlink" title="Step 1 - Analyze the requirements and design APIs"></a>Step 1 - Analyze the requirements and design APIs</h3><p>장바구니 기능은 아래와 같은 핵심 기능을 지원해야 한다.</p>
+<ol>
+<li>장바구니 생성</li>
+<li>장바구니 보기</li>
+<li>장바구니 아이템 담기</li>
+<li>장바구니 내 아이템 보기</li>
+</ol>
+<p>리소스를 카트와 아이템으로 정의한다. 아래는 해당 API에 대한 개요다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230525213104971.png" alt=""></p>
+<p>사용자당 장바구니는 1개이기 때문에 <code>mine</code>이라는 값을 유니크 식별자로 사용한다.</p>
+<p>카트에 항목을 추가할 때 Google 스타일 API는 다음과 같이 URL에 동사를 지정할 수 있다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">POST /v1/carts/mine/items:add</span><br></pre></td></tr></table></figure>
+<p>URL에 콜론을 사용하는 것을 좋아하지 않는 사람들도 있다. 하지만 분명한 것은 개발자는 조직의 API 사양을 따라야 한다. 모두의 컨센서스가 맞을 때 오류가 발생할 가능성이 낮기 때문이다.</p>
+<h3 id="Step-2-Optimizations"><a href="#Step-2-Optimizations" class="headerlink" title="Step 2 - Optimizations"></a>Step 2 - Optimizations</h3><p>많은 항목으로 가득 찬 장바구니를 생각해보다. 쿼리 환경 개선을 위해 필터링, 정렬 및 페이징이 필요한 시점이다.</p>
+<h4 id="1-filtering"><a href="#1-filtering" class="headerlink" title="1. filtering"></a>1. filtering</h4><p>장바구니에 있는 모든 빨간색 항목을 쿼리한다고 가정해보자. API는 아래와 같다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">GET /v1/carts/mine/items?filter=red</span><br></pre></td></tr></table></figure>
+<p>광범위한 필터링 기능을 제공하는 데는 신중해야 한다. 이는 잠재적으로 성능에 부정적인 영향을 미칠 수 있다. 더 나은 대악으로 색상 및 무게와 같은 특정 매개변수로 옵션을 제한하는 구조화된 필터링 방식을 제공해야 한다. 제품 검색 페이지의 경우 구조화된 필터링이 더욱 필수적이다. 가격, 카테고리, 위치 등과 같은 추가 필터가 필요하다.</p>
+<h4 id="2-sorting"><a href="#2-sorting" class="headerlink" title="2. sorting"></a>2. sorting</h4><p>카트에서 항목을 추가한 시점을 기준으로 정렬한다고 가정하자.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">GET /v1/carts/mine/items?sort_by=time</span><br></pre></td></tr></table></figure>
+<p>필터링과 마찬가지로 정렬 메커니즘도 구조화되어 있다. 선택하기 위해 미리 정의된 정렬 필드 세트를 제공한다.</p>
+<h4 id="3-pagination"><a href="#3-pagination" class="headerlink" title="3. pagination"></a>3. pagination</h4><p>한 페이지에 수용할 수 있는 것보다 많은 항목이 있는 경우 페이지네이션을 사용한다. 이를 통해 사용자는 항목의 페이지를 탐색할 수 있다. 페이지네이션에는 널리 사용되는 두 가지 방법이 있다. Offset 페이지네이션과 Cursor 기반 페이지네이션이다.</p>
+<p>오프셋 페이지네이션은 페이지 번호와 페이지당 원하는 결과 수를 매개변수로 사용해 동작한다. 이를 통해 사용자는 총 페이지와 정확한 페이지 번호를 확인할 수 있다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">GET /v1/carts?page=&#123;page&#125;&amp;count=&#123;count&#125;</span><br></pre></td></tr></table></figure>
+<p>서버는 페이지 및 카운트 매개변수를 사용해 데이터베이스에서 요청할 정확한 오프셋과 제한을 계산한다. 관계형 데이터베이스로 이를 구현하는건 간단하다. 예를 들어 페이지 = 2, 카운트 = 10인 경우 데이터베이스 쿼리는 아래와 같다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">SELECT * FROM carts</span><br><span class="line">WHERE cart_id = 1234</span><br><span class="line">ORDER BY item_id DESC</span><br><span class="line">LIMIT 10 OFFSET 10;</span><br></pre></td></tr></table></figure>
+<p>오프셋 페이지네이션은 구현이 간단하고 사용자가 데이터 집합의 특정 페이지로 이동할 수 있는 기능을 제공한다.</p>
+<p>그러나 오프셋 페이지네이션은 대규모 데이터 집합에서는 잘 동작하지 않는다. 데이터베이스가 테이블을 <code>offset + limit</code>까지 스캔해야 하기 때문에 성능 저하가 발생한다. 오프셋이 집합을 초과하는 경우에도 데이터베이스는 여전히 낭비적인 테이블 스캔을 수행하고 많은 row를 드랍해야 한다.</p>
+<p>또한 오프셋 페이지네이션은 너무 자주 write가 발생하는 데이터 집합에서는 제대로 동작하지 않는다. 활성 사용자가 많은 채팅 그룹의 메세지가 좋은 예이다. 데이터 속도가 빠르면 결과가 중복되거나 건너뛰는 경우가 발생할 수 있다.</p>
+<p>반면 커서 기반 페이지네이션은 특정 항목에 대한 포인터를 사용한다. 이후 요청에서 해당 포인터 이후의 결과를 반환한다. 이 방법은 테이블의 고유한 순차 열을 기반으로 하며 오프셋 페이지네이션에 비해 확장성과 안정성에서 이점을 제공한다. 각 요청에 대해 오프셋까지 데이터 집합을 다시 스캔할 필요가 없다.</p>
+<p>커서 기반 페이지네이션의 예는 아래와 같다. 최대 페이지 크기와 페이지 토큰을 사용한다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">GET /v1/carts?maxPageSize=&#123;maxPageSize&#125;&amp;pageToken=&#123;pageToken&#125;</span><br><span class="line"></span><br><span class="line">Response :</span><br><span class="line">&#123;</span><br><span class="line">    results: [...],   </span><br><span class="line">    nextPageToken=&#123; xxx &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>이 예제에서 pageToken은 커서이고 maxPageSize는 응답으로 반환되는 최대 결과를 정의한다. 커서 기반 페이지네이션은 대규모 데이터 집합에 맞게 잘 확장되고 커서가 기본 열의 특정 행을 가리키면 데이터베이스는 인덱스를 사용해 테이블 스캔 없이도 해당 특정 위치로 빠르게 이동할 수 있어 오프셋 기반 페이지네이션의 단점을 해결한다. 또한 페이지네이션 윈도우를 안정화 시켜 빠르게 증가하는 데이터 집합에도 적합하다. 그러나 커서 기반 페이지네이션은 특정 페이지로 점프하는 기능을 희생한다.</p>
+<h3 id="Step-3-Security"><a href="#Step-3-Security" class="headerlink" title="Step 3 - Security"></a>Step 3 - Security</h3><p>대다수의 장바구니 구현에서는 로그인하지 않고도 품목을 추가할 수 있다. 이를 익명 카트 기능이라고 칭하는데, 이런 공용 API는 잠재적인 디도스 공격 대상이 될 수 있다. 공격자가 수만 대의 PC에서 대량의 아이템을 추가하거나 제거해 시스템 리소스를 고갈시키는 것을 방지해야 한다.</p>
+<p>API를 설계할 때는 DDoS공격 방지를 위해 적절한 rate limiting 알고리즘을 적용해야 한다. 이는 방화벽 또는 API 게이트웨이 레벨에서 구현할 수 있다. 예를 들어 방화벽에서는 단일 IP 주소에서 반복되는 요청을 거부할 수 있으며, API 게이트웨이는 장바구니에 추가 또는 제거 요청을 분당 100건으로 제한할 수 있다.</p>
+<h2 id="Example-3-Stripe-API-Redesign"><a href="#Example-3-Stripe-API-Redesign" class="headerlink" title="Example 3 - Stripe API Redesign"></a>Example 3 - Stripe API Redesign</h2><p>아래 다이어그램은 지난 10년 이상에 걸친 Stripe 결제 API의 발전 과정을 보여준다.</p>
+<ul>
+<li>Stage 1 2011 : 7줄의 코드로 동작하는 Stripe API는 Charge 개념을 중심으로 개발되었다. 이 시점에는 카드 결제만 독점적으로 처리했다.</li>
+<li>Stage 2 2011~2015 : Stripe API는 Token API를 도입했다. 이 API의 목표는 고객이 PCI compliance 요건을 만족하는 복잡하고 지루한 프로세스를 회하도록 하는 것이다.</li>
+<li>Stage 3 2015 : ACH 및 비트코인 결제가 등장했다. 이런 유형의 거래는 “완료”까지 어느 정도 시간이 필요했기 때문에 Stripe는 feedback loop를 API에 통합했다. 이런 변화는 결제의 성공을 나타내는데 도움이 되었다.</li>
+<li>Stage 4 2015~2017 : 이 단계에서는 알리페이, 위챗페이, 아이딜 등 더 많은 결제 수단이 추가되었다. 그 결과, souce API는 이러한 다양한 결제 수단을 지원하기 위해 추상화 방식으로 개발되었다.</li>
+<li>Stage 5 2017~2018 : 지원되는 결제 수단의 수가 증가함에 따라 팀은 몇달에 걸쳐 통합 결제 API 초안을 작성하고 PaymentIntents 및 PaymentMethod를 도입했다.</li>
+<li>Stage 6 2018~2020 : Stripe는 2년을 투자해 고객을 통합 결제 API로 마이그레이션 했다.</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230525215657924.png" alt=""></p>
+<h2 id="Design-Checklist"><a href="#Design-Checklist" class="headerlink" title="Design Checklist"></a>Design Checklist</h2><h3 id="Resource-URI"><a href="#Resource-URI" class="headerlink" title="Resource URI"></a>Resource URI</h3><ul>
+<li>복수형 사용</li>
+<li>소문자로 유지</li>
+<li>내부 정보 포함하지 않기</li>
+<li>리소스가 MECE (mutually exclusive, collectively exhaustive)인지 확인</li>
+</ul>
+<h3 id="Parameters"><a href="#Parameters" class="headerlink" title="Parameters"></a>Parameters</h3><ul>
+<li>요청 및 응답 매개변수의 수를 관리 가능한 수준으로 유지</li>
+<li>인증 및 권한 부여 세부 정보를 노출하지 않기</li>
+<li>혼동할 수 있는 약어 사용 방지</li>
+<li>헷깔리는 매개변수 회피</li>
+<li>일관성 있는 매개변수 네이밍</li>
+<li>적절한 HTTP 상태코드 사용</li>
+<li>표준 타임스탬프 형식 사용</li>
+</ul>
+<h3 id="HTTP-header"><a href="#HTTP-header" class="headerlink" title="HTTP header"></a>HTTP header</h3><ul>
+<li>캐시된 정보를 올바르게 사용</li>
+<li>필요한 경우 만료 적용</li>
+<li>필요한 경우 보안 정보 추가</li>
+</ul>
+<h3 id="URL"><a href="#URL" class="headerlink" title="URL"></a>URL</h3><ul>
+<li>버전 관리 사용</li>
+<li>항상 HTTPS 사용</li>
+<li>사용 가능한 모든 API에 대한 API docs 제공</li>
+<li>무단 엑세스 방지</li>
+<li>필요한 경우 리소스 그룹에 rate limiting 알고리즘 적용</li>
+</ul>
+<h2 id="API-Lifecycle-Management"><a href="#API-Lifecycle-Management" class="headerlink" title="API Lifecycle Management"></a>API Lifecycle Management</h2><p>아래는 가트너에서 발표한 API 수명 주기 관리를 위한 Magic Quadrant다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230525220231760.png" alt=""></p>
+<p>이런 강력한 도구는 API 설계 및 개발부터 구성, 계시, 테스트, 배포에 이르기까지 다양한 개발 단계를 용이하게 한다. 일상적인 업무에서 우리는 API 사양을 정의하기 위해 OpenAPI를 사용한다. 이를 통해 프론트엔드, 백엔드 및 QA팀 전체에서 사양에 대한 공유된 이해를 보장한다. </p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230525220349079.png" alt=""></p>
+<p>결론적으로 API 설계는 코드 작성과 마찬가지로 중요하다. 비즈니스 요구 사항과 시스템 상호 작용에 대한 심층적인 이해가 필요하다. 최고 수준의 API는 상호 운용성을 촉진하고 대규모 조직 내에서 네트워크 효과를 창출한다. 새로운 API를 설계하든 기존 API를 미세하게 조정하든 설계 지침을 준수하는 것이 중요하다. 유지보수 가능성도 신중하게 고려해야 한다. Stripe처럼 API를 재설계할 수 있는 여유가 없을 수도 있지만, 그렇다고 해서 지속적인 개선을 멈춰서는 안된다.</p>
+<!-- flag of hidden posts --></div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined">Song Hayoung</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="https://songhayoung.github.io/2023/05/25/System%20Design/ByteByteGo/private/api-redesign-shopping-car-and-stripe-payment/">https://songhayoung.github.io/2023/05/25/System%20Design/ByteByteGo/private/api-redesign-shopping-car-and-stripe-payment/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/System-Design/">System Design</a></div><nav id="pagination"></nav><div id="gitalk-container"></div><script>var gitalk = new Gitalk({
+  clientID: '3604b61642355579f55e',
+  clientSecret: 'f552120f18ac5aee3f6297e05e97d94c0a25cd4b',
+  repo: 'SongHayoung.github.io',
+  owner: 'SongHayoung',
+  admin: 'SongHayoung',
+  id: md5(decodeURI(location.pathname)),
+  language: 'en'
+})
+gitalk.render('gitalk-container')</script></div></div><footer class="footer-bg" style="background-image: url(https://xxxx.jpg)"><div class="layout" id="footer"><div class="copyright">&copy;2020 - 2023 By Song Hayoung</div><div class="framework-info"><span>Driven - </span><a target="_blank" rel="noopener" href="http://hexo.io"><span>Hexo</span></a><span class="footer-separator">|</span><span>Theme - </span><a target="_blank" rel="noopener" href="https://github.com/Molunerfinn/hexo-theme-melody"><span>Melody</span></a></div><div class="footer_custom_text">Learning how to walk slowly to not miss important things</div><div class="busuanzi"><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><span id="busuanzi_container_page_pv"><i class="fa fa-file"></i><span id="busuanzi_value_page_pv"></span><span></span></span></div></div></footer><i class="fa fa-arrow-up" id="go-up" aria-hidden="true"></i><script src="https://cdn.jsdelivr.net/npm/animejs@latest/anime.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@latest/velocity.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-ui-pack@latest/velocity.ui.min.js"></script><script src="/js/utils.js?version=1.7.0"></script><script src="/js/fancybox.js?version=1.7.0"></script><script src="/js/sidebar.js?version=1.7.0"></script><script src="/js/copy.js?version=1.7.0"></script><script src="/js/fireworks.js?version=1.7.0"></script><script src="/js/transition.js?version=1.7.0"></script><script src="/js/scroll.js?version=1.7.0"></script><script src="/js/head.js?version=1.7.0"></script><script src="/js/search/algolia.js"></script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+    processEscapes: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  },
+  CommonHTML: {
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "HTML-CSS": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "SVG": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  }
+});
+</script><script type="text/x-mathjax-config">MathJax.Hub.Queue(function() {
+  var all = MathJax.Hub.getAllJax(), i;
+  for (i=0; i < all.length; i += 1) {
+    all[i].SourceElement().parentNode.className += ' has-jax';
+  }
+});
+</script><script src="https://cdn.jsdelivr.net/npm/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><script>if(/Android|webOS|iPhone|iPod|iPad|BlackBerry/i.test(navigator.userAgent)) {
+  $('#nav').addClass('is-mobile')
+  $('footer').addClass('is-mobile')
+  $('#top-container').addClass('is-mobile')
+}</script><div class="search-dialog" id="algolia-search"><div class="search-dialog__title" id="algolia-search-title">Algolia</div><div id="algolia-input-panel"><div id="algolia-search-input"></div></div><hr><div id="algolia-search-results"><div id="algolia-hits"></div><div id="algolia-pagination"></div><div id="algolia-stats"></div></div><span class="search-close-button"><i class="fa fa-times"></i></span></div><div class="search-mask"></div></body></html>

@@ -1,0 +1,96 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="description" content="[C#] BlockingQueue 개발기"><meta name="keywords" content="CSharp"><meta name="author" content="Song Hayoung"><meta name="copyright" content="Song Hayoung"><title>[C#] BlockingQueue 개발기 | SUMFIのBlog</title><link rel="shortcut icon" href="/songcon.ico"><link rel="stylesheet" href="/css/index.css?version=1.7.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@latest/css/font-awesome.min.css?version=1.7.0"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css?version=1.7.0"><meta name="format-detection" content="telephone=no"><meta http-equiv="x-dns-prefetch-control" content="on"><link rel="dns-prefetch" href="https://cdn.jsdelivr.net"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.css"><script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.js" defer></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@latest/dist/gitalk.min.js"></script><script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.10.0/js/md5.min.js"></script><link rel="dns-prefetch" href="https://www.google-analytics.com"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-169368422-1', 'auto');
+ga('send', 'pageview');</script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: {"appId":"7LZ6OJ4D6C","apiKey":"9a84e13f74ea78c3fd54512c10139c56","indexName":"git blog","hits":{"per_page":10},"languages":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}.","hits_stats":"${hits} results found in ${time} ms"}},
+  localSearch: undefined,
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  }
+} </script><meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/rss2.xml" title="SUMFIのBlog" type="application/rss+xml">
+</head><body><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar" data-display="true"><div class="toggle-sidebar-info text-center"><span data-toggle="Toggle article">Toggle site</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">Catalog</div><div class="sidebar-toc__progress"><span class="progress-notice">You've read</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%EB%93%A4%EC%96%B4%EA%B0%80%EB%A9%B0"><span class="toc-number">1.</span> <span class="toc-text">들어가며</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#wait-pulse%EC%99%80-AutoResetEvent"><span class="toc-number">2.</span> <span class="toc-text">wait &#x2F; pulse와 AutoResetEvent</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%EB%8F%99%EC%8B%9C%EC%84%B1-%EC%A0%9C%EC%96%B4"><span class="toc-number">3.</span> <span class="toc-text">동시성 제어</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%EA%B2%B0%EB%A1%A0"><span class="toc-number">4.</span> <span class="toc-text">결론</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%EC%B0%B8%EC%A1%B0"><span class="toc-number">5.</span> <span class="toc-text">참조</span></a></li></ol></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="https://avatars3.githubusercontent.com/u/37806785?s=460&amp;u=8c68d685faf7c5280cfbd736a6b1730b55fb4203&amp;v=4"></div><div class="author-info__name text-center">Song Hayoung</div><div class="author-info__description text-center"></div><div class="follow-button"><a target="_blank" rel="noopener" href="https://www.instagram.com/hayoung0_0/">Follow Me</a></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="/archives"><span class="pull-left">Articles</span><span class="pull-right">7813</span></a><a class="author-info-articles__tags article-meta" href="/tags"><span class="pull-left">Tags</span><span class="pull-right">192</span></a><a class="author-info-articles__categories article-meta" href="/categories"><span class="pull-left">Categories</span><span class="pull-right">59</span></a></div><hr><div class="author-info-links"><div class="author-info-links__title text-center">VISITED</div><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Seoul Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Jeju Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">British Columbia Canada</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Boracay Philippines</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">三重　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">大阪　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">名古屋　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">静岡　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">札幌　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">京都　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Bangkok Thailand</a></div></div></div><div id="content-outer"><div id="top-container" style="background-image: url(https://xxxx.jpg)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="/">SUMFIのBlog</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus">   <a class="site-page" href="/">Home</a><a class="site-page" href="/archives">Archives</a><a class="site-page" href="/tags">Tags</a><a class="site-page" href="/categories">Categories</a><a class="site-page" href="/about">About</a></span><span class="pull-right"><a class="site-page social-icon search"><i class="fa fa-search"></i><span> Search</span></a></span></div><div id="post-info"><div id="post-title">[C#] BlockingQueue 개발기</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2020-08-23</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/Languages/">Languages</a><i class="fa fa-angle-right" aria-hidden="true"></i><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/Languages/CSharp/">CSharp</a><div class="post-meta-wordcount"><span>Word count: </span><span class="word-count">672</span><span class="post-meta__separator">|</span><span>Reading time: 4 min</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div class="article-container" id="post-content"><h2 id="들어가며"><a href="#들어가며" class="headerlink" title="들어가며"></a>들어가며</h2><span id="more"></span>
+<p>개인 프로젝트를 하면서 다음과 같은 기능이 필요한 Pub-Sub모델에 필요한 큐를 만들어야 했습니다.</p>
+<ol>
+<li>동시성 제어를 할 수 있어야 한다.</li>
+<li>사용할 엔티티가 없다면 CPU 사용율을 낮추기 위해 wait 상태에 빠져야한다.</li>
+</ol>
+<p>이 두가지 조건을 만족하는 큐를 개발하면서 공부했던것을 적어보려고 합니다. 이름이 왜 BlockingQueue 개발기냐면은… 이런 기능을 제공하는 큐가 있는줄 몰랐고(당시에) 오늘 이펙티브 자바를 공부하다가 BlockingQueue를 알게 되었고 레퍼런스를 찾아본 결과 C#에도 BlockingQueue가 있다는 것을 알게 되었기 때문입니다.. 레퍼런스를 꼼꼼히 찾아보는 습관도 많이 길러야겠다.. 바보같은..</p>
+<p><strong>부족한 부분에 대한 지적은 감사히 받겠습니다!</strong></p>
+<h2 id="wait-pulse와-AutoResetEvent"><a href="#wait-pulse와-AutoResetEvent" class="headerlink" title="wait / pulse와 AutoResetEvent"></a>wait / pulse와 AutoResetEvent</h2><p>c#에서 스레드를 wait 상태에 들어가게 하고 깨우는 방법에는 pulse와 AutoResetEvent의 set이 있습니다. 이 둘의 큰 차이점은 pulse는 깨어날 스레드가 없다면 <strong>pulse 신호는 소멸</strong>한다는 점입니다. 이와 반대로 AutoResetEvent의 set은 깨어날 스레드가 없다면 <strong>pulse 신호가 있었다는 점을 기억</strong>한다는 점입니다. 그렇기 때문에 BlockingQueue를 개발하는데 필요한 기능으로 pulse를 사용했습니다. AutoResetEvent를 사용하게 된다면 다음과 같은 문제가 생기게 됩니다.</p>
+<ol>
+<li>큐의 엔티티는 현재 n개이다.</li>
+<li>Producer가 엔티티를 삽입하며 pulse 신호를 보낸다.</li>
+<li>이 때 큐의 엔티티가 현재 존재하기 때문에 wait상태에 들어가 있는 큐는 없다. 그렇기 때문에 이 pulse 신호는 <strong>기억 된다.</strong></li>
+<li>Consumer가 큐의 엔티티를 다 처리하고 엔티티가 존재하지 않기 때문에 wait 상태에 들어간다.</li>
+<li>이때 기억된 pulse 신호를 받고 깨어난다.</li>
+<li>하지만 엔티티는 현재 0개이기 때문에 오류가 발생한다.</li>
+</ol>
+<p>위와 같은 상황을 방지하기 위해 pulse를 선택했습니다. pulseAll을 선택할 수도 있었지만 당시에는 consumer 1개 producer 1개 이기 때문에 pulse를 선택했습니다. 다시 개발한다면 pulseAll을 선택할 생각입니다.(확정성 고려) </p>
+<p>wait은 다음과 같이 동작합니다.</p>
+<ol>
+<li>락을 내려 놓고</li>
+<li>락 오브젝트에 해당하는 큐에 들어가 wait상태에 빠진다.</li>
+</ol>
+<p>그렇기 때문에 pulse 신호를 보내면 오브젝트 내에 있는 큐에서 순차적으로 깨어나게 됩니다.</p>
+<h2 id="동시성-제어"><a href="#동시성-제어" class="headerlink" title="동시성 제어"></a>동시성 제어</h2><p>동시성 제어에는 스핀락을 사용했습니다. 나중에 C#의 Concurrent Collections의 소스코드를 까보니까 얘네들은 Interlock으로 구현을 했음을 확인할 수 있었습니다.(이것도 당시에 이런 컬렉션이 있는줄 몰랐음.. 솔직히 말하면 C++에서 STL이 thread-unsafe한 컨테이너들만 있고 boost 라이브러리에 동시성 관련한 컨테이너들이 있는줄 알고있었기 때문에 당연히 동시성 제어하려면 직접 구현해야 하는 줄 알았다..)</p>
+<p>우선적으로 말하자면 스핀락과 인터락은 둘 다 커널모드 동기화를 지원하지 않는 락입니다. <strong>MSDN에 따르면 Interlock이 성능을 크게 낮추는 경우에나 SpinLock을 사용하라고 권장합니다.</strong></p>
+<blockquote>
+<p>SpinLock 구조는 잠금을 획득하기 위해 대기하는 동안 회전하는 하위 수준의 동기화 기본 형식입니다. 멀티 코어 컴퓨터에서 대기 시간이 짧은 것으로 예상되고 경합이 최소인 경우 SpinLock의 성능이 다른 종류의 잠금보다 더 뛰어납니다. 그러나 프로파일링을 통해 System.Threading.Monitor 메서드 또는 Interlocked 메서드가 프로그램의 성능을 크게 낮추는 것을 확인하는 경우에만 SpinLock을 사용하는 것이 좋습니다.</p>
+</blockquote>
+<p>근데… 이거로는 부족했습니다. 둘다 같은 기능을 제공하는것 처럼 보이는데 InterLock과 SpinLock을 구분지어둔 이유가 있을꺼라고 생각했습니다. 결국 찾다 찾다 다음과 같은 내용을 알 수 있었습니다.(2006년 글입니다.)</p>
+<blockquote>
+<p>The difference between the two is IRQL that the spinlock raises to when<br>it is acquired. If you acquire the spin lock on your own, it is<br>DISPATCH_LEVEL, if you use the interlocked versions it is the highest<br>possible IRQL on the machine. So, you can’t intermix them b/c you could<br>deadlock if you acquired the spinlock, raised to dispatch level and then<br>your interrupt fired on the same thread and you tried to acquire the<br>lock using the interlocked function.</p>
+</blockquote>
+<p>읽어 보자면 스핀락과 인터락의 IRQL(Interrupt Request Level)이 다르다는 말입니다. 스핀락은 DISPATCH_LEVEL에서 락을 수행하고 인터락은 이보다 높은 레벨에서 락을 수행한다고 합니다. 그래서 혼용해서 쓰면 안되며 <strong>혼용해서 쓰다가는 데드락</strong>에 걸린다고 합니다.</p>
+<p>즉 이 내용에서 얻을 수 있는건 두가지 입니다.</p>
+<ol>
+<li>두 락의 수행 레벨이 다르다.(내가 알고싶었던거)</li>
+<li>두 락을 혼용해서 쓰면 데드락에 빠진다.(락을 수행하는 레벨이 다르니)</li>
+</ol>
+<p>알게된 내용을 뒤로하고 커널모드 동기화가 필요없어야 했던 이유 즉, synchronized나 semaphore, mutex가 필요없어야 했던 이유는 큐에서 작업을 꺼내오는 일이 매우 짧다는 이유에 있었습니다. 매우 짧아서 충분히 기다릴 수 있으며 이 과정에서 커널모드 동기화까지 가며 시간을 잡아먹을 필요가 없어보였습니다. 락에 대한 내용은 <a href="https://songhayoung.github.io/2020/06/15/OS/Locking/">여기</a>서 확인할 수 있습니다.</p>
+<h2 id="결론"><a href="#결론" class="headerlink" title="결론"></a>결론</h2><p>BlockingQueue를 만들면서 많은것을 배울 수 있었습니다. 첫째로 Lock에 대한 명확한 개념(커널모드 동기화, 유저모드 동기화). 둘째로 pulse 신호를 기억하는 메소드도 존재한다는 점. <strong>마지막으로.. 레퍼런스를 꼼꼼히 찾아보고 진짜 없으면 개발해야한다는 점…</strong></p>
+<h2 id="참조"><a href="#참조" class="headerlink" title="참조"></a>참조</h2><blockquote>
+<p><a target="_blank" rel="noopener" href="https://docs.microsoft.com/ko-kr/dotnet/standard/threading/spinlock">https://docs.microsoft.com/ko-kr/dotnet/standard/threading/spinlock</a><br><a target="_blank" rel="noopener" href="https://community.osr.com/discussion/94870/difference-between-interlocked-and-spin-lock-version-of-list-management-functions">https://community.osr.com/discussion/94870/difference-between-interlocked-and-spin-lock-version-of-list-management-functions</a></p>
+</blockquote>
+</div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined">Song Hayoung</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="https://songhayoung.github.io/2020/08/23/Languages/CSharp/developingBlockingQueue/">https://songhayoung.github.io/2020/08/23/Languages/CSharp/developingBlockingQueue/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/CSharp/">CSharp</a></div><nav id="pagination"><div class="prev-post pull-left"><a href="/2020/08/23/Etc/hash/"><i class="fa fa-chevron-left">  </i><span>[Hash] 해쉬</span></a></div><div class="next-post pull-right"><a href="/2020/08/23/Languages/Effective%20JAVA/item81/"><span>[Effective Java] wait과 notify보다는 동시성 유틸리티를 애용하라</span><i class="fa fa-chevron-right"></i></a></div></nav><div id="gitalk-container"></div><script>var gitalk = new Gitalk({
+  clientID: '3604b61642355579f55e',
+  clientSecret: 'f552120f18ac5aee3f6297e05e97d94c0a25cd4b',
+  repo: 'SongHayoung.github.io',
+  owner: 'SongHayoung',
+  admin: 'SongHayoung',
+  id: md5(decodeURI(location.pathname)),
+  language: 'en'
+})
+gitalk.render('gitalk-container')</script></div></div><footer class="footer-bg" style="background-image: url(https://xxxx.jpg)"><div class="layout" id="footer"><div class="copyright">&copy;2020 - 2023 By Song Hayoung</div><div class="framework-info"><span>Driven - </span><a target="_blank" rel="noopener" href="http://hexo.io"><span>Hexo</span></a><span class="footer-separator">|</span><span>Theme - </span><a target="_blank" rel="noopener" href="https://github.com/Molunerfinn/hexo-theme-melody"><span>Melody</span></a></div><div class="footer_custom_text">Learning how to walk slowly to not miss important things</div><div class="busuanzi"><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><span id="busuanzi_container_page_pv"><i class="fa fa-file"></i><span id="busuanzi_value_page_pv"></span><span></span></span></div></div></footer><i class="fa fa-arrow-up" id="go-up" aria-hidden="true"></i><script src="https://cdn.jsdelivr.net/npm/animejs@latest/anime.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@latest/velocity.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-ui-pack@latest/velocity.ui.min.js"></script><script src="/js/utils.js?version=1.7.0"></script><script src="/js/fancybox.js?version=1.7.0"></script><script src="/js/sidebar.js?version=1.7.0"></script><script src="/js/copy.js?version=1.7.0"></script><script src="/js/fireworks.js?version=1.7.0"></script><script src="/js/transition.js?version=1.7.0"></script><script src="/js/scroll.js?version=1.7.0"></script><script src="/js/head.js?version=1.7.0"></script><script src="/js/search/algolia.js"></script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+    processEscapes: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  },
+  CommonHTML: {
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "HTML-CSS": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "SVG": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  }
+});
+</script><script type="text/x-mathjax-config">MathJax.Hub.Queue(function() {
+  var all = MathJax.Hub.getAllJax(), i;
+  for (i=0; i < all.length; i += 1) {
+    all[i].SourceElement().parentNode.className += ' has-jax';
+  }
+});
+</script><script src="https://cdn.jsdelivr.net/npm/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><script>if(/Android|webOS|iPhone|iPod|iPad|BlackBerry/i.test(navigator.userAgent)) {
+  $('#nav').addClass('is-mobile')
+  $('footer').addClass('is-mobile')
+  $('#top-container').addClass('is-mobile')
+}</script><div class="search-dialog" id="algolia-search"><div class="search-dialog__title" id="algolia-search-title">Algolia</div><div id="algolia-input-panel"><div id="algolia-search-input"></div></div><hr><div id="algolia-search-results"><div id="algolia-hits"></div><div id="algolia-pagination"></div><div id="algolia-stats"></div></div><span class="search-close-button"><i class="fa fa-times"></i></span></div><div class="search-mask"></div></body></html>
