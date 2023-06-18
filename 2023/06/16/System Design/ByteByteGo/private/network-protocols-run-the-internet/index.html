@@ -1,0 +1,169 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="description" content="[ByteByteGo] Network Protocols Run the Internet"><meta name="keywords" content="System Design"><meta name="author" content="Song Hayoung"><meta name="copyright" content="Song Hayoung"><title>[ByteByteGo] Network Protocols Run the Internet | SUMFIのBlog</title><meta name="robots" content="noindex"><link rel="shortcut icon" href="/songcon.ico"><link rel="stylesheet" href="/css/index.css?version=1.7.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@latest/css/font-awesome.min.css?version=1.7.0"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css?version=1.7.0"><meta name="format-detection" content="telephone=no"><meta http-equiv="x-dns-prefetch-control" content="on"><link rel="dns-prefetch" href="https://cdn.jsdelivr.net"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.css"><script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.js" defer></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@latest/dist/gitalk.min.js"></script><script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.10.0/js/md5.min.js"></script><link rel="dns-prefetch" href="https://www.google-analytics.com"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-169368422-1', 'auto');
+ga('send', 'pageview');</script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: {"appId":"7LZ6OJ4D6C","apiKey":"9a84e13f74ea78c3fd54512c10139c56","indexName":"git blog","hits":{"per_page":10},"languages":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}.","hits_stats":"${hits} results found in ${time} ms"}},
+  localSearch: undefined,
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  }
+} </script><meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/rss2.xml" title="SUMFIのBlog" type="application/rss+xml">
+</head><body><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar" data-display="true"><div class="toggle-sidebar-info text-center"><span data-toggle="Toggle article">Toggle site</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">Catalog</div><div class="sidebar-toc__progress"><span class="progress-notice">You've read</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Network-Protocols-Run-the-Internet"><span class="toc-number">1.</span> <span class="toc-text">Network Protocols Run the Internet</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Internet-and-the-OSI-Model"><span class="toc-number">2.</span> <span class="toc-text">Internet and the OSI Model</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Network-Protocols-in-A-Distributed-System"><span class="toc-number">3.</span> <span class="toc-text">Network Protocols in A Distributed System</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#DNS-What-Happens-When-You-Type-a-URL-in-a-Web-Browser"><span class="toc-number">4.</span> <span class="toc-text">DNS - What Happens When You Type a URL in a Web Browser?</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Recursive-DNS-Lookup"><span class="toc-number">4.1.</span> <span class="toc-text">Recursive DNS Lookup</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#DNS-Lookup-with-a-CDN"><span class="toc-number">4.2.</span> <span class="toc-text">DNS Lookup with a CDN</span></a></li></ol></li></ol></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="https://avatars3.githubusercontent.com/u/37806785?s=460&amp;u=8c68d685faf7c5280cfbd736a6b1730b55fb4203&amp;v=4"></div><div class="author-info__name text-center">Song Hayoung</div><div class="author-info__description text-center"></div><div class="follow-button"><a target="_blank" rel="noopener" href="https://www.instagram.com/hayoung0_0/">Follow Me</a></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="/archives"><span class="pull-left">Articles</span><span class="pull-right">8071</span></a><a class="author-info-articles__tags article-meta" href="/tags"><span class="pull-left">Tags</span><span class="pull-right">193</span></a><a class="author-info-articles__categories article-meta" href="/categories"><span class="pull-left">Categories</span><span class="pull-right">59</span></a></div><hr><div class="author-info-links"><div class="author-info-links__title text-center">VISITED</div><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Seoul Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Jeju Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">British Columbia Canada</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Boracay Philippines</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">三重　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">大阪　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">名古屋　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">静岡　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">札幌　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">京都　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Bangkok Thailand</a></div></div></div><div id="content-outer"><div id="top-container" style="background-image: url(https://xxxx.jpg)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="/">SUMFIのBlog</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus">   <a class="site-page" href="/">Home</a><a class="site-page" href="/archives">Archives</a><a class="site-page" href="/tags">Tags</a><a class="site-page" href="/categories">Categories</a><a class="site-page" href="/about">About</a></span><span class="pull-right"><a class="site-page social-icon search"><i class="fa fa-search"></i><span> Search</span></a></span></div><div id="post-info"><div id="post-title">[ByteByteGo] Network Protocols Run the Internet</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2023-06-16</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/">System Design</a><i class="fa fa-angle-right" aria-hidden="true"></i><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/Byte-Byte-Go/">Byte Byte Go</a><div class="post-meta-wordcount"><span>Word count: </span><span class="word-count">1.6k</span><span class="post-meta__separator">|</span><span>Reading time: 10 min</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div class="article-container" id="post-content"><h2 id="Network-Protocols-Run-the-Internet"><a href="#Network-Protocols-Run-the-Internet" class="headerlink" title="Network Protocols Run the Internet"></a>Network Protocols Run the Internet</h2><span id="more"></span>
+<p>분산 시스템에서 데이터는 다양한 네트워크 프로토콜을 사용해 네트워크를 통해 전송된다. 이 포스트에서는 일반적인 네트워크 프로토콜이 어떻게 작동하는지, 분산 시스템에서 어디에 사용되는지, 일반적인 문제를 어떻게 해결하는지에 대해 설명한다.</p>
+<h2 id="Internet-and-the-OSI-Model"><a href="#Internet-and-the-OSI-Model" class="headerlink" title="Internet and the OSI Model"></a>Internet and the OSI Model</h2><p>스마트폰이나 노트북에서 셀룰러 타워에 연결된 웹사이트에 접속한다고 가정해보자. 이 기지국은 라우터에 연결되고 라우터는 ISP를 통해 인터넷에 접속한다. 패킷은 로컬 ISP로 전달된 다음 웹사이트를 호스팅하는 네트워크로 전달된다. 패킷이 회사 네트워크에 도달하면 링크 레이어 스위치를 거쳐 적절한 서버에 도달한다.</p>
+<p>라우터와 링크 레이어 스위치는 모두 패킷 스위치이며, 패킷을 전달하는 역할을 한다. 차이점은 라우터는 일반적으로 네트워크 코어에서 여러 네트워크를 연결하는데 사용되는 반면, 링크 레이어 스위치는 엑세스 네트워크(최종 시스템을 엣지 라우터에 물리적으로 연결하는 네트워크)에서 단일 네트워크의 여러 장치를 연결하는 데 사용된다는 점이다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230616223305425.png" alt=""></p>
+<p>네트워크 프로토콜이 필요한 이유는 무엇일까? 인터넷에 연결된 장치는 이해할 수 있는 언어로 통신해야 한다. 다양한 컴퓨터 시스템은 OSI(개방형 시스템 상호 연결) 모델에서 지정한 표준을 사용해 서로 통신한다. OSI 모델에는 7개의 추상 계층이 있으며, 각 계층은 고유한 책임과 프로토콜을 가지고 있다.</p>
+<p>아래 다이어그램은 OSI 모델에서 각 계층이 하는 일을 보여준다. 각 중간 계층은 그 위에 있는 계층에 기능 클래스를 제공하고, 그 아래 계층은 그 계층에 의해 서비스를 받는다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230616223437990.png" alt=""></p>
+<ol>
+<li><p>Application Layer</p>
+<p> 애플리케이션 계층은 최종 사용자와 가장 가까운 계층이다. 대부분의 애플리케이션은 이 계층에 상주한다. 데이터 전송 세부 사항을 이해할 필요 없이 백엔드 서버에 데이터를 요청한다. 이 계층에 프로토콜에는 HTTP, SMTP, FTP, DNS 등이 포함된다.</p>
+</li>
+<li><p>Presentation Layer</p>
+<p> 이 계층은 데이터 인코딩, 암호화, 압축을 처리하여 애플리케이션 계층에 전달할 데이터를 준비한다. 예를 들어 HTTPS는 클라이언트와 서버 간의 보안 통신을 위해 TLS(전송 계층 보안)를 활용한다.</p>
+</li>
+<li><p>Session Layer</p>
+<p> 이 계층은 두 장치 간의 통신을 열고 닫습니다. 데이터 크기가 큰 경우 세션 계층은 처음부터 재전송되지 않도록 체크포인트를 설정한다.</p>
+</li>
+<li><p>Transport Layer</p>
+<p> 이 계층은 두 장치 간의 엔드투엔드 통신을 처리한다. 발신자 측에서 데이터를 세그먼트로 나누고 수신자 측에서 재조립한다. 이 계층에는 혼잡을 방지하기 위한 흐름 제어 기능이 있다. 이 계층의 주요 프로토콜은 TCP와 UDP이다.</p>
+</li>
+<li><p>Network Layer</p>
+<p> 이 계층은 서로 다른 네트워크 간의 데이터 전송을 가능하게 한다. 또한 세그먼트 또는 데이터그램을 더 작은 패킷으로 세분화하고 IP 주소를 사용해 최종 목적지까지 최적의 경로를 찾는다. 이 프로세스를 라우팅이라고 한다.</p>
+</li>
+<li><p>Data Link Layer</p>
+<p> 이 계층은 동일한 네트워크에 있는 장치 간의 데이터 전송을 허용한다. 패킷은 로컬 영역 네트워크에 국한된 프레임으로 세분화 된다.</p>
+</li>
+<li><p>Physical Layer</p>
+<p> 이 계층은 케이블과 스위치를 통해 비트스트림을 전송하므로 장치 간의 물리적 연결과 밀접하게 연관되어 있다.</p>
+</li>
+</ol>
+<p>OSI 모델에 비해 TCP/IP 모델에는 4개의 레이어만 존재한다. 레이어를 논의할 때는 컨텍스트를 지정하는 것이 중요하다.</p>
+<p>이제 각 계층의 책임을 이해했으므로 다음 다이어그램을 사용해 데이터 전송 프로세스를 요약해 본다. 이를 캡슐화 및 캡슐 해제라고 한다. 캡슐화는 데이터가 목적지를 향해 이동할 때 헤더를 추가하는 것을 포함한다. 역캡슐화는 이런 헤더를 제거해 원본 데이터를 검색한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230616224232978.png" alt=""></p>
+<p>Step 1 : 장치 A가 HTTP를 사용해 네트워크를 통해 장치 B로 데이터를 전송하면 애플리케이션 계층에서 HTTP 헤더가 처음에 추가된다.</p>
+<p>Step 2 : TCP 또는 UDP 헤더가 데이터에 추가된다. 이 헤더는 전송 계층에서 TCP 세그먼트로 캡슐화된다. 헤더에는 소스 포트, 대상 포트, 시퀀스 번호가 포함된다.</p>
+<p>Step 3 : 그런 다음 네트워크 계층에서 세그먼트가 IP 헤더로 캡슐화된다. IP 헤더에는 소스 및 대상 IP 주소가 포함된다.</p>
+<p>Step 4 : 데이터 링크 계층에서 소스 및 대상 MAC 주소를 포함하는 MAC 헤더가 IP 데이터그램에 추가된다.</p>
+<p>Step 5 : 캡슐화된 프레임이 물리 계층으로 전송되어 네트워크를 통해 비트스트림으로 전송된다.</p>
+<p>Step 6 ~ 10 : 장치 B가 네트워크에서 비트를 수신하면 캡슐화 프로세스의 반대인 캡슐화 해제 프로세스가 시작된다. 장치 B가 원본 데이터에 액세스할 수 있을때 까지 헤더가 레이어별로 제거된다.</p>
+<p>각 계층은 헤더를 처리 명령에 사용하며 이전 계층에서 데이터의 압축을 풀 필요가 없다.</p>
+<p>OSI 모델 레이어는 Linux 서버 구현에 어떻게 매핑되는지 확인해보자. Linux 네트워크 프로토콜 스택은 4계층 TCP / IP 모델과 밀접하게 일치한다. 애플리케이션은 시스템 호출을 통해 소켓으로 데이터를 전송한다. 소켓은 통신 엔드포인트에 대한 추상화 역할을 한다. 소켓 계층은 데이터를 받아들여 전송 및 네트워크 계층으로 전달한다. 데이터는 결국 NIC에 도달해 네트워크를 통해 전송된다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230616225553281.png" alt=""></p>
+<h2 id="Network-Protocols-in-A-Distributed-System"><a href="#Network-Protocols-in-A-Distributed-System" class="headerlink" title="Network Protocols in A Distributed System"></a>Network Protocols in A Distributed System</h2><p>Step 1 : DNS</p>
+<p>웹 브라우저에 URL을 입력하면 DNS Resolver가 URL의 호스트 이름을 IP 주소로 변환한다. 이를 통해 웹 리소스를 찾을 수 있다. DNS resolver는 네임 서버 계층 구조와 통신하여 이 매핑을 검색한다.</p>
+<p>Step 2 : HTTP / HTTPS</p>
+<p>사용자는 HTTP를 사용해 요청 메소드를 관리하는 REST API를 통한 웹사이트와 상호 작용을 한다. 사용자가 iPhone을 구매하기로 결정하면 웹사이트에서 주문이 생성된다.</p>
+<p>Step 3 : gRPC(HTTP / 2)</p>
+<p>주문 서비스는 결제 서비스와 통신해 결제 트랜잭션을 생성한다. 마이크로서비스 아키텍처에서 이 작업은 일반적으로 HTTP / 2를 기반으로 하는 gRPC를 통해 수행된다.</p>
+<p>Step 4 : Web Socket</p>
+<p>클라이언트 측 애플리케이션은 백엔드에 웹소켓을 설정한다. 이렇게 하면 단일 TCP 연결을 통한 전이중 통신 채널이 생성된다. 이렇게 하면 클라이언트 측 애플리케이션이 푸시 알림을 받을 수 있다. 예를 들어, 결제 트랜잭션의 성공 여부를 사용자의 장치로 푸시할 수 있다.</p>
+<p>Step 5 : SMTP</p>
+<p>이메일 알림 서비스는 SMTP를 사용해 사용자의 이메일 주소로 공식 이메일을 보낸다.</p>
+<p>Step 6 : Ping(ICMP)</p>
+<p>SRE 엔지니어가 결제 서비스 인스턴스 중 하나에서 속도 저하를 발견하고 ping 명령을 사용해 서버의 가용성을 확인한다.</p>
+<p>Step 7 : Video call(UDP)</p>
+<p>SRE 엔지니어는 대기중인 개발자의 도움이 필요해졌다. 이들은 TCP 대신 UDP를 사용하는 Zoom을 통해 화상 통화를 진행한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230616230455818.png" alt=""></p>
+<h2 id="DNS-What-Happens-When-You-Type-a-URL-in-a-Web-Browser"><a href="#DNS-What-Happens-When-You-Type-a-URL-in-a-Web-Browser" class="headerlink" title="DNS - What Happens When You Type a URL in a Web Browser?"></a>DNS - What Happens When You Type a URL in a Web Browser?</h2><p>브라우저에 <em>www.myshop.com</em>이라고 입력하면 웹 페이지가 표시되기 전까지 백그라운드에서는 어떤일이 일어나는지 알아보자.</p>
+<p>일반적으로 3가지 단계가 있다.</p>
+<ol>
+<li>도메인 이름 확인</li>
+<li>CDN에서 정적으로 캐시된 웹 콘텐츠 검색</li>
+<li>백엔드 서버에서 동적 데이터 검색</li>
+</ol>
+<p>Step 1 : 사용자가 브라우저에 <em><a target="_blank" rel="noopener" href="https://myshop.com/product/iphone">https://myshop.com/product/iphone</a></em>를 입력한다. 일반적인 URL은 네 부분으로 구성된다.</p>
+<ul>
+<li>Scheme : <code>https://</code> 서버에 연결하는 데 사용되는 프로토콜</li>
+<li>Domain : <code>myshop.com</code> 웹사이트의 도메인 네임</li>
+<li>Path : <code>product</code> 서버 리소스 경로</li>
+<li>Resource : <code>iPhone</code> 요청된 서버 리소스의 이름</li>
+</ul>
+<p>Step 2 : 브라우저는 먼저 DNS 캐시에서 도메인의 IP 주소를 조회한다. DNS는 인터넷 주소를 가지는 애플리케이션 계층 프로토콜이다. DNS 캐시는 브라우저 캐시, 운영체제 캐시, 로컬 네트워크 캐시, ISP 캐시 등 여러 계층에 존재할 수 있다.</p>
+<p>Step 3 : IP 주소가 캐시되지 않는 경우 브라우저는 네임 서버 계층 구조를 통해 도메인 이름을 재귀적으로 확인하도록 DNS resolver에 요청한다.</p>
+<p>Step 4 : 이제 IP 주소를 확인했다. 웹사이트에 CDN을 사용하는 경우 <em>www.myshop.cdn.com</em>과 같은 CDN의 IP 주소를 받는다. 그러면 브라우저는 근처의 CDN 엣지 노드에서 캐시된 콘텐츠를 검색할 수 있다. 이렇게 하면 페이지 로딩 시간이 크게 빨라진다.</p>
+<p>Step 5 : CDN 노드가 계층적으로 배열된다. 특정 콘텐츠를 엣지 노드에서 사용할 수 없는 경우 CDN은 웹 서버에서 최신 데이터를 가져와 로컬 노드 및 엑지 노드로 전파한다.</p>
+<p>Step 6 : 동적 리소스가 요청되면 브라우저는 웹 서버를 방문해 백엔드 서버와 TCP 연결을 설정한다.</p>
+<p>Step 7 : 브라우저는 서버에 HTTP 요청을 전송할 수 있다.</p>
+<p>Step 8 : 웹 서버는 요청된 리소스가 포함된 HTTP 응답을 다시 보낸다. 웹 브라우저는 콘텐츠를 렌더링하여 사용자에게 표시한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230616231843483.png" alt=""></p>
+<h3 id="Recursive-DNS-Lookup"><a href="#Recursive-DNS-Lookup" class="headerlink" title="Recursive DNS Lookup"></a>Recursive DNS Lookup</h3><p>DNS 서버는 세 가지 레벨을 가진 계층적 구조로 구성된다.</p>
+<ol>
+<li>Root name servers. 이 서버는 Top Level Domain(TLD) 네임 서버의 IP 주소를 저장한다. 전 세계적으로 13개의 논리적 루트 네임 서버가 있다.</li>
+<li>TDL name server. 이 서버는 권한 있는 네임 서버의 IP 주소를 저장한다. TLD 이름에는 여러 유형이 있다. 예를 들어 일반 TSL(.com, .org), 국가 코드 TLD(.us) 및 테스트 TLD(.test)가 있다.</li>
+<li>Authoritative name servers. 이 서버는 DNS 질의에 대한 실제 답변을 제공한다. GoDaddy, Namecheap 등과 같은 도메인 네임 등록 기관에 권한 있는 네임 서버를 등록할 수 있다.</li>
+</ol>
+<p>이제 재귀적 DNS 조회가 어떻게 동작하는지 알아보자.</p>
+<p>Step 1 : 사용자가 브라우저에 google.com을 입력하면 브라우저가 도메인 이름을 DNS resolver로 보낸다.</p>
+<p>Step 2 : Resolver가 DNS 루트 네임 서버에 질의한다.</p>
+<p>Step 3 : 루트 서버는 이 경우 .com TLD DNS 서버의 주소로 응답한다.</p>
+<p>Step 4 : Resolver는 .com TLD에 요청을 보낸다.</p>
+<p>Step 5 : TLD 서버가 google.com의 정보를 가지고있는 authoritative name server의 IP 주소로 응답한다.</p>
+<p>Step 6 : DNS resolver가 도메인의 네임 서버에 질의를 보낸다.</p>
+<p>Step 7 : 네임 서버에서 google.com의 IP 주소가 resolver로 반환된다.</p>
+<p>Step 8 : DNS resolver는 처음에 요청한 도메인의 IP 주소(142.251.46.238)로 웹 브라우저에 응답한다.</p>
+<p>YSlow에 따르면 DNS 조회는 완료하는데 평균 20~120ms가 걸린다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230616233306281.png" alt=""></p>
+<h3 id="DNS-Lookup-with-a-CDN"><a href="#DNS-Lookup-with-a-CDN" class="headerlink" title="DNS Lookup with a CDN"></a>DNS Lookup with a CDN</h3><p>CDN은 정적 및 동적 콘텐츠를 빠르게 전송하는 지리적으로 분산된 엣지 서버로 구성된다. CDN을 사용하면 사용자는 원본 서버에서 콘텐츠를 검색할 필요가 없다. 대신 콘텐츠는 전 세계 CDN 노드에 캐시되며, 사용자는 가까운 CDN 노드에서 콘텐츠를 검색할 수 있다. CDN의 이점은 아래와 같다.</p>
+<ol>
+<li>레이턴시 개선</li>
+<li>대역폭 감소</li>
+<li>웹사이트 보안 강화(특히 DDoS)</li>
+<li>콘텐츠 가용성 향상</li>
+</ol>
+<p>뉴욕에 사는 밥이 런던에 배포된 이커머스 웹사이트를 방문한다고 가정하자. 요청이 런던에 위치한 서버로 전송되면 응답 속도가 매우 느려진다. 이를 극복하기 위해 밥과 가까운 곳에 CDN 서버를 배치하면 콘텐츠가 가까운 CDN 서버에서 로드된다.</p>
+<p>Step 1 : 브라우저에 <em>www.myshop.com</em>을 입력한다. 브라우저는 로컬 DNS 캐시에서 도메인 이름을 찾는다.</p>
+<p>Step 2 : 도메인 이름이 로컬 DNS 캐시에 없는 경우 브라우저는 DNS resolver로 이동해 이름을 확인한다.</p>
+<p>Step 3 : DNS resolver는 도메인 이름을 재귀적으로 확인한다. 마지막으로 authoritative name server에 도메인 이름을 확인하도록 요청한다.</p>
+<p>Step 4 : CDN을 사용하지 않는 경우 authoritative name server는 <em>www.myshop.com</em>의 IP 주소를 반환한다. 하지만 CDN을 사용하면 authoritative name server는 <em>www.myshop.cdn.com</em>(CDN 서버의 도메인 네임)을 가리키는 별칭을 갖는다.</p>
+<p>Step 5 : DNS resolver는 authoritative name server에 <em>www.myshop.cdn.com</em> 확인을 요청한다.</p>
+<p>Step 6 : Authoritative name server가 CDN 로드밸런서의 도메인 이름 <em>www.myshop.lb.com</em>을 반환한다.</p>
+<p>Step 7 : DNS resolver는 CDN 로드밸런서에 <em>www.myshop.lb.com</em> 확인을 요청한다. 로드밸런서는 사용자의 IP 주소, 사용자의 ISP, 요청된 콘텐츠, 서버 부하를 기반으로 최적의 CDN 엣지 서버를 선택한다.</p>
+<p>Step 8 : CDN 로드밸런서가 <em>www.myshop.lb.com</em>에 대한 CDN 엣지 서버의 IP 주소를 반환한다.</p>
+<p>Step 9 : DNS resolver가 방문할 실제 IP 주소를 얻고 브라우저에 이 주소를 반환한다.</p>
+<p>Step 10 : 브라우저는 CDN 엣지 서버를 방문해 콘텐츠를 로드한다. CDN 서버에 캐시되는 콘텐츠에는 정적 콘텐츠와 동적 콘텐츠의 두 가지 유형이 있다. 전자는 정적 페이지, 사진, 동영상을 포함하고 후자는 엣지 컴퓨팅의 결과를 포함한다.</p>
+<p>Step 11 : 엣지 CDN 서버 캐시에 콘텐츠가 포함되어 있지 않으면 콘텐츠는 지역 CDN 서버로 올라간다. 그래도 콘텐츠를 찾지 못하면 중앙 CDN 서버로 올라가거나 심지어 오리진인 런던 웹 서버로 이동한다. 이를 CDN 배포 네트워크라고 하며, 서버가 지리적으로 배치된다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230616234917113.png" alt=""></p>
+<!-- flag of hidden posts --></div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined">Song Hayoung</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="https://songhayoung.github.io/2023/06/16/System%20Design/ByteByteGo/private/network-protocols-run-the-internet/">https://songhayoung.github.io/2023/06/16/System%20Design/ByteByteGo/private/network-protocols-run-the-internet/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/System-Design/">System Design</a></div><nav id="pagination"></nav><div id="gitalk-container"></div><script>var gitalk = new Gitalk({
+  clientID: '3604b61642355579f55e',
+  clientSecret: 'f552120f18ac5aee3f6297e05e97d94c0a25cd4b',
+  repo: 'SongHayoung.github.io',
+  owner: 'SongHayoung',
+  admin: 'SongHayoung',
+  id: md5(decodeURI(location.pathname)),
+  language: 'en'
+})
+gitalk.render('gitalk-container')</script></div></div><footer class="footer-bg" style="background-image: url(https://xxxx.jpg)"><div class="layout" id="footer"><div class="copyright">&copy;2020 - 2023 By Song Hayoung</div><div class="framework-info"><span>Driven - </span><a target="_blank" rel="noopener" href="http://hexo.io"><span>Hexo</span></a><span class="footer-separator">|</span><span>Theme - </span><a target="_blank" rel="noopener" href="https://github.com/Molunerfinn/hexo-theme-melody"><span>Melody</span></a></div><div class="footer_custom_text">Learning how to walk slowly to not miss important things</div><div class="busuanzi"><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><span id="busuanzi_container_page_pv"><i class="fa fa-file"></i><span id="busuanzi_value_page_pv"></span><span></span></span></div></div></footer><i class="fa fa-arrow-up" id="go-up" aria-hidden="true"></i><script src="https://cdn.jsdelivr.net/npm/animejs@latest/anime.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@latest/velocity.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-ui-pack@latest/velocity.ui.min.js"></script><script src="/js/utils.js?version=1.7.0"></script><script src="/js/fancybox.js?version=1.7.0"></script><script src="/js/sidebar.js?version=1.7.0"></script><script src="/js/copy.js?version=1.7.0"></script><script src="/js/fireworks.js?version=1.7.0"></script><script src="/js/transition.js?version=1.7.0"></script><script src="/js/scroll.js?version=1.7.0"></script><script src="/js/head.js?version=1.7.0"></script><script src="/js/search/algolia.js"></script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+    processEscapes: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  },
+  CommonHTML: {
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "HTML-CSS": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "SVG": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  }
+});
+</script><script type="text/x-mathjax-config">MathJax.Hub.Queue(function() {
+  var all = MathJax.Hub.getAllJax(), i;
+  for (i=0; i < all.length; i += 1) {
+    all[i].SourceElement().parentNode.className += ' has-jax';
+  }
+});
+</script><script src="https://cdn.jsdelivr.net/npm/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><script>if(/Android|webOS|iPhone|iPod|iPad|BlackBerry/i.test(navigator.userAgent)) {
+  $('#nav').addClass('is-mobile')
+  $('footer').addClass('is-mobile')
+  $('#top-container').addClass('is-mobile')
+}</script><div class="search-dialog" id="algolia-search"><div class="search-dialog__title" id="algolia-search-title">Algolia</div><div id="algolia-input-panel"><div id="algolia-search-input"></div></div><hr><div id="algolia-search-results"><div id="algolia-hits"></div><div id="algolia-pagination"></div><div id="algolia-stats"></div></div><span class="search-close-button"><i class="fa fa-times"></i></span></div><div class="search-mask"></div></body></html>
