@@ -1,0 +1,182 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="description" content="[ByteByteGo] Everything You Always Wanted to Know About TCP But Too Afraid to Ask"><meta name="keywords" content="System Design"><meta name="author" content="Song Hayoung"><meta name="copyright" content="Song Hayoung"><title>[ByteByteGo] Everything You Always Wanted to Know About TCP But Too Afraid to Ask | SUMFIのBlog</title><meta name="robots" content="noindex"><link rel="shortcut icon" href="/songcon.ico"><link rel="stylesheet" href="/css/index.css?version=1.7.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@latest/css/font-awesome.min.css?version=1.7.0"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css?version=1.7.0"><meta name="format-detection" content="telephone=no"><meta http-equiv="x-dns-prefetch-control" content="on"><link rel="dns-prefetch" href="https://cdn.jsdelivr.net"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.css"><script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.js" defer></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@latest/dist/gitalk.min.js"></script><script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.10.0/js/md5.min.js"></script><link rel="dns-prefetch" href="https://www.google-analytics.com"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-169368422-1', 'auto');
+ga('send', 'pageview');</script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: {"appId":"7LZ6OJ4D6C","apiKey":"9a84e13f74ea78c3fd54512c10139c56","indexName":"git blog","hits":{"per_page":10},"languages":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}.","hits_stats":"${hits} results found in ${time} ms"}},
+  localSearch: undefined,
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  }
+} </script><meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/rss2.xml" title="SUMFIのBlog" type="application/rss+xml">
+</head><body><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar" data-display="true"><div class="toggle-sidebar-info text-center"><span data-toggle="Toggle article">Toggle site</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">Catalog</div><div class="sidebar-toc__progress"><span class="progress-notice">You've read</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Everything-You-Always-Wanted-to-Know-About-TCP-But-Too-Afraid-to-Ask"><span class="toc-number">1.</span> <span class="toc-text">Everything You Always Wanted to Know About TCP But Too Afraid to Ask</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Connection-oriented-reliable-and-bitstream-oriented"><span class="toc-number">2.</span> <span class="toc-text">Connection-oriented, reliable, and bitstream-oriented</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#More-on-TCP-header"><span class="toc-number">3.</span> <span class="toc-text">More on TCP header</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Establishing-a-TCP-connection-The-3-way-handshake"><span class="toc-number">4.</span> <span class="toc-text">Establishing a TCP connection: The 3-way handshake</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Closing-a-TCP-connection-The-4-way-handshake"><span class="toc-number">5.</span> <span class="toc-text">Closing a TCP connection: The 4-way handshake</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#What-happens-if-the-client-goes-down-after-establishing-a-TCP-connection"><span class="toc-number">6.</span> <span class="toc-text">What happens if the client goes down after establishing a TCP connection?</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#SYN-flood"><span class="toc-number">7.</span> <span class="toc-text">SYN flood</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#TCP-vs-UDP"><span class="toc-number">8.</span> <span class="toc-text">TCP vs UDP</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Can-we-use-the-same-port-for-TCP-and-UDP"><span class="toc-number">8.1.</span> <span class="toc-text">Can we use the same port for TCP and UDP?</span></a></li></ol></li></ol></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="https://avatars3.githubusercontent.com/u/37806785?s=460&amp;u=8c68d685faf7c5280cfbd736a6b1730b55fb4203&amp;v=4"></div><div class="author-info__name text-center">Song Hayoung</div><div class="author-info__description text-center"></div><div class="follow-button"><a target="_blank" rel="noopener" href="https://www.instagram.com/hayoung0_0/">Follow Me</a></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="/archives"><span class="pull-left">Articles</span><span class="pull-right">8140</span></a><a class="author-info-articles__tags article-meta" href="/tags"><span class="pull-left">Tags</span><span class="pull-right">193</span></a><a class="author-info-articles__categories article-meta" href="/categories"><span class="pull-left">Categories</span><span class="pull-right">59</span></a></div><hr><div class="author-info-links"><div class="author-info-links__title text-center">VISITED</div><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Seoul Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Jeju Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">British Columbia Canada</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Boracay Philippines</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">三重　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">大阪　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">名古屋　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">静岡　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">札幌　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">京都　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Bangkok Thailand</a></div></div></div><div id="content-outer"><div id="top-container" style="background-image: url(https://xxxx.jpg)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="/">SUMFIのBlog</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus">   <a class="site-page" href="/">Home</a><a class="site-page" href="/archives">Archives</a><a class="site-page" href="/tags">Tags</a><a class="site-page" href="/categories">Categories</a><a class="site-page" href="/about">About</a></span><span class="pull-right"><a class="site-page social-icon search"><i class="fa fa-search"></i><span> Search</span></a></span></div><div id="post-info"><div id="post-title">[ByteByteGo] Everything You Always Wanted to Know About TCP But Too Afraid to Ask</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2023-06-23</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/">System Design</a><i class="fa fa-angle-right" aria-hidden="true"></i><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/Byte-Byte-Go/">Byte Byte Go</a><div class="post-meta-wordcount"><span>Word count: </span><span class="word-count">1.5k</span><span class="post-meta__separator">|</span><span>Reading time: 9 min</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div class="article-container" id="post-content"><h2 id="Everything-You-Always-Wanted-to-Know-About-TCP-But-Too-Afraid-to-Ask"><a href="#Everything-You-Always-Wanted-to-Know-About-TCP-But-Too-Afraid-to-Ask" class="headerlink" title="Everything You Always Wanted to Know About TCP But Too Afraid to Ask"></a>Everything You Always Wanted to Know About TCP But Too Afraid to Ask</h2><span id="more"></span>
+<h2 id="Connection-oriented-reliable-and-bitstream-oriented"><a href="#Connection-oriented-reliable-and-bitstream-oriented" class="headerlink" title="Connection-oriented, reliable, and bitstream-oriented"></a>Connection-oriented, reliable, and bitstream-oriented</h2><p>네트워크 계층의 IP 프로토콜은 본질적으로 신뢰할 수 없다. 이 프로토콜은 패킷의 전달, 순서, 패킷에 포함된 데이터의 무결성에 대한 어떤 보장도 없이 한 IP 주소에서 다른 IP 주소로 패킷을 전달하는 역할을 담당한다. 바로 이 부분에서 TCP가 안정적인 데이터 전송을 보장하기 위해 개입한다. 데이터 전송을 보장하기 위한 TCP의 3가지 중요한 특징이 있다.</p>
+<ol>
+<li>TCP는 연결지향적이다</li>
+</ol>
+<p>​    한 서버에서 여러 서버로 데이터를 전송하는 UDP와 달리, TCP는 두 개의 특정 서버 간에 연결을 설정한다.</p>
+<ol>
+<li>TCP는 안정적이다</li>
+</ol>
+<p>​    TCP는 네트워크 상태에 관계없이 세그먼트의 전송을 보장한다.</p>
+<ol>
+<li>TCP는 비트스트림 지향적이다</li>
+</ol>
+<p>​    TCP를 사용하면 애플리케이션 계층 데이터가 세그먼트화 된다. 전송 계층은 메세지의 경계를 알지 못한다. 또한 세그먼트는 순차적으로 처리되어야 하며 중복된 세그먼트는 삭제된다.</p>
+<p>고유한 TCP 연결을 식별하기 위해 아래의 4-tuple을 사용한다.</p>
+<ul>
+<li>Source and destination IP address. IP 헤더에 위치하며 데이터 라우팅에 대한 IP 프로토콜을 지시한다.</li>
+<li>Source and destination ports. TCP 헤더에 있는 이 필드는 어떤 프로세스가 세그먼트를 수신해야 하는지 TCP 프로토콜에 지시한다.</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230623164257113.png" alt=""></p>
+<h2 id="More-on-TCP-header"><a href="#More-on-TCP-header" class="headerlink" title="More on TCP header"></a>More on TCP header</h2><p>이번에는 TCP 연결 설정에 필수적인 필드에 대해 살펴본다.</p>
+<ul>
+<li>Sequence number</li>
+</ul>
+<p>새 TCP 연결을 설정할 때 초기 시퀀스 번호로 임의의 32비트 값이 할당된다. 수신 측에서는 이 시퀀스 번호를 사용해 확인을 다시 보낸다. 시퀀스 번호는 수신 측에서 세그먼트의 순차적 처리를 보장하는 메커니즘 역할을 한다.</p>
+<ul>
+<li>Acknowledgment number</li>
+</ul>
+<p>이 32비트 숫자는 수신 측에서 다음 TCP 세그먼트를 요청하는데 사용된다. 이 값은 1씩 증가하는 시퀀스 번호다. 발신자가 이 확인을 받으면 이전의 모든 데이터가 성공적으로 수신된 것으로 간주할 수 있다. 이 메커니즘은 데이터 손실을 방지하기 위해 작동한다.</p>
+<ul>
+<li>Flags</li>
+</ul>
+<p>Control bits라고 하는 플래그는 TCP 메세지의 목적을 나타낸다. 다음 섹션에서 살펴볼 것처럼 TCP 메세지에는 다양한 유형이 있다. Control bits는 메세지가 연결 설정, 데이터 전송 또는 연결 종료를 위한 것인지 여부를 나타낸다.</p>
+<ul>
+<li>ACK - acknowledgments에 사용</li>
+<li>RST - 복구할 수 없는 오류가 있을 때 연결을 재설정하는 데 사용</li>
+<li>SYN - 초기 3way handshake에 사용, sequence number 필요</li>
+<li>FIN - 연결을 종료하는데 사용</li>
+</ul>
+<h2 id="Establishing-a-TCP-connection-The-3-way-handshake"><a href="#Establishing-a-TCP-connection-The-3-way-handshake" class="headerlink" title="Establishing a TCP connection: The 3-way handshake"></a>Establishing a TCP connection: The 3-way handshake</h2><ul>
+<li>Step 0 : 처음에는 클라이언트와 서버가 모두 CLOSE 상태에 있다. 서버는 특정 포트에서 들어오는 연결을 수신 대기하는 것으로 시작한다.</li>
+<li>Step 1 : 클라이언트가 서버에 SYN 세그먼트를 전송하여 연결을 시작한다. 서버는 초기 시퀀스 번호(Initial Sequence Number, ISN)라고 하는 시퀀스 번호에 임의의 숫자를 할당한다. SYN 제어 비트가 1로 설정되어 클라이언트가 SYN-SENT 상태로 전환된다.</li>
+<li>Step 2 : SYN 세그먼트를 수신하면 서버는 시퀀스 번호에 난수를 할당하고 acknowledgment number를 client_isn + 1로 설정한다. 그 다음 SYN 및 ACK control bit를 모두 1로 설정하고 이 세그먼트를 클라이언트로 다시 보낸다. 이 시점에서 서버는 SYN-RECEIVED 상태가 된다.</li>
+<li>Step 3 : 클라이언트는 SYN + ACK 세그먼트를 수신한 후 ACK 세그먼트를 다시 전송해 acknowledgment number를 server_isn + 1로 설정한다. 이제 이 세그먼트는 애플리케이션 레이어 데이터를 전달할 수 있으며 클라이언트는 ESTABLISHED 상태가 된다. 서버가 ACK 세그먼트를 수신하면 서버도 ESTABLISHED 상태가 된다.</li>
+</ul>
+<p>처음 두 번의 handshake는 데이터를 전달할 수 없지만 세 번째 handshake는 가능하다는 점에 주목할 필요가 있다. 3way handshake가 끝나면 클라이언트와 서버는 데이터 교환을 시작할 수 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230623172254284.png" alt=""></p>
+<p>TCP는 안정적이기 때문에 세그먼트가 손실되면 어떻게 될까?</p>
+<ul>
+<li>SYN이 손실된 경우</li>
+</ul>
+<p>클라이언트가 설정된 시간 내에 SYN + ACK를 수신하지 못하면 SYN 세그먼트를 여러 번 재전송한다(default 5). 그래도 SYN + ACK 세그먼트가 도착하지 않으면 클라이언트는 연결을 종료하고 SYN_SENT에서 CLOSED 상태로 전환한다.</p>
+<ul>
+<li>SYN + ACK가 손실된 경우</li>
+</ul>
+<p>클라이언트는 SYN 세그먼트가 유실된 것인지 SYN + ACK 세그먼트가 유실된 것인지 구분할 수 없으므로 SYN 세그먼트를 재전송을 여러 번 시도한 후 연결을 종료한다. 서버는 일정 시간 내에 ACK를 받지 못하면 SYN + ACK 세그먼트를 재전송하고 여러 번 시도한 후 연결을 닫는다.</p>
+<ul>
+<li>ACK가 손실된 경우</li>
+</ul>
+<p>서버가 ACK 세그먼트를 수신하지 못하면 재전송을 시작한다. 클라이언트는 ACK 세그먼트를 재전송하지 않는다. 서버는 재전송 후에도 ACK 세그먼트를 수신하지 못하면 연결을 닫는다.</p>
+<h2 id="Closing-a-TCP-connection-The-4-way-handshake"><a href="#Closing-a-TCP-connection-The-4-way-handshake" class="headerlink" title="Closing a TCP connection: The 4-way handshake"></a>Closing a TCP connection: The 4-way handshake</h2><ul>
+<li>Step 1 : 클라이언트는 FIN 세그먼트를 서버로 전송해 FIN_WAIT_1 상태로 전환된다.</li>
+<li>Step 2 : FIN 세그먼트를 수신한 후 서버는 ACK 세그먼트로 응답하고 CLOSE_WAIT 상태로 들어간다. ACK 세그먼트를 수신한 후 클라이언트는 FIN_WAIT_2 상태가 된다.</li>
+<li>Step 3 : 서버가 처리를 완료하면 FIN 세그먼트를 클라이언트에 전송하고 LAST_ACK 상태가 된다.</li>
+<li>Step 4 : 클라이언트는 FIN 세그먼트를 수신한 후 ACK 세그먼트를 전송하고 TIME_WAIT 상태로 들어간다. 서버는 ACK 세그먼트를 수신한 후 CLOSED 상태로 이동한다. 2MSL(Maximum Segment Lifetime) 기간 동안 기다린 후 클라이언트도 CLOSED 상태로 전환된다. MSL은 TCP 세그먼트가 네트워크에 존재할 수 있는 최장 기간으로, 임의로 2분으로 정의된다.</li>
+</ul>
+<p>TCP 연결 종료인 4way handshake는 서버와 클라이언트 모두 시도할 수 있으며 아래 다이어그램은 클라이언트가 시도를하는 것을 예로 한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230623174141171.png" alt=""></p>
+<h2 id="What-happens-if-the-client-goes-down-after-establishing-a-TCP-connection"><a href="#What-happens-if-the-client-goes-down-after-establishing-a-TCP-connection" class="headerlink" title="What happens if the client goes down after establishing a TCP connection?"></a>What happens if the client goes down after establishing a TCP connection?</h2><p>클라이언트와 서버 간에 TCP 연결이 설정된 후 클라이언트가 갑자기 오프라인 상태가 되는 시나리오를 생각해보자. 서버가 클라이언트에 데이터 전송을 시도하지 않으면 서버가 클라이언트의 상태를 알 수 있는 방법이 없다. 서버는 ESTABLISHED 상태로 유지된다. 이 문제에 대한 해결책은 TCP keepalive를 구현하는 것이다.</p>
+<p>TCP keepalive를 사용하면 일련의 타이머가 설정된 TCP 커넥션이 된다. Keepalive 타이머가 만료되면 서버는 클라이언트에 keepalive probe를 보낸다. 이 probe는 데이터가 없는 ACK 세그먼트다. 클라이언트의 응답 없이 probe 세그먼트가 여러 번 연속으로 전송 되면 서버는 TCP 연결이 끊어진 것으로 간주한다. 이제 4가지 시나리오에서 TCP keepalive에 대해 자세히 살펴보자.</p>
+<ol>
+<li>클라이언트가 정상적으로 작동하는 경우. 서버가 keepalive probe를 전송하고 응답을 수신한다. Keepalive 타이머가 재설정되고 타이머가 다시 만료되면 서버가 다음 probe를 보낸다.</li>
+<li>클라이언트 프로세스가 다운된 경우. 클라이언트 측의 운영체제는 프로세스 리소스를 회수할 때 서버에 FIN 세그먼트를 보낸다.</li>
+<li>클라이언트 컴퓨터가 오프라인 상태가 되었다가 다시 시작된 경우. 아래 다이어그램에서 볼 수 있듯이 클라이언트가 다시 온라인 상태가 되면 이전 연결에 대해 알지 못한다. 서버가 이 죽은 연결을 통해 클라이언트에 데이터를 보내려고 하면 클라이언트는 RST 세그먼트로 응답하여 서버가 연결을 강제로 닫는다.</li>
+<li>클라이언트의 컴퓨터가 오프라인 상태가 되어 복구되지 않는 경우. 이 시나리오는 여러 번 probe에 응답하지 않으면 서버가 연결을 끊은 것으로 간주한다.</li>
+</ol>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230623175005266.png" alt=""></p>
+<h2 id="SYN-flood"><a href="#SYN-flood" class="headerlink" title="SYN flood"></a>SYN flood</h2><p>SYN flood는 DDoS 공격의 한 형태이다. 이 공격에서 해커는 서로 다른 IP 주소에서 대량의 SYN 세그먼트를 보내지만 ACK 세그먼트로 응답하지 않아 서버의 리소스를 소진시킨다. 이 공격에 대해서 알아보자.</p>
+<p>먼저 Linux 커널에는 TCP 연결을 위해 두 개의 대기열이 유지된다는 점을 이해해야 한다.</p>
+<ol>
+<li>SYN queue(half-open queue). 이 큐는 SYN 세그먼트를 저장하고 SYN + ACK 세그먼트를 보내도록 디스패치한다.</li>
+<li>Accept queue. 서버가 ACK 세그먼트를 받으면 SYN 큐에서 SYN 세그먼트를 제거하고 accept 큐에 새 연결 개체를 배치한다. 그런 다음 애플리케이션은 accept() 함수를 호출해 커넥션을 큐에 넣는다.</li>
+</ol>
+<p>두 큐 모두 최대 용량이 있으며 한도를 초과해서 들어오는 세그먼트는 기본적으로 삭제된다. SYN flood가 SYN 큐를 가득 채우면 후속 SYN 세그먼트가 삭제되고 새 연결을 설정할 수 없다. 결과적으로 사용자는 서비스를 이용할 수 없게 된다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230623175346224.png" alt=""></p>
+<p>어떻게 이러한 공격을 완화할 수 있는지에 대해서 알아보자.</p>
+<ul>
+<li>Increase backlog queue(netdev_max_backlog)</li>
+</ul>
+<p>NIC가 커널이 처리할 수 있는 속도보다 빠르게 패킷을 수신하면 이러한 패킷은 운영체제의 큐에 보관된다. 큐 크기를 늘리면 더 많은 SYN 세그먼트를 수용할 수 있다.</p>
+<ul>
+<li><p>Increase the maximum size of the SYN queue</p>
+</li>
+<li><p>Enable tcp_syncookies</p>
+</li>
+</ul>
+<p><em>net.ipv4.tcp_syncookies</em>를 활성화하면 SYN 큐를 사용하지 않고도 TCP 연결을 설정할 수 있다.  아래 다이어그램은 <em>net.ipv4.tcp_syncookies</em>를 활성화했을 때의 차이점을 보여준다.</p>
+<p>Step 1 : 클라이언트가 서버에 SYN 세그먼트를 전송해 TCP 연결을 설정하라는 신호를 보낸다.</p>
+<p>Step 2 : 서버의 SYN 큐가 꽉 차면 새로운 SYN 세그먼트를 거부하는 대신 syncookies라는 모드로 들어간다.</p>
+<p>Step 3 : syncookies 모드에서 서버는 클라이언트 정보를 서버의 메모리에 저장하는 대신 쿠키라고도 하는 초기 시퀀스 번호(ISN)를 계산한다. 그런 다음 이 쿠키는 서버가 클라이언트로 다시 전송하는 SYN + ACK 세그먼트의 시퀀스 번호 필드에 포함된다.</p>
+<p>Step 4 : 서버가 SYN + ACK 세그먼트를 클라이언트로 다시 보낸다. 이 세그먼트에는 3단계에서 계산된 쿠키가 포함된다.</p>
+<p>Step 5 : SYN + ACK 세그먼트를 수신한 클라이언트는 서버가 보낸 쿠키가 포함된 ACK 세그먼트로 응답한다.</p>
+<p>Step 6 : 서버가 ACK 세그먼트를 수신하면 쿠키를 확인한다. 쿠기가 유효하면 클라이언트가 합법성을 입증했다는 의미이며, 서버는 연결을 accept 큐에서 대기시킨다. 이렇게 하면 SYN 큐가 꽉 찬 경우에도 연결을 설정할 수 있으므로 잠재적인 SYN flood 공격을 완화할 수 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230623180017240.png" alt=""></p>
+<ul>
+<li>Reduce SYN+ACK retransmission</li>
+</ul>
+<p>SYN flood 공격 중에는 SYN_RECEIVED 상태의 TCP 연결이 대량으로 발생한다. 서버는 SYN + ACK 또는 ACK 세그먼트가 손실된 것으로 간주하고 tcp_synack_retries에 도달할 때까지 SYN + ACK을 반복적으로 전송할 수 있다. 재전송 횟수를 줄이면 TCP disconnections를 가속화하고 서버 리소스에 대한 수요를 줄일 수 있다.</p>
+<h2 id="TCP-vs-UDP"><a href="#TCP-vs-UDP" class="headerlink" title="TCP vs UDP"></a>TCP vs UDP</h2><p>TCP와 다른 전송 계층 프로토콜인 UDP(User Datagram Protocol)을 비교해보자. TCP가 안정적인 연결을 보장하기 위해 사용하는 복잡한 메커니즘을 이해한 후에는 UDP와 같은 더 간단한 프로토콜이 자주 사용되는 이유를 살펴본다. 먼저 UDP 헤더를 살펴보자.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230623182312933.png" alt=""></p>
+<ul>
+<li>Source port</li>
+</ul>
+<p>이 필드는 발신자의 포트를 식별해 응답이 어디로 전달되는지 알 수 있도록 한다.</p>
+<ul>
+<li>Destination Port</li>
+</ul>
+<p>이 필드는 수신자의 포트를 식별해 UDP가 어떤 프로세스가 데이터를 수신해야 하는지 알 수 있도록 한다.</p>
+<ul>
+<li>Length</li>
+</ul>
+<p>이 필드에는 UDP 헤더 및 UDP 데이터 길이(byte)가 저장된다.</p>
+<ul>
+<li>Checksum</li>
+</ul>
+<p>Checksum은 손상된 데이터 수신을 방지하기 위해 UDP 세그먼트의 오류 검사에 사용된다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230623182455486.png" alt=""></p>
+<p>두 프로토콜의 차이점으로 인해 TCP는 FTP, HTTP와 같은 애플리케이션 계층 프로토콜에 사용되는 반면, UDP는 DNS, SNMP, video/audio 통신에 사용된다.</p>
+<h3 id="Can-we-use-the-same-port-for-TCP-and-UDP"><a href="#Can-we-use-the-same-port-for-TCP-and-UDP" class="headerlink" title="Can we use the same port for TCP and UDP?"></a>Can we use the same port for TCP and UDP?</h3><p>정답은 “예”이다.</p>
+<p>TCP와 UDP에는 모두 서버의 프로세스를 식별하는 source port와 destination port 필드가 있다. <strong>또한 TCP와 UDP는 커널에서 완전히 독립된 두 개의 모듈이다.</strong> 서버가 데이터를 수신하면 IP 헤더의 프로토콜 필드에서 프로토콜을 식별하고 해당 모듈로 데이터를 전송할 수 있다. 그런 다음 서버는 TCP 또는 UDP 헤더에서 destination port 필드를 읽고 데이터를 올바른 프로세스로 보낸다. 이러한 방식으로 TCP와 UDP 간에 포트를 공유할 수 있다.</p>
+<!-- flag of hidden posts --></div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined">Song Hayoung</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="https://songhayoung.github.io/2023/06/23/System%20Design/ByteByteGo/private/everything-you-always-wanted-to-know/">https://songhayoung.github.io/2023/06/23/System%20Design/ByteByteGo/private/everything-you-always-wanted-to-know/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/System-Design/">System Design</a></div><nav id="pagination"></nav><div id="gitalk-container"></div><script>var gitalk = new Gitalk({
+  clientID: '3604b61642355579f55e',
+  clientSecret: 'f552120f18ac5aee3f6297e05e97d94c0a25cd4b',
+  repo: 'SongHayoung.github.io',
+  owner: 'SongHayoung',
+  admin: 'SongHayoung',
+  id: md5(decodeURI(location.pathname)),
+  language: 'en'
+})
+gitalk.render('gitalk-container')</script></div></div><footer class="footer-bg" style="background-image: url(https://xxxx.jpg)"><div class="layout" id="footer"><div class="copyright">&copy;2020 - 2023 By Song Hayoung</div><div class="framework-info"><span>Driven - </span><a target="_blank" rel="noopener" href="http://hexo.io"><span>Hexo</span></a><span class="footer-separator">|</span><span>Theme - </span><a target="_blank" rel="noopener" href="https://github.com/Molunerfinn/hexo-theme-melody"><span>Melody</span></a></div><div class="footer_custom_text">Learning how to walk slowly to not miss important things</div><div class="busuanzi"><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><span id="busuanzi_container_page_pv"><i class="fa fa-file"></i><span id="busuanzi_value_page_pv"></span><span></span></span></div></div></footer><i class="fa fa-arrow-up" id="go-up" aria-hidden="true"></i><script src="https://cdn.jsdelivr.net/npm/animejs@latest/anime.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@latest/velocity.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-ui-pack@latest/velocity.ui.min.js"></script><script src="/js/utils.js?version=1.7.0"></script><script src="/js/fancybox.js?version=1.7.0"></script><script src="/js/sidebar.js?version=1.7.0"></script><script src="/js/copy.js?version=1.7.0"></script><script src="/js/fireworks.js?version=1.7.0"></script><script src="/js/transition.js?version=1.7.0"></script><script src="/js/scroll.js?version=1.7.0"></script><script src="/js/head.js?version=1.7.0"></script><script src="/js/search/algolia.js"></script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+    processEscapes: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  },
+  CommonHTML: {
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "HTML-CSS": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "SVG": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  }
+});
+</script><script type="text/x-mathjax-config">MathJax.Hub.Queue(function() {
+  var all = MathJax.Hub.getAllJax(), i;
+  for (i=0; i < all.length; i += 1) {
+    all[i].SourceElement().parentNode.className += ' has-jax';
+  }
+});
+</script><script src="https://cdn.jsdelivr.net/npm/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><script>if(/Android|webOS|iPhone|iPod|iPad|BlackBerry/i.test(navigator.userAgent)) {
+  $('#nav').addClass('is-mobile')
+  $('footer').addClass('is-mobile')
+  $('#top-container').addClass('is-mobile')
+}</script><div class="search-dialog" id="algolia-search"><div class="search-dialog__title" id="algolia-search-title">Algolia</div><div id="algolia-input-panel"><div id="algolia-search-input"></div></div><hr><div id="algolia-search-results"><div id="algolia-hits"></div><div id="algolia-pagination"></div><div id="algolia-stats"></div></div><span class="search-close-button"><i class="fa fa-times"></i></span></div><div class="search-mask"></div></body></html>
