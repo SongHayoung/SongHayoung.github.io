@@ -1,0 +1,473 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="description" content="[System Design] Distributed Message Queue"><meta name="keywords" content="System Design"><meta name="author" content="Song Hayoung"><meta name="copyright" content="Song Hayoung"><title>[System Design] Distributed Message Queue | SUMFIのBlog</title><meta name="robots" content="noindex"><link rel="shortcut icon" href="/songcon.ico"><link rel="stylesheet" href="/css/index.css?version=1.7.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@latest/css/font-awesome.min.css?version=1.7.0"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css?version=1.7.0"><meta name="format-detection" content="telephone=no"><meta http-equiv="x-dns-prefetch-control" content="on"><link rel="dns-prefetch" href="https://cdn.jsdelivr.net"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.css"><script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.js" defer></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@latest/dist/gitalk.min.js"></script><script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.10.0/js/md5.min.js"></script><link rel="dns-prefetch" href="https://www.google-analytics.com"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-169368422-1', 'auto');
+ga('send', 'pageview');</script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: {"appId":"7LZ6OJ4D6C","apiKey":"9a84e13f74ea78c3fd54512c10139c56","indexName":"git blog","hits":{"per_page":10},"languages":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}.","hits_stats":"${hits} results found in ${time} ms"}},
+  localSearch: undefined,
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  }
+} </script><meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/rss2.xml" title="SUMFIのBlog" type="application/rss+xml">
+</head><body><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar" data-display="true"><div class="toggle-sidebar-info text-center"><span data-toggle="Toggle article">Toggle site</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">Catalog</div><div class="sidebar-toc__progress"><span class="progress-notice">You've read</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Distributed-Message-Queue"><span class="toc-number">1.</span> <span class="toc-text">Distributed Message Queue</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Step-1-Understand-the-Problem-and-Establish-Design-Scope"><span class="toc-number">2.</span> <span class="toc-text">Step 1 - Understand the Problem and Establish Design Scope</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Non-functional-requirements"><span class="toc-number">2.1.</span> <span class="toc-text">Non-functional requirements</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Adjustments-for-traditional-message-queues"><span class="toc-number">2.2.</span> <span class="toc-text">Adjustments for traditional message queues</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Step-2-Propose-High-Level-Design-and-Get-Buy-In"><span class="toc-number">3.</span> <span class="toc-text">Step 2 - Propose High-Level Design and Get Buy-In</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Messaging-models"><span class="toc-number">3.1.</span> <span class="toc-text">Messaging models</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Point-to-point"><span class="toc-number">3.1.1.</span> <span class="toc-text">Point-to-point</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Publish-subscribe"><span class="toc-number">3.1.2.</span> <span class="toc-text">Publish-subscribe</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Topics-partitions-and-brokers"><span class="toc-number">3.2.</span> <span class="toc-text">Topics, partitions, and brokers</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Consumer-group"><span class="toc-number">3.3.</span> <span class="toc-text">Consumer group</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#High-Level-architecture"><span class="toc-number">3.4.</span> <span class="toc-text">High-Level architecture</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Step-3-Design-Deep-Dive"><span class="toc-number">4.</span> <span class="toc-text">Step 3 - Design Deep Dive</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Data-storage"><span class="toc-number">4.1.</span> <span class="toc-text">Data storage</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Option-1-Database"><span class="toc-number">4.1.1.</span> <span class="toc-text">Option 1 : Database</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Option-2-Write-ahead-log-WAL"><span class="toc-number">4.1.2.</span> <span class="toc-text">Option 2 : Write-ahead log(WAL)</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Message-data-structure"><span class="toc-number">4.2.</span> <span class="toc-text">Message data structure</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Message-key"><span class="toc-number">4.2.1.</span> <span class="toc-text">Message key</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Message-value"><span class="toc-number">4.2.2.</span> <span class="toc-text">Message value</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Other-fields-of-a-message"><span class="toc-number">4.2.3.</span> <span class="toc-text">Other fields of a message</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Batching"><span class="toc-number">4.3.</span> <span class="toc-text">Batching</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Producer-flow"><span class="toc-number">4.4.</span> <span class="toc-text">Producer flow</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Consumer-flow"><span class="toc-number">4.5.</span> <span class="toc-text">Consumer flow</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Push-vs-pull"><span class="toc-number">4.5.1.</span> <span class="toc-text">Push vs pull</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#Push-model"><span class="toc-number">4.5.1.1.</span> <span class="toc-text">Push model</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#Pull-model"><span class="toc-number">4.5.1.2.</span> <span class="toc-text">Pull model</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Consumer-rebalancing"><span class="toc-number">4.5.2.</span> <span class="toc-text">Consumer rebalancing</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#State-storage"><span class="toc-number">4.6.</span> <span class="toc-text">State storage</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Metadata-storage"><span class="toc-number">4.7.</span> <span class="toc-text">Metadata storage</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ZooKeeper"><span class="toc-number">4.8.</span> <span class="toc-text">ZooKeeper</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Replication"><span class="toc-number">4.9.</span> <span class="toc-text">Replication</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#In-sync-replicas"><span class="toc-number">4.9.1.</span> <span class="toc-text">In-sync replicas</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#ACK-all"><span class="toc-number">4.9.1.1.</span> <span class="toc-text">ACK&#x3D;all</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#ACK-1"><span class="toc-number">4.9.1.2.</span> <span class="toc-text">ACK&#x3D;1</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#ACK-0"><span class="toc-number">4.9.1.3.</span> <span class="toc-text">ACK&#x3D;0</span></a></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Scalability"><span class="toc-number">4.10.</span> <span class="toc-text">Scalability</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Producer"><span class="toc-number">4.10.1.</span> <span class="toc-text">Producer</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Consumer"><span class="toc-number">4.10.2.</span> <span class="toc-text">Consumer</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Broker"><span class="toc-number">4.10.3.</span> <span class="toc-text">Broker</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Partition"><span class="toc-number">4.10.4.</span> <span class="toc-text">Partition</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Data-delivery-semantics"><span class="toc-number">4.11.</span> <span class="toc-text">Data delivery semantics</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#At-most-once"><span class="toc-number">4.11.1.</span> <span class="toc-text">At-most once</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#At-least-once"><span class="toc-number">4.11.2.</span> <span class="toc-text">At-least once</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Exactly-once"><span class="toc-number">4.11.3.</span> <span class="toc-text">Exactly once</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Advanced-features"><span class="toc-number">4.12.</span> <span class="toc-text">Advanced features</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Message-filtering"><span class="toc-number">4.12.1.</span> <span class="toc-text">Message filtering</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Delayed-messages-amp-Scheduled-messages"><span class="toc-number">4.12.2.</span> <span class="toc-text">Delayed messages &amp; Scheduled messages</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Step-4-Wrap-Up"><span class="toc-number">5.</span> <span class="toc-text">Step 4 - Wrap Up</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Chapter-summary"><span class="toc-number">6.</span> <span class="toc-text">Chapter summary</span></a></li></ol></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="https://avatars3.githubusercontent.com/u/37806785?s=460&amp;u=8c68d685faf7c5280cfbd736a6b1730b55fb4203&amp;v=4"></div><div class="author-info__name text-center">Song Hayoung</div><div class="author-info__description text-center"></div><div class="follow-button"><a target="_blank" rel="noopener" href="https://www.instagram.com/hayoung0_0/">Follow Me</a></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="/archives"><span class="pull-left">Articles</span><span class="pull-right">8253</span></a><a class="author-info-articles__tags article-meta" href="/tags"><span class="pull-left">Tags</span><span class="pull-right">193</span></a><a class="author-info-articles__categories article-meta" href="/categories"><span class="pull-left">Categories</span><span class="pull-right">60</span></a></div><hr><div class="author-info-links"><div class="author-info-links__title text-center">VISITED</div><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Seoul Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Jeju Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">British Columbia Canada</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Boracay Philippines</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">三重　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">大阪　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">名古屋　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">静岡　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">札幌　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">京都　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Bangkok Thailand</a></div></div></div><div id="content-outer"><div id="top-container" style="background-image: url(https://xxxx.jpg)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="/">SUMFIのBlog</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus">   <a class="site-page" href="/">Home</a><a class="site-page" href="/archives">Archives</a><a class="site-page" href="/tags">Tags</a><a class="site-page" href="/categories">Categories</a><a class="site-page" href="/about">About</a></span><span class="pull-right"><a class="site-page social-icon search"><i class="fa fa-search"></i><span> Search</span></a></span></div><div id="post-info"><div id="post-title">[System Design] Distributed Message Queue</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2023-07-02</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/">System Design</a><i class="fa fa-angle-right" aria-hidden="true"></i><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/System-Design-Interview/">System Design Interview</a><div class="post-meta-wordcount"><span>Word count: </span><span class="word-count">5.4k</span><span class="post-meta__separator">|</span><span>Reading time: 33 min</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div class="article-container" id="post-content"><h2 id="Distributed-Message-Queue"><a href="#Distributed-Message-Queue" class="headerlink" title="Distributed Message Queue"></a>Distributed Message Queue</h2><span id="more"></span>
+<p>이 장에서는 분산 메세지 큐 설계에 대해 살펴본다. 현대 아키텍처에서 시스템은 잘 정의된 인터페이스를 갖춘 작고 독립적인 빌딩 블록으로 나뉜다. 메세지 큐는 이러한 빌딩 블록에 대한 통신 및 조정을 제공한다. 메세지 큐는 어떤 이점은 제공하는지 알아보자.</p>
+<ul>
+<li>Decoupling : 메세지 큐는 컴포넌트간의 긴밀한 결합을 제거하여 독립적으로 업데이트할 수 있다.</li>
+<li>Improved scalability : 트래픽 부하에 따라 생산자와 소비자를 독립적으로 확장할 수 있다. 예를 들어, 피크 시간대에는 더 많은 소비자를 추가하여 트래픽 증가를 처리할 수 있다.</li>
+<li>Increased availability : 시스템의 한 부분이 오프라인 상태가 되더라도 다른 구성 요소는 대기열과 계속 상호 작용할 수 있다.</li>
+<li>Better performance : 메세지 큐를 사용하면 비동기 통신이 쉬워진다. 생산자는 응답을 기다릴 필요 없이 대기열에 메세지를 추가할 수 있고, 소비자는 메세지가 사용 가능할 때마다 메세지를 소비할 수 있다. 서로 기다릴 필요가 없다.</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230702183220258.png" alt=""></p>
+<p><strong>Message queues vs event streaming platforms</strong></p>
+<p>엄밀히 말하면 Kafka나 Pulsar는 이벤트 스트리밍 플랫폼이기 때문에 메세지 큐가 아니다. 그러나 메세지 큐(RocketMQ, ActiveMQ, RabbitMQ, ZeroMQ 등)과 이벤트 스트리밍 플랫폼(Kafka, Pulsar)의 구분이 모호해지기 시작하는 기능의 융합이 있다. 예를 들어 일반 메세지 큐인 RabbitMQ는 반복적인 메세지 소비와 긴 메세지 보존을 허용하기 위해 선택적 스트리밍 기능을 추가했으며, 그 구현은 이벤트 스트리밍 플랫폼과 마찬가지로 추가 전용 로그를 사용한다. Pulsar는 주로 카프카의 경쟁자이지만, 일반적인 분산 메세지 큐로 사용할 수 있을 만큼 유연하고 성능이 뛰어나다.</p>
+<p>이 장에서는 일반적으로 이벤트 스트리밍 플랫폼에서만 사용할 수 있는 긴 데이터 보존, 반복적인 메세지 소비 등과 같은 추가 기능을 갖춘 분산 메세지 큐를 설계해본다. 이런 추가 기능으로 인해 설계가 더 복잡해진다. 이 장에서는 인터뷰의 초점이 보다 전통적인 분산 메세지 큐에 맞춰져 있다면 설계를 단순화할 수 있는 부분을 강조해 본다.</p>
+<h2 id="Step-1-Understand-the-Problem-and-Establish-Design-Scope"><a href="#Step-1-Understand-the-Problem-and-Establish-Design-Scope" class="headerlink" title="Step 1 - Understand the Problem and Establish Design Scope"></a>Step 1 - Understand the Problem and Establish Design Scope</h2><ul>
+<li>생산자는 메세지 큐에 메세지를 보낸다.</li>
+<li>소비자는 메세지 큐에서 메세지를 소비한다.</li>
+<li>메세지는 반복적으로 또는 한 번만 소비될 수 있다.</li>
+<li>기록용 데이터를 제거할 수 있다.</li>
+<li>메세지 크기는 킬로바이트 범위이다.</li>
+<li>대기열에 추가된 순서대로 소비자에게 메세지를 전달하는 기능이 있다.</li>
+<li>사용자가 데이터 전달 의미(at-least-once, at-most-once, or exactly-once)를 구성할 수 있다.</li>
+</ul>
+<h3 id="Non-functional-requirements"><a href="#Non-functional-requirements" class="headerlink" title="Non-functional requirements"></a>Non-functional requirements</h3><ul>
+<li>사용 사례에 따라 높은 처리량 또는 낮은 지연 시간으로 구성할 수 있다.</li>
+<li>확장성 : 시스템은 자연적으로 분산되어야 한다. 갑작스러운 메세지 볼륨의 급증을 지원할 수 있어야 한다.</li>
+<li>지속성과 내구성 : 데이터는 디스크에 보존되고 여러 노드에 복제되어야 한다.</li>
+</ul>
+<h3 id="Adjustments-for-traditional-message-queues"><a href="#Adjustments-for-traditional-message-queues" class="headerlink" title="Adjustments for traditional message queues"></a>Adjustments for traditional message queues</h3><p>기존 메세지 큐는 이벤트 스트리밍 플랫폼만큼 강력한 보존 요건을 가지고 있지 않다. 기존 큐는 메세지가 소비될 때까지만 메모리에 메세지를 보관한다. 이러한 큐는 이벤트 스트리밍 플랫폼에 필요한 용량 보다 몇 배나 작은 온디스크 오버플로 용량을 제공한다. 기존 메세지 큐는 일반적으로 메세지 순서를 유지하지 않는다. 메세지는 생성된 순서와 다른 순서로 소비될 수 있다. 이러한 차이점은 설계를 크게 단순화하며, 적절한 경우 이에 대해 논의할 것이다.</p>
+<h2 id="Step-2-Propose-High-Level-Design-and-Get-Buy-In"><a href="#Step-2-Propose-High-Level-Design-and-Get-Buy-In" class="headerlink" title="Step 2 - Propose High-Level Design and Get Buy-In"></a>Step 2 - Propose High-Level Design and Get Buy-In</h2><p>먼저 메세지 큐의 기본 기능에 대해 논의해본다. 아래는 메세지 큐의 주요 구성 요소와 이런 구성 요소 간의 단순화된 상호 작용을 보여준다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230702184117835.png" alt=""></p>
+<ul>
+<li>프로듀서가 메세지 큐에 메세지는 보낸다.</li>
+<li>컨슈머는 큐를 구독하고 메세지를 소비한다.</li>
+<li>메세지 큐는 생산자와 소비자를 분리해 각자가 독립적으로 작동하고 확장할 수 있도록 하는 중간에 있는 서비스다.</li>
+<li>클라이언트 / 서버 모델에서 생산자와 소비자는 모두 클라이언트이고 메세지 큐는 서버다. 클라이언트와 서버는 네트워크를 통해 통신한다.</li>
+</ul>
+<h3 id="Messaging-models"><a href="#Messaging-models" class="headerlink" title="Messaging models"></a>Messaging models</h3><p>가장 많이 사용되는 메세징 모델은 point-to-point 방식과 publish-subscribe 모델이다.</p>
+<h4 id="Point-to-point"><a href="#Point-to-point" class="headerlink" title="Point-to-point"></a>Point-to-point</h4><p>이 모델은 기존 메세지 대기열에서 흔히 볼 수 있다. 지점 간 모델에서는 메세지가 큐로 전송되고 한 명의 소비자만 메세지를 소비한다. 큐에서 메세지를 소비하기 위해 대기중인 여러 소비자가 있을 수 있지만 각 메세지는 한 명의 소비자만 소비할 수 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230702184421852.png" alt=""></p>
+<p>소비자가 메세지가 소비되었음을 확인하면 해당 메세지는 대기열에서 제거된다. Point-to-Point 모델에는 데이터 보존이 없다. 반면, 우리 설계에는 2주간 메세지를 보관하는 지속성 계층이 포함되어 있어 메세지가 반복적으로 소비될 수 있다. 우리의 설계는 point-to-point 모델을 시뮬레이션할 수 있지만, 그 기능은 publish-subscribe 모델에 자연스럽게 매핑된다.</p>
+<h4 id="Publish-subscribe"><a href="#Publish-subscribe" class="headerlink" title="Publish-subscribe"></a>Publish-subscribe</h4><p>토픽은 메세지를 정리하는데 사용되는 카테고리다. 각 토픽은 전체 메세지 대기열 서비스에서 고유한 이름을 가진다. 메세지는 특정 토픽으로 보내지고 토픽에서 읽혀진다. 게시-구독 모델에서는 토픽으로 메세지가 전송되고 이 토픽을 구독하는 소비자들이 메세지를 받는다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230702184747133.png" alt=""></p>
+<p>분산 메세지 큐는 두 가지 모델을 모두 지원한다. 게시-구독 모델은 토픽별로 구현되며, point-to-point 모델은 소비자 그룹 섹션에서 이야기할 소비자 그룹이라는 개념으로 시뮬레이션할 수 있다.</p>
+<h3 id="Topics-partitions-and-brokers"><a href="#Topics-partitions-and-brokers" class="headerlink" title="Topics, partitions, and brokers"></a>Topics, partitions, and brokers</h3><p>앞서 언급했듯이 메세지는 토픽별로 보존된다. 토픽의 데이터 볼륨이 너무 커서 단일 서버가 처리할 수 없다면 어떻게 해야할까? 이 문제를 해결하기 위한 한 가지 접근 방식은 파티션이다. 토픽을 파티션으로 나누고 파티션 간에 균등하게 메세지를 전달한다. 파티션을 토픽에 대한 메세지의 작은 하위 집합으로 생각하면 된다. 파티션은 메세지 큐 클러스터의 서버에 고르게 분산되어 있다. 파티션을 보유하고 있는 이러한 서버를 브로커라고 한다. 브로커 간의 파티션 분배는 높은 확장성을 지원하기 위한 핵심 요소다. 파티션의 수를 확장하여 토픽 용량을 확장할 수 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230702185145282.png" alt=""></p>
+<p>각 토픽 파티션은 FIFO(선입선출) 메커니즘을 사용해 대기열 형태로 작동한다. 즉, 파티션 내에서 메세지의 순서를 유지할 수 있다. 파티션에서 메세지의 위치를 오프셋이라고 한다. 프로듀서가 메세지를 보내면 실제로는 해당 주제에 대한 파티션 중 하나로 전송된다. 각 메세지에는 선택적 메세지 키(예: 사용자 ID)가 있으며, 동일한 메세지 키에 대한 모든 메세지는 동일한 파티션으로 전송된다. 메세지 키가 없는 경우에는 메세지가 파티션 중 한 곳으로 무작위로 전송된다.</p>
+<p>소비자가 토픽을 구독하면 이런 파티션 중 하나 이상에서 데이터를 가져온다. 한 토픽을 구독하는 소비자가 여러 명인 경우 각 소비자는 해당 토픽에 대한 파티션의 하위 집합을 담당한다. 소비자는 토픽에 대한 소비자 그룹을 형성한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230702185414807.png" alt=""></p>
+<h3 id="Consumer-group"><a href="#Consumer-group" class="headerlink" title="Consumer group"></a>Consumer group</h3><p>앞서 언급했듯이, 우리는 P2P 모델과 Pub-Sub 모델을 모두 지원해야 한다. 소비자 그룹은 토픽의 메세지를 소비하기 위해 함께 일하는 일련의 소비자다. 소비자는 그룹으로 구성할 수 있다. 각 소비자 그룹은 여러 토픽을 구독하고 자체적인 소비 상쇄를 유지할 수 있다. 예를 들어 사용 사례별로 소비자를 그룹화하여 한 그룹은 청구용, 다른 그룹은 회계용으로 그룹화할 수 있다. 아래와 같이 동일한 그룹의 인스턴스는 트래픽을 병렬로 소비할 수 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230702185712573.png" alt=""></p>
+<p>하지만 한 가지 문제가 있다. 데이터를 병렬로 읽으면 처리량은 향상되지만, 같은 파티션에 있는 메세지의 소비 순서를 보장할 수 없다. 예를 들어, 소비자 1과 소비자 2가 모두 파티션 1에서 읽는 경우, 파티션 1에서 메세지 소비 순서를 보장할 수 없다. 이 문제는 하나의 파티션은 같은 그룹에 속한 한 명의 소비자만 사용할 수 있다는 제약 조건을 추가하면 이 문제를 해결할 수 있다. 그룹의 소비자 수가 토픽의 파티션 수보다 많으면 일부 소비자는 이 토픽에서 데이터를 얻지 못한다. 예를 들어 그룹2의 소비자 3은 동일한 소비자 그룹의 소비자 4가 이미 토픽 B의 메세지를 소비하고 있기 때문에 토픽 B의 메세지를 소비할 수 없다.</p>
+<p>이 제약 조건으로 모든 소비자를 동일한 소비자 그룹에 배치하면 동일한 파티션의 메세지는 한 명의 소비자만 소비하게 되며, 이는 P2P 모델과 동일하다. 파티션은 가장 작은 저장 단위이므로 사전에 충분한 파티션을 할당하면 동적으로 파티션 수를 늘릴 필요가 없다. 대규모로 처리하려면 소비자를 추가하기만 하면 된다.</p>
+<h3 id="High-Level-architecture"><a href="#High-Level-architecture" class="headerlink" title="High-Level architecture"></a>High-Level architecture</h3><p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230702190025840.png" alt=""></p>
+<p>Clients</p>
+<ul>
+<li>Producer : 특정 토픽에 메세지를 푸시한다.</li>
+<li>Consumer group : 토픽을 구독하고 메세지를 소비한다.</li>
+</ul>
+<p>Core service and storage</p>
+<ul>
+<li>Broker : 여러 개의 파티션을 보유한다. 파티션은 한 토픽에 대한 메세지의 하위 집합을 보유한다.</li>
+<li>Storage :<ul>
+<li>Data storage : 메세지는 파티션의 데이터 스토리지에 유지된다.</li>
+<li>State storage : 소비자는 상태 스토리지에서 관리한다.</li>
+<li>Metadata storage : 토픽의 구성 및 속성이 메타데이터 저장소에 유지된다.</li>
+</ul>
+</li>
+<li>Coordination service : <ul>
+<li>Service discovery : 어떤 브로커가 살아 있는지 확인한다.</li>
+<li>Leader election : 브로커 중 한 명이 활성 컨트롤러로 선택된다. 클러스터에는 활성 컨트롤러가 하나만 있다. 활성 컨트롤러는 파티션 할당을 담당한다.</li>
+<li>일반적으로 아파치 쥬키퍼 또는 etcd가 컨트롤러를 선출하는데 사용된다.</li>
+</ul>
+</li>
+</ul>
+<h2 id="Step-3-Design-Deep-Dive"><a href="#Step-3-Design-Deep-Dive" class="headerlink" title="Step 3 - Design Deep Dive"></a>Step 3 - Design Deep Dive</h2><p>높은 데이터 보존 요건을 충족하면서 높은 처리량을 달성하기 위해 세 가지 중요한 설계를 선택했으며, 지금부터 자세히 설명한다.</p>
+<ul>
+<li>회전식 디스크의 뛰어난 순차 엑세스 성능과 최신 운영 체제의 공격적인 디스크 캐싱 전략을 활용하는 온디스크 데이터 구조를 선택했다.</li>
+<li>메세지 데이터 구조는 수정 없이 생산자에서 큐로, 그 이후에 소비자에게 메세지가 전달될 수 있도록 설계되었다. 이를 통해 대용량 트래픽이 많은 시스템에서 비용이 많이 드는 복사의 필요성을 최소화할 수 있다.</li>
+<li>일괄 처리를 선호하도록 시스템을 설계했다. 작은 I/O는 높은 처리량의 적이다. 따라서 가능한 한 일괄 처리를 권장한다. 생산자는 메세지를 일괄적으로 보낸다. 메세지 대기열은 훨씬 더 큰 배치로 메세지를 유지한다. 소비자도 가능하면 일괄적으로 메세지를 가져온다.</li>
+</ul>
+<h3 id="Data-storage"><a href="#Data-storage" class="headerlink" title="Data storage"></a>Data storage</h3><p>메세지를 보존하는 옵션을 더 자세히 살펴보자. 최적의 선택을 찾기 위해 메세지 큐의 트래픽 패턴을 고려해 본다.</p>
+<ul>
+<li>Write-heavy, read-heavy.</li>
+<li>업데이트 / 삭제 연산 없음. 기존 메세지 큐는 큐가 뒤처지지 않는 한 메세지를 지속하지 않으며, 이 경우 큐가 따라잡히면 “삭제” 작업이 수행된다. 여기서 말하는 것은 데이터 스트리밍 플랫폼의 지속성이다.</li>
+<li>주로 순차적 읽기 / 쓰기 엑세스가 사용된다.</li>
+</ul>
+<h4 id="Option-1-Database"><a href="#Option-1-Database" class="headerlink" title="Option 1 : Database"></a>Option 1 : Database</h4><p>첫 번째 옵션은 데이터베이스를 사용하는 것이다.</p>
+<ul>
+<li>RDB : 토픽 테이블을 만들고 테이블에 행으로 메세지를 쓴다.</li>
+<li>NoSQL : 컬렉션을 토픽으로 만들고 메세지를 문서로 작성한다.</li>
+</ul>
+<p>데이터베이스는 스토리지 요구 사항을 처리할 수 있지만 write-heavy 및 read-heavy 엑세스 패턴을 모두 지원하는 데이터베이스를 대규모로 설계하기 어렵기 때문에 이상적이지 못하다. 데이터베이스 솔루션은 특정 데이터 사용 패턴에 잘 맞지 않는다. 즉, 데이터베이스는 최선의 선택이 아니며 시스템의 병목 현상이 될 수 있다.</p>
+<h4 id="Option-2-Write-ahead-log-WAL"><a href="#Option-2-Write-ahead-log-WAL" class="headerlink" title="Option 2 : Write-ahead log(WAL)"></a>Option 2 : Write-ahead log(WAL)</h4><p>두 번째 옵션은 WAL이다. WAL은 새 항목이 추가 전용 로그에 기록되는 일반 파일이다. WAL은 MySQL의 재실행 로그와 ZooKeeper의 WAL 등 많은 시스템에서 사용된다.</p>
+<p>메세지를 디스크에 WAL 로그 파일로 보존하는 것이 좋다. WAL은 순수한 순차 읽기 / 쓰기 엑세스 패턴을 가지고 있다. 순차 엑세스의 디스크 성능은 매우 우수하다. 또한 회전 디스크는 용량이 크고 가격도 매우 저렴하다. 그림 9에서 볼 수 있듯이, 파티션의 꼬리 부분에 새 메세지가 추가되며 오프셋이 단조롭게 증가한다. 가장 쉬운 옵션은 로그 파일의 줄 번호를 오프셋으로 사용하는 것이다. 그러나 파일은 무한히 커질 수 없으므로 세그먼트로 나누는 것이 좋다.</p>
+<p>세그먼트를 사용하면 새 메세지가 활성 세그먼트 파일에만 추가된다. 활성 세그먼트가 특정 크기에 도달하면 새 메세지를 수신하기 위해 새 활성 세그먼트가 생성되고 현재 활성 세그먼트는 나머지 비활성 세그먼트와 마찬가지로 비활성 상태가 된다. 비활성 세그먼트는 읽기 요청만 처리한다. 오래된 비활성 세그먼트 파일은 보존 기간 또는 용량 제한을 초과하는 경우 잘릴 수 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230703215938312.png" alt=""></p>
+<p>동일한 파티션의 세그먼트 파일은 “Partition-{:partition_id}”라는 폴더에 정리된다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230703220023872.png" alt=""></p>
+<p><strong>A note on disk performance</strong></p>
+<p>높은 데이터 보존 요건을 충족하기 위해 설계는 많은 양의 데이터를 저장하기 위한 디스크 드라이브에 크게 의존하고 있다. 회전식 디스크는 느리다는 일반적인 오해가 있지만, 이는 실제로는 랜덤 엑세스의 경우에만 해당된다. 우리 워크로드의 경우, 순차 엑세스 패턴을 활용하도록 온디스크 데이터 구조를 설계하기만 하면 RAID 구성의 최신 디스크 드라이브(즉, 더 높은 성능을 위해 디스크를 스트라이핑하여 함께 사용하는 경우)로도 초당 수백 MB의 읽기 및 쓰기 속도를 편안하게 달성할 수 있다. 이는 우리의 요구에 충분하며 비용 구조도 유리하다.</p>
+<p>또한 최신 운영 체제는 디스크 데이터를 메인 메모리에 매우 적극적으로 캐시하기 때문에 사용 가능한 모든 여유 메모리를 사용하여 디스크 데이터를 캐시한다. WAL은 위에서 설명한 것처럼 무거운 OS 디스크 캐싱도 활용한다.</p>
+<h3 id="Message-data-structure"><a href="#Message-data-structure" class="headerlink" title="Message data structure"></a>Message data structure</h3><p>메세지의 데이터 구조는 높은 처리량의 핵심이다. 이는 생산자, 메세지 큐, 소비자 간의 계약을 정의한다. 이 설계는 메세지가 생산자에서 큐로, 그리고 최종적으로 소비자에게 전송되는 동안 불필요한 데이터 복사를 제거함으로써 고성능을 달성한다. 시스템의 일부가 이 계약에 동의하지 않는 경우 메세지를 변경해야 하며, 이 경우 복사 비용이 많이 든다. 이는 시스템 성능에 심각한 타격을 줄 수 있다.</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Field Name</th>
+<th style="text-align:left">Data Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><strong>key</strong></td>
+<td style="text-align:left">byte[]</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>value</strong></td>
+<td style="text-align:left">byte[]</td>
+</tr>
+<tr>
+<td style="text-align:left">topic</td>
+<td style="text-align:left">string</td>
+</tr>
+<tr>
+<td style="text-align:left">partition</td>
+<td style="text-align:left">integer</td>
+</tr>
+<tr>
+<td style="text-align:left">offset</td>
+<td style="text-align:left">long</td>
+</tr>
+<tr>
+<td style="text-align:left">timestamp</td>
+<td style="text-align:left">long</td>
+</tr>
+<tr>
+<td style="text-align:left">size</td>
+<td style="text-align:left">integer</td>
+</tr>
+<tr>
+<td style="text-align:left">crc [5]</td>
+<td style="text-align:left">integer</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h4 id="Message-key"><a href="#Message-key" class="headerlink" title="Message key"></a>Message key</h4><p>메세지 키는 메세지의 파티션을 결정하는 데 사용된다. 키가 정의되지 않으면 파티션이 무작위로 선택된다. 그렇지 않으면 해시(키) % numPartitions에 의해 파티션이 선택된다. 더 많은 유연성이 필요한 경우 제작자가 자체 매핑 알고리즘을 정의하여 파티션을 선택할 수 있다. 키는 파티션 번호와 동일하지 않다는 점에 유의해야 한다.</p>
+<p>키는 문자열 또는 숫자일 수 있다. 일반적으로 일부 비즈니스 정보를 전달한다. 파티션 번호는 메세지 대기열의 개념이므로 클라이언트에 명시적으로 노출되어서는 안된다. 적절한 매핑 알고리즘을 사용하면 파티션 수가 변경되더라도 메세지가 모든 파티션에 균등하게 전송될 수 있다.</p>
+<h4 id="Message-value"><a href="#Message-value" class="headerlink" title="Message value"></a>Message value</h4><p>메세지 값은 메세지의 페이로드다. 일반 텍스트 또는 압축된 바이너리 블록일 수 있다.</p>
+<h4 id="Other-fields-of-a-message"><a href="#Other-fields-of-a-message" class="headerlink" title="Other fields of a message"></a>Other fields of a message</h4><ul>
+<li>Topic : 메세지가 속한 토픽의 이름.</li>
+<li>Partition : 메세지가 속한 파티션의 ID.</li>
+<li>Offset : 파티션에서 메세지의 위치. 토픽, 파티션, 오프셋의 세가지 필드 조합을 통해 메세지를 찾을 수 있음.</li>
+<li>Timestamp : 이 메세지가 저장된 시점의 타임스탬프.</li>
+<li>Size : 메세지의 크기</li>
+<li>CRC : 원시 데이터의 무결성을 보장하기 위한 CRC 비트</li>
+</ul>
+<p>추가 기능을 지원하기 위해 필요에 따라 일부 선택적 필드를 추가할 수 있다. 예를 들어 태그가 선택적 필드의 일부인 경우 태그를 기준으로 메세지를 필터링할 수 있다.</p>
+<h3 id="Batching"><a href="#Batching" class="headerlink" title="Batching"></a>Batching</h3><p>일괄 처리는 이 디자인에서 널리 사용된다. 생산자, 소비자, 메세지 큐 자체에서 메세지를 일괄 처리한다. 일괄 처리는 시스템 성능에 매우 중요하다. 이 섹션에서는 주료 메세지 큐에서의 일괄 처리에 중점을 둔다. 곧 생산자와 소비자를 위한 일괄 처리에 대해 더 자세히 설명한다. 일괄처리가 필요한 이유는 다음과 같다.</p>
+<ul>
+<li>운영체제에서 단일 네트워크 요청으로 메세지를 그룹화하여 값비싼 네트워크 왕복 비용을 절감할 수 있다.</li>
+<li>브로커는 추가 로그에 메세지를 큰 덩어리로 쓰기 때문에 운영 체제에서 유지 관리하는 순차 쓰기 블록과 연속된 디스크 캐시 블록이 더 커진다. 이 두 가지 방식 모두 순차적 디스크 액세스 처리량을 훨씬 더 증가시킨다.</li>
+<li>처리량과 지연 시간 사이에는 상충 관계가 있다. 지연 시간이 더 중요할 수 있는 기존 메세지 큐로 시스템을 배포하는 경우, 더 작은 배치 크기를 사용하도록 시스템을 조정할 수 있다. 이 사용 사례에서는 디스크 성능이 약간 저하될 수 있다. 처리량을 위해 튜닝하는 경우, 느린 순차 디스크 쓰기 처리량을 보완하기 위해 토픽당 파티션 수를 더 늘려야 할 수도 있다.</li>
+</ul>
+<p>지금까지 기본 디스크 스토리지 하위 시스템과 관련 온디스크 데이터 구조에 대해 알아보았다. 이제 생산자 및 소비자 흐름에 대해 알아보자.</p>
+<h3 id="Producer-flow"><a href="#Producer-flow" class="headerlink" title="Producer flow"></a>Producer flow</h3><p>프로듀서가 파티션에 메세지를 보내려면 어떤 브로커에 연결해야 하는가? 첫 번째 옵션은 라우팅 레이어를 도입하는 것이다. 라우팅 레이어로 전송된 모든 메세지는 “올바른” 브로커로 라우팅된다. 브로커가 복제된 경우 “올바른” 브로커가 리더 복제본이 된다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230703221753666.png" alt=""></p>
+<p>위와 같이 생산자는 토픽 A의 파티션 1로 메세지를 보내려 한다. </p>
+<ol>
+<li>생산자는 라우팅 레이어로 메세지를 보낸다.</li>
+<li>라우팅 레이어는 메타데이터 스토리지에서 복제본 배포 계획을 읽고 로컬에 캐시한다. 메세지가 도착하면 브로커 1에 저장된 파티션 1의 리더 레플리카로 메세지를 라우팅한다.</li>
+<li>리더 복제본은 메세지를 수신하고 팔로워 복제본은 리더로부터 데이터를 가져온다.</li>
+<li>“충분한” 복제본이 메세지를 동기화하면 리더는 데이터를 커밋하여 데이터를 사용할 수 있게 된다. 그런 다음 프로듀서에게 응답한다.</li>
+</ol>
+<p>리더와 팔로워 복제본이 필요한 이유는 내결함성 때문이다. 이 프로세스에 대해서는 “In-sync replicas” 섹션에서 자세히 살펴본다.</p>
+<p>이 접근 방식은 효과적이지만 몇 가지 단점이 있다.</p>
+<ul>
+<li>새로운 라우팅 계층은 오버헤드와 추가 네트워크 홉으로 인한 추가 네트워크 지연 시간을 의미한다.</li>
+<li>요청 일괄 처리는 효율성의 큰 중요 요소중 하나다. 이 설계에서는 이를 고려하지 않았다.</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230703222211056.png" alt=""></p>
+<p>라우팅 레이어에는 생산자에 래필되고 버퍼 컴포넌트는 프로듀서에 추가된다. 두 컴포넌트 모두 프로듀서 클라이언트 라이브러리의 일부로 프로듀서에 설치할 수 있다. 이 변경은 몇 가지 이점을 가져다 준다.</p>
+<ul>
+<li>네트워크 홉 수가 줄어들어 지연 시간이 단축된다.</li>
+<li>프로듀서는 메세지를 어느 파티션으로 전송할지 결정하는 자체 로직을 가질 수 있다.</li>
+<li>일괄 처리는 메모리에 메세지를 버퍼링하고 한 번의 요청으로 더 큰 배치를 보낸다. 이렇게 하면 처리량이 증가한다.</li>
+</ul>
+<p>배치 크기를 선택하는 것은 처리량과 지연 시간 사이의 전형적인 절충안이다. 배치 크기가 크면 처리량은 증가하지만 배치를 누적하는 데 대기 시간이 길어지므로 지연 시간이 길어진다. 배치 크기가 작으면 요청이 더 빨리 전송되므로 지연 시간이 짧아지지만 처리량이 저하된다. 프로듀서는 사용 사례에 따라 배치 크기를 조정할 수 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230703222432023.png" alt=""></p>
+<h3 id="Consumer-flow"><a href="#Consumer-flow" class="headerlink" title="Consumer flow"></a>Consumer flow</h3><p>소비자는 파티션에서 오프셋을 지정하고 해당 위치에서 시작하는 이벤트 청크를 다시 받는다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230703222505084.png" alt=""></p>
+<h4 id="Push-vs-pull"><a href="#Push-vs-pull" class="headerlink" title="Push vs pull"></a>Push vs pull</h4><p>중요한 질문은 브로커가 소비자에게 데이터를 푸시해야 하는지, 아니면 소비자가 브로커로부터 데이터를 가져와야 하는지에 대한 부분이다.</p>
+<h5 id="Push-model"><a href="#Push-model" class="headerlink" title="Push model"></a>Push model</h5><p>Pros :</p>
+<ul>
+<li>지연 시간이 짧다. 브로커는 메세지를 수신하는 즉시 소비자에게 푸시할 수 있다.</li>
+</ul>
+<p>Cons :</p>
+<ul>
+<li>소비 속도가 생산 속도보다 떨어지면 소비자에게 과부하가 걸릴 수 있다.</li>
+<li>브로커가 데이터 전송 속도를 제어하기 때문에 다양한 처리 능력을 가진 소비자를 처리하기 어렵다.</li>
+</ul>
+<h5 id="Pull-model"><a href="#Pull-model" class="headerlink" title="Pull model"></a>Pull model</h5><p>Pros :</p>
+<ul>
+<li>소비자가 소비 속도를 제어한다. 한 세트의 소비자는 실시간으로 메세지를 처리하고 다른 세트의 소비자는 일괄 처리 모드로 메세지를 처리하도록 할 수 있다.</li>
+<li>소비 속도가 생산 속도보다 떨어지면 소비자를 스케일 아웃하거나 가능한 한 빨리 따라잡을 수 있다.</li>
+<li>풀 모델은 일괄 처리에 더 적합하다. 푸시 모델에서 브로커는 소비자가 메세지를 즉시 처리할 수 있는지 여부를 알 수 없다. 브로커가 소비자에게 한 번에 한 개의 메세지를 보내고 소비자가 백업을 받으면 새 메세지가 버퍼에서 대기하게 된다. 풀 모델은 로그에서 소비자의 현재 위치 이후 사용 가능한 모든 메세지를 가져온다. 데이터의 공격적인 일괄 처리에 적합하다.</li>
+</ul>
+<p>Cons :</p>
+<ul>
+<li>브로커에 메세지가 없는 경우에도 소비자는 계속 데이터를 가져와 리소스를 낭비할 수 있다. 이 문제를 극복하기 위해 많은 메세지 큐는 long polling 모드를 지원하여 지정된 시간 동안 pull을 기다릴 수 있도록 한다.</li>
+</ul>
+<p>이런 고려 사항에 따라 대부분의 메세지 큐는 풀 모델을 선택한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230703224712562.png" alt=""></p>
+<ol>
+<li>새로운 소비자가 그룹 1에 가입하고 토픽 A를 구독하려고 하면 그룹 이름을 해시하여 해당 브로커 노드를 찾는다. 이렇게 하면 같은 그룹의 모든 소비자가 같은 브로커에 연결하는데, 이 브로커를 이 소비자 그룹의 코디네이터라고도 한다. 이름이 비슷하지만, 소비자 그룹 코디네이터는 앞서 에서 언급한 코디네이션 서비스와 다르다. 앞서 언급한 코디네이션 서비스가 브로커 클러스터를 조정하는 반면, 이 코디네이터는 소비자 그룹을 조정한다.</li>
+<li>코디네이터는 소비자가 그룹에 가입했는지 확인하고 소비자에게 파티션 2를 할당한다. 라운드 로빈, 범위 등을 포함한 다양한 파티션 할당 전략이 있다.</li>
+<li>소비자는 마지막으로 소비된 오프셋에서 메세지를 가져오는데, 이는 상태 저장소에서 관리한다.</li>
+<li>소비자는 메세지를 처리하고 오프셋을 브로커에 커밋한다. 데이터 처리와 오프셋 커밋 순서는 메세지 전달 의미론에 영향을 미치며, 이에 대해서는 곧 설명한다.</li>
+</ol>
+<h4 id="Consumer-rebalancing"><a href="#Consumer-rebalancing" class="headerlink" title="Consumer rebalancing"></a>Consumer rebalancing</h4><p>소비자 리벨런싱은 어떤 소비자가 어떤 파티션의 하위 집합을 담당할지 결정한다. 이 프로세스는 소비자가 가입할 때, 소비자가 탈퇴할 때, 소비자가 충돌할 때 또는 파티션이 조정될 때 발생할 수 있다.</p>
+<p>소비자 리밸런싱이 발생할 때 코디네이터는 중요한 역할을 한다. 먼저 코디네이터가 무엇인지 살펴보자. 코디네이터는 소비자 리밸런싱을 위해 소비자와 커뮤니케이션을 담당하는 브로커 중 한명이다. 코디네이터는 소비자로부터 하트비트를 수신하고 파티션에서 오프셋을 관리한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230704220813778.png" alt=""></p>
+<ul>
+<li>위에서 볼 수 있듯이 각 소비자는 그룹에 속해 있다. 그룹 이름을 해싱하여 전담 코디네이터를 찾는다. 같은 그룹의 모든 소비자는 같은 코디네이터에 연결된다.</li>
+<li>코디네이터는 연결된 소비자 목록을 유지한다. 목록이 변경되면 코디네이터는 그룹의 새로운 리더를 선출한다.</li>
+<li>소비자 그룹의 새로운 리더는 새로운 파티션 배차 계획을 생성하여 코디네이터에게 다시 보고한다. 코디네이터는 이 계획을 그룹의 다른 소비자에게 브로드캐스트 한다.</li>
+</ul>
+<p>분산 시스템에서 소비자는 네트워크 문제, 충돌, 재시작 등 모든 종류의 문제를 겪을 수 있다. 코디네이터의 입장에서는 더 이상 하트비트가 발생하지 않을 것이다. 이런 문제가 발생하면 코디네이터는 아래와 같이 재조정 프로세스를 트리거해 파티션을 다시 디스패치한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230704221017525.png" alt=""></p>
+<p>몇 가지 재조정 시나리오를 시뮬레이션해 본자. 그룹에 2명의 소비자가 있고 구독된 주제에 4개의 파티션이 있다고 가정한다. 아래는 새로운 소비자 B가 그룹에 가입할 때의 흐름을 보여준다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230704221100772.png" alt=""></p>
+<ol>
+<li>처음에는 소비자 A만 그룹에 포함된다. 모든 파티션을 소비하고 코디네이터와 하트비트를 유지한다.</li>
+<li>소비자 B가 그룹에 참여 요청을 보낸다.</li>
+<li>코디네이터는 리밸런싱할 때가 되었다는 것을 알고 수동적인 방식으로 그룹의 모든 소비자에게 알린다. 코디네이터는 A의 하트비트를 수신하면 A에게 그룹에 재참여할 것을 요청한다.</li>
+<li>모든 소비자가 그룹에 다시 참여하면 코디네이터는 그 중 한 명을 리더로 선택하고 모든 소비자에게 선거 결과를 알린다.</li>
+<li>리더 소비자는 파티션 배차 계획을 생성하여 코디네이터에게 보낸다. 팔로워 소비자는 코디네이터에게 파티션 배차 계획에 대해 질문한다.</li>
+<li>소비자는 새로 할당된 파티션의 메세지를 소비하기 시작한다.</li>
+</ol>
+<p>아래는 기존 소비자 A가 그룹을 떠날 때의 흐름을 보여준다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230704221317747.png" alt=""></p>
+<ol>
+<li>소비자 A와 B가 같은 소비자 그룹에 속해 있다.</li>
+<li>소비자 A는 종료해야 하므로 그룹에서 탈퇴를 요청한다.</li>
+<li>코디네이터는 밸런스를 재조정해야 할 때 임을 알 수 있다. 코디네이터는 B의 하트비트를 수신하면 B에게 그룹에 다시 참여하도록 요청한다.</li>
+</ol>
+<p>아래는 기존 소비자 A가 충돌했을 때의 흐름을 보여준다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230704221507104.png" alt=""></p>
+<ol>
+<li>소비자 A와 B는 코디네이터와 하트비트를 유지한다.</li>
+<li>소비자 A가 충돌하여 소비자 A에서 코디네이터로 전송되는 하트비트가 없다. 코디네이터는 소비자 A로부터 지정된 시간 내에 하트비트 신호를 받지 못하면 해당 소비자를 죽은 것으로 표시한다.</li>
+<li>코디네이터는 리밸런싱 프로세스를 트리거한다.</li>
+</ol>
+<p>이제 생산자 및 소비자 흐름에 대한 우회를 마쳤으니 다시 돌아와서 나머지 메세지 큐 브로커에 대한 심층 분석을 마친다.</p>
+<h3 id="State-storage"><a href="#State-storage" class="headerlink" title="State storage"></a>State storage</h3><p>메세지 큐 브로커에서 상태 저장소는 아래 내용들을 저장한다.</p>
+<ul>
+<li>파티션과 소비자 간의 매핑</li>
+<li>각 파티션에 대한 소비자 그룹의 마지막으로 소비된 오프셋</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230705225018872.png" alt=""></p>
+<p>예를 들어 위에 표시된 것 처럼 그룹 1의 소비자는 파티션의 메세지를 순차적으로 소비하고 소비된 오프셋 6을 커밋한다. 즉 오프셋 6 이전과 이후의 모든 메세지가 이미 소비되었다. 소비자가 충돌하면 같은 그룹의 다른 새 소비자가 상태 스토리지에서 마지막으로 소비한 오프셋을 읽어 소비를 재개한다. 소비자 상태의 데이터 엑세스 패턴은 아래와 같다.</p>
+<ul>
+<li>읽기 및 쓰기 작업이 빈번하지만 볼륨이 크지 않다.</li>
+<li>데이터는 자주 업데이트되며 거의 삭제되지 않는다.</li>
+<li>무작위 읽기 및 쓰기 작업</li>
+<li>데이터 일관성이 중요하다.</li>
+</ul>
+<p>소비자 상태 데이터를 저장하는데 많은 스토리지 솔루션을 사용할 수 있다. 데이터 일관성과 빠른 읽기 / 쓰기 요구 사항을 고려할 때, Zookeeper와 같은 KV 저장소는 훌륭한 선택이다. 카프카는 오프셋 스토리지를 Zookeeper에서 카프카 브로커로 옮겼다. </p>
+<h3 id="Metadata-storage"><a href="#Metadata-storage" class="headerlink" title="Metadata storage"></a>Metadata storage</h3><p>메타데이터 저장소에는 파티션 수, 보존 기간, 복제본 배포 등 토픽의 구성과 속성이 저장된다. 메타데이터는 자주 변경되지 않고 데이터 양이 적지만 일관성 요구 사항이 높다. 메타데이터를 저장하는 데는 Zookeeper가 적합하다.</p>
+<h3 id="ZooKeeper"><a href="#ZooKeeper" class="headerlink" title="ZooKeeper"></a>ZooKeeper</h3><p>Zookeeper는 계층적 키-값 저장소를 제공하는 분산 시스템에 필수적인 서비스다. 일반적으로 분산 구성 서비스, 동기화 서비스, 명명 레지스트리를 제공하는데 사용된다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230705225432506.png" alt=""></p>
+<p>변경 사항을 간단히 살펴보자.</p>
+<ul>
+<li>메타데이터와 상태 저장소가 Zookeeper로 이전된다.</li>
+<li>브로커는 메세지에 대한 데이터 저장소만 유지하면 된다.</li>
+<li>Zookeeper는 브로커 클러스터의 리더 선출을 지원한다.</li>
+</ul>
+<h3 id="Replication"><a href="#Replication" class="headerlink" title="Replication"></a>Replication</h3><p>분산 시스템에서 하드웨어 문제는 흔한 문제이며 무시할 수 없는 문제다. 디스크가 손상되거나 영구적으로 장애가 발생하면 데이터가 손실된다. 복제는 고가용성을 달성하기 위한 고전적인 솔루션이다. 아래와 같이 각 파티션에는 3개의 복제본이 서로 다른 브로커 노드에 분산되어 있다.</p>
+<p>각 파티션에서 강조 표시된 복제본은 리더이고 다른 복제본은 팔로워다. 프로듀서는 리더 레플리카에만 메세지를 보낸다. 팔로워 복제본은 리더로부터 새 메세지를 계속 가져온다. 메세지가 충분한 복제본에 동기화되면 리더는 프로듀서에게 승인 응답을 보낸다. 아래의 동기화중인 복제본 섹션에서 “충분”을 정의하는 방법에 대해 자세히 설명한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230705225732383.png" alt=""></p>
+<p>각 파티션에 대한 복제본 배포를 복제본 배포 계획이라고 한다. 예를 들어 위의 복제본 배포 계획은 아래와 같이 설명할 수 있다.</p>
+<ul>
+<li><p>Partition 1 of topic A : 3 레플리카 / 브로커 1의 리더 / 브로커 2, 3의 팔로워</p>
+</li>
+<li><p>Partition 2 of topic A : 3 레플리카 / 브로커 2의 리더 / 브로커 3, 4의 팔로워</p>
+</li>
+<li><p>Partition 1 of topic B : 3 레플리카 / 브로커 3의 리더 / 브로커 4, 1의 팔로워</p>
+</li>
+</ul>
+<p>복제본 배포 계획은 코디네이션 서비스의 도움으로 브로커 노드 중 하나가 리더로 선출되고 이 노드는 복제본 배포 계획을 생성하고 메타데이터 저장소에 계획을 유지한다. 이제 모든 브로커가 계획에 따라 작업할 수 있다.</p>
+<h4 id="In-sync-replicas"><a href="#In-sync-replicas" class="headerlink" title="In-sync replicas"></a>In-sync replicas</h4><p>단일 노드 장애를 방지하기 위해 메세지가 여러 파티션에 보존되며, 각 파티션에는 여러 개의 복제본이 있다고 이야기했다. 메세지는 리더에게만 쓰여지고 팔로워는 리더의 데이터를 동기화한다. 해결해야 할 한 가지 문제는 동기화 상태를 유지하는 것이다. 동기화 복제본(ISR)은 리더와 “동기화”되어 있는 복제본을 말한다. “동기화”의 정의는 토픽 구성에 따라 다른다. 예를 들어 <code>replica.lag.max.messages</code>의 값이 4이면 팔로워가 리더보다 메세지 수가 3개 이하로 뒤쳐저 있는 한 ISR에서 제거되지 않음을 의미한다. 리더는 기본적으로 ISR이다. ISR이 어떻게 작동하는지 알아보자.</p>
+<ul>
+<li>리더 복제본의 커밋된 오프셋은 13이다. 두 개의 새 메세지가 리더에 기록되었지만 아직 커밋되지 않았다. 커밋된 오프셋은 이 오프셋 이전과 이후의 모든 메세지가 이미 ISR의 모든 복제본에 동기화되었음을 의미한다.</li>
+<li>레플리카-2와 레플리카-3은 리더를 완전히 따라잡았으므로 ISR에 있으며 새 메세지를 가져올 수 있다.</li>
+<li>복제본 4는 구성된 지연 시간 내에 리더를 완전히 따라잡지 못했으므로 ISR에 속하지 않는다. 다시 따라잡으면 ISR에 추가할 수 있다.</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230706211748564.png" alt=""></p>
+<p>ISR이 필요한 이유는 무엇일까. 그 이유는 ISR이 성능과 내구성 사이의 절충점을 반영하기 때문이다. 제작자가 메세지 손실을 원하지 않는다면, 가장 안전한 방법은 확인을 보내기 전에 모든 복제본이 이미 동기화되어 있는지 확인하는 것이다. 그러나 복제본이 느리면 전체 파티션이 느려지거나 사용할 수 없게 된다. 이제 승인 설정에 대해 살펴보자. 프로듀서는 K개의 ISR이 메세지를 수신할 때까지 확인을 받도록 선택할 수 있으며 여기서 K는 설정 가능한 값이다.</p>
+<h5 id="ACK-all"><a href="#ACK-all" class="headerlink" title="ACK=all"></a>ACK=all</h5><p>아래는 ACK=all의 경우를 보여준다. ACK=all을 사용하면 모든 ISR이 메세지를 수신했을 때 프로듀서가 ACK를 받는다. 즉, 가장 느린 ISR을 기다려야 하므로 메세지를 전송하는데 시간이 더 오래 걸리지만 메세지 내구성이 가장 강력하다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230706212249199.png" alt=""></p>
+<h5 id="ACK-1"><a href="#ACK-1" class="headerlink" title="ACK=1"></a>ACK=1</h5><p>ACK=1을 사용하면 리더가 메세지를 지속하면 프로듀서가 ACK를 받는다. 데이터 동기화를 기다리지 않으므로 지연 시간이 개선된다. 메세지가 승인된 직후 팔로워 노드에 의해 복제되기 전에 리더가 실패하면 메세지가 손실된다. 이 설정은 간헐적인 데이터 손실이 허용되는 저지연 시스템에 적합하다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230706212347404.png" alt=""></p>
+<h5 id="ACK-0"><a href="#ACK-0" class="headerlink" title="ACK=0"></a>ACK=0</h5><p>프로듀서는 승인을 기다리지 않고 리더에게 메세지를 계속 보내며, 재시도하지 않는다. 이 방법은 메세지 손실 가능성이 있는 대신 지연 시간이 가장 짧다. 이 설정은 데이터 양이 많고 가끔씩 데이터 손실이 허용되는 메트릭 수집이나 데이터 로깅과 같은 사용 사례에 적합할 수 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230706212440916.png" alt=""></p>
+<p>구성 가능한 ACK를 통해 내구성과 성능의 균형을 맞출 수 있다. 이제 소비자 측면을 살펴보자. 가장 쉬운 설정은 소비자가 리더 복제본에 연결하여 메세지를 소비하도록 하는 것이다. 이러한 설계로 인해 리더 복제본이 과부하가 걸리지 않을지, 왜 ISR에서 메세지를 읽지 않는지 궁금할 수 있다. 그 이유는 다음과 같다.</p>
+<ul>
+<li>설계 및 운영의 단순성</li>
+<li>한 파티션의 메세지는 소비자 그룹 내의 한 소비자에게만 발송되므로 리더 복제본에 대한 연결 수가 제한된다</li>
+<li>토픽의 매우 인기 있는 토픽이 아니라면 리더 복제본에 대한 연결 수는 일반적으로 많지 않다</li>
+<li>토픽이 인기 있는 경우 파티션과 소비자 수를 확장하여 스케일링할 수 있다.</li>
+</ul>
+<p>일부 시나리오에서는 리더 복제본에서 읽는 것이 최선의 선택이 아닐 수도 있다. 예를 들어 소비자가 리더 복제본과 다른 데이터 센터에 있는 경우 읽기 성능이 저하될 수 있다. 이 경우 소비자가 가장 가까운 ISR에서 읽을 수 있도록 하는 것이 좋다.</p>
+<p>ISR은 매우 중요하다. 복제본이 ISR인지 아닌지는 어떻게 결정할까? 일반적으로 모든 파티션의 리더는 모든 복제본의 지연을 자체적으로 계산하여 ISR 목록을 추적한다.</p>
+<h3 id="Scalability"><a href="#Scalability" class="headerlink" title="Scalability"></a>Scalability</h3><p>이번에는 다양한 시스템 컴포넌트의 확장성을 평가해본다.</p>
+<h4 id="Producer"><a href="#Producer" class="headerlink" title="Producer"></a>Producer</h4><p>생산자는 그룹 조정이 필요하지 않으므로 개념적으로 소비자보다 훨씬 간단하다. 생산자의 확장성은 생산자 인스턴스를 추가하거나 제거하여 쉽게 달성할 수 있다.</p>
+<h4 id="Consumer"><a href="#Consumer" class="headerlink" title="Consumer"></a>Consumer</h4><p>소비자 그룹은 서로 격리되어 있으므로 소비자 그룹을 쉽게 추가하거나 제거할 수 있다. 소비자 그룹 내에서 리벨런싱 메커니즘은 소비자가 추가 또는 제거되거나 충돌이 발생하는 경우를 처리하는데 도움이 된다. 소비자 그룹과 리밸런싱 메커니즘을 통해 소비자의 확장성과 내결함성을 확보할 수 있다.</p>
+<h4 id="Broker"><a href="#Broker" class="headerlink" title="Broker"></a>Broker</h4><p>브로커 측의 확장성에 대해 논의하기 전에 먼저 브로커의 장애 복구에 대해 살펴보자.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230706213322666.png" alt=""></p>
+<ol>
+<li>4개의 브로커가 있고 파티션(복제본) 배포 계획이 아래와 같다고 가정한다.<ol>
+<li>토픽 A의 파티션 1 : 1(리더) / 2 / 3</li>
+<li>토픽 A의 파티션 2 : 2(리더) / 3 / 4</li>
+<li>토픽 B의 파티션 1 : 3(리더) / 4 / 1</li>
+</ol>
+</li>
+<li>브로커 3이 충돌하여 노드의 모든 파티션이 손실된다. 파티션 배포 계획은 아래와 같이 변경된다.<ol>
+<li>토픽 A의 파티션 1 : 1(리더) / 2</li>
+<li>토픽 A의 파티션 2 : 2(리더) / 4</li>
+<li>토픽 B의 파티션 1 : 2 / 3</li>
+</ol>
+</li>
+<li>브로커 컨트롤러가 브로커 3이 다운된 것을 감지하고 나머지 브로커 노드에 대한 새 파티션 분배 계획을 생성한다.<ol>
+<li>토픽 A의 파티션 1 : 1(리더) / 2 / 4(new)</li>
+<li>토픽 A의 파티션 2 : 2(리더) / 4 / 1(new)</li>
+<li>토픽 B의 파티션 1 : 4(리더) / 1 / 2(new)</li>
+</ol>
+</li>
+<li>새 복제본은 팔로워로 작동하며 리더를 따라잡는다.</li>
+</ol>
+<p>브로커를 내결함성으로 만들려면 아래와 같은 추가 고려사항이 있다.</p>
+<ul>
+<li>최소 ISR 수는 메세지가 성공적으로 커밋된 것으로 간주되기 전에 프로바이더가 수신해야 하는 복제본 수를 지정한다. 숫자가 높을수록 더 안전하다. 하지만 다른 한편으로는 지연 시간과 안전성의 균형을 맞춰야 한다.</li>
+<li>파티션의 모든 복제본이 동일한 브로커 노드에 있는 경우, 이 노드의 장애를 용인할 수 없다. 또한 동일한 노드에서 데이터를 복제하는 것은 리소스 낭비다. 따라서 복제본은 동일한 노드에 있어서는 안된다.</li>
+<li>파티션의 모든 복제본이 충돌하면 해당 파티션의 데이터는 영원히 손실된다. 복제본 수와 복제본 위치를 선택할 때는 데이터 안전성, 리소스 비용, 지연 시간 간에 절충점을 찾아야 한다. 복제본을 여러 데이터 센터에 분산하는 것이 더 안전하지만, 복제본 간에 데이터를 동기화하는데 훨신 더 많은 지연 시간과 비용이 발생한다. 해결 방법으로 데이터 미러링을 사용하면 데이터 센터 간에 데이터를 복사하는 데 도움이 될 수 있지만, 이는 범위를 벗어난다.</li>
+</ul>
+<p>이제 브로커의 확장성에 대해 다시 논의해 보자. 가장 간단한 해결책은 브로커 노드가 추가되거나 제거될 때 복제본을 다시 배포하는 것이다. 하지만 더 나은 접근 방식이 있다. 브로커 컨트롤러는 일시적으로 구성 파일의 레플리카 수보다 더 많은 레플리카를 시스템에 허용할 수 있다. 새로 추가된 브로커가 따라잡으면 더 이상 필요하지 않은 브로커를 제거할 수 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230706214210733.png" alt=""></p>
+<ol>
+<li>초기 설정 : 브로커 3개, 파티션 2개, 각 파티션당 복제본 3개</li>
+<li>새 브로커 4가 추가된다. 브로커 컨트롤러가 파티션 2의 복제본 배포를 브로커 (2, 3, 4)로 변경한다고 가정한다. 브로커 4의 새 복제본이 리더 브로커 2의 데이터를 복사하기 시작한다. 이제 파티션 2의 복제본 수가 일시적으로 3보다 많아진다.</li>
+<li>브로커 4의 복제본이 따라잡으면 브로커 1의 중복 파티션이 정상적으로 제거된다.</li>
+</ol>
+<p>이 프로세스를 따르면 브로커를 추가하는 동안 데이터 손실을 방지할 수 있다. 유사한 프로세스를 적용하여 브로커를 안전하게 제거할 수 있다.</p>
+<h4 id="Partition"><a href="#Partition" class="headerlink" title="Partition"></a>Partition</h4><p>토픽 확장, 처리량 조정, 가용성 / 처리량 균형 조정 등 다양한 운영상의 이유로 파티션 수를 변경할 수 있다. 파티션 수가 변경되면 생산자는 브로커와 통신한 후 알림을 받게 되며, 소비자는 소비자 리밸런싱을 트리거하게 된다. 따라서 생산자와 소비자 모두에게 안전하다. 이제 파티션 수가 변경되었을 때 데이터 저장 계층을 살펴보자.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230706214526813.png" alt=""></p>
+<ul>
+<li>보존된 메세지는 여전히 이전 파티션에 있으므로 데이터 마이그레이션이 없다.</li>
+<li>새 파티션(파티션 3)이 추가되면 새 메세지가 3개의 파티션 모두에 보존된다.</li>
+</ul>
+<p>따라서 파티션을 늘려서 토픽을 확장하는 것은 간단하다. 하지만 아래에서 확인할 수 있듯이 파티션을 줄이는 것은 더 복잡하다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230706214631176.png" alt=""></p>
+<ul>
+<li>파티션 3이 해제되므로 나머지 파티션(파티션 1 및 파티션 2) 에서만 세 메세지를 수신할 수 있다.</li>
+<li>폐기된 파티션(파티션 3)은 현재 소비자들이 일정 기간 동안 데이터를 사용할 수 있으므로 즉시 제거할 수 없다. 구성된 보존 기간이 경과한 후에만 데이터를 잘라내고 저장 공간을 확보할 수 있다. 파티션을 줄인다고 해서 데이터 공간을 확보할 수 있는 지름길은 아니다.</li>
+<li>이 전환 기간 동안(파티션 3이 폐기되는 동안) 생산자는 나머지 2개의 파티션으로만 메세지를 보내지만, 소비자는 여전히 3개의 파티션 모두에서 소비할 수 있다. 폐기된 파티션의 보존 기간이 만료된 후 소비자 그룹은 재조정이 필요하다.</li>
+</ul>
+<h3 id="Data-delivery-semantics"><a href="#Data-delivery-semantics" class="headerlink" title="Data delivery semantics"></a>Data delivery semantics</h3><p>분산 메세지 큐의 다양한 구성 요소를 이해했으니 이제 메세지 전달 시멘틱들을 알아보자.</p>
+<h4 id="At-most-once"><a href="#At-most-once" class="headerlink" title="At-most once"></a>At-most once</h4><p>이 시멘틱은 메세지가 한 번만 배달됨을 의미한다. 메세지가 손실될 수는 있지만 다시 전달되지는 않는다. 이것이 상위 수준에서 한 번만 전달이 작동하는 방식이다.</p>
+<ul>
+<li>프로듀서는 확인을 기다리지 않고(ack=0) 토픽에 비동기적으로 메세지를 보낸다. 메세지 전달에 실패하면 재시도가 없다.</li>
+<li>소비자는 데이터를 처리하기 전에 메세지를 가져와서 오프셋을 커밋한다. 오프셋 커밋 직후에 소비자가 충돌하면 메세지가 다시 소비되지 않는다.</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230706215420127.png" alt=""></p>
+<p>소량의 데이터 손실이 허용되는 메트릭 모니터링과 같은 사용 사례에 적합하다.</p>
+<h4 id="At-least-once"><a href="#At-least-once" class="headerlink" title="At-least once"></a>At-least once</h4><p>이 데이터 전달 시멘틱을 사용하면 메세지를 두 번 이상 전달하는 것은 허용되지만 메세지가 손실되어서는 안된다.</p>
+<ul>
+<li>프로듀서는 메세지가 브로커에 전달되도록 하기 위해 응답 콜백을 통해 동기 또는 비동기식으로 메세지를 전송하고, ack=1 또는 ack=all을 설정한다. 메세지 전달에 실패하거나 시간 초과가 발생하면 생산자는 계속 재시도한다.</li>
+<li>소비자는 데이터를 성공적으로 처리한 후에만 메세지를 가져와서 오프셋을 커밋한다. 소비자가 메세지 처리에 실패하면 메세지를 다시 소비하므로 데이터 손실이 발생하지 않는다. 반면에 소비자가 메세지를 처리하지만 브로커에 오프셋을 커밋하지 않으면 소비자가 다시 시작할 때 메세지가 다시 소비되어 중복이 발생한다.</li>
+<li>브로커와 소비자에게 메세지가 두 번 이상 전달될 수 있다.</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230706215701664.png" alt=""></p>
+<p>메세지가 손실되지는 않지만 동일한 메세지가 여러 번 전달될 수 있다. 사용자 관점에서는 이상적이지 않지만, 데이터 중복이 큰 문제가 되지 않거나 소비자 측에서 중복 제거가 가능한 사용 사례에서는 일반적으로 at-least once 의미론 충분하다. 예를 들어, 각 메세지에 고유 키가 있으면 데이터베이스에 중복 데이터를 쓸 때 메세지를 거부할 수 있다.</p>
+<h4 id="Exactly-once"><a href="#Exactly-once" class="headerlink" title="Exactly once"></a>Exactly once</h4><p>Exactly once는 구현하기 가장 어려운 시멘틱이다. 사용자에게는 친숙하지만 시스템 성능과 복잡성에 비해 비용이 많이 든다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230706215851478.png" alt=""></p>
+<p>금융 관련 사용 사례 같이 exactly once는 복제가 허용되지 않고 다운스트림 서비스나 서드파티가 비동시성을 지원하지 않는 경우에 특히 중요하다.</p>
+<h3 id="Advanced-features"><a href="#Advanced-features" class="headerlink" title="Advanced features"></a>Advanced features</h3><h4 id="Message-filtering"><a href="#Message-filtering" class="headerlink" title="Message filtering"></a>Message filtering</h4><p>토픽은 동일한 유형의 메세지를 포함하는 논리적 추상화다. 그러나 일부 소비자 그룹은 특정 하위 유형의 메세지만 소비하기를 원할 수 있다. 예를 들어 주문 시스템은 주문에 대한 모든 활동을 토픽으로 보내지만 결제 시스템은 결제 및 환불과 관련된 메세지에만 관심을 가진다. 한 가지 옵션은 결제 시스템 전용 토픽과 주문 시스템 전용 토픽을 구축하는 것이다. 이 방법은 간단하지만 몇 가지 우려 사항이 발생할 수 있다.</p>
+<ul>
+<li>다른 시스템에서 다른 하위 유형의 메세지를 요청하면 어떻게 하는지?</li>
+<li>모든 소비자 요청에 대해 전용 토픽을 만들어야 하는지?</li>
+</ul>
+<p>동일한 메세지를 다른 토픽에 저장하는 것은 리소스 낭비다.</p>
+<p>생산자와 소비자는 이제 긴밀하게 연결되어 있기 때문에 새로운 소비자 요구 사항이 올 때마다 생산자를 변경해야 한다. 따라서 다른 접근 방식을 사용하여 이 요구 사항을 해결해야 한다. 다행히 메세지 필터링이 이를 해결해준다.</p>
+<p>메세지 필터링에 대한 간단한 해결책은 소비자가 전체 메세지 집합을 가져와 처리 시간 동안 불필요한 메세지를 필터링하는 것이다. 이 접근 방식은 유연하지만 시스템 성능에 영향을 미치는 불필요한 트래픽을 유발한다.</p>
+<p>더 나은 해결책은 브로커 측에서 메세지를 필터링하여 소비자가 관심있는 메세지만 받도록 하는 것이다. 이를 구현하려면 몇 가지 신중한 고려가 필요하다. 데이터 필터링에 데이터 복호화 또는 역직렬화가 필요한 경우 브로커 성능이 저하될 수 있다. 또한 메세지에 민감한 데이터가 포함된 경우 메세지 대기열에서 해당 데이터를 읽을 수 없어야 한다.</p>
+<p>따라서 브로커의 필터링 로직이 메세지 페이로드를 추출해서는 안된다. 필터링에 사용되는 데이터는 브로커가 효율적으로 읽을 수 있는 메세지의 메타데이터에 넣는 것이 좋다. 예를 들어 각 메세지에 태그를 첨부할 수 있다. 메세지 태그를 사용하면 브로커가 해당 데이터로 메세지를 필터링할 수 있다. 태그가 더 많이 첨부되면 메세지를 여러 차원에서 필터링할 수 있다. 따라서 태그 목록은 대부분의 필터링 요구 사항을 지원할 수 있다. 수학 공식과 같은 더 복잡한 로직을 지원하려면 브로커에 문법 파서나 스크립트 실행기가 필요하여, 이는 메세지 대기열에 비해 너무 무거울 수 있다.</p>
+<p>각 메세지에 태그를 첨부하면 아래와 같이 소비자는 지정된 태그를 기반으로 메세지를 구독할 수 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230706221556173.png" alt=""></p>
+<h4 id="Delayed-messages-amp-Scheduled-messages"><a href="#Delayed-messages-amp-Scheduled-messages" class="headerlink" title="Delayed messages &amp; Scheduled messages"></a>Delayed messages &amp; Scheduled messages</h4><p>특정 기간 동안 소비자에게 메세지 전달을 지연시키고 싶을 때가 있다. 예를 들어 주문이 생성된 후 30분 이내에 결제가 이루어지지 않으면 주문을 마감해야 한다. 지연 확인 메세지(결제 완료 여부 확인)은 즉시 전송되지만 30분 후에 소비자에게 전달된다. 소비자가 메세지를 받으면 결제 상태를 확인한다. 결제가 완료되지 않은 경우 주문이 종료된다. 그렇지 않으면 메세지가 무시된다.</p>
+<p>인스턴트 메세지를 보내는 것과 달리, 지연 메세지를 토픽에 바로 보내는 대신 브로커 측의 임시 저장소로 보낸 다음 시간이 다 되면 토픽에 전달할 수 있다. 이를 위한 고수준 설계는 아래와 같다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230706221737418.png" alt=""></p>
+<p>시스템의 핵심 구성 요소에는 임시 저장소와 타이밍 기능이 포함된다</p>
+<ul>
+<li>임시 저장소는 하나 이상의 특수 메세지 주제가 될 수 있다. </li>
+<li>타이밍 기능은 범위를 벗어났지만 다음은 널리 사용되는 두 가지 솔루션이다.<ul>
+<li>사전 정의된 지연 수준을 가진 전용 지연 대기열. 예를 들어 RocketMQ는 임의의 시간 정밀도로 지연된 메세지를 지원하지 않지만 특정 수준의 지연된 메세지는 지원한다. 메세지 지연 수준은 1s, 5s, 10s, 30s, 1m, 2m, 3m, 4m, 6m, 8m, 9m, 10m, 20m, 30m, 1h, 2h 다.</li>
+<li>예약 메세지는 예약된 시간에 소비자에게 메세지가 전달되어야 함을 의미한다. 전체적인 디자인은 지연된 메세지와 매우 유사하다.</li>
+</ul>
+</li>
+</ul>
+<p>예약 메세지는 예약된 시간에 소비자에게 메세지가 전달되어야 함을 의미한다. 전체적인 디자인은 지연된 메세지와 매우 유사하다.</p>
+<h2 id="Step-4-Wrap-Up"><a href="#Step-4-Wrap-Up" class="headerlink" title="Step 4 - Wrap Up"></a>Step 4 - Wrap Up</h2><p>이 포스트에서는 데이터 스트리밍 플랫폼에서 흔히 볼 수 있는 몇 가지 고급 기능을 갖춘 분산 메세지 큐의 설계에 대해 설명했다. 아래는 더 이야기 해볼 추가 주제에 대한 내용이다.</p>
+<ul>
+<li>Protocol : 프로토콜은 서로 다른 노드 간에 정보를 교환하고 데이터를 전송하는 방법에 대한 규칙, 구문 및 API를 정의한다. 분산 메세지 대기열에서 프로토콜은 다음을 수행할 수 있어야 한다.<ul>
+<li>생산, 소비, 하트비트 등과 같은 모든 활동을 다룰 수 있어야 한다.</li>
+<li>대용량의 데이터를 효과적으로 전송할 수 있어야 한다.</li>
+<li>데이터의 무결성과 정확성을 검증할 수 있어야 한다.</li>
+</ul>
+</li>
+<li>Retry consumption : 일부 메세지를 성공적으로 소비할 수 없는 경우 작업을 다시 시도해야 한다. 수신 메세지를 차단하지 않으려면 일정 시간이 지난 후 어떻게 작업을 재시도할 수 있을까? 한 가지 아이디어는 실패한 메세지 전용 재시도 토픽으로 보내서 나중에 소비할 수 있도록 하는 것이다.</li>
+<li>Historical data archive : 시간 기반 또는 용량 기반 로그 보존 메커니즘이 있다고 가정해 보자. 소비자가 이미 잘린 이부 과거 메세지를 다시 소비해야 하는 경우 어떻게 해야할까? 한 가지 가능한 해결책은 HDFS 또는 오브젝트 스토리지와 같은 대용량의 스토리지 시스템을 사용하여 기록 데이터를 저장하는 것이다.</li>
+</ul>
+<h2 id="Chapter-summary"><a href="#Chapter-summary" class="headerlink" title="Chapter summary"></a>Chapter summary</h2><p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230706222449398.png" alt=""></p>
+<!-- flag of hidden posts --></div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined">Song Hayoung</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="https://songhayoung.github.io/2023/07/02/System%20Design/ByteByteGo/book/distributed-message-queue/">https://songhayoung.github.io/2023/07/02/System%20Design/ByteByteGo/book/distributed-message-queue/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/System-Design/">System Design</a></div><nav id="pagination"></nav><div id="gitalk-container"></div><script>var gitalk = new Gitalk({
+  clientID: '3604b61642355579f55e',
+  clientSecret: 'f552120f18ac5aee3f6297e05e97d94c0a25cd4b',
+  repo: 'SongHayoung.github.io',
+  owner: 'SongHayoung',
+  admin: 'SongHayoung',
+  id: md5(decodeURI(location.pathname)),
+  language: 'en'
+})
+gitalk.render('gitalk-container')</script></div></div><footer class="footer-bg" style="background-image: url(https://xxxx.jpg)"><div class="layout" id="footer"><div class="copyright">&copy;2020 - 2023 By Song Hayoung</div><div class="framework-info"><span>Driven - </span><a target="_blank" rel="noopener" href="http://hexo.io"><span>Hexo</span></a><span class="footer-separator">|</span><span>Theme - </span><a target="_blank" rel="noopener" href="https://github.com/Molunerfinn/hexo-theme-melody"><span>Melody</span></a></div><div class="footer_custom_text">Learning how to walk slowly to not miss important things</div><div class="busuanzi"><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><span id="busuanzi_container_page_pv"><i class="fa fa-file"></i><span id="busuanzi_value_page_pv"></span><span></span></span></div></div></footer><i class="fa fa-arrow-up" id="go-up" aria-hidden="true"></i><script src="https://cdn.jsdelivr.net/npm/animejs@latest/anime.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@latest/velocity.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-ui-pack@latest/velocity.ui.min.js"></script><script src="/js/utils.js?version=1.7.0"></script><script src="/js/fancybox.js?version=1.7.0"></script><script src="/js/sidebar.js?version=1.7.0"></script><script src="/js/copy.js?version=1.7.0"></script><script src="/js/fireworks.js?version=1.7.0"></script><script src="/js/transition.js?version=1.7.0"></script><script src="/js/scroll.js?version=1.7.0"></script><script src="/js/head.js?version=1.7.0"></script><script src="/js/search/algolia.js"></script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+    processEscapes: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  },
+  CommonHTML: {
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "HTML-CSS": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "SVG": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  }
+});
+</script><script type="text/x-mathjax-config">MathJax.Hub.Queue(function() {
+  var all = MathJax.Hub.getAllJax(), i;
+  for (i=0; i < all.length; i += 1) {
+    all[i].SourceElement().parentNode.className += ' has-jax';
+  }
+});
+</script><script src="https://cdn.jsdelivr.net/npm/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><script>if(/Android|webOS|iPhone|iPod|iPad|BlackBerry/i.test(navigator.userAgent)) {
+  $('#nav').addClass('is-mobile')
+  $('footer').addClass('is-mobile')
+  $('#top-container').addClass('is-mobile')
+}</script><div class="search-dialog" id="algolia-search"><div class="search-dialog__title" id="algolia-search-title">Algolia</div><div id="algolia-input-panel"><div id="algolia-search-input"></div></div><hr><div id="algolia-search-results"><div id="algolia-hits"></div><div id="algolia-pagination"></div><div id="algolia-stats"></div></div><span class="search-close-button"><i class="fa fa-times"></i></span></div><div class="search-mask"></div></body></html>
