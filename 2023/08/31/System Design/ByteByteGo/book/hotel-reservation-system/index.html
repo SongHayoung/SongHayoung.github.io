@@ -1,0 +1,501 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="description" content="[System Design] Hotel Reservation System"><meta name="keywords" content="System Design"><meta name="author" content="Song Hayoung"><meta name="copyright" content="Song Hayoung"><title>[System Design] Hotel Reservation System | SUMFIのBlog</title><meta name="robots" content="noindex"><link rel="shortcut icon" href="/songcon.ico"><link rel="stylesheet" href="/css/index.css?version=1.7.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@latest/css/font-awesome.min.css?version=1.7.0"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css?version=1.7.0"><meta name="format-detection" content="telephone=no"><meta http-equiv="x-dns-prefetch-control" content="on"><link rel="dns-prefetch" href="https://cdn.jsdelivr.net"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.css"><script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.js" defer></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@latest/dist/gitalk.min.js"></script><script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.10.0/js/md5.min.js"></script><link rel="dns-prefetch" href="https://www.google-analytics.com"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-169368422-1', 'auto');
+ga('send', 'pageview');</script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: {"appId":"7LZ6OJ4D6C","apiKey":"9a84e13f74ea78c3fd54512c10139c56","indexName":"git blog","hits":{"per_page":10},"languages":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}.","hits_stats":"${hits} results found in ${time} ms"}},
+  localSearch: undefined,
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  }
+} </script><meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/rss2.xml" title="SUMFIのBlog" type="application/rss+xml">
+</head><body><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar" data-display="true"><div class="toggle-sidebar-info text-center"><span data-toggle="Toggle article">Toggle site</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">Catalog</div><div class="sidebar-toc__progress"><span class="progress-notice">You've read</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Hotel-Reservation-System"><span class="toc-number">1.</span> <span class="toc-text">Hotel Reservation System</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Step-1-Understand-the-Problem-and-Establish-Design-Scope"><span class="toc-number">2.</span> <span class="toc-text">Step 1 - Understand the Problem and Establish Design Scope</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Non-functional-requirements"><span class="toc-number">2.1.</span> <span class="toc-text">Non-functional requirements</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Back-of-the-envelope-estimation"><span class="toc-number">2.2.</span> <span class="toc-text">Back-of-the-envelope estimation</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Step-2-Propose-High-Level-Design-and-Get-Buy-In"><span class="toc-number">3.</span> <span class="toc-text">Step 2 - Propose High-Level Design and Get Buy-In</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#API-design"><span class="toc-number">3.1.</span> <span class="toc-text">API design</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Hotel-related-APIs"><span class="toc-number">3.1.1.</span> <span class="toc-text">Hotel-related APIs</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Room-related-APIs"><span class="toc-number">3.1.2.</span> <span class="toc-text">Room-related APIs</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Reservation-related-APIs"><span class="toc-number">3.1.3.</span> <span class="toc-text">Reservation related APIs</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Data-model"><span class="toc-number">3.2.</span> <span class="toc-text">Data model</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#High-level-design"><span class="toc-number">3.3.</span> <span class="toc-text">High-level design</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Step-3-Design-Deep-Dive"><span class="toc-number">4.</span> <span class="toc-text">Step 3 - Design Deep Dive</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Improved-data-model"><span class="toc-number">4.1.</span> <span class="toc-text">Improved data model</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Concurrency-issues"><span class="toc-number">4.2.</span> <span class="toc-text">Concurrency issues</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Option-1-Pessimistic-locking"><span class="toc-number">4.2.1.</span> <span class="toc-text">Option 1: Pessimistic locking</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Option-2-Optimistic-locking"><span class="toc-number">4.2.2.</span> <span class="toc-text">Option 2: Optimistic locking</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Option-3-Database-constraints"><span class="toc-number">4.2.3.</span> <span class="toc-text">Option 3: Database constraints</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Scalability"><span class="toc-number">4.3.</span> <span class="toc-text">Scalability</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Database-sharding"><span class="toc-number">4.3.1.</span> <span class="toc-text">Database sharding</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Caching"><span class="toc-number">4.3.2.</span> <span class="toc-text">Caching</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Data-consistency-among-services"><span class="toc-number">4.4.</span> <span class="toc-text">Data consistency among services</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Step-4-Wrap-Up"><span class="toc-number">5.</span> <span class="toc-text">Step 4 - Wrap Up</span></a></li></ol></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="https://avatars3.githubusercontent.com/u/37806785?s=460&amp;u=8c68d685faf7c5280cfbd736a6b1730b55fb4203&amp;v=4"></div><div class="author-info__name text-center">Song Hayoung</div><div class="author-info__description text-center"></div><div class="follow-button"><a target="_blank" rel="noopener" href="https://www.instagram.com/hayoung0_0/">Follow Me</a></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="/archives"><span class="pull-left">Articles</span><span class="pull-right">8826</span></a><a class="author-info-articles__tags article-meta" href="/tags"><span class="pull-left">Tags</span><span class="pull-right">193</span></a><a class="author-info-articles__categories article-meta" href="/categories"><span class="pull-left">Categories</span><span class="pull-right">60</span></a></div><hr><div class="author-info-links"><div class="author-info-links__title text-center">VISITED</div><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Seoul Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Jeju Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">British Columbia Canada</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Boracay Philippines</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">三重　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">大阪　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">名古屋　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">静岡　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">札幌　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">京都　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Bangkok Thailand</a></div></div></div><div id="content-outer"><div id="top-container" style="background-image: url(https://xxxx.jpg)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="/">SUMFIのBlog</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus">   <a class="site-page" href="/">Home</a><a class="site-page" href="/archives">Archives</a><a class="site-page" href="/tags">Tags</a><a class="site-page" href="/categories">Categories</a><a class="site-page" href="/about">About</a></span><span class="pull-right"><a class="site-page social-icon search"><i class="fa fa-search"></i><span> Search</span></a></span></div><div id="post-info"><div id="post-title">[System Design] Hotel Reservation System</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2023-08-31</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/">System Design</a><i class="fa fa-angle-right" aria-hidden="true"></i><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/System-Design-Interview/">System Design Interview</a><div class="post-meta-wordcount"><span>Word count: </span><span class="word-count">4.1k</span><span class="post-meta__separator">|</span><span>Reading time: 25 min</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div class="article-container" id="post-content"><h2 id="Hotel-Reservation-System"><a href="#Hotel-Reservation-System" class="headerlink" title="Hotel Reservation System"></a>Hotel Reservation System</h2><span id="more"></span>
+<h2 id="Step-1-Understand-the-Problem-and-Establish-Design-Scope"><a href="#Step-1-Understand-the-Problem-and-Establish-Design-Scope" class="headerlink" title="Step 1 - Understand the Problem and Establish Design Scope"></a>Step 1 - Understand the Problem and Establish Design Scope</h2><ul>
+<li>시스템 규모 : 5000개의 호텔과 총 100만개의 객실을 보유한 호텔 체인을 위한 웹사이트 구축</li>
+<li>고객이 예약할때 결제 됨</li>
+<li>호텔 웹사이트나 앱을 통해서만 호텔 객실 예약 가능</li>
+<li>예약 취소 가능</li>
+<li>10%의 오버 부킹 허용</li>
+<li>호텔 관련 페이지 표시</li>
+<li>호텔 객실 관련 상세 페이지 표시</li>
+<li>객실 예약</li>
+<li>관리자 패널을 통한 객실 정보 추가 / 수정 / 제거 기능</li>
+<li>호텔 가격은 예약율과 임박 시기에 따라 동적으로 변경됨</li>
+</ul>
+<h3 id="Non-functional-requirements"><a href="#Non-functional-requirements" class="headerlink" title="Non-functional requirements"></a>Non-functional requirements</h3><ul>
+<li>높은 동시성 지원</li>
+<li>적당한 지연 시간 필요</li>
+</ul>
+<h3 id="Back-of-the-envelope-estimation"><a href="#Back-of-the-envelope-estimation" class="headerlink" title="Back-of-the-envelope estimation"></a>Back-of-the-envelope estimation</h3><ul>
+<li>호텔 5000개, 총 객실 수 100만개</li>
+<li>객실의 70%가 예약되어 있고 평균 숙박 기간이 3일이라고 가정</li>
+<li>예상 일일 예약 수 : (100만 * 0.7) / 3 = 233,333 = ~240,000</li>
+<li>초당 예약 건수 = 240,000 / 10^5 (seconds in a day) = ~3</li>
+</ul>
+<p>이제는 시스템 내 모든 페이지의 QPS를 대략적으로 계산해본다. 일반적인 고객 흐름에는 세 단계가 있다.</p>
+<ol>
+<li>호탤 / 객실 세부 정보 페이지 보기. 사용자가 이 페이지를 탐색한다.(query)</li>
+<li>예약 페이지 보기. 사용자는 예약하기 전에 날짜, 투숙객 수, 결제 정보 등의 예약 세부 정보를 확인한다.(쿼리)</li>
+<li>객실 예약. 사용자가 예약 버튼을 클릭하여 객실을 예약하면 객실이 예약된다.(transaction)</li>
+</ol>
+<p>약 10%의 사용자가 다음 단계에 도달하고 90%의 사용자가 최종 단계에 도달하기 전에 흐름을 중단한다고 가정하자. 또한 프리페칭 기능(사용자가 다음 단계에 도달하기 전에 콘텐츠를 미리 가져오는 기능)이 구현되지 않았다고 가정하자. 아래는 여러 단계에 대한 QPS의 대략적인 추정치를 보여준다. 최종 예약 TPS가 3이라는 것을 알고 있으므로 퍼널을 따라 거꾸로 작업할 수 있다. 주문 확인 페이지의 QPS는 30이고 상세 페이지의 QPS는 300이다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230831224727422.png" alt=""></p>
+<h2 id="Step-2-Propose-High-Level-Design-and-Get-Buy-In"><a href="#Step-2-Propose-High-Level-Design-and-Get-Buy-In" class="headerlink" title="Step 2 - Propose High-Level Design and Get Buy-In"></a>Step 2 - Propose High-Level Design and Get Buy-In</h2><h3 id="API-design"><a href="#API-design" class="headerlink" title="API design"></a>API design</h3><p>이 포스트에서는 호텔 예약 시스템의 디자인에 중점을 두고 있다. 완벽한 호텔 웹사이트의 디자인을 위해서는 고객이 다양한 기준에 따라 객실을 검색할 수 있는 직관적인 기능을 제공해야 한다. 이런 검색 기능을 위한 API는 중요하지만 기술적으로 까다롭지는 않다. 이 포스트에서는 다루지 않는다.</p>
+<h4 id="Hotel-related-APIs"><a href="#Hotel-related-APIs" class="headerlink" title="Hotel-related APIs"></a>Hotel-related APIs</h4><div class="table-container">
+<table>
+<thead>
+<tr>
+<th><strong>API</strong></th>
+<th><strong>Detail</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GET /v1/hotels/ID</td>
+<td>Get detailed information about a hotel.</td>
+</tr>
+<tr>
+<td>POST /v1/hotels</td>
+<td>Add a new hotel. This API is only available to hotel staff.</td>
+</tr>
+<tr>
+<td>PUT /v1/hotels/ID</td>
+<td>Update hotel information. This API is only available to hotel staff.</td>
+</tr>
+<tr>
+<td>DELETE /v1/hotels/ID</td>
+<td>Delete a hotel. This API is only available to hotel staff.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h4 id="Room-related-APIs"><a href="#Room-related-APIs" class="headerlink" title="Room-related APIs"></a>Room-related APIs</h4><div class="table-container">
+<table>
+<thead>
+<tr>
+<th><strong>API</strong></th>
+<th><strong>Detail</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GET /v1/hotels/ID/rooms/ID</td>
+<td>Get detailed information about a room.</td>
+</tr>
+<tr>
+<td>POST /v1/hotels/ID/rooms</td>
+<td>Add a room. This API is only available to hotel staff.</td>
+</tr>
+<tr>
+<td>PUT /v1/hotels/ID/rooms/ID</td>
+<td>Update room information. This API is only available to hotel staff.</td>
+</tr>
+<tr>
+<td>DELETE /v1/hotels/ID/rooms/ID</td>
+<td>Delete a room. This API is only available to hotel staff.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h4 id="Reservation-related-APIs"><a href="#Reservation-related-APIs" class="headerlink" title="Reservation related APIs"></a>Reservation related APIs</h4><div class="table-container">
+<table>
+<thead>
+<tr>
+<th><strong>API</strong></th>
+<th><strong>Detail</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GET /v1/reservations</td>
+<td>Get the reservation history of the logged-in user.</td>
+</tr>
+<tr>
+<td>GET /v1/reservations/ID</td>
+<td>Get detailed information about a reservation.</td>
+</tr>
+<tr>
+<td>POST /v1/reservations</td>
+<td>Make a new reservation.</td>
+</tr>
+<tr>
+<td>DELETE /v1/reservations/ID</td>
+<td>Cancel a reservation.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>신규 예약은 매우 중요한 기능이다. 새 예약을 만드는 요청 매개변수(POST /v1/reservations)는 다음과 같다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  &quot;startDate&quot;:&quot;2021-04-28&quot;,</span><br><span class="line">  &quot;endDate&quot;:&quot;2021-04-30&quot;,</span><br><span class="line">  &quot;hotelID&quot;:&quot;245&quot;,</span><br><span class="line">  &quot;roomID&quot;:&quot;U12354673389&quot;,</span><br><span class="line">  &quot;reservationID&quot;:&quot;13422445&quot;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>예약 ID는 이중 예약을 방지하기 위해 무효화 키로 사용된다는 점에 유의해야 한다. </p>
+<h3 id="Data-model"><a href="#Data-model" class="headerlink" title="Data model"></a>Data model</h3><p>어떤 데이터베이스를 사용할지 결정하기 전에 데이터 액세스 패턴을 살펴보자. 호텔 예약 시스템의 경우 다음과 같은 쿼리를 지원해야 한다.</p>
+<ul>
+<li>Query 1 : 호텔에 대한 상세 정보 조회</li>
+<li>Query 2 : 날짜 범위에서 사용 가능한 객실 유형 검색</li>
+<li>Query 3 : 예약을 기록</li>
+<li>Query 4 : 예약 또는 과거 예약 내역 조회</li>
+</ul>
+<p>대략적 추정을 통해 시스템 규모가 크지 않다는 것을 알았지만 대규모 이벤트 기간 동안 트래픽이 급증할것에 대비해야 한다. 이런 요구 사항을 염두에 두고 관계형 데이터베이스를 선택한 이유는 아래와 같다.</p>
+<p>관계형 데이터베이스는 읽기 빈도가 높고 쓰기 빈도가 낮은 워크플로우에서 잘 작동한다. 호텔 웹사이트 / 앱을 방문하는 사용자 수가 실제 예약을 하는 사용자 수 보다 몇 배나 많기 때문이다. NoSQL 데이터베이스는 일반적으로 쓰기에 최적화되어 있으며 관계형 데이터베이스는 읽기가 많은 워크플로에 충분히 잘 작동한다.</p>
+<p>관계형 데이터베이스는 ACID 보장을 제공한다. 이런 속성이 없으면 마이너스 잔액, 이중 청구, 이중 예약 등과 같은 문제를 방지하기가 쉽지 않다. ACID 속성은 애플리케이션 코드를 훨씬 더 단순하게 만들고 전체 시스템을 더 쉽게 추론할 수 있게 해준다. 관계형 데이터베이스는 일반적으로 이러한 보장 기능을 제공한다.</p>
+<p>관계형 데이터베이스는 데이터를 쉽게 모델링할 수 있다. 비즈니스 데이터의 구조가 매우 명확하고 서로 다른 엔티티간의 관계가 안정적이다. 이런 종류의 데이터 모델은 관계형 데이터베이스로 쉽게 모델링할 수 있다.</p>
+<p>이제 관계형 데이터베이스를 데이터 저장소로 선택했으므로 스키마 설계를 살펴본다. 아래는 간단한 스키마 설계를 보여준다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230831225549033.png" alt=""></p>
+<p>대부분의 속성을 설명이 필요 없으므로 예약 테이블의 상태 필드에 대해서만 설명한다. 상태 필드는 보류중, 결제됨, 환불됨, 취소됨, 거부됨 중 한 가지 상태일 수 있다. </p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230831225641642.png" alt=""></p>
+<p>이 스키마 설계에는 큰 문제가 있다. 이 데이터 모델은 사용자가 예약할 때 room_id가 제공되므로 Airbnb와 같은 회사에서 적합한 구조다. 하지만 호텔의 경우에는 그렇지 않다. 사용자는 실제로 특정 객실이 아닌 특정 호텔의 객실 유형을 예약한다. 예를 들어, 객실 유형은 스탠다드 룸, 킹 사이즈 룸, 퀸 사이즈 룸 등이 될 수 있다. 객실 번호는 예약 시점이 아니라 게스트가 체크인할 때 부여된다. 이 새로운 요구 사항을 반영하기 위해 데이터 모델을 업데이트 해야한다. </p>
+<h3 id="High-level-design"><a href="#High-level-design" class="headerlink" title="High-level design"></a>High-level design</h3><p>이 호텔 예약 시스템에는 마이크로 아키텍처를 사용한다. 고수준 디자인 다이어그램은 아래에 나타나있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230831232118673.png" alt=""></p>
+<p>시스템의 각 구성 요소를 위에서부터 아래까지 간략하게 살펴보자.</p>
+<ul>
+<li>User : 휴대폰이나 컴퓨터로 호텔 객실을 예약하는 사용자</li>
+<li>Admin : 권한이 있는 호텔 직원이 고객 환불, 예약 취소, 객실 정보 업데이트 등의 관리 작업을 수행</li>
+<li>CDN : 로드 시간을 개선하기 위해 CDN은 자바스크립트 번들, 이미지, 동영상, HTML 등 모든 정적 자산을 캐싱하는데 사용됨</li>
+<li>Public API Gateway : 속도 제한, 인증 등을 지원하는 완전 관리형 서비스. API 게이트웨이는 엔드포인트를 기반으로 특정 서비스로 요청을 전달하도록 구성된다. 예를 들어 호텔 홈페이지 로딩 요청은 호텔 서비스로, 호텔 객실 예약 요청은 예약 서비스로 라우팅 된다.</li>
+<li>Internal APIs : 이러한 API는 권한이 부여된 호텔 직원만 사용할 수 있다. 내부 소프트웨어 또는 웹사이트를 통해 엑세스할 수 있다. 일반적으로 VPN을 통해 추가로 보호된다.</li>
+<li>Hotel Service : 호텔 및 객실에 대한 자세한 정보를 제공한다. 호텔 및 객실 데이터는 일반적으로 정적이므로 쉽게 캐시할 수 있다.</li>
+<li>Rate Service : 향후 여러 날짜에 대한 객실 요금을 제공한다. 호텔 업계에서 흥미로운 사실은 객실 요금이 특정 날짜에 호텔이 얼마나 꽉 찰 것으로 예상되는 지에 따라 달라진다는 것이다.</li>
+<li>Reservation Service : 예약 요청을 받고 호텔 객실을 예약한다. 이 서비스는 또한 객실이 예약되거나 예약이 취소될 때 객실 재고를 추적한다.</li>
+<li>Payment Service : 고객으로부터 결제를 실행하고 결제 거래가 성공하면 예약 상태를 “결제됨”으로, 거래가 실패하면 “거부됨”으로 업데이트 한다.</li>
+<li>Hotel Management Service : 승인된 호텔 직원만 사용할 수 있다. 호텔 직원은 예정된 예약 기록 보기, 고객 객실 예약, 예약 취소 등의 기능을 사용할 수 있다.</li>
+</ul>
+<p>명확성을 위해 위 다이어그램에서는 마이크로 서비스 간의 상호 작용에 대한 많은 화살표가 생략되어 있다. 예를 들어 아래 표시된 것 처럼 예약 서비스와 요금 서비스 사이에는 화살표가 있어야 한다. 예약은 서비스는 객실 요금에 대해 요금 서비스에 쿼리한다. 이는 예약에 대한 총 객실 요금을 계산하는데 사용된다. 또 다른 예로 호텔 관리 서비스와 대부분의 다른 서비스를 연결하는 화살표가 많이 있어야 한다. 관리자가 호텔 관리 서비스를 통해 변경을 수행하면 데이터를 소유한 실제 서비스로 요청이 전달되더 변경 사항을 처리한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230831232735851.png" alt=""></p>
+<p>프로덕션 시스템의 경우, 서비스간 통신에는 종종 gRPC와 같은 최신 고성능 원격 프로시저 호출(RPC) 프레임워크가 사용된다. 이런 프레임워크를 사용하면 많은 이점이 있다.</p>
+<h2 id="Step-3-Design-Deep-Dive"><a href="#Step-3-Design-Deep-Dive" class="headerlink" title="Step 3 - Design Deep Dive"></a>Step 3 - Design Deep Dive</h2><h3 id="Improved-data-model"><a href="#Improved-data-model" class="headerlink" title="Improved data model"></a>Improved data model</h3><p>고수준 설계에서 언급했듯이 호텔 객실을 예약할 때 실제로는 특정 객실이 아닌 객실 유형을 예약한다. 이를 수용하기 위해 API와 스키마에서 변경해야 할 사항은 무엇일까?</p>
+<p>예약 API의 경우 요청 매개변수에서 roomID가 roomTypeID로 대체된다. 예약을 위한 API는 다음과 같다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">POST /v1/reservations</span><br><span class="line">&#123;</span><br><span class="line">  &quot;startDate&quot;:&quot;2021-04-28&quot;,</span><br><span class="line">  &quot;endDate&quot;:&quot;2021-04-30&quot;,</span><br><span class="line">  &quot;hotelID&quot;:&quot;245&quot;,</span><br><span class="line">  &quot;roomTypeID&quot;:&quot;12354673389&quot;,</span><br><span class="line">  &quot;roomCount&quot;:&quot;3&quot;,</span><br><span class="line">  &quot;reservationID&quot;:&quot;13422445&quot;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>업데이트된 스키마는 아래와 같다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230831232959106.png" alt=""></p>
+<p>가장 중요한 몇 가지 테이블에 대해 확인해보자.</p>
+<ul>
+<li>room : 객실에 대한 정보를 포함한다</li>
+<li>room_type_rate : 특정 객실 유형에 대한 향후 날짜의 가격 데이터를 저장한다</li>
+<li>reservation : 게스트 예약 데이터를 기록한다</li>
+<li>room_type_inventory : 호텔 객실에 대한 인벤토리 데이터를 저장한다. 이 테이블은 예약 시스템에서 매우 중요하므로 각 열을 자세히 살펴보자.<ul>
+<li>hotel_id : 호텔 ID</li>
+<li>room_type_id : 객실 유형 ID</li>
+<li>date : 날짜</li>
+<li>total_inventory : 총 객실 수에서 일시적으로 인벤토리에서 제외된 객실 수를 뺀 값. 일부 객실은 유지보수를 위해 마켓에서 제외될 수 있다</li>
+<li>total_reserved : hotel_id, room_type_id, date를 기반으로 예약된 방들의 수</li>
+</ul>
+</li>
+</ul>
+<p>room_type_inventory 테이블을 디자인하는 다른 방법도 있지만 날짜당 하나의 행이 있으면 날짜 범위 내에서 예약을 관리하고 쿼리하기가 쉽다. 아래 표시된 것처럼(hotel_id, room_type_id, date)가 복합 기본 키이다. 테이블의 행은 2년 이내의 모든 미래 날짜에 대한 인벤토리 데이터를 쿼리하여 미리 채워져 있다. 날짜가 더 앞당겨지면 재고 데이터를 미리 채우는 예약된 daily job이 있다.</p>
+<p>스키마 설계를 마무리 했으니 이제 저장 용량에 대한 몇 가지 추정을 해보자. 5000개의 호텔에서 각 호텔에 20개의 객실 유형이 있다고 가정하자. 그러면 <code>호텔 5000개 * 객실 유형 20개 * 2년 * 365일 = 7300만 row</code> 가 된다. 7300만 건은 많은 데이터가 아니므로 데이터베이스 하나면 충분히 저장할 수 있다. 그러나 단일 서버는 단일 장애 지점을 의미한다. 고가용성을 달성하기 위해 여러 지역 또는 가용성 영역에 걸쳐 데이터베이스 복제를 설정할 수 있다.</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th><strong>hotel_id</strong></th>
+<th><strong>room_type_id</strong></th>
+<th><strong>date</strong></th>
+<th><strong>total_inventory</strong></th>
+<th><strong>total_reserved</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>211</td>
+<td>1001</td>
+<td>2021-06-01</td>
+<td>100</td>
+<td>80</td>
+</tr>
+<tr>
+<td>211</td>
+<td>1001</td>
+<td>2021-06-02</td>
+<td>100</td>
+<td>82</td>
+</tr>
+<tr>
+<td>211</td>
+<td>1001</td>
+<td>2021-06-03</td>
+<td>100</td>
+<td>86</td>
+</tr>
+<tr>
+<td>211</td>
+<td>1001</td>
+<td>…</td>
+<td>…</td>
+<td></td>
+</tr>
+<tr>
+<td>211</td>
+<td>1001</td>
+<td>2023-05-31</td>
+<td>100</td>
+<td>0</td>
+</tr>
+<tr>
+<td>211</td>
+<td>1002</td>
+<td>2021-06-01</td>
+<td>200</td>
+<td>16</td>
+</tr>
+<tr>
+<td>2210</td>
+<td>101</td>
+<td>2021-06-01</td>
+<td>30</td>
+<td>23</td>
+</tr>
+<tr>
+<td>2210</td>
+<td>101</td>
+<td>2021-06-02</td>
+<td>30</td>
+<td>25</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>room_type_inventory 테이블은 고객이 특정 유형의 객실을 예약할 수 있는지 여부를 확인하는데 사용된다. 예약에 대한 입력과 출력은 아래와 같다.</p>
+<ul>
+<li>Input: startDate (2021-07-01), endDate (2021-07-03), roomTypeId, hotelId, numberOfRoomsToReserve</li>
+<li>Output: 지정된 객실 유형에 인벤토리가 있고 사용자가 예약할 수 있으면 true 반환, 아니면 false 반환</li>
+</ul>
+<p>SQL 관점에서 보면 다음 두 단계로 구성되어 있다.</p>
+<ul>
+<li>날짜 범위의 행 선택</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">SELECT date, total_inventory, total_reserved</span><br><span class="line">FROM room_type_inventory</span><br><span class="line">WHERE room_type_id = $&#123;roomTypeId&#125; AND hotel_id = $&#123;hotelId&#125;</span><br><span class="line">AND date between $&#123;startDate&#125; and $&#123;endDate&#125;</span><br></pre></td></tr></table></figure>
+<p>쿼리는 아래 결과를 반환한다.</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th><strong>date</strong></th>
+<th><strong>total_inventory</strong></th>
+<th><strong>total_reserved</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2021-07-01</td>
+<td>100</td>
+<td>97</td>
+</tr>
+<tr>
+<td>2021-07-02</td>
+<td>100</td>
+<td>96</td>
+</tr>
+<tr>
+<td>2021-07-03</td>
+<td>100</td>
+<td>95</td>
+</tr>
+</tbody>
+</table>
+</div>
+<ul>
+<li>각 항목에 대해 애플리케이션은 아래 조건을 확인</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">if (total_reserved + $&#123;numberOfRoomsToReserve&#125;) &lt;= total_inventory</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>조건이 모든 항목에 대해 참으로 반환되면 날짜 범위 내 각 날짜에 충분한 객실이 있다는 의미다. 요구사항 중 하나는 10%의 오버부킹을 지원하는 것이므로 새로운 스키마를 사용하면 쉽게 구현할 수 있다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">if (total_reserved + $&#123;numberOfRoomsToReserve&#125;) &lt;= 110% * total_inventory</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>이 시점에서 “에약 데이터가 단일 데이터베이스에 담기에는 너무 크다면 어떻게 하겠는가?”와 같은 후속 질문이 들어올 수 있다. 여기에는 몇 가지 전략이 있다.</p>
+<ul>
+<li>현재와 미래의 예약 데이터만 저장한다. 예약 기록은 자주 엑세스하지 않으므로 아카이브에 보관하거나 콜드 스토리지로 옮긴다.</li>
+<li>데이터베이스 샤딩을 고려한다. 가장 빈번한 쿼리에는 예약을 하거나 이름으로 예약을 조회하는 것이 포함된다. 두 쿼리 모두 호텔을 먼저 선택해야 하므로 hotel_id가 좋은 샤딩 키가 된다. 데이터는 <code>hash(hotel_id) % number_of_servers</code>로 사딩할 수 있다.</li>
+</ul>
+<h3 id="Concurrency-issues"><a href="#Concurrency-issues" class="headerlink" title="Concurrency issues"></a>Concurrency issues</h3><p>살펴봐야 할 또 다른 중요한 문제는 이중 예약이다.</p>
+<ul>
+<li>동일한 사용자가 “예약” 버튼을 여러번 클릭하는 경우</li>
+<li>여러 사용자가 동시에 같은 객실을 예약하려고 시도하는 경우</li>
+</ul>
+<p>첫번째 시나리오 에서는 아래와 같이 두 개의 예약이 이루어진다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230831234311128.png" alt=""></p>
+<p>이 문제를 해결하기 위한 두 가지 일반적인 접근 방식이 있다.</p>
+<ul>
+<li><p>Client-side implementation. 클라이언트는 요청이 전송되면 “제출” 버튼을 회색으로 표시하거나 숨기거나 비활성화할 수 있다. 이렇게 하면 대부분의 경우 더블 클릭 문제를 방지할 수 있다. 그러나 이 접근 방식은 그다지 신뢰할 수 없다. 예를 들어 사용자가 스크립트를 비활성화하여 클라이언트 검사를 우외할 수 있다.</p>
+</li>
+<li><p>Idempotent APIs. 예약 API 요청에 멱등성 키를 추가한다. API 호출이 몇 번을 호출해도 동일한 결과를 생성하면 멱등한 상태이다. 아래는 이중 예약 문제를 방지하기 위해 멱등키(reservation_id)를 사용하는 방법을 보여준다.</p>
+</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230831234545383.png" alt=""></p>
+<ol>
+<li><p>예약 주문 생성하기. 고객이 예약에 대한 세부 정보를 입력하고 “게속” 버튼을 클릭하면 예약 서비스에서 예약 주문이 생성된다.</p>
+</li>
+<li><p>시스템이 고객이 검토할 수 있도록 예약 주문을 생성한다. 고유한 reservation_id는 전세계적으로 고유한 ID 생성기에 의해 생성되며 API 응답의 일부로 반환된다. 이 단계의 UI는 다음과 같다.<br> <img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230831234729026.png" alt=""></p>
+</li>
+</ol>
+<p>3a. reservation_id는 요청의 일부로 포함된다. 예약 테이블의 기본 키이다. 멱등성 키가 반드시 reservation_id일 필요는 없지만, 이미 존재하고 우리 디자인에 잘 작동하기 때문에 reservation_id로 선택했다.<br>3b. 사용자가 “내 예약 완료” 버튼을 두 번 클릭하면 submit2가 제출된다. reservation_id는 예약 테이블의 기본 키이므로 이 키의 고유 제약 조건을 사용하여 이중 예약이 발생하지 않도록 할 수 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230831235034695.png" alt=""></p>
+<p>객실이 하나밖에 남지 않았는데 여러 사용자가 동시에 같은 유형의 객실을 예약하면 어떻게 될지 두번째 시나리오를 통해 알아보자.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230831235122167.png" alt=""></p>
+<ol>
+<li>데이터베이스 격리 수준이 직렬화할 수 없다고 가정해보자. 사용자1과 사용자2가 동시에 같은 유형의 객실을 예약하려고 하지만 남은 객실은 1개뿐이다. 사용자 1의 실행을 ‘트랜잭션 1’, 사용자 2의 실행을 ‘트랜잭션 2’라고 부르자. 현재 호텔에는 100개의 객실이 있고 그 중 99개의 객실이 예약되어 있다.</li>
+<li>트랜잭션 2는 <code>(total_reserved + rooms_to_book) &lt;= total_inventory</code>를 확인하여 남은 객실이 충분한지 확인한다. 객실이 1개 남았으므로 참을 반환한다.</li>
+<li>트랜잭션 1은 <code>(total_reserved + rooms_to_book) &lt;= total_inventory</code>를 확인하여 남은 객실이 충분한지 확인한다. 객실이 1개 남았으므로 참을 반환한다.</li>
+<li>트랜잭션 1이 객실을 예약하고 인벤토리를 업데이트하면 reserved_room이 100이 된다.</li>
+<li>그런 다음 트랜잭션 2가 방을 예약한다. ACID의 격리 속성은 데이터베이스 트랜잭션이 다른 트랜잭션과 독립적으로 작업을 완료해야 함을 의미한다. 따라서 트랜잭션 1이 완료(커밋) 될 때까지 트랜잭션 2에서 수행한 데이터 변경 사항은 트랜잭션 2에 표시되지 않는다. 따라서 트랜잭션 2는 여전이 total_reserved를 99로 보고 인벤토리를 업데이트하여 객실을 예약한다. 그 결과 방이 1개만 남아 있어도 두 사용자 모두 방을 예약할 수 있는 시스템이 된다.</li>
+<li>트랜잭션 1이 변경 사항을 성공적으로 커밋한다.</li>
+<li>트랜잭션 2가 변경 사항을 성공적으로 커밋한다.</li>
+</ol>
+<p>이 문제를 해결하려면 일반적으로 잠금 형태를 사용할 수 있따.</p>
+<ul>
+<li>Pessimistic locking</li>
+<li>Optimistic locking</li>
+<li>Database constraints</li>
+</ul>
+<p>해결 방법을 살펴보기 전에 객실 예약에 사용되는 SQL 의사코드를 살펴보자. SQL은 두 부분으로 구성되어 있다.</p>
+<ul>
+<li>Check room inventory</li>
+<li>Reserve a room</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"># step 1: check room inventory</span><br><span class="line">SELECT date, total_inventory, total_reserved</span><br><span class="line">FROM room_type_inventory</span><br><span class="line">WHERE room_type_id = $&#123;roomTypeId&#125; AND hotel_id = $&#123;hotelId&#125;</span><br><span class="line">AND date between $&#123;startDate&#125; and $&#123;endDate&#125;</span><br><span class="line"></span><br><span class="line"># For every entry returned from step 1</span><br><span class="line">if((total_reserved + $&#123;numberOfRoomsToReserve&#125;) &gt; 110% * total_inventory) &#123;</span><br><span class="line">  Rollback</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"># step 2: reserve rooms</span><br><span class="line">UPDATE room_type_inventory</span><br><span class="line">SET total_reserved = total_reserved + $&#123;numberOfRoomsToReserve&#125;</span><br><span class="line">WHERE room_type_id = $&#123;roomTypeId&#125;</span><br><span class="line">AND date between $&#123;startDate&#125; and $&#123;endDate&#125;</span><br><span class="line"></span><br><span class="line">Commit</span><br></pre></td></tr></table></figure>
+<h4 id="Option-1-Pessimistic-locking"><a href="#Option-1-Pessimistic-locking" class="headerlink" title="Option 1: Pessimistic locking"></a>Option 1: Pessimistic locking</h4><p>비관적 동시성 제어라고도 하는 비관적 잠금은 한 사용자가 레코드를 업데이트하기 시작하자마자 레코드에 잠금을 설정하여 동시 업데이트를 방지한다. 레코드를 업데이트하려는 다른 사용자는 첫 번째 사용자가 잠금을 해제할 때까지 기다려야 한다.</p>
+<p>MySQL의 경우 “SELECT …FOR UPDATE” 문은 선택 쿼리가 반환한 행을 잠그는 방식으로 작동한다. 트랜잭션이 “트랜잭션 1”에 의해 시작되었다고 가정해 보자. 다른 트랜잭션은 다른 트랜잭션을 시작하기 전에 트랜잭션 1이 완료될 때 까지 기다려야 한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230831235912634.png" alt=""></p>
+<p>위에서 트랜잭션 1이 행을 잠그기 때문에 트랜잭션 2의 “SELECT … FOR UPDATE” 문은 트랜잭션 1이 완료될 때까지 대기한다. 트랜잭션 1이 완료되면 total_reserved가 100이 되며, 이는 사용자 2가 예약할 공간이 없음을 의미한다.</p>
+<p>Pros</p>
+<ul>
+<li>애플리케이션이 변경 중이거나 변경된 데이터를 업데이트하지 못하도록 방지한다.</li>
+<li>구현하기 쉽고 업데이트를 직렬화하여 충돌을 방지한다. 비관적 잠금은 데이터 경합이 심할 때 유용하다.</li>
+</ul>
+<p>Cons</p>
+<ul>
+<li>여러 리소스가 잠겨 있을 때 교착 상태가 발생할 수 있다. 데드락이 없는 애플리케이션 코드를 작성하는 것은 어려울 수 있다.</li>
+<li>이 접근 방식은 확장성이 떨어진다. 트랜잭션이 너무 오랫동안 잠기면 다른 트랜잭션이 리소스에 엑세스할 수 없다. 이는 특히 트랜잭션의 수명이 길거나 많은 엔티티가 관련된 경우 데이터베이스 성능에 큰 영향을 미친다.</li>
+</ul>
+<p>이런 제한 사항으로 인해 예약 시스템에 비관적 잠금을 사용하지 않는 것이 좋다.</p>
+<h4 id="Option-2-Optimistic-locking"><a href="#Option-2-Optimistic-locking" class="headerlink" title="Option 2: Optimistic locking"></a>Option 2: Optimistic locking</h4><p>낙관적 동시성 제어라고도 하는 낙관적 잠금을 사용하면 여러 명의 동시 사용자가 동일한 리소스를 업데이트 하려고 시도할 수 있다.</p>
+<p>낙관적 잠금을 구현하는 일반적인 방법에는 버전 번호와 타임스탬프의 두 가지가 있다. 서버 시계는 시간이 지남에 따라 부정확할 수 있으므로 일반적으로 버전 번호가 더 나은 옵션으로 간주된다. 버전 번호로 낙관적 잠금이 어떻게 작동하는지 설명한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230901000309667.png" alt=""></p>
+<ol>
+<li>데이터베이스 테이블에 “version” 이라는 새 컬럼이 추가된다.</li>
+<li>사용자가 데이터베이스 행을 수행하기 전에 애플리케이션은 행의 버전 번호를 읽는다.</li>
+<li>사용자가 행을 업데이트하면 애플리케이션은 버전 번호를 1씩 증가시키고 데이터베이스에 다시 쓴다.</li>
+<li>데이터베이스 유효성 검사가 수행되며, 다음 버전 번호는 현재 버전 번호보다 1을 초과해야 한다. 유효성 검사에 실패하고 사용자가 2단계부터 다시 시도하면 트랜잭션이 중단된다.</li>
+</ol>
+<p>낙관적 잠금은 데이터베이스를 잠그지 않기 때문에 일반적으로 비관적 잠금보다 빠르다. 그러나 동시성이 높으면 낙관적 잠금의 성능이 급격히 떨어진다.</p>
+<p>그 이유를 이해하려면 많은 고객이 동시에 호텔 객실을 예약하려고 하는 경우를 생각해 보자. 예약 가능한 객실 수를 읽을 수 있는 클라이언트 수에는 제한이 없으므로 모든 클라이언트가 동일한 예약 가능한 객실 수와 현재 버전 번호를 다시 읽는다. 여러 클라이언트가 예약을 하고 그 결과를 데이터베이스에 다시 쓰면 그중 한 클라이언트만 성공하고 나머지 클라이언트는 버전 확인 실패 메세지를 받게 된다. 이러한 클라이언트는 다시 시도해야 한다. 이후 재시도 라운드에서 다시 성공한 클라이언트는 한 명뿐이며 나머지는 다시 시도해야 한다. 최종 결과는 정확하지만 반복적인 재시도는 매우 불쾌한 사용자 경험을 유발한다.</p>
+<p>Pros</p>
+<ul>
+<li>애플리케이션이 오래된 데이터를 편집하지 못하도록 방지한다.</li>
+<li>데이터베이스 리소스를 잠글 필요가 없다. 데이터베이스 관점에서는 실제로 잠기지도 않으며 버전 번호로 로직을 처리하는 것은 전적으로 애플리케이션에 달려 있다.</li>
+<li>낙관적 잠금은 일반적으로 데이터 경합이 적을 때 사용된다. 충돌이 드물면 잠금을 관리할 필요 없이 트랜잭션을 완료할 수 있다.</li>
+</ul>
+<p>Cons</p>
+<ul>
+<li>데이터 경합이 심할 때 성능이 저하된다.</li>
+<li>낙관적 잠금은 일반적으로 예약에 대한 QPS가 높지 않기 때문에 호텔 예약 시스템에 적합한 옵션이다.</li>
+</ul>
+<h4 id="Option-3-Database-constraints"><a href="#Option-3-Database-constraints" class="headerlink" title="Option 3: Database constraints"></a>Option 3: Database constraints</h4><p>이 접근 방식은 낙관적 잠금과 매우 유사하다. 어떻게 작동하는지 살펴보자. 우선 room_type_inventory 테이블에 다음 제약 조건을 추가한다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">CONSTRAINT `check_room_count` CHECK((`total_inventory - total_reserved` &gt;= 0))</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>아래 표시된 것과 동일한 예를 사용하면 사용자가 객실을 예약하려고 할 때 total_reserved가 101이 되어 <code>total_inventory(100) - total_reserved(101) &gt;= 0</code> 제약 조건을 위반하게 된다. 그러면 트랜잭션이 롤백 된다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230901000946735.png" alt=""></p>
+<p>Pros</p>
+<ul>
+<li>구현하기 쉽다.</li>
+<li>데이터 경합이 최소화될 때 잘 작동한다.</li>
+</ul>
+<p>Cons</p>
+<ul>
+<li>낙관적 잠금과 마찬가지로 데이터 경합이 심할 경우 대량의 실패를 초래할 수 있다. 사용자가 사용 가능한 객실이 있음을 알 수 있지만 예약을 시도하면 ‘사용 가능한 객실이 없습니다’ 라는 응답을 받게 된다. 이러한 경험은 사용자에게 실망감을 줄 수 있다.</li>
+<li>데이터베이스 제약 조건은 애플리케이션 코드처럼 쉽게 버전을 제어할 수 없다.</li>
+<li>모든 데이터베이스가 제약 조건을 지원하는 것은 아니다. 한 데이터베이스 솔루션에서 다른 데이터베이스 솔루션으로 마이그레이션할 때 문제가 발생할 수 있다.</li>
+</ul>
+<p>이 접근 방식은 구현하기 쉽고 호텔 예약에 대한 데이터 경합이 일반적으로 높지 않으므로(낮은 QPS) 호텔 예약 시스템에 적합한 또 다른 옵션이다.</p>
+<h3 id="Scalability"><a href="#Scalability" class="headerlink" title="Scalability"></a>Scalability</h3><p>일반적으로 호텔 예약 시스템의 부하가 높지 않다. 하지만 후속 질문으로 “호텔 예약 시스템이 호텔 체인뿐만 아니라 booking.com이나 expedia.com과 같은 인기 여행 사이트에서도 사용된다면 어떨까요?”라는 후속 질문을 할 수 있다. 이 경우 QPS는 1,000배가 될 수 있다.</p>
+<p>시스템 부하가 높을 때는 무엇이 병목 현상이 될 수 있는지 파악해야 한다. 모든 서비스는 상태 비저장형 이므로 서버를 추가하여 쉽게 확장할 수 있다. 그러나 데이터베이스에는 모든 상태가 포함되어 있으므로 단순히 데이터베이스를 더 추가하는 것만으로는 확장할 수 없다. 데이터베이스를 확장하는 방법을 살펴보자.</p>
+<h4 id="Database-sharding"><a href="#Database-sharding" class="headerlink" title="Database sharding"></a>Database sharding</h4><p>데이터베이스를 확장하는 한 가지 방법은 데이터베이스 샤딩을 적용하는 것이다. 이 아이디어는 데이터를 여러 개의 데이터베이스로 분할하여 각 데이터베이스가 데이터의 일부만 포함하도록 하는 것이다.</p>
+<p>데이터베이스를 샤딩할 때는 데이터를 배포하는 방법을 고려해야 한다. 데이터 모델 섹션에서 볼 수 있듯이, 대부분의 쿼리는 hotel_id를 기준으로 데이터를 샤딩하는 것이다. 아래는 16개의 샤드에 부하가 분산되어 있는 상황을 나타낸다. QPS가 30,000이라고 가정한다. 데이터베이스 샤딩 후 각 샤드는 30,000/16 = 1875QPS를 처리하며 이는 단일 MySQL 서버의 로드 용량 내에 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230901002423736.png" alt=""></p>
+<h4 id="Caching"><a href="#Caching" class="headerlink" title="Caching"></a>Caching</h4><p>호텔 재고 데이터에는 흥미로운 특성이 있는데, 고객이 가까운 미래에 객실을 예약할 수 있기 때문에 현재와 미래의 호텔 재고 데이터만 의미가 있다. 따라서 스토리지 선택 시 오래된 데이터를 자동으로 만료하는 TTL 메커니즘을 사용하는 것이 이상적이다. 과거 데이터는 다른 데이터베이스에서 쿼리할 수 있다. Redis는 TTL과 가장 최근에 사용된 캐시 퇴거(LRU) 정책을 통해 메모리를 최적으로 사용할 수 있으므로 좋은 선택이다.</p>
+<p>로딩 속도와 데이터베이스 확장성이 문제가 되는 경우(예를 들어, 예약 닷컴이나 익스피디아 닷컴의 규모로 설계하는 경우), 아래와 같이 데이터베이스 위에 캐시 계층을 추가하고 객실 인벤토리 확인 및 예약 로직을 캐시 계층으로 옮길 수 있다. 이 설계에서는 대부분의 부적격 요청이 인벤토리 캐시에 의해 차단되므로 인벤토리 데이터베이스에 도달하는 요청의 비율은 극히 일부에 불과하다. 한 가지 언급할 만한 점은 Redis에 충분한 인벤토리가 표시되더라도 예방 조치로 데이터베이스 측에서 인벤토리를 다시 확인해야 한다는 것이다. 데이터베이스는 인벤토리 데이터에 대한 신뢰할 수 있는 소스다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230901012744833.png" alt=""></p>
+<p>먼저 이 시스템의 구성 요소를 살펴보자.</p>
+<ul>
+<li>Reservation service : 아래와 같은 인벤토리 관리 API를 지원한다<ul>
+<li>지정된 호텔 ID, 객실 유형 및 날짜 범위에 대해 사용 가능한 객실 수를 쿼리한다.</li>
+<li>total_reserved + 1을 실행하여 객실을 예약한다</li>
+<li>사용자가 예약을 취소하면 인벤토리를 업데이트 한다</li>
+</ul>
+</li>
+<li>Inventory cache : 모든 인벤토리 관리 쿼리 작업은 인벤토리 캐시(Redis)로 이동되며, 인벤토리 데이터를 캐시에 미리 채워야 한다. 캐시는 다음과 같은 구조를 가진 KV 스토어다.</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">key: hotelID_roomTypeID_&#123;date&#125;</span><br><span class="line">value: the number of available rooms for the given hotel ID, room type ID and date.</span><br></pre></td></tr></table></figure>
+<p>호텔 예약 시스템의 경우 읽기 작업(객실 재고 확인)의 양이 쓰기 작업보다 훨씬 더 많다. 대부분의 읽기 작업은 캐시가 응답한다.</p>
+<ul>
+<li>Inventory cache : 인벤토리 데이터를 원본 소스로 저장한다.</li>
+</ul>
+<p><strong>New challenges posed by the cache</strong></p>
+<p>캐시 계층을 추가하면 시스템 확장성과 처리량이 크게 증가하지만 데이터베이스와 캐시 간의 데이터 일관성을 유지하는 방법이라는 새로운 과제도 발생한다. 사용자가 객실을 예약하면 두 가지 작업이 실행된다.</p>
+<ol>
+<li>객실 인벤토리를 쿼리하여 남은 객실이 충분한지 확인한다. 쿼리는 인벤토리 캐시에서 실행된다.</li>
+<li>인벤토리 데이터 업데이트. 인벤토리 DB가 먼저 업데이트 된다. 그런 다음 변경 사항이 캐시에 비동기적으로 전파된다. 이 비동기 캐시 업데이트는 데이터가 데이터베이스에 저장된 후 인벤토리 캐시를 업데이트 하는 애플리케이션 코드에 의해 호출될 수 있다. 또한 변경 데이터 캡처(CDC)를 사용하여 전파할 수도 있다. CDC는 데이터베이스에서 데이터 변경 사항을 읽고 다른 데이터 시스템에 변경 사항을 적용하는 메커니즘이다. 일반적인 솔루션 중 하나는 Debezium 이다. 이 솔루션은 소스 커넥터를 사용하여 데이터베이스에서 변경 사항을 읽고 Redis와 같은 캐시 솔루션에 적용한다.</li>
+</ol>
+<p>인벤토리 데이터가 데이터베이스에서 먼저 업데이트 되기 때문에 캐시에 최신 인벤토리 데이터가 반영되지 않을 가능성이 있다. 예를 들어, 데이터베이스에 남은 공간이 없다고 표시되어 있는데도 캐시는 여전히 빈 공간이 있다고 보고하거나 그 반대의 경우도 마찬가지다.</p>
+<p>잘 생각해 보면 데이터베이스가 최종 재고 유효성 검사를 수행하는 한 인벤토리 캐시와 데이터베이스 간의 불일치는 실제로 중요하지 않다는 것을 알 수 있다. 예를 들어 캐시에는 아직 빈 방이 있다고 표시되지만 데이터베이스에는 빈 방이 없다고 표시된다고 가정해 보자. 이 경우 사용자가 객실 인벤토리를 조회하면 아직 사용 가능한 객실이 있음을 확인하고 예약을 시도한다. 요청이 인벤토리 데이터베이스에 도달하면 데이터베이스에서 유효성 검사를 수행하여 남은 객실이 없음을 확인한다. 이 경우 클라이언트는 다른 사람이 방금 전에 마지막 객실을 예약했음을 나타내는 오류를 받게 된다. 사용자가 웹사이트를 새로 고치면 새로 고침 버튼을 클릭하기 전에 데이터베이스가 인벤토리 데이터를 캐시에 동기화했기 대문에 남은 객실이 없는 것으로 표시될 수 있다.</p>
+<p>Pros</p>
+<ul>
+<li>데이터베이스 부하 감소. 읽기 쿼리는 캐시 계층에서 응답하므로 데이터베이스 부하가 크게 준다.</li>
+<li>고성능. 메모리에서 결과를 가져오기 때문에 읽기 쿼리가 매우 빠르다.</li>
+</ul>
+<p>Cons</p>
+<ul>
+<li>데이터베이스와 캐시 간의 데이터 일관성을 유지하기가 어렵다. 이런 불일치가 사용자 경험에 어떤 영향을 미치는지 신중하게 고려해야 한다.</li>
+</ul>
+<h3 id="Data-consistency-among-services"><a href="#Data-consistency-among-services" class="headerlink" title="Data consistency among services"></a>Data consistency among services</h3><p>기존의 모놀리식 아키텍처에서는 데이터 일관성을 보장하기 위해 공유 관계형 데이터베이스가 사용된다. 마이크로서비스 설계에서는 예약 서비스가 예약 및 재고 API를 모두 처리하도록 하여 재고 및 예약 데이터베이스 테이블이 동일한 관계형 데이터베이스에 저장되도록 하는 하이브리드 접근 방식을 선택했다. 동시성 문제 섹션에서 설명한 것처럼 이런 방식을 사용하면 관계형 데이터베이스의 ACID 속성을 활용하여 예약 흐름 중에 발생하는 많은 동시성 문제를 우아하게 처리할 수 있다.</p>
+<p>그러나 면접관이 순수 마이크로서비스만을 고집하는 사람이라면 이런 하이브리드 접근 방식에 이의를 제기할 수 있다. 마이크로서비스 아키텍처의 경우 아래 표시된 것 처럼 각 마이크로 서비스에는 자체 데이터베이스가 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230901013840472.png" alt=""></p>
+<p>이러한 순수한 설계는 많은 데이터 일관성 문제를 야기한다. 마이크로서비스를 다루는 것은 이번이 처음이므로 이러한 문제가 어떻게 그리고 왜 발생하는지 설명한다. 이해를 돕기 위해 이 논의에서는 두 가지 서비스만을 사용한다. 실제로는 한 회사 내에 수백 개의 마이크로 서비스가 있을 수 있다. 아래와 같이 모놀리틱 아키텍처에서는 단일 트랜잭션 내 다양한 작업을 래핑하여 ACID 속성을 보장할 수 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230901013946264.png" alt=""></p>
+<p>그러나 마이크로서비스 아키텍처에서는 각 서비스에 자체 데이터베이스가 있다. 논리적으로 원자적인 하나의 작업이 여러 서비스에 걸쳐 있을 수 있다. 즉, 데이터 일관성을 보장하기 위해 단일 트랜잭션을 사용할 수 없다. 아래에서 볼 수 있듯이 예약 데이터베이스에서 업데이트 작업이 실패하면 인벤토리 데이터베이스의 예약 객실 수를 롤백해야 한다. 일반적으로 happy path는 하나 뿐이지만 데이터 불일치를 초래할 수 있는 실패 사례는 많다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230901014138627.png" alt=""></p>
+<p>데이터 불일치 문제를 해결하기 위해 업계에서 입증된 기법을 개략적으로 요약해 보았다. </p>
+<ul>
+<li>Two-phase commit. 2PC는 여러 노드에서 원자 트랜잭션 커밋을 보장하는데 사용되는 데이터베이스 프로토콜로 모든 노드가 성공하거나 모든 노드가 실패한 경우다. 2PC는 차단 프로토콜이기 때문에 단일 노드에 장애가 발생하면 노드가 복구될 때까지 진행이 차단되므로 성능이 좋지 않다.</li>
+<li>Saga. 사가는 로컬 트랜잭션의 시퀀스다. 각 트랜잭션은 다음 트랜잭션 단계를 트리거하기 위해 메세지를 업데이트하고 게시한다. 한 단계가 실패하면 사가는 보장 트랜잭션을 실행하여 이전 트랜잭션이 변경한 내용을 취소한다. 2PC는 단일 커밋으로 ACID 트랜잭션을 수행하는 반면, 사가는 여러 단계로 구성되며 최종 일관성에 의존한다.</li>
+</ul>
+<p>마이크로서비스 간의 데이터 불일치를 해결하려면 전체 설계의 복잡성을 크게 증가시키는 몇 가지 복잡한 매커니즘이 필요하다는 점에 유의할 필요가 있다. 추가된 복잡성이 그만한 가치가 있는지 결정하는 것은 설계자의 몫이다. 이 문제에 대해서는 그만한 가치가 없다고 판단하여 예약 및 재고 데이터를 동일한 관계형 데이터베이스에 저장하는 보다 실용적인 접근 방식을 선택했다.</p>
+<h2 id="Step-4-Wrap-Up"><a href="#Step-4-Wrap-Up" class="headerlink" title="Step 4 - Wrap Up"></a>Step 4 - Wrap Up</h2><p>이 포스트에서는 호텔 예약 시스템을 위한 디자인을 소개했다. 먼저 요구사항을 수집하고 규모를 파악하기 위한 추정치를 계산하는 것으로 시작했다. 고수준 설계에서는 API 설계, 데이터 모델의 초안, 시스템 아키텍처 다이어그램을 제시했다. 저수준 설계에서는 특정 객실이 아닌 객실 유형 수준에서 예약이 이루어져야 한다는 사실을 깨닫고 대체 데이터베이스 스키마 설계를 탐색했다. 경쟁 조건에 대해 심도 있게 논의하고 몇 가지 잠재적인 해결책을 제안했다. 그 다음 데이터베이스 샤딩과 Redis 캐시 사용 등 시스템 확장을 위한 다양한 접근 방식에 대해 논의했다. 마지막으로 마이크로서비스 아키텍처의 데이터 일관성 문제를 다루고 몇 가지 해결책을 간략하게 살펴봤다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20230901014648356.png" alt=""></p>
+<!-- flag of hidden posts --></div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined">Song Hayoung</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="https://songhayoung.github.io/2023/08/31/System%20Design/ByteByteGo/book/hotel-reservation-system/">https://songhayoung.github.io/2023/08/31/System%20Design/ByteByteGo/book/hotel-reservation-system/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/System-Design/">System Design</a></div><nav id="pagination"></nav><div id="gitalk-container"></div><script>var gitalk = new Gitalk({
+  clientID: '3604b61642355579f55e',
+  clientSecret: 'f552120f18ac5aee3f6297e05e97d94c0a25cd4b',
+  repo: 'SongHayoung.github.io',
+  owner: 'SongHayoung',
+  admin: 'SongHayoung',
+  id: md5(decodeURI(location.pathname)),
+  language: 'en'
+})
+gitalk.render('gitalk-container')</script></div></div><footer class="footer-bg" style="background-image: url(https://xxxx.jpg)"><div class="layout" id="footer"><div class="copyright">&copy;2020 - 2023 By Song Hayoung</div><div class="framework-info"><span>Driven - </span><a target="_blank" rel="noopener" href="http://hexo.io"><span>Hexo</span></a><span class="footer-separator">|</span><span>Theme - </span><a target="_blank" rel="noopener" href="https://github.com/Molunerfinn/hexo-theme-melody"><span>Melody</span></a></div><div class="footer_custom_text">Learning how to walk slowly to not miss important things</div><div class="busuanzi"><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><span id="busuanzi_container_page_pv"><i class="fa fa-file"></i><span id="busuanzi_value_page_pv"></span><span></span></span></div></div></footer><i class="fa fa-arrow-up" id="go-up" aria-hidden="true"></i><script src="https://cdn.jsdelivr.net/npm/animejs@latest/anime.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@latest/velocity.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-ui-pack@latest/velocity.ui.min.js"></script><script src="/js/utils.js?version=1.7.0"></script><script src="/js/fancybox.js?version=1.7.0"></script><script src="/js/sidebar.js?version=1.7.0"></script><script src="/js/copy.js?version=1.7.0"></script><script src="/js/fireworks.js?version=1.7.0"></script><script src="/js/transition.js?version=1.7.0"></script><script src="/js/scroll.js?version=1.7.0"></script><script src="/js/head.js?version=1.7.0"></script><script src="/js/search/algolia.js"></script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+    processEscapes: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  },
+  CommonHTML: {
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "HTML-CSS": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "SVG": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  }
+});
+</script><script type="text/x-mathjax-config">MathJax.Hub.Queue(function() {
+  var all = MathJax.Hub.getAllJax(), i;
+  for (i=0; i < all.length; i += 1) {
+    all[i].SourceElement().parentNode.className += ' has-jax';
+  }
+});
+</script><script src="https://cdn.jsdelivr.net/npm/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><script>if(/Android|webOS|iPhone|iPod|iPad|BlackBerry/i.test(navigator.userAgent)) {
+  $('#nav').addClass('is-mobile')
+  $('footer').addClass('is-mobile')
+  $('#top-container').addClass('is-mobile')
+}</script><div class="search-dialog" id="algolia-search"><div class="search-dialog__title" id="algolia-search-title">Algolia</div><div id="algolia-input-panel"><div id="algolia-search-input"></div></div><hr><div id="algolia-search-results"><div id="algolia-hits"></div><div id="algolia-pagination"></div><div id="algolia-stats"></div></div><span class="search-close-button"><i class="fa fa-times"></i></span></div><div class="search-mask"></div></body></html>

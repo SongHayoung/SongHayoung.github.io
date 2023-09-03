@@ -1,0 +1,87 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="description" content="[데이터 중심 애플리케이션 설계] 스트림 처리"><meta name="keywords" content="System Design"><meta name="author" content="Song Hayoung"><meta name="copyright" content="Song Hayoung"><title>[데이터 중심 애플리케이션 설계] 스트림 처리 | SUMFIのBlog</title><meta name="robots" content="noindex"><link rel="shortcut icon" href="/songcon.ico"><link rel="stylesheet" href="/css/index.css?version=1.7.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@latest/css/font-awesome.min.css?version=1.7.0"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css?version=1.7.0"><meta name="format-detection" content="telephone=no"><meta http-equiv="x-dns-prefetch-control" content="on"><link rel="dns-prefetch" href="https://cdn.jsdelivr.net"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.css"><script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.js" defer></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@latest/dist/gitalk.min.js"></script><script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.10.0/js/md5.min.js"></script><link rel="dns-prefetch" href="https://www.google-analytics.com"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-169368422-1', 'auto');
+ga('send', 'pageview');</script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: {"appId":"7LZ6OJ4D6C","apiKey":"9a84e13f74ea78c3fd54512c10139c56","indexName":"git blog","hits":{"per_page":10},"languages":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}.","hits_stats":"${hits} results found in ${time} ms"}},
+  localSearch: undefined,
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  }
+} </script><meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/rss2.xml" title="SUMFIのBlog" type="application/rss+xml">
+</head><body><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar" data-display="true"><div class="toggle-sidebar-info text-center"><span data-toggle="Toggle article">Toggle site</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">Catalog</div><div class="sidebar-toc__progress"><span class="progress-notice">You've read</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%EC%8A%A4%ED%8A%B8%EB%A6%BC-%EC%B2%98%EB%A6%AC"><span class="toc-number">1.</span> <span class="toc-text">스트림 처리</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%EC%83%9D%EC%82%B0%EC%9E%90%EC%97%90%EC%84%9C-%EC%A7%81%EC%A0%91-%EC%86%8C%EB%B9%84%EC%9E%90%EB%A1%9C-%EC%A0%84%EB%8B%AC%ED%95%98%EB%8A%94-%EA%B2%BD%EC%9A%B0"><span class="toc-number">1.1.</span> <span class="toc-text">생산자에서 직접 소비자로 전달하는 경우</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%EB%A9%94%EC%84%B8%EC%A7%80-%EB%B8%8C%EB%A1%9C%EC%BB%A4"><span class="toc-number">1.2.</span> <span class="toc-text">메세지 브로커</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%EB%B3%80%EA%B2%BD-%EB%8D%B0%EC%9D%B4%ED%84%B0-%EC%BA%A1%EC%B2%98"><span class="toc-number">1.3.</span> <span class="toc-text">변경 데이터 캡처</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%EC%9D%B4%EB%B2%A4%ED%8A%B8-%EC%86%8C%EC%8B%B1"><span class="toc-number">1.4.</span> <span class="toc-text">이벤트 소싱</span></a></li></ol></li></ol></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="https://avatars3.githubusercontent.com/u/37806785?s=460&amp;u=8c68d685faf7c5280cfbd736a6b1730b55fb4203&amp;v=4"></div><div class="author-info__name text-center">Song Hayoung</div><div class="author-info__description text-center"></div><div class="follow-button"><a target="_blank" rel="noopener" href="https://www.instagram.com/hayoung0_0/">Follow Me</a></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="/archives"><span class="pull-left">Articles</span><span class="pull-right">8826</span></a><a class="author-info-articles__tags article-meta" href="/tags"><span class="pull-left">Tags</span><span class="pull-right">193</span></a><a class="author-info-articles__categories article-meta" href="/categories"><span class="pull-left">Categories</span><span class="pull-right">60</span></a></div><hr><div class="author-info-links"><div class="author-info-links__title text-center">VISITED</div><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Seoul Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Jeju Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">British Columbia Canada</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Boracay Philippines</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">三重　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">大阪　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">名古屋　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">静岡　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">札幌　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">京都　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Bangkok Thailand</a></div></div></div><div id="content-outer"><div id="top-container" style="background-image: url(https://xxxx.jpg)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="/">SUMFIのBlog</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus">   <a class="site-page" href="/">Home</a><a class="site-page" href="/archives">Archives</a><a class="site-page" href="/tags">Tags</a><a class="site-page" href="/categories">Categories</a><a class="site-page" href="/about">About</a></span><span class="pull-right"><a class="site-page social-icon search"><i class="fa fa-search"></i><span> Search</span></a></span></div><div id="post-info"><div id="post-title">[데이터 중심 애플리케이션 설계] 스트림 처리</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2023-08-26</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/">System Design</a><i class="fa fa-angle-right" aria-hidden="true"></i><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/Designing-Data-Intensive-Applications/">Designing Data-Intensive Applications</a><div class="post-meta-wordcount"><span>Word count: </span><span class="word-count">443</span><span class="post-meta__separator">|</span><span>Reading time: 2 min</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div class="article-container" id="post-content"><h2 id="스트림-처리"><a href="#스트림-처리" class="headerlink" title="스트림 처리"></a>스트림 처리</h2><span id="more"></span>
+<p>일괄 처리 환경에서 작업은 입출력이 파일이다. 스트림 처리에서는 이벤트라고 하는 특정 시점에 일어난 사건에 대한 세부 사항을 포함하는 레코드를 처리한다. 새로운 이벤트에 대해 소비자에게 알려주려고 쓰이는 일반적인 방법은 메세징 시스템을 사용하는 것이다. 메세지를 보내는 발행 / 구독 모델에서는 여러 시스템들이 다양한 접근법을 사용한다.</p>
+<ol>
+<li>소비자가 메세지를 처리하는 속도보다 생산자가 메세지를 빠르게 전송하면 어떻게 될까?<ol>
+<li>메세지를 버린다.</li>
+<li>배압을 적용한다.(생산자가 메세지를 보내지 못하게 막는다)</li>
+<li>큐에 버퍼링을 한다.<ol>
+<li>큐의 크기가 증가함에 따라 어떤 현상이 발생하는가<ol>
+<li>시스템이 중단되는가</li>
+<li>메세지를 디스크에 쓰는가<ol>
+<li>이 케이스라면 성능에 어떤 영향을 미치는가</li>
+</ol>
+</li>
+</ol>
+</li>
+</ol>
+</li>
+</ol>
+</li>
+<li>노드가 죽거나 일시적으로 오프라인이 된다면 어떻게 될까?<ol>
+<li>디스크에 기록한다</li>
+<li>복제본을 구축한다</li>
+</ol>
+</li>
+</ol>
+<p>발행 / 구독 모델에서도 처리는 두 가지로 나뉜다. </p>
+<h3 id="생산자에서-직접-소비자로-전달하는-경우"><a href="#생산자에서-직접-소비자로-전달하는-경우" class="headerlink" title="생산자에서 직접 소비자로 전달하는 경우"></a>생산자에서 직접 소비자로 전달하는 경우</h3><p>직접 메세징 시스템은 설계 상황에서는 잘 동작하지만 메세지가 유실될 가능성을 고려한 코드를 작성해야 한다. 하지만 허용 가능한 결함은 매우 제한적인데, 프로토콜이 네트워크 상에서 패킷 유실을 감지하고 재전송하더라도 시스템은 일반적으로 소비자와 생산자가 항상 온라인 상태라고 가정한다. 오프라인 상태일 경우 메세지가 유실되거나, 일부 프로토콜은 생산자 측에서 재시도를 처리하도록 하지만, 생산자 장비마저 오프라인이 되버리면 메세지를 잃어버리기 때문에 문제가 발생한다.</p>
+<h3 id="메세지-브로커"><a href="#메세지-브로커" class="headerlink" title="메세지 브로커"></a>메세지 브로커</h3><p>위 상황의 대안으로는 메세지 브로커를 통해 메세지를 보내는 것이다. 브로커는 일종의 스토리지로 동작하며 브로커에 데이터가 모이기 때문에 이 시스템은 클라이언트의 상태 변경에 쉽게 대처할 수 있다. 지속성 문제가 생산자 / 소비자에서 브로커로 옮겨갔기 때문이다. </p>
+<h3 id="변경-데이터-캡처"><a href="#변경-데이터-캡처" class="headerlink" title="변경 데이터 캡처"></a>변경 데이터 캡처</h3><p>변경 데이터 캡처(change data capture, CDC)는 데이터베이스에 기록하는 모든 데이터의 변화를 관찰해 다른 시스템으로 데이터를 복제할 수 있는 형태로 추출하는 과정이다. CDC는 데이터가 기록되자마자 변경 내용을 스트림으로 제공할 수 있으면 특히 유용하다. CDC를 구현하는데 데이터베이스 트리거나 로그 정보를 사용하곤 하는데, 데이터베이스의 모든 변화를 관찰하는 트리거 방식은 고장나기 쉽고 성능 오버헤드가 상당하다. 복제로그를 파싱하는 방식은 스키마 변경 대응 등 해결해야 하는 여러 문제가 있지만, 트리거 방식보다 견고한 방법이다.</p>
+<h3 id="이벤트-소싱"><a href="#이벤트-소싱" class="headerlink" title="이벤트 소싱"></a>이벤트 소싱</h3><p>이벤트 소싱은 도메인 주도 설계 커뮤니티에서 개발한 기법이다. 이벤트 소싱은 스트리밍 시스템에 관련한 유용한 아이디어들을 포함하기 때문에 살펴볼 가치가 있다. 이벤트 소싱은 변경 데이터 캡처와 유사하게 애플리케이션 상태 변화를 모두 변경 이벤트 로그로 저장한다. 변경 데이터 캡처와 가장 큰 차이점은 이 아이디어를 적용하는 추상화 레벨이 다르다는 점이다.</p>
+<ul>
+<li>CDC에서 애플리케이션은 데이터베이스를 변경 가능한 방식으로 사용해 레코드를 자유롭게 갱신하고 삭제한다. 변경 로그는 쓰기 순서가 실제로 데이터를 기록한 순서와 일치하고 경쟁 조건이 나타나지 않게 보장하기 때문에 데이터베이스에서 저수준으로 추출하고 데이터베이스에 기록하는 애플리케이션은 CDC에 관해서 관심을 갖지 않아도 된다.</li>
+<li>이벤트 소싱에서 애플리케이션 로직은 이벤트 로그에 기록된 불변 이벤트를 기반으로 명시적으로 구축한다. 이때 이벤트 저장은 단지 추가만 가능하고 갱신이나 삭제는 권장하지 않거나 금지한다. 이벤트는 저수준에서 상태 변경을 반영하는 것이 아니라 애플리케이션 수준에서 발생한 일을 반영하게끔 설계되었다.</li>
+</ul>
+<p>이벤트 소싱은 연대기 데이터 모델과 유사하다. 또한 이벤트 로그와 별 모양 스키마에서 발견한 사실 테이블 사이에도 유사점이 있다. 이벤트 스토어 같은 특화된 데이터베이스는 이벤트 소싱을 사용하는 애플리케이션을 지원하게끔 개발하고 있지만 일반적으로 이벤트 소싱 접근법은 특정 도구와 독립적이다. 일반 데이터베이스나 로그 기반 메세지 브로커도 이런 방식으로 애플리케이션을 구축하는데 사용할 수 있다.</p>
+<!-- flag of hidden posts --></div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined">Song Hayoung</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="https://songhayoung.github.io/2023/08/26/System%20Design/Designing%20Data-Intensive%20Applications/designing-data-intensive-applications-11/">https://songhayoung.github.io/2023/08/26/System%20Design/Designing%20Data-Intensive%20Applications/designing-data-intensive-applications-11/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/System-Design/">System Design</a></div><nav id="pagination"></nav><div id="gitalk-container"></div><script>var gitalk = new Gitalk({
+  clientID: '3604b61642355579f55e',
+  clientSecret: 'f552120f18ac5aee3f6297e05e97d94c0a25cd4b',
+  repo: 'SongHayoung.github.io',
+  owner: 'SongHayoung',
+  admin: 'SongHayoung',
+  id: md5(decodeURI(location.pathname)),
+  language: 'en'
+})
+gitalk.render('gitalk-container')</script></div></div><footer class="footer-bg" style="background-image: url(https://xxxx.jpg)"><div class="layout" id="footer"><div class="copyright">&copy;2020 - 2023 By Song Hayoung</div><div class="framework-info"><span>Driven - </span><a target="_blank" rel="noopener" href="http://hexo.io"><span>Hexo</span></a><span class="footer-separator">|</span><span>Theme - </span><a target="_blank" rel="noopener" href="https://github.com/Molunerfinn/hexo-theme-melody"><span>Melody</span></a></div><div class="footer_custom_text">Learning how to walk slowly to not miss important things</div><div class="busuanzi"><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><span id="busuanzi_container_page_pv"><i class="fa fa-file"></i><span id="busuanzi_value_page_pv"></span><span></span></span></div></div></footer><i class="fa fa-arrow-up" id="go-up" aria-hidden="true"></i><script src="https://cdn.jsdelivr.net/npm/animejs@latest/anime.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@latest/velocity.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-ui-pack@latest/velocity.ui.min.js"></script><script src="/js/utils.js?version=1.7.0"></script><script src="/js/fancybox.js?version=1.7.0"></script><script src="/js/sidebar.js?version=1.7.0"></script><script src="/js/copy.js?version=1.7.0"></script><script src="/js/fireworks.js?version=1.7.0"></script><script src="/js/transition.js?version=1.7.0"></script><script src="/js/scroll.js?version=1.7.0"></script><script src="/js/head.js?version=1.7.0"></script><script src="/js/search/algolia.js"></script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+    processEscapes: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  },
+  CommonHTML: {
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "HTML-CSS": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "SVG": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  }
+});
+</script><script type="text/x-mathjax-config">MathJax.Hub.Queue(function() {
+  var all = MathJax.Hub.getAllJax(), i;
+  for (i=0; i < all.length; i += 1) {
+    all[i].SourceElement().parentNode.className += ' has-jax';
+  }
+});
+</script><script src="https://cdn.jsdelivr.net/npm/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><script>if(/Android|webOS|iPhone|iPod|iPad|BlackBerry/i.test(navigator.userAgent)) {
+  $('#nav').addClass('is-mobile')
+  $('footer').addClass('is-mobile')
+  $('#top-container').addClass('is-mobile')
+}</script><div class="search-dialog" id="algolia-search"><div class="search-dialog__title" id="algolia-search-title">Algolia</div><div id="algolia-input-panel"><div id="algolia-search-input"></div></div><hr><div id="algolia-search-results"><div id="algolia-hits"></div><div id="algolia-pagination"></div><div id="algolia-stats"></div></div><span class="search-close-button"><i class="fa fa-times"></i></span></div><div class="search-mask"></div></body></html>
