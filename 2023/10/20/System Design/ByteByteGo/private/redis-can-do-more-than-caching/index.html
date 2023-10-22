@@ -1,0 +1,140 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="description" content="[ByteByteGo] Redis Can Do More Than Caching"><meta name="keywords" content="System Design"><meta name="author" content="Song Hayoung"><meta name="copyright" content="Song Hayoung"><title>[ByteByteGo] Redis Can Do More Than Caching | SUMFIのBlog</title><meta name="robots" content="noindex"><link rel="shortcut icon" href="/songcon.ico"><link rel="stylesheet" href="/css/index.css?version=1.7.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@latest/css/font-awesome.min.css?version=1.7.0"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css?version=1.7.0"><meta name="format-detection" content="telephone=no"><meta http-equiv="x-dns-prefetch-control" content="on"><link rel="dns-prefetch" href="https://cdn.jsdelivr.net"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.css"><script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.js" defer></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@latest/dist/gitalk.min.js"></script><script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.10.0/js/md5.min.js"></script><link rel="dns-prefetch" href="https://www.google-analytics.com"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-169368422-1', 'auto');
+ga('send', 'pageview');</script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: {"appId":"7LZ6OJ4D6C","apiKey":"9a84e13f74ea78c3fd54512c10139c56","indexName":"git blog","hits":{"per_page":10},"languages":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}.","hits_stats":"${hits} results found in ${time} ms"}},
+  localSearch: undefined,
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  }
+} </script><meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/rss2.xml" title="SUMFIのBlog" type="application/rss+xml">
+</head><body><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar" data-display="true"><div class="toggle-sidebar-info text-center"><span data-toggle="Toggle article">Toggle site</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">Catalog</div><div class="sidebar-toc__progress"><span class="progress-notice">You've read</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Redis-Can-Do-More-Than-Caching"><span class="toc-number">1.</span> <span class="toc-text">Redis Can Do More Than Caching</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Social-Media"><span class="toc-number">2.</span> <span class="toc-text">Social Media</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#User-Profiles"><span class="toc-number">3.</span> <span class="toc-text">User Profiles</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#User-Relationships"><span class="toc-number">4.</span> <span class="toc-text">User Relationships</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Posts"><span class="toc-number">5.</span> <span class="toc-text">Posts</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#User-Interactions"><span class="toc-number">6.</span> <span class="toc-text">User Interactions</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Personalized-Feed"><span class="toc-number">7.</span> <span class="toc-text">Personalized Feed</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Tracking-User-State-with-Bitmaps"><span class="toc-number">8.</span> <span class="toc-text">Tracking User State with Bitmaps</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Location-Based-Services"><span class="toc-number">9.</span> <span class="toc-text">Location-Based Services</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Real-World-Use-Cases"><span class="toc-number">10.</span> <span class="toc-text">Real-World Use Cases</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Fraud-Detection"><span class="toc-number">10.1.</span> <span class="toc-text">Fraud Detection</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Gaming"><span class="toc-number">10.2.</span> <span class="toc-text">Gaming</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#eCommerce"><span class="toc-number">10.3.</span> <span class="toc-text">eCommerce</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Expanding-Redis-with-Libraries"><span class="toc-number">11.</span> <span class="toc-text">Expanding Redis with Libraries</span></a></li></ol></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="https://avatars3.githubusercontent.com/u/37806785?s=460&amp;u=8c68d685faf7c5280cfbd736a6b1730b55fb4203&amp;v=4"></div><div class="author-info__name text-center">Song Hayoung</div><div class="author-info__description text-center"></div><div class="follow-button"><a target="_blank" rel="noopener" href="https://www.instagram.com/hayoung0_0/">Follow Me</a></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="/archives"><span class="pull-left">Articles</span><span class="pull-right">9279</span></a><a class="author-info-articles__tags article-meta" href="/tags"><span class="pull-left">Tags</span><span class="pull-right">192</span></a><a class="author-info-articles__categories article-meta" href="/categories"><span class="pull-left">Categories</span><span class="pull-right">61</span></a></div><hr><div class="author-info-links"><div class="author-info-links__title text-center">VISITED</div><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Seoul Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Jeju Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">British Columbia Canada</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Boracay Philippines</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">三重　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">大阪　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">名古屋　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">静岡　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">札幌　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">京都　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Bangkok Thailand</a></div></div></div><div id="content-outer"><div id="top-container" style="background-image: url(https://xxxx.jpg)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="/">SUMFIのBlog</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus">   <a class="site-page" href="/">Home</a><a class="site-page" href="/archives">Archives</a><a class="site-page" href="/tags">Tags</a><a class="site-page" href="/categories">Categories</a><a class="site-page" href="/about">About</a></span><span class="pull-right"><a class="site-page social-icon search"><i class="fa fa-search"></i><span> Search</span></a></span></div><div id="post-info"><div id="post-title">[ByteByteGo] Redis Can Do More Than Caching</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2023-10-20</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/">System Design</a><i class="fa fa-angle-right" aria-hidden="true"></i><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/Byte-Byte-Go/">Byte Byte Go</a><div class="post-meta-wordcount"><span>Word count: </span><span class="word-count">1.6k</span><span class="post-meta__separator">|</span><span>Reading time: 9 min</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div class="article-container" id="post-content"><h2 id="Redis-Can-Do-More-Than-Caching"><a href="#Redis-Can-Do-More-Than-Caching" class="headerlink" title="Redis Can Do More Than Caching"></a>Redis Can Do More Than Caching</h2><span id="more"></span>
+<p>이번 포스트에서는 Redis의 기본 데이터 유형인 해시, 집합, 정렬된 집합, 스트림 및 비트맵을 사용해 사용자 프로필, 관계 그래프, 홈 타임라인 및 주변 검색과 같은 주요 기능을 구축하는 사례를 확인한다.</p>
+<h2 id="Social-Media"><a href="#Social-Media" class="headerlink" title="Social Media"></a>Social Media</h2><p>Redis의 유연한 데이터 구조는 트위터와 같은 소셜 미디어 애플리케이션의 핵심 기능을 구동하는 소셜 그래프 데이터베이스를 구축하는데 매우 적합하다. 관계형 데이터베이스는 사용자가 생성한 콘텐츠의 복잡한 관계와 비정형 데이터로 인해 어려움을 겪을 수 있다.</p>
+<p>Redis는 소셜 앱에서 기대되는 기능을 지원하기 위해 고성능 읽기 및 쓰기 기능을 제공하여 소규모 팀도 빠르게 시작하고 반복할 수 있다. Redis는 주요 소셜 네트워크의 규모에 맞게 확장할 수는 없지만, 사용자가 크게 증가할 때 앱의 첫 번째 버전을 지원할 수 있다.</p>
+<p>Redis를 사용하면 다음과 같은 일반적인 소셜 미디어 기능을 구현할 수 있다.</p>
+<ul>
+<li>사용자 프로필</li>
+<li>사용자 관계(친구, 팔로워)</li>
+<li>게시물</li>
+<li>사용자 상호 작용(좋아요, 싫어요, 댓글 등)</li>
+<li>홈 타임라인</li>
+</ul>
+<h2 id="User-Profiles"><a href="#User-Profiles" class="headerlink" title="User Profiles"></a>User Profiles</h2><p>소셜 애플리케이션에서 사용자 프로필은 이름, 위치, 관심사, 환경 설정과 같은 신원 속성을 저장한다. 각 사용자가 프로필은 키가 사용자 ID이고 해시 필드에 프로필 속성이 포함된 Redis 해시로 표현할 수 있다.</p>
+<p>예를 들어, 사용자 Bob의 프로필을 다음과 같은 해시에 저장할 수 있다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">HMSET user:bob name Bob location &quot;New York&quot; interests &quot;photography, hiking&quot;</span><br></pre></td></tr></table></figure>
+<p>관계형 모델과 비교했을 때, Redis 해시는 나중에 데이터베이스 스키마를 수정하지 않고도 새 프로필 속성을 쉽게 추가할 수 있는 유연성을 제공한다. 데이터베이스 스키마 변경을 거칠 필요가 없기 때문에 사용자 프로필에 속성을 추가할 때 검색 방법과 추가 시점을 정의하기만 하면 된다.</p>
+<p>애플리케이션 코드에서 이러한 해시 프로필 객체를 검색하고 표시하는 방법을 정의한다. 예를 들어, 이름과 위치만 표시하거나 관심사가 있는 경우 선택적으로 포함할 수 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231020205100987.png" alt=""></p>
+<h2 id="User-Relationships"><a href="#User-Relationships" class="headerlink" title="User Relationships"></a>User Relationships</h2><p>소셜 애플리케이션의 주요 기능 중 하나는 친구 관계나 다른 사용자의 업데이트를 받기 위해 팔로우하는 등 사용자 간의 연결을 설정하는 것이다. 관계형 데이터베이스에서 이러한 연결을 효율적으로 모델링하는 것은 소셜 네트워크의 복잡한 그래프와 같은 구조로 인해 어려울 수 있다.</p>
+<p>Redis는 내장된 집합 데이터 구조를 사용해 사용자 관계를 보다 자연스럽게 표현할 수 있는 방법을 제공한다.</p>
+<p>예를 들어 SQL에서는 Bob의 친구중에서 Alice와도 친구인 사람을 검색하기 위해 Bob의 친구를 모두 검색한 후 그 중에서 Alice와 친구인 사람을 검색해야 한다.</p>
+<p>Redis에서는 훨씬 간결하다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SINTER &#123;Bob&#x27;s key&#125; &#123;Alice&#x27;s key&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231020205459157.png" alt=""></p>
+<p>복잡한 조인 쿼리를 피함으로써, Redis 집합은 정렬되지 않은 소셜 연결을 관리하기 위해 더 빠른 읽기 및 쓰기를 제공한다. 집합 데이터 구조는 소셜 그래프에서 간단한 관계를 표현하는데 자연스럽게 매핑된다.</p>
+<h2 id="Posts"><a href="#Posts" class="headerlink" title="Posts"></a>Posts</h2><p>소셜 앱에서 사용자는 게시물을 작성해 아이디어, 감정, 상태 업데이트를 공유한다. 관계형 데이터베이스에서는 이러한 사용자 생성 콘텐츠를 모델링하는 것이 어려울 수 있다.</p>
+<p>여기서도 Redis를 더 효율적으로 활용할 수 있다. 각 사용자에 대해 post_ids를 타임스탬프 별로 정렬된 집합에 저장할 수 있다. 키는 사용자 ID가 될 수 있으며 각각의 새로운 post_id는 집합에 멤버로 추가된다.</p>
+<p>글 콘텐츠 자체는 post_id를 해시 키로 하여 해시에 별도로 저장된다. 각 해시에는 아래와 같은 속성이 포함된다.</p>
+<ul>
+<li>user_id</li>
+<li>timestamp</li>
+<li>message</li>
+<li>etc</li>
+</ul>
+<p>아래 다이어그램은 이 요소들이 함께 작동하는 방식을 보여준다. 사용자가 새 글을 작성하면 새 post_id를 생성하고, 글 콘텐츠를 나타내는 해시를 생성한 다음, 사용자의 정렬된 글 집합에 post_id를 추가한다.</p>
+<p>이렇게 하면 자연스럽게 글 타임라인을 모델링할 수 있다. 새 post_id가 집합의 마지막에 추가되고, post_id의 ZRANGE를 사용해 시간순으로 정렬된 글을 페이지로 이동할 수 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231020205910421.png" alt=""></p>
+<h2 id="User-Interactions"><a href="#User-Interactions" class="headerlink" title="User Interactions"></a>User Interactions</h2><p>소셜 앱에서 사용자는 좋아요를 누르고, 댓글을 달고, 게시물을 공유하는 등의 방식으로 상호작용한다. 이런 이벤트를 기록하면 사용 패턴을 분석하고 추천 시스템에 데이터를 제공할 수 있다.</p>
+<p>관계형 데이터베이스에서 사용자 상호 작용을 모델링하려면 여러 테이블에 걸쳐 복잡한 스키마가 필요할 수 있다. Redis는 Redis Stream을 통해 이벤트 스트림을 보다 자연스럽게 표현할 수 있는 방법을 제공한다.</p>
+<p>사용자 활동에 대한 스트림과 포스트 참여에 대한 스트림 두 집합을 만들 수 있다.</p>
+<p>사용자 54321(Alice)이 게시물 34139에 좋아요를 누르면, Alice의 활동에 대한 스트림과 게시물 34139에 대한 좋아요 스트림을 추가한다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">XADD activity:54321 * action likes postid 34139</span><br><span class="line">XADD likes:34139 * user 54321 </span><br></pre></td></tr></table></figure>
+<p>아래 다이어그램은 두 스트림이 어떻게 수정되는지 보여준다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231020210247189.png" alt=""></p>
+<p>스트림은 분석을 위해 다운스트림 프로세서에 공급할 수 있는 영구 로그 역할을 한다. 즉석에서 생성되는 스트림의 동적 특성을 관리하기 위해 효과적인 접근 방식 중 하나는 패턴 기반 폴링이다. <code>activity:&lt;userID&gt;</code>나 <code>likes:&lt;postID&gt;</code>와 같은 예측 가능한 스트림 명명 규칙이 주어지면, 소비자는 주기적으로 패턴 매칭과 결합된  scan 명령을 실행해 새로 생성된 스트림을 발견할 수 있다. 이런 방식으로 정기적으로 폴링함으로써 소비자는 놓치는 스트림이 없도록 하고 스트림이 식별되는 즉시 해당 스트림의 데이터를 소비하기 시작할 수 있다. 패턴 기반 폴링은 간단하고 많은 사용 사례에 적합하지만, 애플리케이션의 특정 요구 사항과 규모에 따라 동적 스트림 검색을 처리하는 데 사용할 수 있는 몇 가지 다른 메커니즘이 있다는 점에 유의할 필요가 있다.</p>
+<h2 id="Personalized-Feed"><a href="#Personalized-Feed" class="headerlink" title="Personalized Feed"></a>Personalized Feed</h2><p>일반적으로 소셜 애플리케이션에는 사용자 별로 홈 페이지가 있다. 홈 페이지에는 추천 알고리즘에 따라 계산된 타임라인이라고 하는 게시물 업데이트가 나열된다. 이 페이지는 사용자가 애플리케이션을 방문했을 때 가장 먼저 보게 되는 페이지로, 사용자의 관심을 끌기 위해서는 반응성이 중요하다.</p>
+<p>Redis에서 정렬된 집합을 사용해 개인화된 피드를 구축할 수 있다. 아래 다이어그램은 작동 방식을 보여준다. 키는 사용자 ID이고 값은 타임라인의 각 게시물을 가리키는 ZSet이다. ZSet의 점수는 게시물의 순서와 우선 순위를 나타내며, 여기서 내림차순으로 게시물을 정렬할 수 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231020210732453.png" alt=""></p>
+<p>새 글이 작성되면 글 작성자, 콘텐츠, 사용자 선호도 등과 같은 요소를 기반으로 관련성 점수를 계산할 수 있다. 이 점수로 정렬된 집합에 게시물 ID를 추가한다. 점수가 높은 글이 사용자 타임라인에서 첫 번째 순위에 표시된다. 새 글이 들어올 때마다 정렬된 집합을 점진적으로 업데이트하여 최신의 개인화된 피드를 유지할 수 있다.</p>
+<p>정렬된 집합 데이터 구조는 각 사용자에게 고유하게 지속적으로 업데이트되는 타임라인을 효율적으로 모델링할 수 있는 방법을 제공한다. 타임라인 순서대로 게시물을 가져오려면 ZRANGE 명령만 사용하면 된다. 점수가 변경되면 게시물이 자동으로 집합에서 다시 정렬된다.</p>
+<p>이 정렬된 집합 모델링은 간단하지만 수백만 명의 사용자와 게시물이 있는 네트워크에서는 확장되지 않는다. 새 게시물을 작성할 때마다 사용자당 하나씩 수백만 개의 정렬된 집합을 업데이트해야 한다. 이러한 쓰기 증가는 처리량을 제한하게 된다. 대규모 트래픽의 경우 피드 사전 생성 및 캐싱과 같은 대안이 필요할 수 있다. 하지만 대부분의 초기 단계 소셜 앱의 경우, 정렬된 집합은 간단하고 효과적인 접근 방식을 제공한다.</p>
+<p>결론적으로 Redis를 사용하면 간단한 소셜 애플리케이션을 빠르게 구현할 수 있다. Redis의 풍부한 데이터 구조는 대부분의 기능 요구사항을 즉시 지원한다.</p>
+<h2 id="Tracking-User-State-with-Bitmaps"><a href="#Tracking-User-State-with-Bitmaps" class="headerlink" title="Tracking User State with Bitmaps"></a>Tracking User State with Bitmaps</h2><p>사용자가 웹사이트나 앱과 상호 작용할 때 다음과 같은 상태를 추적해야 하는 경우가 많다.</p>
+<ul>
+<li>사용자가 현재 온라인인지</li>
+<li>사용자가 오늘 로그인했는지</li>
+<li>현재 활성 사용자는 몇 명인지</li>
+</ul>
+<p>각 사용자의 상태를 개별 변수에 저장하는 것은 비효율적일 수 있다. Redis 비트맵은 대규모 bool flag 집합을 간결하게 표현할 수 있는 방법을 제공한다.</p>
+<p>예를 들어 <code>online:20231019</code> 비트맵을 2023년 10월 19일에 대한 온라인 상태를 추적하는 자료구조라 하자. 사용자 12345(Bob)가 온라인 상태면 아래 쿼리를 실행한다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SETBIT online:20231019 12345 1</span><br></pre></td></tr></table></figure>
+<p>Bob의 온라인 상태 여부도 쉽게 확인할 수 있다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">GETBIT online:20231019 12345</span><br></pre></td></tr></table></figure>
+<p>비트맵은 AND, OR, NOT, XOR과 같은 연산자를 사용해 빠른 bool 논리 연산을 가능하게 한다. 여러 비트맵을 결합해 집계된 사용자 상태를 도출할 수 있다. 예를 들어, 아래 연산은 10월 18일과 19일에 활성 상태인 사용자를 가져온다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">BITOP AND active_on_both_days online:20231018 online:20231019</span><br></pre></td></tr></table></figure>
+<p>비트맵은 수백만 명의 사용자 상태를 추적할 때 도움이 된다. 각 사용자는 1비트씩만 차지한다. 비트맵 크기는 비트의 분포가 아니라 사용자 수에 따라 달라진다. 하지만 카디널리티가 높은 사용자 ID는 메모리 오버헤드를 유발할 수 있다. 예를 들어 10억명의 사용자를 추적하려면 비트맵당 최소 128MB가 필요하다. 이 사용 사례에서는 잠재적 범위를 최소화하기 위해 순차적 정수 ID를 사용하는 것이 가장 좋다.</p>
+<p>이제 위치 기반 서비스(LBS)에 사용되는 Redis가 제공하는 특수 데이터 구조에 대해 살펴보자.</p>
+<h2 id="Location-Based-Services"><a href="#Location-Based-Services" class="headerlink" title="Location-Based Services"></a>Location-Based Services</h2><p>차량 호출 애플리케이션이나 Yelp와 같은 애플리케이션에서 우리는 종종 주변 택시나 주변 식당을 찾아야 한다. 주변 친구를 찾는 것도 소셜 앱의 흥미로운 기능이다. Redis는 3.2버전부터 위치 기반 서비스를 사용할 수 있도록 위치 기반 데이터 구조를 제공한다.</p>
+<p>“주변 레스토랑” 기능을 구축하는 예를 살펴보자. 먼저 모든 레스토랑과 해당 레스토랑의 위도/경도 좌표를 Redis에 로드한다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">GEOADD restaurants:open -110.331245 58.069327 pizza</span><br><span class="line">GEOADD restaurants:open -110.331245 58.134221 steak</span><br><span class="line">GEOADD restaurants:open -109.533987 55.039818 chinese</span><br></pre></td></tr></table></figure>
+<p>그 이면에서 Redis는 빠른 조회를 위해 지도 좌표를 문자열로 색인하는 공간 효율적인 구조인 Geohash를 사용해 이런 위치를 정렬된 집합에 저장한다.</p>
+<p>가까운 레스토랑을 찾으려면 위도/경도와 반경으로 쿼리하기만 하면 된다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">GEOSEARCH restaurants:open FROMLONLAT -110.331240 58.069310 BYRADIUS 1 km WITHDIST</span><br></pre></td></tr></table></figure>
+<p>그러면 표시된 위도/경도에서 1km 이내에 있는 레스토랑이 반환된다. 지리공간 데이터 구조를 사용하면 복잡한 애플리케이션 코드 없이도 이러한 위치 기반 검색을 쉽게 수행할 수 있다.</p>
+<h2 id="Real-World-Use-Cases"><a href="#Real-World-Use-Cases" class="headerlink" title="Real-World Use Cases"></a>Real-World Use Cases</h2><p>이제 다양한 산업 영역에서 Redis를 사용하는 예를 살펴보자.</p>
+<h3 id="Fraud-Detection"><a href="#Fraud-Detection" class="headerlink" title="Fraud Detection"></a>Fraud Detection</h3><p>BioCatch에서는 Redis를 시스템 구성 데이터베이스로 사용해 활성 사용자 세선 중에 행동 데이터를 캡쳐한다. 이를 통해 사용자 행동 프로필을 실시간으로 구축한다. 그러면 사기 탐지 서비스가 실질적인 피해가 발생하기 전에 40ms 이내 대응하고 결정을 내릴 수 있다.</p>
+<h3 id="Gaming"><a href="#Gaming" class="headerlink" title="Gaming"></a>Gaming</h3><p>게임에서 응답 속도는 우수한 플레이어 경험을 위해 매우 중요하다. 앞서 설명한 것처럼 Redis는 빠른 리더보드, 메세지 대기열, 캐싱을 지원한다. Scopely는 이런 기능 다수를 Redis를 통해 지원한다. 리더보드는 플레이어 순위를 추적하고, 큐는 백그라운드 워크로드를 관리하며, 캐싱은 데이터 액세스 속도를 높인다.</p>
+<h3 id="eCommerce"><a href="#eCommerce" class="headerlink" title="eCommerce"></a>eCommerce</h3><p>전자상거래에서 장바구니 이탈률은 웹사이트의 핵심 지표다. 제품을 검색하고 주문하고 결제하는 동안 사용자 경험을 개선하기 위해 제품 인벤토리를 Redis에 캐시해 빠르게 액세스할 수 있다. Gap Inc.는 Redis를 사용해 재고를 캐시함으로써 블랙 프라이데이와 같은 계절적 성수기에도 뛰어난 성능을 달성하고 있다.</p>
+<h2 id="Expanding-Redis-with-Libraries"><a href="#Expanding-Redis-with-Libraries" class="headerlink" title="Expanding Redis with Libraries"></a>Expanding Redis with Libraries</h2><p>원시 Redis 데이터 구조는 많은 사용 사례에 강력한 힘을 보여준다. 그러나 추가 라이브러리를 사용하면 개발 생산성을 더욱 높일 수 있다. 예를 들어, redisson 라이브러리는 Redis 위에 분산 데이터 구조를 제공한다. </p>
+<ul>
+<li>SetMultimap - Set 값이 있는 KV map</li>
+<li>ScoredSortedSet - 부동 소수점 점수가 있는 정렬된 집합</li>
+<li>ConcurrentMap - 스레드 세이프한 map</li>
+<li>ListMultimap - List 값이 있는 KV map</li>
+<li>BlockingQueue - Blocking 작업이 있는 큐</li>
+</ul>
+<p>이들은 더 높은 수준의 추상화를 추가하면서 Redis와 원활하게 구성된다. 라이브러리는 직렬화, 네트워크 호출 및 기타 세부사항을 처리한다.</p>
+<p>개발자는 하위 수준의 분산 프로그래밍 대신 도메인 로직에 집중할 수 있다. 집계된 리더보드나 관계 그래프와 같은 사용자 정의 유형을 훨씬 더 간단하게 구축할 수 있다.</p>
+<!-- flag of hidden posts --></div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined">Song Hayoung</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="https://songhayoung.github.io/2023/10/20/System%20Design/ByteByteGo/private/redis-can-do-more-than-caching/">https://songhayoung.github.io/2023/10/20/System%20Design/ByteByteGo/private/redis-can-do-more-than-caching/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/System-Design/">System Design</a></div><nav id="pagination"></nav><div id="gitalk-container"></div><script>var gitalk = new Gitalk({
+  clientID: '3604b61642355579f55e',
+  clientSecret: 'f552120f18ac5aee3f6297e05e97d94c0a25cd4b',
+  repo: 'SongHayoung.github.io',
+  owner: 'SongHayoung',
+  admin: 'SongHayoung',
+  id: md5(decodeURI(location.pathname)),
+  language: 'en'
+})
+gitalk.render('gitalk-container')</script></div></div><footer class="footer-bg" style="background-image: url(https://xxxx.jpg)"><div class="layout" id="footer"><div class="copyright">&copy;2020 - 2023 By Song Hayoung</div><div class="framework-info"><span>Driven - </span><a target="_blank" rel="noopener" href="http://hexo.io"><span>Hexo</span></a><span class="footer-separator">|</span><span>Theme - </span><a target="_blank" rel="noopener" href="https://github.com/Molunerfinn/hexo-theme-melody"><span>Melody</span></a></div><div class="footer_custom_text">Learning how to walk slowly to not miss important things</div><div class="busuanzi"><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><span id="busuanzi_container_page_pv"><i class="fa fa-file"></i><span id="busuanzi_value_page_pv"></span><span></span></span></div></div></footer><i class="fa fa-arrow-up" id="go-up" aria-hidden="true"></i><script src="https://cdn.jsdelivr.net/npm/animejs@latest/anime.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@latest/velocity.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-ui-pack@latest/velocity.ui.min.js"></script><script src="/js/utils.js?version=1.7.0"></script><script src="/js/fancybox.js?version=1.7.0"></script><script src="/js/sidebar.js?version=1.7.0"></script><script src="/js/copy.js?version=1.7.0"></script><script src="/js/fireworks.js?version=1.7.0"></script><script src="/js/transition.js?version=1.7.0"></script><script src="/js/scroll.js?version=1.7.0"></script><script src="/js/head.js?version=1.7.0"></script><script src="/js/search/algolia.js"></script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+    processEscapes: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  },
+  CommonHTML: {
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "HTML-CSS": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "SVG": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  }
+});
+</script><script type="text/x-mathjax-config">MathJax.Hub.Queue(function() {
+  var all = MathJax.Hub.getAllJax(), i;
+  for (i=0; i < all.length; i += 1) {
+    all[i].SourceElement().parentNode.className += ' has-jax';
+  }
+});
+</script><script src="https://cdn.jsdelivr.net/npm/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><script>if(/Android|webOS|iPhone|iPod|iPad|BlackBerry/i.test(navigator.userAgent)) {
+  $('#nav').addClass('is-mobile')
+  $('footer').addClass('is-mobile')
+  $('#top-container').addClass('is-mobile')
+}</script><div class="search-dialog" id="algolia-search"><div class="search-dialog__title" id="algolia-search-title">Algolia</div><div id="algolia-input-panel"><div id="algolia-search-input"></div></div><hr><div id="algolia-search-results"><div id="algolia-hits"></div><div id="algolia-pagination"></div><div id="algolia-stats"></div></div><span class="search-close-button"><i class="fa fa-times"></i></span></div><div class="search-mask"></div></body></html>

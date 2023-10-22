@@ -1,0 +1,155 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="description" content="[ByteByteGo] The 6 Most Impactful Ways Redis is Used in Production Systems"><meta name="keywords" content="System Design"><meta name="author" content="Song Hayoung"><meta name="copyright" content="Song Hayoung"><title>[ByteByteGo] The 6 Most Impactful Ways Redis is Used in Production Systems | SUMFIのBlog</title><meta name="robots" content="noindex"><link rel="shortcut icon" href="/songcon.ico"><link rel="stylesheet" href="/css/index.css?version=1.7.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@latest/css/font-awesome.min.css?version=1.7.0"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css?version=1.7.0"><meta name="format-detection" content="telephone=no"><meta http-equiv="x-dns-prefetch-control" content="on"><link rel="dns-prefetch" href="https://cdn.jsdelivr.net"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.css"><script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.js" defer></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@latest/dist/gitalk.min.js"></script><script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.10.0/js/md5.min.js"></script><link rel="dns-prefetch" href="https://www.google-analytics.com"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-169368422-1', 'auto');
+ga('send', 'pageview');</script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: {"appId":"7LZ6OJ4D6C","apiKey":"9a84e13f74ea78c3fd54512c10139c56","indexName":"git blog","hits":{"per_page":10},"languages":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}.","hits_stats":"${hits} results found in ${time} ms"}},
+  localSearch: undefined,
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  }
+} </script><meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/rss2.xml" title="SUMFIのBlog" type="application/rss+xml">
+</head><body><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar" data-display="true"><div class="toggle-sidebar-info text-center"><span data-toggle="Toggle article">Toggle site</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">Catalog</div><div class="sidebar-toc__progress"><span class="progress-notice">You've read</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#The-6-Most-Impactful-Ways-Redis-is-Used-in-Production-Systems"><span class="toc-number">1.</span> <span class="toc-text">The 6 Most Impactful Ways Redis is Used in Production Systems</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Cache"><span class="toc-number">2.</span> <span class="toc-text">Cache</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Session-Store"><span class="toc-number">3.</span> <span class="toc-text">Session Store</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Leaderboard"><span class="toc-number">4.</span> <span class="toc-text">Leaderboard</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Message-Queue"><span class="toc-number">5.</span> <span class="toc-text">Message Queue</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Use-a-List"><span class="toc-number">5.1.</span> <span class="toc-text">Use a List</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Use-Streams"><span class="toc-number">5.2.</span> <span class="toc-text">Use Streams</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Use-Pub-Sub"><span class="toc-number">5.3.</span> <span class="toc-text">Use Pub&#x2F;Sub</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Website-Analytics"><span class="toc-number">6.</span> <span class="toc-text">Website Analytics</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Flash-Sale"><span class="toc-number">7.</span> <span class="toc-text">Flash Sale</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Summary"><span class="toc-number">8.</span> <span class="toc-text">Summary</span></a></li></ol></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="https://avatars3.githubusercontent.com/u/37806785?s=460&amp;u=8c68d685faf7c5280cfbd736a6b1730b55fb4203&amp;v=4"></div><div class="author-info__name text-center">Song Hayoung</div><div class="author-info__description text-center"></div><div class="follow-button"><a target="_blank" rel="noopener" href="https://www.instagram.com/hayoung0_0/">Follow Me</a></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="/archives"><span class="pull-left">Articles</span><span class="pull-right">9279</span></a><a class="author-info-articles__tags article-meta" href="/tags"><span class="pull-left">Tags</span><span class="pull-right">192</span></a><a class="author-info-articles__categories article-meta" href="/categories"><span class="pull-left">Categories</span><span class="pull-right">61</span></a></div><hr><div class="author-info-links"><div class="author-info-links__title text-center">VISITED</div><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Seoul Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Jeju Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">British Columbia Canada</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Boracay Philippines</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">三重　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">大阪　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">名古屋　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">静岡　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">札幌　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">京都　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Bangkok Thailand</a></div></div></div><div id="content-outer"><div id="top-container" style="background-image: url(https://xxxx.jpg)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="/">SUMFIのBlog</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus">   <a class="site-page" href="/">Home</a><a class="site-page" href="/archives">Archives</a><a class="site-page" href="/tags">Tags</a><a class="site-page" href="/categories">Categories</a><a class="site-page" href="/about">About</a></span><span class="pull-right"><a class="site-page social-icon search"><i class="fa fa-search"></i><span> Search</span></a></span></div><div id="post-info"><div id="post-title">[ByteByteGo] The 6 Most Impactful Ways Redis is Used in Production Systems</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2023-10-13</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/">System Design</a><i class="fa fa-angle-right" aria-hidden="true"></i><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/Byte-Byte-Go/">Byte Byte Go</a><div class="post-meta-wordcount"><span>Word count: </span><span class="word-count">1.8k</span><span class="post-meta__separator">|</span><span>Reading time: 11 min</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div class="article-container" id="post-content"><h2 id="The-6-Most-Impactful-Ways-Redis-is-Used-in-Production-Systems"><a href="#The-6-Most-Impactful-Ways-Redis-is-Used-in-Production-Systems" class="headerlink" title="The 6 Most Impactful Ways Redis is Used in Production Systems"></a>The 6 Most Impactful Ways Redis is Used in Production Systems</h2><span id="more"></span>
+<p>Redis는 다양한 문제를 해결하는데 도움이 되는 매우 다재다능한 인메모리 데이터베이스입니다. 이번 포스트에서는 캐싱, 세션 관리, 리더보드, 대기열, 분석 등 6가지 인기 있는 Redis 사용 사례에 대해 살펴본다. </p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231013191855257.png" alt=""></p>
+<h2 id="Cache"><a href="#Cache" class="headerlink" title="Cache"></a>Cache</h2><p>캐시는 시스템의 필수적인 부분이다. 캐시는 핫 데이터에 액세스할 수 있는 지름길을 제공하고 성능을 향상시킨다. 일반적인 캐시 아키텍처는 세 가지 계층으로 구성된다.</p>
+<ol>
+<li>Application Cache : 애플리케이션의 메모리 내부에 위치하며 일반적으로 사용자 프로필과 같이 자주 액세스하는 데이터를 저장하는 해시맵이다. 캐시 크기는 작으며 앱이 다시 시작되면 데이터가 손실된다.</li>
+<li>Second Level Cache : 이 캐시는 종종 EhCache와 같은 in-process 또는 out-of-process 캐시다. 자동 캐시 무효화를 위해 LRU, LFU, 또는 TTL 기반 제거와 같은 퇴거 정책을 구성해야 한다. 캐시는 각 서버에 로컬로 저장된다.</li>
+<li>Distributed Cache : 일반적으로 애플리케이션 서버와 별도의 서버에 배포되는 Redis다. Redis는 캐시에 남아있는 데이터를 제어하기 위해 다양한 퇴거 정책을 지원한다. 캐시는 수평적 확장성을 위해 여러 서버에 걸쳐 사딩될 수 있고 여러 앱에 공유된다. Redis는 지속성, 고가용성을 위한 복제, 다양한 데이터 구조 세트를 제공한다.</li>
+</ol>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231013192227007.png" alt=""></p>
+<p>Redis를 사용하면 사용자 전체 이름에 대한 문자열, 사용자 프로필에 대한 해시 등과 같은 다양한 데이터 유형을 캐시할 수 있다. 그러나 데이터베이스는 완전한 데이터 소스로 남아 전체 데이터 집합을 보유하는 반면, Redis는 인기있는 하위 집합을 캐시한다.</p>
+<p>파레토 원칙에 따르면 약 20%의 데이터가 액세스의 80%를 차지하는 경향이 있다. 따라서 가장 인기 있는 데이터의 20%를 Redis에 캐싱하면 대부분의 요청에 대한 성능을 개선할 수 있다. 이 80/20 법칙은 어떤 데이터를 캐싱하고 어떤 데이터를 데이터베이스에만 저장할지 결정할 수 있는 기준이 된다.</p>
+<p>캐시 계층 구조를 통해 다양한 데이터 크기 / 액세스 패턴을 효율적으로 관리할 수 있습니다. Level 1 Cache는 매우 중요한 소량의 데이터를 저장한다. Level 2 Cache는 여전히 자주 액세스되는 더 많은 데이터를 저장한다. 분산형 Redis 캐시는 서버간에 샤딩을 통한 대규모 데이터 세트를 보유할 수 있다.</p>
+<p>Redis를 캐시로 사용하면 성능이 향상되지만 캐시 일관성과 관련된 복잡성이 발생한다. 데이터 복사본이 여러 개 있을 수 있으므로 읽기 / 쓰기 전략을 신중하게 설계해야 한다. 일반적으로 하나의 데이터 소스를 “source of truth”로 지정하고 쓰기가 먼저 이 소스로 이동한다. 애플리케이션은 Redis를 캐시로 사용하여 업데이트 상태를 유지할 때 지연 로딩 및 write-through 패턴을 구현할 수 있다. Cache aside와 read aside는 Redis가 쉽게 지원하는 애플리케이션 레벨 캐싱 패턴이다.</p>
+<p>캐싱은 전형적인 시간 대 공간의 절충안으로 시스템 전체에 데이터를 복제하여 속도를 높인다. 파레토 원칙에 따르면 시스템 데이터의 20%가 대부분에 액세스되므로 캐싱 전략에 대한 좋은 지침이 될 수 있다.</p>
+<h2 id="Session-Store"><a href="#Session-Store" class="headerlink" title="Session Store"></a>Session Store</h2><p>세션 저장소는 웹 애플리케이션이 여러 요청에 걸쳐 상태를 유지하는데 중요한 구성요소다. Redis와 같이 널리 사용되는 솔루션은 세션 데이터를 인메모리에 보관하여 빠르고 확장 가능한 세션 저장소를 제공한다.</p>
+<p>서버는 Redis를 사용하여 세션 데이터를 저장하고 각 사용자와 연결한다. 서버는 올바른 세션을 검색하기 위해 각 요청에 대해 전송되는 고유한 세션 ID를 모든 클라이언트에 할당한다. 세션을 각 앱 서버에 로컬로 저장하는 대신 Redis에 저장하면 로드 밸런싱 시 “sticky session”이 필요하지 않게 된다.</p>
+<p>Redis의 세션 데이터는 JSON 또는 유사한 형식으로 직렬화된다. 따라서 사용자 프로필, 최근 작업, 장바구니, CSRF 토큰과 같은 구조화된 데이터를 저장할 수 있다.</p>
+<p>세션은 일정 기간 동안 사용하지 않으면 만료되어야 한다. 이렇게 하면 보안이 향상되고 오래된 리소스를 확보할 수 있다. 만료 시간은 앱의 필료에 따라 설정할 수 있다. 아래 다이어그램은 일반적인 Redis 세션 흐름을 보여준다.</p>
+<ul>
+<li>Step 1 - 2 : 사용자 로그인 요청이 사용자 서비스로 전송된다.</li>
+<li>Step 3 - 4 : 사용자 서비스가 고유한 세션ID를 생성하여 Redis에 새 세션을 생성한다.</li>
+<li>Step 5 - 6 : 사용자 서비스가 세션 ID를 로컬에 저장된 클라이언트로 다시 보낸다.</li>
+<li>Step 7 - 8 : 사용자가 장바구니에 제품을 추가한다. 그러면 요청이 쇼핑 카트 서비스로 전송된다.</li>
+<li>Step 9 - 10 : 장바구니 서비스가 세션 ID를 사용하여 Redis에서 세션 데이터를 검색한다. 새 장바구니 항목을 추가하여 Redis의 세션 개체를 업데이트한다.</li>
+<li>Step 11 - 12 : 쇼핑 카트 서비스가 성공 상태를 클라이언트에 반환한다.</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231013193205476.png" alt=""></p>
+<h2 id="Leaderboard"><a href="#Leaderboard" class="headerlink" title="Leaderboard"></a>Leaderboard</h2><p>리더보드는 오늘날 많은 애플리케이션에서 흔히 볼 수 있는 기능이다. 수백만 명의 사용자와 실시간으로 빠르게 변화하는 점수를 처리할 때는 고성능 리더보드를 구축하기 어렵다. Redis의 Sorted Set(ZSet) 데이터 구조는 빠르고 확장 가능한 리더보드를 구현하는 훌륭한 방법을 제공한다.</p>
+<p>ZSet은 점수별로 정렬된 멤버 컬렉션을 유지한다. 해시 테이블과 스킵 리스트를 사용해 내부적으로 구현되어 연사에 O(log(N)) 시간 복잡성을 허용한다. 아래는 몇 가지 주요 속성들이다.</p>
+<ul>
+<li>멤버는 고유하다</li>
+<li>각 멤버에는 연결된 점수가 있다</li>
+<li>멤버는 점수별로 정렬된다</li>
+<li>추가, 제거, 쿼리 범위, 순위 등과 같은 일반적인 작업을 지원한다</li>
+</ul>
+<p>Redis ZSet 명령을 사용해 실시간 리더보드를 구축하는 방법을 살펴보자.</p>
+<ul>
+<li>Step 1 - 초기 걸음 수가 1000인 Bob을 추가하여 ZADD로 리더보드 ZSet을 초기화한다.</li>
+<li>Step 2 - 기존 항복에 ZINCRBY를 사용하여 Bob의 점수를 15 증가시킨다.</li>
+<li>Step 3 - ZREVRANGE를 사용하여 상위 3개의 점수를 가져와 반환한다.</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231013193619799.png" alt=""></p>
+<p>대부분의 일반적인 리더보드 사용 사례의 경우, Redis ZSet은 짧은 지연 시간으로 실시간 업데이트를 처리할 수 있는 효율적인 구조를 제공한다. 동시 사용자가 수천만 명에 이르는 매우 높은 처리량 시나리오에서는 업데이트를 자주 다시 정렬하는데 드는 비용이 확장되지 않을 수 있다. 이러한 대규모 사례에서는 이런 워크로드에 최적화된 맞춤형 솔루션이 필요하다.</p>
+<h2 id="Message-Queue"><a href="#Message-Queue" class="headerlink" title="Message Queue"></a>Message Queue</h2><p>비동기 메시징을 위한 일반적인 솔루션은 ActiveMQ 또는 Apache Kafka와 같은 전용 메세지 큐 시스템이다. 그러나 다른 미들웨어를 도입하면 오버헤드와 복잡성이 추가될 수 있다. Redis는 회사의 기술 스택에 다른 기술을 추가하지 않고도 기본적인 메세징 요구 사항을 충족할 수 있는 경량 pub-sub 및 큐 기능을 제공한다. Redis 에서 메세지 큐를 구현하는 3가지 접근 방식은 아래와 같다.</p>
+<ol>
+<li>List</li>
+<li>Streams</li>
+<li>Pub / Sub</li>
+</ol>
+<h3 id="Use-a-List"><a href="#Use-a-List" class="headerlink" title="Use a List"></a>Use a List</h3><p>Redis List는 단순한 FIFO 큐다. 요소는 왼쪽에 추가되고 오른쪽에서 소비된다. 생산자는 LPUSH 명령을 사용하여 목록의 끝에 메세지를 추가한다. 소비자는 RPOP 명령을 사용하여 리스트의 앞쪽에서 메세지를 검색한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231013193935333.png" alt=""></p>
+<p>List는 기본적인 큐잉만 제공하므로 소비자는 새 메세지를 확인하려면 Redis를 폴링해야 한다. 이로 인해 CPU 주기가 낭비될 수 있다. 대안으로 blocking pop 명령인 BRPOP을 사용해 새 메세지를 효율적으로 기다릴 수 있다.</p>
+<p>메세지가 소비되면 목록에서 제거된다. 카프카처럼 메세지를 지속하려면 BRPOPPUSH를 사용해 소비된 메세지를 백업 목록에 추가할 수 있다.</p>
+<p>단점은 소비 속도가 느리면 메세지가 메모리에 쌓일 수 있다는 점이다. 리스트는 메세지 처리를 병렬화하는 소비자 그룹을 지원하지 않는다. 따라서 리스트는 단순한 임시 대기열에 가장 적합하다.</p>
+<h3 id="Use-Streams"><a href="#Use-Streams" class="headerlink" title="Use Streams"></a>Use Streams</h3><p>Redis Stream은 이벤트 소싱에 적합한 추가 전용 로그다. 스트림은 List에 비해 메세지 지속성, 순서 보장, 소비자 그룹에 대한 지원이 향상된다. 아래 다이억그램은 그 작동 방식을 보여준다.</p>
+<p>생산자는 <code>*</code> 매개변수와 함께 XADD를 사용하여 스트림에 새 메세지를 추가한다. 이 <code>*</code>는 각 메세지에 대한 고유 ID를 자동으로 생성하도록 Redis에 지시한다. <code>*</code>를 제공하지 않으면 중복을 피하기 위해 사용자가 고유 ID를 지정해야 한다. 이러한 ID를 사용하면 메세지 순서를 추적하고 중복을 방지하며 처리 후 전달을 확인할 수 있다.</p>
+<p>XGROUP는 소비자 그룹을 생성한다. XREADGROUP을 사용하면 동일한 스트림에서 동시에 읽는 그룹에 속한 여러 소비자가 확장된 소비를 할 수 있다. 예를 들어, “Consumer Group 1”의 “Consuer 1”과 “Consumer 2”가 메세지 부하를 공유하도록 구성할 수 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231013194442356.png" alt=""></p>
+<p>소비된 메세지는 pending entries list에 임시 보관된다. XACK를 통해 소비자가 확인하면 재전송을 방지하기 위해 목록에서 메세지가 제거된다. 더 나은 전달 보장 및 처리량을 제공하는 스트림은 리스트에 비해 더 강력한 대기열 선택지다.</p>
+<h3 id="Use-Pub-Sub"><a href="#Use-Pub-Sub" class="headerlink" title="Use Pub/Sub"></a>Use Pub/Sub</h3><p>Redis는 구독, 구독 취소, 게시 명령을 통해 pub/sub 메세지 기능을 제공한다. 클라이언트는 SUBSCRIBE를 사용해 채널을 구독하고, UNSUBSCRIBE로 등록을 취소하고, Kafka와 같은 토픽 기반 시스템과 유사하게 PUBLISH를 통한 메세지 전달을 할 수 있다.</p>
+<p>소비자는 하나 이상의 채널을 구독할 수 있다. 이러한 채널에 게시된 메세지가 있는 경우 Redis는 구독한 모든 소비자에게 메세지를 푸시한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231013195211604.png" alt=""></p>
+<p>Redis Pub/Sub은 간단한 채팅 애플리케이션을 빌드하는데 사용할 수 있다. 클라이언트는 사용자 / 채팅 채널을 구독하고 서로 간에 메세지를 게시한다. 그러나 Kafka와 같은 강력한 브로커 메세징 시스템과 비교하면 한계가 있다.</p>
+<ul>
+<li>지속성 보장 없음 - 메세지는 일시적이다.</li>
+<li>전달 보장 없음 - 메세지가 유실될 수 있다.</li>
+<li>순서 보장 없음 - 메세지가 순서대로 수신되지 않을 수 있다.</li>
+</ul>
+<p>Redis Pub/Sub은 기본적인 영구 보존 메세징을 지원하지만 지속성, 배달  보장, 주문 보장 등의 신뢰성 메커니즘이 부족하다.</p>
+<h2 id="Website-Analytics"><a href="#Website-Analytics" class="headerlink" title="Website Analytics"></a>Website Analytics</h2><p>인터넷 애플리케이션에서는 대량의 데이터에 대한 분석을 수행해야 하는 경우가 많다. 예를 들어 특정 웹 페이지의 페이지 뷰(PV) 또는 해당 페이지의 순 방문자 수(UV)를 계산해야 할 수 있다.</p>
+<p>수천만 또는 수억 명의 방문자와 같은 방대한 사용자 규모를 처리할 때는 PV와 UV를 계산하는 것이 어려워진다. 단순한 hash set을 사용해 각 사용자 ID를 저장하면 고유 사용자 수에 따라 메모리 공간이 선형적으로 증가하기 때문에 확장성이 떨어진다.</p>
+<p>대신 HyperLogLog와 같은 Redis의 확률적 데이터 구조를 활용해 PV 및 UV 메트릭의 카디널리티를 효율적으로 추정할 수 있다.</p>
+<p>HyperLogLog 데이터 구조는 추가된 요소의 수에 관계없이 상수 메모리를 사용하여 대략적인 카디널리티 수를 제공한다. 메모리 foorprint를 조정하여 표준 오차를 제어할 수 있으며, 메모리를 더 많이 할당하면 정확도가 향상된다. 그러나 메모리가 부족하더라도 HyperLogLog는 합리적인 오차로 대규모 카디널리티를 추정할 수 있다. 이를 통해 메모리 사용량을 고정적으로 유지하면서 웹 규모에서 페이지 조회수와 순 방문자를 추적할 수 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231013195708266.png" alt=""></p>
+<ul>
+<li>사용자가 페이지를 방문하면 해당 페이지에 매핑된 HyperLogLog 키에 사용자 ID를 PFADD 한다.</li>
+<li>예상 페이지 조회수를 얻기 위해 HyperLogLog 키에서 PFCOUNT를 실행한다.</li>
+</ul>
+<p>이렇게 하면 최소한의 메모리를 사용하면서 대규모로 페이지 조회수를 추적할 수 있다. 유사한 접근 방식을 사용하여 페이지 전체에서 고유 방문자 수를 중복 제거하고 계산할 수 있다.</p>
+<h2 id="Flash-Sale"><a href="#Flash-Sale" class="headerlink" title="Flash Sale"></a>Flash Sale</h2><p>플래시 세일에서는 각 제품의 수량이 제한되어 있기 때문에 제품 인벤토리 상태를 업데이트하기 위한 쓰기 요청이 동시에 대량으로 발생한다. 이러한 동시 요청을 조정하기 위해 Redis의 키-값 저장소를 사용하여 분산 잠금을 구현할 수 있다. 잠금을 획득한 인스턴스만 인벤토리 업데이트를 진행할 수 있으며 완료되면 잠금을 해제해야 한다.</p>
+<p>아래 다이어그램은 이것이 어떻게 작동하는지 보여준다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231013195920923.png" alt=""></p>
+<p>인스턴스 A가 인벤토리를 업데이트하려고 할 때, 현재 0인 경우 lock을 1로 설정하여 잠금을 획득하려고 시도한다고 가정해보자. Redis는 단일 스레드에서 모든 명령을 순차적으로 실행하므로 여러 인스턴스의 요청이 수신된 순서대로 실행된다. </p>
+<p>인스턴스 B가 인벤토리를 업데이트하려고 할 때, 인스턴스 A가 이미 잠금을 1로 설정했기 때문에 B의 요청은 실패한다.</p>
+<p>사용 가능한 경우 SETNX 명령을 사용하여 잠금을 원자적으로 획득할 수 있다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">SETNX inventorylock 1</span><br><span class="line">// Update the inventory</span><br><span class="line">DEL inventorylock</span><br></pre></td></tr></table></figure>
+<p>이 간단한 접근 방식에는 두 가지 잠재적인 문제가 있다.</p>
+<ol>
+<li>키를 삭제하기 전에 인스턴스 A가 충돌하면 잠금이 해제되지 않을 수 있다. 그러면 다른 인스턴스가 잠금을 획득할 수 없다.</li>
+<li>인스턴스 A가 보유한 잠금이 인스턴스 B 또는 다른 인스턴스에 의해 의도치 않게 해제될 수 있다.</li>
+</ol>
+<p>이런 문제를 해결하기 위해 접근 방식을 수정할 수 있다.</p>
+<ol>
+<li>만료 제한시간을 추가해 잠금 키가 삭제 되도록 한다.</li>
+<li>잠금 키에 고유한 인스턴스 식별자 값을 설정한다. 잠금 소유자 인스턴스만 키를 삭제할 수 있다.</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">SET inventorylock instanceA NX PX 10000</span><br><span class="line">// Update the inventory</span><br></pre></td></tr></table></figure>
+<p>이렇게 하면 인스턴스 A만 10초 이내에 잠금을 해제할 수 있다. 잠금이 만료되면 모든 인스턴스가 다시 획득을 시도할 수 있다. 그러나 이 Redis 기반 접근 방식은 많은 사용 사례에서 잘 작동하지만, 처리량이 매우 높은 시나리오에서는 몇 가지 한계가 있다.</p>
+<p>여러 서버에서 초당 수백만 건의 동시 요청이 발생하는 경우, Redis에서 반복적으로 잠금을 획득하고 해제하는데 드는 비용이 병목 현상이 될 수 있다.</p>
+<p>경합하는 클라이언트 간에 공정성이나 순서가 보장되지 않기 때문에 한 클라이언트의 잠금 요청은 다른 클라이언트가 계속 잠금을 보유하면 무기한 중단될 수 있다.</p>
+<p>따라서 분산 잠금이 필요한 처리량이 많은 시스템에서는 Redis가 전용 잠금 서비스에 비해 충분히 강력하지 않을 수 있지만, 운영이 더 간단하다.</p>
+<h2 id="Summary"><a href="#Summary" class="headerlink" title="Summary"></a>Summary</h2><p>이번 포스트에서는 캐싱, 공유 세션, 리더보드, 메세지 큐, 분석, 플래시 세일 등 다양한 Redis 사용 사례에 대해 알아보았다. 이번 포스트를 통해 여러 애플리케이션에서 프로덕션 환경에서 Redis가 널리 사용되는 방식에 대한 유용한 개요가 되었기를 바라며 마친다.</p>
+<!-- flag of hidden posts --></div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined">Song Hayoung</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="https://songhayoung.github.io/2023/10/13/System%20Design/ByteByteGo/private/the-6-most-impactful-ways-redis-is-used-in-production-systems/">https://songhayoung.github.io/2023/10/13/System%20Design/ByteByteGo/private/the-6-most-impactful-ways-redis-is-used-in-production-systems/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/System-Design/">System Design</a></div><nav id="pagination"></nav><div id="gitalk-container"></div><script>var gitalk = new Gitalk({
+  clientID: '3604b61642355579f55e',
+  clientSecret: 'f552120f18ac5aee3f6297e05e97d94c0a25cd4b',
+  repo: 'SongHayoung.github.io',
+  owner: 'SongHayoung',
+  admin: 'SongHayoung',
+  id: md5(decodeURI(location.pathname)),
+  language: 'en'
+})
+gitalk.render('gitalk-container')</script></div></div><footer class="footer-bg" style="background-image: url(https://xxxx.jpg)"><div class="layout" id="footer"><div class="copyright">&copy;2020 - 2023 By Song Hayoung</div><div class="framework-info"><span>Driven - </span><a target="_blank" rel="noopener" href="http://hexo.io"><span>Hexo</span></a><span class="footer-separator">|</span><span>Theme - </span><a target="_blank" rel="noopener" href="https://github.com/Molunerfinn/hexo-theme-melody"><span>Melody</span></a></div><div class="footer_custom_text">Learning how to walk slowly to not miss important things</div><div class="busuanzi"><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><span id="busuanzi_container_page_pv"><i class="fa fa-file"></i><span id="busuanzi_value_page_pv"></span><span></span></span></div></div></footer><i class="fa fa-arrow-up" id="go-up" aria-hidden="true"></i><script src="https://cdn.jsdelivr.net/npm/animejs@latest/anime.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@latest/velocity.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-ui-pack@latest/velocity.ui.min.js"></script><script src="/js/utils.js?version=1.7.0"></script><script src="/js/fancybox.js?version=1.7.0"></script><script src="/js/sidebar.js?version=1.7.0"></script><script src="/js/copy.js?version=1.7.0"></script><script src="/js/fireworks.js?version=1.7.0"></script><script src="/js/transition.js?version=1.7.0"></script><script src="/js/scroll.js?version=1.7.0"></script><script src="/js/head.js?version=1.7.0"></script><script src="/js/search/algolia.js"></script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+    processEscapes: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  },
+  CommonHTML: {
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "HTML-CSS": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "SVG": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  }
+});
+</script><script type="text/x-mathjax-config">MathJax.Hub.Queue(function() {
+  var all = MathJax.Hub.getAllJax(), i;
+  for (i=0; i < all.length; i += 1) {
+    all[i].SourceElement().parentNode.className += ' has-jax';
+  }
+});
+</script><script src="https://cdn.jsdelivr.net/npm/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><script>if(/Android|webOS|iPhone|iPod|iPad|BlackBerry/i.test(navigator.userAgent)) {
+  $('#nav').addClass('is-mobile')
+  $('footer').addClass('is-mobile')
+  $('#top-container').addClass('is-mobile')
+}</script><div class="search-dialog" id="algolia-search"><div class="search-dialog__title" id="algolia-search-title">Algolia</div><div id="algolia-input-panel"><div id="algolia-search-input"></div></div><hr><div id="algolia-search-results"><div id="algolia-hits"></div><div id="algolia-pagination"></div><div id="algolia-stats"></div></div><span class="search-close-button"><i class="fa fa-times"></i></span></div><div class="search-mask"></div></body></html>
