@@ -1,0 +1,246 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="description" content="[System Design] Design Google Drive"><meta name="keywords" content="System Design"><meta name="author" content="Song Hayoung"><meta name="copyright" content="Song Hayoung"><title>[System Design] Design Google Drive | SUMFIのBlog</title><meta name="robots" content="noindex"><link rel="shortcut icon" href="/songcon.ico"><link rel="stylesheet" href="/css/index.css?version=1.7.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@latest/css/font-awesome.min.css?version=1.7.0"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css?version=1.7.0"><meta name="format-detection" content="telephone=no"><meta http-equiv="x-dns-prefetch-control" content="on"><link rel="dns-prefetch" href="https://cdn.jsdelivr.net"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.css"><script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.js" defer></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@latest/dist/gitalk.min.js"></script><script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.10.0/js/md5.min.js"></script><link rel="dns-prefetch" href="https://www.google-analytics.com"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-169368422-1', 'auto');
+ga('send', 'pageview');</script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: {"appId":"7LZ6OJ4D6C","apiKey":"9a84e13f74ea78c3fd54512c10139c56","indexName":"git blog","hits":{"per_page":10},"languages":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}.","hits_stats":"${hits} results found in ${time} ms"}},
+  localSearch: undefined,
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  }
+} </script><meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/rss2.xml" title="SUMFIのBlog" type="application/rss+xml">
+</head><body><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar" data-display="true"><div class="toggle-sidebar-info text-center"><span data-toggle="Toggle article">Toggle site</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">Catalog</div><div class="sidebar-toc__progress"><span class="progress-notice">You've read</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Design-Google-Drive"><span class="toc-number">1.</span> <span class="toc-text">Design Google Drive</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Step-1-Understand-the-problem-and-establish-design-scope"><span class="toc-number">2.</span> <span class="toc-text">Step 1 - Understand the problem and establish design scope</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Non-functional-requirements"><span class="toc-number">2.1.</span> <span class="toc-text">Non functional requirements</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Back-of-the-envelope-estimation"><span class="toc-number">2.2.</span> <span class="toc-text">Back of the envelope estimation</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Step-2-Propose-high-level-design-and-get-buy-in"><span class="toc-number">3.</span> <span class="toc-text">Step 2 - Propose high-level design and get buy-in</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#APIs"><span class="toc-number">3.1.</span> <span class="toc-text">APIs</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Upload-a-file-to-Google-Drive"><span class="toc-number">3.1.1.</span> <span class="toc-text">Upload a file to Google Drive</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Download-a-file-from-Google-Drive"><span class="toc-number">3.1.2.</span> <span class="toc-text">Download a file from Google Drive</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Get-file-revisions"><span class="toc-number">3.1.3.</span> <span class="toc-text">Get file revisions</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Move-away-from-single-server"><span class="toc-number">3.2.</span> <span class="toc-text">Move away from single server</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Sync-conflicts"><span class="toc-number">3.3.</span> <span class="toc-text">Sync conflicts</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#High-level-design"><span class="toc-number">3.4.</span> <span class="toc-text">High-level design</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Step-3-Design-deep-dive"><span class="toc-number">4.</span> <span class="toc-text">Step 3 - Design deep dive</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Block-servers"><span class="toc-number">4.1.</span> <span class="toc-text">Block servers</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#High-consistency-requirement"><span class="toc-number">4.2.</span> <span class="toc-text">High consistency requirement</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Metadata-database"><span class="toc-number">4.3.</span> <span class="toc-text">Metadata database</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Upload-flow"><span class="toc-number">4.4.</span> <span class="toc-text">Upload flow</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Download-flow"><span class="toc-number">4.5.</span> <span class="toc-text">Download flow</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Notification-service"><span class="toc-number">4.6.</span> <span class="toc-text">Notification service</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Save-storage-space"><span class="toc-number">4.7.</span> <span class="toc-text">Save storage space</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Failure-Handling"><span class="toc-number">4.8.</span> <span class="toc-text">Failure Handling</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Step-4-Wrap-up"><span class="toc-number">5.</span> <span class="toc-text">Step 4 - Wrap up</span></a></li></ol></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="https://avatars3.githubusercontent.com/u/37806785?s=460&amp;u=8c68d685faf7c5280cfbd736a6b1730b55fb4203&amp;v=4"></div><div class="author-info__name text-center">Song Hayoung</div><div class="author-info__description text-center"></div><div class="follow-button"><a target="_blank" rel="noopener" href="https://www.instagram.com/hayoung0_0/">Follow Me</a></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="/archives"><span class="pull-left">Articles</span><span class="pull-right">9393</span></a><a class="author-info-articles__tags article-meta" href="/tags"><span class="pull-left">Tags</span><span class="pull-right">191</span></a><a class="author-info-articles__categories article-meta" href="/categories"><span class="pull-left">Categories</span><span class="pull-right">60</span></a></div><hr><div class="author-info-links"><div class="author-info-links__title text-center">VISITED</div><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Seoul Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Jeju Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">British Columbia Canada</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Boracay Philippines</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">三重　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">大阪　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">名古屋　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">静岡　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">札幌　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">京都　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Bangkok Thailand</a></div></div></div><div id="content-outer"><div id="top-container" style="background-image: url(https://xxxx.jpg)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="/">SUMFIのBlog</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus">   <a class="site-page" href="/">Home</a><a class="site-page" href="/archives">Archives</a><a class="site-page" href="/tags">Tags</a><a class="site-page" href="/categories">Categories</a><a class="site-page" href="/about">About</a></span><span class="pull-right"><a class="site-page social-icon search"><i class="fa fa-search"></i><span> Search</span></a></span></div><div id="post-info"><div id="post-title">[System Design] Design Google Drive</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2023-10-31</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/">System Design</a><i class="fa fa-angle-right" aria-hidden="true"></i><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/System-Design-Interview/">System Design Interview</a><div class="post-meta-wordcount"><span>Word count: </span><span class="word-count">2.5k</span><span class="post-meta__separator">|</span><span>Reading time: 15 min</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div class="article-container" id="post-content"><h2 id="Design-Google-Drive"><a href="#Design-Google-Drive" class="headerlink" title="Design Google Drive"></a>Design Google Drive</h2><span id="more"></span>
+<p>최근 몇 년 동안 구글 드라이브, 드롭박스, 마이크로소프트 OneDrive, 애플 iCloud와 같은 클라우드 스토리지 서비스가 큰 인기를 끌고 있다. 이 포스트에서는 구글 드라이브를 디자인한다.</p>
+<p>디자인에 들어가기 전 구글 드라이브에 대해 잠시 이해해본다. 구글 드라이브는 문서, 사진, 동영상 및 기타 파일을 클라우드에 저장하는데 도움이 되는 파일 저장 및 동기화 서비스다. 모든 컴퓨터, 스마트폰, 태블릿에서 파일에 액세스할 수 있다. 이런 파일을 친구, 가족, 동료와 쉽게 공유할 수 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231031174914140.png" alt=""></p>
+<h2 id="Step-1-Understand-the-problem-and-establish-design-scope"><a href="#Step-1-Understand-the-problem-and-establish-design-scope" class="headerlink" title="Step 1 - Understand the problem and establish design scope"></a>Step 1 - Understand the problem and establish design scope</h2><ul>
+<li>파일 추가 : 파일을 추가하는 가장 쉬운 방법은 파일을 드라이브에 드레그 앤 드랍 하는 것이다.</li>
+<li>파일 다운로드 </li>
+<li>여러 장치에서 파일을 동기화 : 한 디바이스에 파일을 추가하면 다른 디바이스에 자동으로 동기화 된다.</li>
+<li>파일 수정 내용 확인</li>
+<li>친구, 가족, 동료와 파일 공유</li>
+<li>파일을 수정, 삭제하거나 공유할 때 알림 전송</li>
+</ul>
+<h3 id="Non-functional-requirements"><a href="#Non-functional-requirements" class="headerlink" title="Non functional requirements"></a>Non functional requirements</h3><ul>
+<li>Reliability. 스토리지 시스템에서 신뢰성은 매우 중요하다. 데이터 손실은 용납될 수 없다.</li>
+<li>Fast sync speed. 파일 동기화에 시간이 너무 오래 걸리면 사용자는 부정적인 경험을 한다.</li>
+<li>Bandwidth usage. 제품이 불필요한 네트워크 대역폭을 많이 사용하는 경우, 특히 모바일 데이터 요금제를 사용하는 사용자는 불만을 갖게 된다.</li>
+<li>Scalability. 시스템은 많은 양의 트래픽을 처리할 수 있어야 한다.</li>
+<li>High availability. 일부 서버가 오프라인 상태이거나 속도가 느려지거나 예기치 않은 네트워크 오류가 발생하더라도 사용자가 시스템을 계속 사용할 수 있어야 한다.</li>
+</ul>
+<h3 id="Back-of-the-envelope-estimation"><a href="#Back-of-the-envelope-estimation" class="headerlink" title="Back of the envelope estimation"></a>Back of the envelope estimation</h3><ul>
+<li>가입자가 50M DAU가 10M이라고 가정한다.</li>
+<li>사용자에게 10GB의 공간이 제공된다.</li>
+<li>사용자당 평균 하루에 2개의 파일을 업로드하고 파일 평균 크기는 500KB라 한다.</li>
+<li>1:1의 읽기 쓰기 비율</li>
+<li>Total space allocated : 50M * 10GB = 500 Petabyte</li>
+<li>QPS for upload API : 10M * 2 uploads / 24H / 3600s =~ 240</li>
+<li>Peak QPS = QPS * 2 = 480</li>
+</ul>
+<h2 id="Step-2-Propose-high-level-design-and-get-buy-in"><a href="#Step-2-Propose-high-level-design-and-get-buy-in" class="headerlink" title="Step 2 - Propose high-level design and get buy-in"></a>Step 2 - Propose high-level design and get buy-in</h2><p>처음부터 고수준 설계 다이어그램을 작성하는 대신 다른 접근방식을 취해본다. 모든 것을 단일 서버에 구축하는 간단한 방법부터 시작한다. 그 뒤엔 수백만 명의 사용자를 지원할 수 있도록 점진적으로 확장해간다. 우선 아래 나열된 단일 서버들 부터 시작한다.</p>
+<ul>
+<li>파일을 업로드하고 다운로드할 웹 서버</li>
+<li>사용자 데이터, 로그인 정보, 파일 정보 등의 메타데이터를 추적하는 데이터베이스</li>
+<li>파일을 저장할 스토리지 시스템. 파일을 저장하기 위해 1TB의 저장 공간을 할당한다.</li>
+</ul>
+<p>Apache web server, MySQL, 업로드된 파일을 저장할 루트 디렉토리로 <em>drive/</em>라는 디렉토리를 구축했다. <em>drive/</em> 디렉토리 아래에는 네임스페이스라고 하는 디렉토리 목록이 있다. 각 네임스페이스에는 해당 사용자가 업로드한 모든 파일이 포함된다. 서버의 파일 이름은 원본 파일 이름과 동일하게 유지된다. 네임스페이스와 상대 경로를 결합하여 각 파일 또는 폴더를 고유하게 식별할 수 있다. 아래는 <em>drive/</em> 디렉토리의 구조를 보여준다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231031212716203.png" alt=""></p>
+<h3 id="APIs"><a href="#APIs" class="headerlink" title="APIs"></a>APIs</h3><p>기본적으로 파일 업로드, 파일 다운로드, 파일 변경사항 가져오기 등 3가지 API가 필요하다.</p>
+<h4 id="Upload-a-file-to-Google-Drive"><a href="#Upload-a-file-to-Google-Drive" class="headerlink" title="Upload a file to Google Drive"></a>Upload a file to Google Drive</h4><p>두 가지 유형의 업로드가 지원된다.</p>
+<ul>
+<li>Simple upload. 파일 크기가 작은 경우 이 업로드 유형을 사용한다.</li>
+<li>Resumable upload. 파일 크기가 크고 네트워크가 중단될 가능성이 높은 경우 이 유업로드 유형을 사용한다.</li>
+</ul>
+<p>아래는 resumable upload API의 예이다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">https://api.example.com/files/upload?uploadType=resumable</span><br><span class="line"></span><br><span class="line">Params:</span><br><span class="line">uploadType=resumable</span><br><span class="line">data: Local file to be uploaded.</span><br></pre></td></tr></table></figure>
+<p>Resumable upload는 3단계를 통해 이루어진다.</p>
+<ul>
+<li>Resumable upload를 시작하기 위한 초기 요청</li>
+<li>데이터를 업로드하고 업로드 상태를 모니터링</li>
+<li>업로드가 중단되면 업로드를 재개</li>
+</ul>
+<h4 id="Download-a-file-from-Google-Drive"><a href="#Download-a-file-from-Google-Drive" class="headerlink" title="Download a file from Google Drive"></a>Download a file from Google Drive</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">Example API: https://api.example.com/files/download</span><br><span class="line"></span><br><span class="line">Params:</span><br><span class="line">path: download file path.</span><br><span class="line"></span><br><span class="line">e.g)</span><br><span class="line">&#123;</span><br><span class="line">	&quot;path&quot;: &quot;/recipes/soup/best_soup.txt&quot;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="Get-file-revisions"><a href="#Get-file-revisions" class="headerlink" title="Get file revisions"></a>Get file revisions</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">Example API: https://api.example.com/files/list_revisions</span><br><span class="line"></span><br><span class="line">Params:</span><br><span class="line">path: The path to the file you want to get the revision history.</span><br><span class="line">limit: The maximum number of revisions to return.</span><br><span class="line"></span><br><span class="line">E.g)</span><br><span class="line"></span><br><span class="line">&#123;</span><br><span class="line">	&quot;path&quot;: &quot;/recipes/soup/best_soup.txt&quot;,</span><br><span class="line">	&quot;limit&quot;: 20</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>모든 API는 사용자 인증이 필요하며 HTTPS를 사용한다. Secure Sockets Layer(SSL)은 클라이언트와 백엔드 서버 간의 데이터 전송을 보호한다.</p>
+<h3 id="Move-away-from-single-server"><a href="#Move-away-from-single-server" class="headerlink" title="Move away from single server"></a>Move away from single server</h3><p>더 많은 파일이 업로드될 수록 결국 아래와 같이 공간이 가득 찼다는 알림을 받게 된다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231031213325446.png" alt=""></p>
+<p>저장 공간이 얼마 남지 않았다. 사용자가 더 이상 파일을 업로드할 수 없는 비상 상황이다. 가장 먼저 떠오르는 해결책은 데이터를 샤딩해 여러 스토리지 서버에 저장하는 것이다. 아래는 user_id를 기반으로 하는 샤딩의 예이다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231031213413720.png" alt=""></p>
+<p>데이터베이스를 샤딩한 뒤에는 면밀히 모니터링한다. 모든 것이 다시 순조롭게 동작한다. 급한 불은 껐지만 스토리지 서버가 중단될 경우 발생할 수 있는 데이터 손실에 대해 여전히 걱정하고 있다. 이 문제를 해결하기 위해 Amazon Simple Storage Service(Amazon S3) 도입을 검토한다. S3는 동일 리전 및 리전 간 복제를 지원한다. 중복 파일은 데이터 손실을 방지하고 가용성을 보장하기 위해 여러 리전에 저장된다. 버킷은 파일 시스템의 폴더와 같다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231031213637040.png" alt=""></p>
+<p>S3에 파일을 저장한 후에는 데이터 손실에 대한 걱정이 줄었다. 앞으로 유사한 문제가 발생하지 않도록 개선할 수 있는 부분에 대한 추가 연구를 진행하기로 한다.</p>
+<ul>
+<li>Load balancer : LB를 추가해 네트워크 트래픽을 분산시킨다. LB는 트래픽이 고르게 분산되도록 하며, 웹 서버가 다운되면 트래픽을 재분배한다.</li>
+<li>Web servers : LB를 추가한 뒤에는 트래픽 부하에 따라 웹 서버를 쉽게 추가 / 제거할 수 있다.</li>
+<li>Metadata database : 데이터베이스를 서버 외부로 이동해 단일 장애 지점을 방지한다. 그 동안 데이터 복제 및 샤딩을 설정해 가용성 및 확장성 요구 사항을 충족한다.</li>
+<li>File storage : Amazon S3를 스토리지로 사용한다. 가용성과 내구성을 보장하기 위해 파일은 두 개의 별도 지리적 영역에 복제된다.</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231031214226763.png" alt=""></p>
+<h3 id="Sync-conflicts"><a href="#Sync-conflicts" class="headerlink" title="Sync conflicts"></a>Sync conflicts</h3><p>구글 드라이브와 같은 대용량 스토리지 시스템의 경우 동기화 충돌이 수시로 발생한다. 두 명의 사용자가 동시에 같은 파일이나 폴더를 수정하면 충돌이 발생한다. 이 충돌을 어떻게 처리해야 할까? 먼저 처리되는 버전이 승리하고 나중에 처리되는 버전이 충돌을 받는 방식이다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231031222211493.png" alt=""></p>
+<p>위 다이어그램은 사용자 1와 2가 동시에 동일한 파일을 업데이트하려고 시도하지만 사용자 1의 파일이 시스템에서 먼저 처리된다. 사용자 1의 업데이트 작업은 진행되지만 사용자 2는 동기화 충돌이 발생한다. 사용자 2의 충돌을 해결하려면 어떻게 해야할까? 이 시스템은 사용자 2의 로컬 복사본과 서버의 최신 버전이라는 동일한 파일의 두 복사본을 모두 제공한다. 사용자 2는 두 파일을 병합하거나 한 버전을 다른 버전으로 재정의할 수 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231031223110776.png" alt=""></p>
+<h3 id="High-level-design"><a href="#High-level-design" class="headerlink" title="High-level design"></a>High-level design</h3><p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231031223203035.png" alt=""></p>
+<ul>
+<li>User : 브라우저 또는 모바일 앱을 통해 애플리케이션을 사용하는 사용자.</li>
+<li>Block servers : 블록 서버는 블록을 클라우드 스토리지에 업로드한다. 블록 단위 저장소라고도 하는 블록 스토리지는 클라우드 기반 환경에 데이터 파일을 저장하는 기술이다. 파일은 각각 고유한 해시값을 가진 여러 개의 블록으로 분할되어 메타데이터 데이터베이스에 저장될 수 있다. 각 블록은 독립적인 개체로 취급되어 Dropbox 스토리지 시스템(S3)에 저장된다. 파일을 재구성하기 위해 블록은 특정 순서로 결합된다.</li>
+<li>Cloud storage : 파일이 더 작은 블록으로 분할되어 클라우드 스토리지에 저장된다.</li>
+<li>Clod storage : 콜드 스토리지는 비활성 데이터를 저장하기 위해 설계된 컴퓨터 시스템으로, 파일에 오랫동안 액세스하지 않는 것을 의미한다.</li>
+<li>Load balancer : 로드 밸런서는 API 서버 간에 요청을 균등하게 분배한다.</li>
+<li>API servers : 업로드 흐름을 제외한 거의 모든 작업을 담당한다. API 서버는 사용자 인증, 사용자 프로필 관리, 파일 메타데이터 업데이트 등에 사용된다.</li>
+<li>Metadata database : 사용자, 파일, 블록, 버전 등의 메타데이터를 저장한다. 파일은 클라우드에 저장되며 메타데이터 데이터베이스에는 메타데이터만 저장된다는 점에 유의한다.</li>
+<li>Metadata cache : 빠른 검색을 위해 일부 메타데이터가 캐시된다.</li>
+<li>Notification service : 특정 이벤트가 발생할 때 알림 서비스에서 클라이언트로 데이터를 전송할 수 있는 pub / sub 시스템이다. 이 서비스의 경우 파일이 다른 곳에서 추가 / 편집 / 제거 될 때 관련 클라이언트에게 알려주어 최신 변경 사항을 가져올 수 있도록 한다.</li>
+<li>Offline backup queue : 클라이언트가 오프라인 상태여서 최신 파일 변경 내용을 가져올 수 없는 경우, 오프라인 백업 대기열에 정보를 저장하여 클라이언트가 온라인 상태가 되면 변경 내용이 동기화되도록 한다.</li>
+</ul>
+<h2 id="Step-3-Design-deep-dive"><a href="#Step-3-Design-deep-dive" class="headerlink" title="Step 3 - Design deep dive"></a>Step 3 - Design deep dive</h2><p>이 섹션에서는 블록 서버, 메타데이터 데이터베이스, 업로드 흐름, 다운로드 흐름, 알림 서비스, 저장 공간 절약 및 장애 처리에 대해 살펴본다.</p>
+<h3 id="Block-servers"><a href="#Block-servers" class="headerlink" title="Block servers"></a>Block servers</h3><p>정기적으로 업데이트되는 대용량 파일의 경우 업데이트할 때마다 전체 파일을 전송하면 많은 대역폭이 소모된다. 전송되는 네트워크 트래픽의 양을 최소화하기 위해 두 가치 최적화가 제안된다.</p>
+<ul>
+<li>Delta sync : 파일이 수정되면 동기화 알고리즘을 사용하여 전체 파일 대신 수정된 블록만 동기화 된다.</li>
+<li>Compression : 블록에 압축을 적용하면 데이터 크기를 크게 줄일 수 있다. 따라서 블록은 파일 유형에 따라 압축 알고리즘을 사용하여 압축된다. 예를 들어, 텍스트 파일을 압축하는 데는 gzip 및 bzip2가 사용된다. 이미지와 동영상을 압축하려면 다른 압축 알고리즘이 필요하다.</li>
+</ul>
+<p>이 시스템에서는 블록 서버가 파일 업로드를 위한 무거운 작업을 수행한다. 블록 서버는 파일을 블록으로 분할하고, 각 블록을 압축하고, 암화하하는 방식으로 클라이언트로부터 전달받은 파일을 처리한다. 전체 파일을 스토리지 시스템에 업로드하는 대신 수정된 블록만 전송한다. 아래는 블록 서버에 새로운 파일이 추가될 때 동작을 이해하기 위한 다이어그램이다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231031224319526.png" alt=""></p>
+<ul>
+<li>파일은 더 작은 블록으로 분할된다.</li>
+<li>각 블록은 압축 알고리즘을 사용해 압축된다.</li>
+<li>보안을 위해 각 블록은 클라우드 스토리지로 전송되기 전에 암호화 된다.</li>
+<li>블록이 클라우드 스토리지에 업로드 된다.</li>
+</ul>
+<p>아래는 델타 동기화, 즉 수정된 블록만 클라우드 스토리지로 전송되는 것을 보여준다. 강조 표시된 “Block 2”와 “Block 5”는 변경된 블록을 나타낸다. 델타 동기화를 사용하면 이 두 블록만 클라우드 스토리지에 업로드 된다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231031224518008.png" alt=""></p>
+<p>블록 서버를 사용하면 델타 동기화 및 압축을 제공해 네트워크 트래픽을 절약할 수 있다.</p>
+<h3 id="High-consistency-requirement"><a href="#High-consistency-requirement" class="headerlink" title="High consistency requirement"></a>High consistency requirement</h3><p>이 시스템은 기본적으로 강력한 일관성을 요구한다. 파일이 여러 클라이언트에서 동시에 다르게 표시되는 것은 용납되지 않는다. 시스템은 메타데이터 캐시 및 데이터베이스 레이어에 강력한 일관성을 제공해야 한다.</p>
+<p>메모리 캐시는 기본적으로 최종 일관성 모델을 채택하므로 복제본마다 다른 데이터를 가질 수 있다. 강력한 일관성을 확보하려면 다음을 보장해야 한다.</p>
+<ul>
+<li>캐시 복제본과 마스터의 데이터는 일관성이 있어야 한다.</li>
+<li>데이터베이스 쓰기 시 캐시를 무효화하여 캐시와 데이터베이스가 동일한 값을 보유하도록 한다.</li>
+</ul>
+<p>관계형 데이터베이스는 ACID 속성을 유지하기 때문에 강력한 일관성을 쉽게 달성할 수 있다. 그러나 NoSQL 데이터베이스는 기본적으로 ACID 속성을 지원하지 않는다. ACID 속성은 동기화 로직에 프로그래밍 방식으로 통합해야 한다. </p>
+<h3 id="Metadata-database"><a href="#Metadata-database" class="headerlink" title="Metadata database"></a>Metadata database</h3><p>아래는 간략한 데이터베이스 스키마 설계를 보여준다. </p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231031224843426.png" alt=""></p>
+<ul>
+<li>User : 사용자 테이블에는 사용자 이름, 이메일, 프로필 사진 등 사용자에 대한 기본 정보가 포함되어 있다.</li>
+<li>Device : 디바이스 테이블에는 디바이스 정보가 저장된다. Push_id는 모바일 푸시 알림을 보내고 받는 데 사용된다. 한 사용자가 여러 개의 디바이스를 보유할 수 있다는 점에 유의해야 한다.</li>
+<li>Namespace : 네임스페이스는 사용자의 루트 디렉토리다.</li>
+<li>File : 파일 테이블에는 최신 파일과 관련된 모든 것이 저장된다.</li>
+<li>File_version : 파일의 버전 기록을 저장한다. 파일 수정 내역의 무결성을 유지하기 위해 기존 행은 읽기 전용이다.</li>
+<li>Block : 파일 블록과 관련된 모든 내용을 저장한다. 모든 블록을 올바른 순서로 조인하여 모든 버전의 파일을 재구성할 수 있다.</li>
+</ul>
+<h3 id="Upload-flow"><a href="#Upload-flow" class="headerlink" title="Upload flow"></a>Upload flow</h3><p>클라이언트가 파일을 업로드하면 어떤 일이 발생하는지 살펴보자.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231031225106861.png" alt=""></p>
+<p>위 다이어그램은 파일 메타데이터 추가와 클라우드 스토리지에 파일 업로드라는 두 가지 요청이 동시에 전송된다. 두 요청 모두 클라이언트 1에서 시작된다.</p>
+<ul>
+<li>Add file metadata<ol>
+<li>클라이언트 1이 새 파일의 메타데이터를 추가하는 요청을 보낸다.</li>
+<li>메타데이터 DB에 새 파일 메타데이터를 저장하고 파일 업로드 상태를 “대기 중”으로 변경한다.</li>
+<li>알림 서비스에 새 파일이 추가되고 있음을 알린다.</li>
+<li>알림 서비스에서 관련 클라이언트에 파일 업로드 중임을 알린다.</li>
+</ol>
+</li>
+<li>Upload files to cloud storage<ol>
+<li>클라이언트 1이 파일 콘텐츠를 블록 서버에 업로드한다.</li>
+<li>블록 서버는 파일을 블록으로 분할하고, 압축하고, 암호화하여 클라우드 스토리지에 업로드한다.</li>
+<li>파일이 업로드되면 클라우드 스토리지에서 업로드 완료 콜백을 트리거한다. 요청이 API 서버로 전송된다.</li>
+<li>메타데이터 DB에서 파일 상태가 “업로드 됨”으로 변경된다.</li>
+<li>파일 상태가 “업로드 됨”으로 변경되었음을 알림 서비스에 알린다.</li>
+<li>알림 서비스는 관련 클라이언트에게 파일이 완전히 업로드되었음을 알린다.</li>
+</ol>
+</li>
+</ul>
+<h3 id="Download-flow"><a href="#Download-flow" class="headerlink" title="Download flow"></a>Download flow</h3><p>다운로드 흐름은 다른 곳에서 파일을 추가 하거나 편집할 때 트리거된다. 클라이언트는 다른 클라이언트가 파일을 추가하거나 편집했는지 알 수 있는 방법은 두 가지가 있다.</p>
+<ul>
+<li>다른 클라이언트가 파일을 변경하는 동안 클라이언트 A가 온라인인 경우 알림 서비스는 클라이언트 A에게 어딘가에서 변경이 이루어졌으므로 최신 데이터를 가져와야 한다는 사실을 알려준다.</li>
+<li>다른 클라이언트가 파일을 변경하는 동안 클라이언트 A가 오프라인 상태이면 데이터가 캐시에 저장된다. 오프라인 클라이언트가 다시 온라인 상태가 되면 최신 변경 사항을 가져온다.</li>
+</ul>
+<p>클라이언트는 파일이 변경된 것을 알게 되면 먼저 API 서버를 통해 메타데이터를 요청한 다음 블록을 다운로드해 파일을 구성한다. 아래는 자세한 흐름을 보여준다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231031225719450.png" alt=""></p>
+<ol>
+<li>알림 서비스가 클라이언트 2에게 파일이 다른 곳에서 변경되었음을 알린다.</li>
+<li>클라이언트 2가 새 업데이트가 사용 가능하다는 것을 알게 되면 메타데이터 가져오기 요청을 보낸다.</li>
+<li>API 서버는 메타데이터 DB를 호출해 변경된 메타데이터를 가져온다.</li>
+<li>메타데이터가 API 서버로 반환된다.</li>
+<li>클라이언트 2가 메타데이터를 가져온다.</li>
+<li>클라이언트가 메타데이터를 받으면 블록 서버에 블록을 다운로드 하라는 요청을 보낸다.</li>
+<li>블록 서버가 먼저 클라우드 스토리지에서 블록을 다운로드 한다.</li>
+<li>클라우드 스토리지가 블록을 블록 서버로 반환한다.</li>
+<li>클라이언트 2가 모든 새 블록을 다운로드해 파일을 재구성한다.</li>
+</ol>
+<h3 id="Notification-service"><a href="#Notification-service" class="headerlink" title="Notification service"></a>Notification service</h3><p>파일 일관성을 유지하려면 로컬에서 수행된 파일의 모든 변형을 다른 클라이언트에 알려 충돌을 줄여야 한다. 알림 서비스는 이런 목적을 위해 구축되었다. 고수준에서 알림 서비스를 사용하면 이벤트가 발생할 때 데이터를 클라이언트에 전송할 수 있다. 아래는 몇 가지 옵션이다.</p>
+<ul>
+<li>Long polling. Dropbox는 롱 폴링을 쓴다.</li>
+<li>WebSocket. Websocket은 클라이언트와 서버 간에 영구적인 연결을 제공한다. 통신은 양방향으로 이루어진다.</li>
+</ul>
+<p>두 옵션 모드 잘 동작하지만 아래 이유들로 인해 long polling을 선택한다.</p>
+<ul>
+<li>알림 서비스를 위한 통신은 양방향이 아니다. 서버는 파일 변경에 대한 정보를 클라이언트로 보내지만 그 반대는 아니다.</li>
+<li>웹소켓은 채팅 앱과 같은 실시간 양방향 통신에 적합하다. Google 드라이브의 경우 알림은 데이터 폭증 없이 드물게 전송된다.</li>
+</ul>
+<p>롱 폴링을 사용하면 각 클라이언트가 알림 서비스에 대한 롱 폴링 연결을 설정한다. 파일에 대한 변경 사항이 감지되면 클라이언트는 롱 폴링 연결을 닫는다. 연결을 닫는다는 것은 클라이언트가 메타데이터 서버에 연결해 최신 변경 사항을 다운로드 해야 한다는 의미다. 응답을 받거나 연결 시간 제한에 도달하면 클라이언트는 즉시 연결을 계속 열어두기 위해 새 요청을 보낸다.</p>
+<h3 id="Save-storage-space"><a href="#Save-storage-space" class="headerlink" title="Save storage space"></a>Save storage space</h3><p>파일 버전 기록을 지원하고 안정성을 보장하기 위해 동일한 파일의 여러 버전이 여러 데이터 센터에 저장된다. 모든 파일 수정본을 자주 백업하면 스토리지 공간을 빠르게 채울 수 있다. 스토리지 비용을 절감하기 위해 세 가지 기술이 제안된다.</p>
+<ul>
+<li>De-duplicate data blocks. 계정 수준에서 중복 블록을 제거하면 공간을 쉽게 절약할 수 있다. 두 블록의 해시 값이 같으면 동일한 블록이다.</li>
+<li>Adopt an intelligent data backup strategy. 두 가치 최적화 전략을 적용할 수 있다.<ul>
+<li>Set a limit : 저장할 버전 수에 제한을 설정할 수 있다. 한도에 도달하면 가장 오래된 버전이 새 버전으로 대체된다.</li>
+<li>Keep valuable versions only : 일부 파일은 자주 편집할 수 있다. 예를 들어 많이 수정된 문서의 모든 수정 버전을 저장하면 단 기간에 파일이 1000번 이상 저장될 수 있다. 불필요한 사본을 방지하기 위해 저장되는 버전 수를 제한할 수 있다. 최신 버전에 더 많은 가중치를 부여한다. 실험을 통해 저장할 최적의 버전 수를 파악하는 데 도움이 된다.</li>
+</ul>
+</li>
+<li>Moving infrequently used data to cold storage. 콜드 데이터는 몇 달 또는 몇 년 동안 활성화되지 않은 데이터다. Amazon S3 glacier와 같은 콜드 스토리지는 S3보다 훨씬 저렴하다.</li>
+</ul>
+<h3 id="Failure-Handling"><a href="#Failure-Handling" class="headerlink" title="Failure Handling"></a>Failure Handling</h3><p>대규모 시스템에서는 장애가 발생할 수 있으며 이런 장애를 해결하기 위한 설계 전략을 채택해야 한다.</p>
+<ul>
+<li>Load balancer failure : LB에 장애가 발생하면 보조 장치가 활성화되어 트래픽을 처리한다. LB는 일반적으로 LB 간에 주기적으로 전송되는 신호인 하트비트를 사용해 서로를 모니터링한다. 일정 시간 동안 하트비트를 보내지 않으면 로드 밸런서가 실패한 것으로 간주한다.</li>
+<li>Block server failure : 블록 서버에 장애가 발생하면 다른 서버가 완료되지 않았거나 보류 중인 작업을 선택한다.</li>
+<li>Cloud storage failure : S3 버킷은 여러 리전에서 여러 번 복제된다. 한 지역에서 파일을 사용할 수 없는 경우 다른 지역에서 파일을 가져올 수 있다.</li>
+<li>API server failure : 상태 비저장 서비스다. API 서버에 장애가 발생하면 로드 밸런서에 의해 트래픽이 다른 API 서버로 리디렉션 된다.</li>
+<li>Metadata cache failure : 메타데이터 캐시 서버는 여러 번 복제된다. 한 노드가 다운되더라도 다른 노드에 계속 액세스하여 데이터를 가져올 수 있다. 장애가 발생한 캐시 서버를 대체할 새 캐시 서버를 불러올 것이다.</li>
+<li>Metadata DB failure<ul>
+<li>Master down : 마스터가 다운된 경우 슬레이브 중 하나를 새 마스터로 승격하고 슬레이브 노드를 불러온다.</li>
+<li>Slave down : 슬레이브가 다운된 경우 읽기 작업에 다른 슬레이브를 사용하고 장애가 발생한 데이터베이스 서버를 대체할 다른 데이터베이스 서버를 가져올 수 있다.</li>
+</ul>
+</li>
+<li>Notification service failure : 모든 온라인 사용자는 알림 서버와 롱 폴링 연결을 유지한다. 따라서 각 알림 서버는 많은 사용자와 연결되어 있다. 2012년 Dropbox 컨퍼런스에 따르면 컴퓨터당 1백만 개 이상의 연결이 열려 있다고 한다. 서버가 다운되면 모든 롱 폴링 연결이 손실되므로 클라이언트는 다른 서버에 다시 연결해야 한다. 한 서버가 많은 연결이 열려 있어도 손실된 모든 연결을 한 번에 다시 연결할 수는 없다. 끊어진 모든 클라이언트와 다시 연결하는 과정은 상대적으로 느리다.</li>
+<li>Offline backup queue failure : 대기열은 여러 번 복제된다. 하나의 대기열에 장애가 발생하면 해당 대기열의 소비자는 백업 대기열에 다시 가입해야 할 수 있다.</li>
+</ul>
+<h2 id="Step-4-Wrap-up"><a href="#Step-4-Wrap-up" class="headerlink" title="Step 4 - Wrap up"></a>Step 4 - Wrap up</h2><p>이 포스트에서는 구글 드라이브를 지원하기 위한 시스템 설계를 살펴봤다. 강력한 일관성, 낮은 네트워크 대역폭, 빠른 동기화의 조합을 살펴봤다. 설계에는 파일 메타데이터 관리와 파일 동기화라는 두 가지 흐름이 포함되어 있다. 알림 서비스는 시스템의 또 다른 중요한 구성 요소다. 이 서비스는 롱 폴링을 사용해 고객에게 파일 변경 사항을 최신 상태로 유지한다.</p>
+<!-- flag of hidden posts --></div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined">Song Hayoung</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="https://songhayoung.github.io/2023/10/31/System%20Design/ByteByteGo/book/design-google-drive/">https://songhayoung.github.io/2023/10/31/System%20Design/ByteByteGo/book/design-google-drive/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/System-Design/">System Design</a></div><nav id="pagination"></nav><div id="gitalk-container"></div><script>var gitalk = new Gitalk({
+  clientID: '3604b61642355579f55e',
+  clientSecret: 'f552120f18ac5aee3f6297e05e97d94c0a25cd4b',
+  repo: 'SongHayoung.github.io',
+  owner: 'SongHayoung',
+  admin: 'SongHayoung',
+  id: md5(decodeURI(location.pathname)),
+  language: 'en'
+})
+gitalk.render('gitalk-container')</script></div></div><footer class="footer-bg" style="background-image: url(https://xxxx.jpg)"><div class="layout" id="footer"><div class="copyright">&copy;2020 - 2023 By Song Hayoung</div><div class="framework-info"><span>Driven - </span><a target="_blank" rel="noopener" href="http://hexo.io"><span>Hexo</span></a><span class="footer-separator">|</span><span>Theme - </span><a target="_blank" rel="noopener" href="https://github.com/Molunerfinn/hexo-theme-melody"><span>Melody</span></a></div><div class="footer_custom_text">Learning how to walk slowly to not miss important things</div><div class="busuanzi"><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><span id="busuanzi_container_page_pv"><i class="fa fa-file"></i><span id="busuanzi_value_page_pv"></span><span></span></span></div></div></footer><i class="fa fa-arrow-up" id="go-up" aria-hidden="true"></i><script src="https://cdn.jsdelivr.net/npm/animejs@latest/anime.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@latest/velocity.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-ui-pack@latest/velocity.ui.min.js"></script><script src="/js/utils.js?version=1.7.0"></script><script src="/js/fancybox.js?version=1.7.0"></script><script src="/js/sidebar.js?version=1.7.0"></script><script src="/js/copy.js?version=1.7.0"></script><script src="/js/fireworks.js?version=1.7.0"></script><script src="/js/transition.js?version=1.7.0"></script><script src="/js/scroll.js?version=1.7.0"></script><script src="/js/head.js?version=1.7.0"></script><script src="/js/search/algolia.js"></script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+    processEscapes: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  },
+  CommonHTML: {
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "HTML-CSS": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "SVG": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  }
+});
+</script><script type="text/x-mathjax-config">MathJax.Hub.Queue(function() {
+  var all = MathJax.Hub.getAllJax(), i;
+  for (i=0; i < all.length; i += 1) {
+    all[i].SourceElement().parentNode.className += ' has-jax';
+  }
+});
+</script><script src="https://cdn.jsdelivr.net/npm/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><script>if(/Android|webOS|iPhone|iPod|iPad|BlackBerry/i.test(navigator.userAgent)) {
+  $('#nav').addClass('is-mobile')
+  $('footer').addClass('is-mobile')
+  $('#top-container').addClass('is-mobile')
+}</script><div class="search-dialog" id="algolia-search"><div class="search-dialog__title" id="algolia-search-title">Algolia</div><div id="algolia-input-panel"><div id="algolia-search-input"></div></div><hr><div id="algolia-search-results"><div id="algolia-hits"></div><div id="algolia-pagination"></div><div id="algolia-stats"></div></div><span class="search-close-button"><i class="fa fa-times"></i></span></div><div class="search-mask"></div></body></html>
