@@ -1,0 +1,415 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="description" content="[System Design] Google Maps"><meta name="keywords" content="System Design"><meta name="author" content="Song Hayoung"><meta name="copyright" content="Song Hayoung"><title>[System Design] Google Maps | SUMFIのBlog</title><meta name="robots" content="noindex"><link rel="shortcut icon" href="/songcon.ico"><link rel="stylesheet" href="/css/index.css?version=1.7.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@latest/css/font-awesome.min.css?version=1.7.0"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css?version=1.7.0"><meta name="format-detection" content="telephone=no"><meta http-equiv="x-dns-prefetch-control" content="on"><link rel="dns-prefetch" href="https://cdn.jsdelivr.net"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.css"><script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.js" defer></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@latest/dist/gitalk.min.js"></script><script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.10.0/js/md5.min.js"></script><link rel="dns-prefetch" href="https://www.google-analytics.com"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-169368422-1', 'auto');
+ga('send', 'pageview');</script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: {"appId":"7LZ6OJ4D6C","apiKey":"9a84e13f74ea78c3fd54512c10139c56","indexName":"git blog","hits":{"per_page":10},"languages":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}.","hits_stats":"${hits} results found in ${time} ms"}},
+  localSearch: undefined,
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  }
+} </script><meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/rss2.xml" title="SUMFIのBlog" type="application/rss+xml">
+</head><body><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar" data-display="true"><div class="toggle-sidebar-info text-center"><span data-toggle="Toggle article">Toggle site</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">Catalog</div><div class="sidebar-toc__progress"><span class="progress-notice">You've read</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Google-Maps"><span class="toc-number">1.</span> <span class="toc-text">Google Maps</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Step-1-Understand-the-Problem-and-Establish-Design-Scope"><span class="toc-number">2.</span> <span class="toc-text">Step 1 - Understand the Problem and Establish Design Scope</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Non-functional-requirements-and-constraints"><span class="toc-number">2.1.</span> <span class="toc-text">Non-functional requirements and constraints</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Map-101"><span class="toc-number">2.2.</span> <span class="toc-text">Map 101</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Positioning-system"><span class="toc-number">2.2.1.</span> <span class="toc-text">Positioning system</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Going-from-3D-to-2D"><span class="toc-number">2.2.2.</span> <span class="toc-text">Going from 3D to 2D</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Geocoding"><span class="toc-number">2.2.3.</span> <span class="toc-text">Geocoding</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Geohashing"><span class="toc-number">2.2.4.</span> <span class="toc-text">Geohashing</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Map-rendering"><span class="toc-number">2.2.5.</span> <span class="toc-text">Map rendering</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Road-data-processing-for-navigation-algorithms"><span class="toc-number">2.2.6.</span> <span class="toc-text">Road data processing for navigation algorithms</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Back-of-the-envelope-estimation"><span class="toc-number">2.3.</span> <span class="toc-text">Back-of-the-envelope estimation</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Storage-usage"><span class="toc-number">2.3.1.</span> <span class="toc-text">Storage usage</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Server-throughput"><span class="toc-number">2.3.2.</span> <span class="toc-text">Server throughput</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Step-2-Propose-High-Level-Design-and-Get-Buy-In"><span class="toc-number">3.</span> <span class="toc-text">Step 2 - Propose High-Level Design and Get Buy-In</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#High-level-design"><span class="toc-number">3.1.</span> <span class="toc-text">High-level design</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Location-service"><span class="toc-number">3.1.1.</span> <span class="toc-text">Location service</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Navigation-service"><span class="toc-number">3.1.2.</span> <span class="toc-text">Navigation service</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Map-rendering-1"><span class="toc-number">3.1.3.</span> <span class="toc-text">Map rendering</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Step-3-Design-Deep-Dive"><span class="toc-number">4.</span> <span class="toc-text">Step 3 - Design Deep Dive</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Data-model"><span class="toc-number">4.1.</span> <span class="toc-text">Data model</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Routing-tiles"><span class="toc-number">4.1.1.</span> <span class="toc-text">Routing tiles</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#User-location-data"><span class="toc-number">4.1.2.</span> <span class="toc-text">User location data</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Geocoding-database"><span class="toc-number">4.1.3.</span> <span class="toc-text">Geocoding database</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Precomputed-images-of-the-world-map"><span class="toc-number">4.1.4.</span> <span class="toc-text">Precomputed images of the world map</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Services"><span class="toc-number">4.2.</span> <span class="toc-text">Services</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Location-service-1"><span class="toc-number">4.2.1.</span> <span class="toc-text">Location service</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Rendering-map"><span class="toc-number">4.2.2.</span> <span class="toc-text">Rendering map</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#Precomputed-tiles"><span class="toc-number">4.2.2.1.</span> <span class="toc-text">Precomputed tiles</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#Optimization-use-vectors"><span class="toc-number">4.2.2.2.</span> <span class="toc-text">Optimization: use vectors</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Navigation-service-1"><span class="toc-number">4.2.3.</span> <span class="toc-text">Navigation service</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#Geocoding-service"><span class="toc-number">4.2.3.1.</span> <span class="toc-text">Geocoding service</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#Route-planner-service"><span class="toc-number">4.2.3.2.</span> <span class="toc-text">Route planner service</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#Shortest-path-service"><span class="toc-number">4.2.3.3.</span> <span class="toc-text">Shortest-path service</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#ETA-service"><span class="toc-number">4.2.3.4.</span> <span class="toc-text">ETA service</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#Updater-services"><span class="toc-number">4.2.3.5.</span> <span class="toc-text">Updater services</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#Improvement-adaptive-ETA-and-rerouting"><span class="toc-number">4.2.3.6.</span> <span class="toc-text">Improvement: adaptive ETA and rerouting</span></a></li></ol></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Step-4-Wrap-Up"><span class="toc-number">5.</span> <span class="toc-text">Step 4 - Wrap Up</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Chapter-Summary"><span class="toc-number">6.</span> <span class="toc-text">Chapter Summary</span></a></li></ol></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="https://avatars3.githubusercontent.com/u/37806785?s=460&amp;u=8c68d685faf7c5280cfbd736a6b1730b55fb4203&amp;v=4"></div><div class="author-info__name text-center">Song Hayoung</div><div class="author-info__description text-center"></div><div class="follow-button"><a target="_blank" rel="noopener" href="https://www.linkedin.com/in/hayoung-song-9523b61bb/">Follow Me</a></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="/archives"><span class="pull-left">Articles</span><span class="pull-right">9614</span></a><a class="author-info-articles__tags article-meta" href="/tags"><span class="pull-left">Tags</span><span class="pull-right">191</span></a><a class="author-info-articles__categories article-meta" href="/categories"><span class="pull-left">Categories</span><span class="pull-right">60</span></a></div><hr><div class="author-info-links"><div class="author-info-links__title text-center">VISITED</div><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Seoul Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Jeju Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">British Columbia Canada</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Boracay Philippines</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">三重　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">大阪　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">名古屋　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">静岡　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">札幌　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">京都　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Bangkok Thailand</a></div></div></div><div id="content-outer"><div id="top-container" style="background-image: url(https://xxxx.jpg)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="/">SUMFIのBlog</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus">   <a class="site-page" href="/">Home</a><a class="site-page" href="/archives">Archives</a><a class="site-page" href="/tags">Tags</a><a class="site-page" href="/categories">Categories</a><a class="site-page" href="/about">About</a></span><span class="pull-right"><a class="site-page social-icon search"><i class="fa fa-search"></i><span> Search</span></a></span></div><div id="post-info"><div id="post-title">[System Design] Google Maps</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2023-11-20</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/">System Design</a><i class="fa fa-angle-right" aria-hidden="true"></i><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/System-Design-Interview/">System Design Interview</a><div class="post-meta-wordcount"><span>Word count: </span><span class="word-count">5k</span><span class="post-meta__separator">|</span><span>Reading time: 31 min</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div class="article-container" id="post-content"><h2 id="Google-Maps"><a href="#Google-Maps" class="headerlink" title="Google Maps"></a>Google Maps</h2><span id="more"></span>
+<p>이 포스트에서는 간단한 버전의 구글 지도를 설계한다. 구글 지도는 위성 이미지, 거리 지도, 실시간 교통 상황, 경로 계획 등 다양한 서비스를 제공한다. 구글 지도는 사용자가 길을 찾고 목적지 까지 이동하는 데 도움이 된다. 2021년 3월 구글 지도의 DAU는 10억명, 전 세계 커버리지 비율은 99%, 정확한 실시간 위치 정보는 매일 2,500만 건 업데이트 된다. 구글 지도의 엄청난 복잡성을 고려할 때 인터뷰에서 지원하는 기능을 파악하는 것이 중요하다.</p>
+<h2 id="Step-1-Understand-the-Problem-and-Establish-Design-Scope"><a href="#Step-1-Understand-the-Problem-and-Establish-Design-Scope" class="headerlink" title="Step 1 - Understand the Problem and Establish Design Scope"></a>Step 1 - Understand the Problem and Establish Design Scope</h2><p>이 포스트에서는 모바일에서 지원하는 3가지 주요 기능에 중점을 둔다.</p>
+<ul>
+<li>사용자 위치 업데이트</li>
+<li>ETA 서비스를 포함한 네비게이션 서비스</li>
+<li>지도 렌더링</li>
+</ul>
+<h3 id="Non-functional-requirements-and-constraints"><a href="#Non-functional-requirements-and-constraints" class="headerlink" title="Non-functional requirements and constraints"></a>Non-functional requirements and constraints</h3><ul>
+<li>정확성 : 사용자에게 잘못된 길 안내를 제공해서는 안된다.</li>
+<li>Smooth navigation : 클라이언트 측에서 사용자는 매우 부드러운 지도 렌더링을 경험할 수 있어야 한다.</li>
+<li>데이터 및 배터리 사용량 : 클라이언트는 가능한 한 적은 데이터와 배터리를 사용해야 한다. 이는 모바일 디바이스에서 매우 중요하다.</li>
+<li>일반적인 가용성 및 확장성 요구 사항</li>
+</ul>
+<p>디자인에 들어가기 전에 구글 지도를 디자인하는데 도움이 되는 몇 가지 기본 개념과 용어를 간략히 소개한다.</p>
+<h3 id="Map-101"><a href="#Map-101" class="headerlink" title="Map 101"></a>Map 101</h3><h4 id="Positioning-system"><a href="#Positioning-system" class="headerlink" title="Positioning system"></a>Positioning system</h4><p>세상은 축을 중심으로 자전하는 구다. 맨 위에는 북극이 있고 아래에는 남극이 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231120235424877.png" alt=""></p>
+<ul>
+<li>Lat(Latitude, 위도) : 북쪽 또는 남쪽가지의 거리를 나타낸다.</li>
+<li>Long(Longitude, 경도) : 동쪽 또는 서쪽의 거리를 나타낸다.</li>
+</ul>
+<h4 id="Going-from-3D-to-2D"><a href="#Going-from-3D-to-2D" class="headerlink" title="Going from 3D to 2D"></a>Going from 3D to 2D</h4><p>3D 지구본에서 2D 평면으로 점을 변환하는 과정을 “Map Projection”이라고 한다. 지도 투영을 수행하는 방법에는 여러가지가 있으며, 각 방법에는 고유한 장점과 한계가 있다. 거의 모든 방법이 실제 geometry를 왜곡한다. </p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231120235630768.png" alt=""></p>
+<p>구글 지도는 Web Mercator라는 수정된 버전의 메르카토르 투영법을 선택했다. </p>
+<h4 id="Geocoding"><a href="#Geocoding" class="headerlink" title="Geocoding"></a>Geocoding</h4><p>Geocoding은 주소를 지리적 좌표로 변환하는 프로세스다. 예를 들어 “1600 Amphitheatre Parkway, Mountain View, CA” 는 위도 / 경도 쌍(latitude 37.423021, longitude -122.083739) 으로 geocoding 된다.</p>
+<p>다른 방향으로 위도 / 경도 쌍을 사람이 읽을 수 있는 실제 주소로 변환하는 것을 reverse geocoding이라고 한다. Geocoding의 한 가지 방법은 보간법이다. 이 방법은 도로망이 지리적 좌표 공간에 매핑되는 지리 정보 시스템(GIS)과 같은 다양한 출처의 데이터를 활용한다.</p>
+<h4 id="Geohashing"><a href="#Geohashing" class="headerlink" title="Geohashing"></a>Geohashing</h4><p>Geohashing은 지리적 영역을 짧은 문자와 숫자의 문자열로 인코딩하는 인코딩 시스템이다. Geohashing의 핵심은 지구를 평평한 표면으로 묘사하고 그리드를 정사각형 또는 직사각형이 될 수 있는 하위 그리드로 재귀적으로 분할하는 것이다. 각 그리드는 재귀적으로 생성되는 0에서 3사이의 이진 숫자 문자열로 표현된다.</p>
+<p>초기 평평한 표면의 크기가 20,000km <em> 10,000km라고 가정해 보자. 첫 번째 분할 후에는 10,000km </em> 5,000km 크기의 그리드 4개가 생긴다. 아래와 같이 00,01,10,11로 표시한다. 각 그리드를 다시 4개의 그리드로 나누고 동일한 네이밍 전략을 사용한다. 이제 각 하위 그리드의 크기는 5,000km * 2,500km다. 각 그리드가 특정 크기 임계값에 도달할 때까지 그리드를 재귀적으로 나눈다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231121000203589.png" alt=""></p>
+<p>Geohashing은 다양한 용도로 사용된다. 우리 디자인에서는 지도 타일링에 Geohashing을 사용한다.</p>
+<h4 id="Map-rendering"><a href="#Map-rendering" class="headerlink" title="Map rendering"></a>Map rendering</h4><p>여기서는 지도 렌더링에 대해 자세히 설명하지는 않겠지만 기본 사항을 언급할 가치가 있다. 지도 렌더링의 기본 개념 중 하나는 타일링이다. 전체 지도를 하나의 큰 사용자 지정 이미지로 렌더링하는 대신 세계를 작은 타일로 분할한다. 클라이언트는 사용자가 있는 영역에 해당하는 타일만 다운로드해 모자이크처럼 이어 붙여 표시한다.</p>
+<p>줌 레벨에 따라 타일 세트가 구분된다. 클라이언트는 클라이언트에서 지도 뷰포트의 줌 레벨에 적합한 타일 세트를 선택한다. 이렇게 하면 과도한 대역폭을 소비하지 않고도 적절한 레벨의 지도 세부 정보를 제공할 수 있다. 극단적인 예를 들어 설명하자면, 클라이언트를 완전히 확대해 전 세계를 표시할 때 매우 높은 줌 레벨을 위해 수십만 개의 타일을 다운로드하고 싶지 않다. 모든 디테일이 낭비될 수 있다. 대신 클라이언트는 가장 낮은 줌 레벨에서 하나의 타일을 다운로드해 256 * 256 픽셀 이미지로 전 세계를 표시한다.</p>
+<h4 id="Road-data-processing-for-navigation-algorithms"><a href="#Road-data-processing-for-navigation-algorithms" class="headerlink" title="Road data processing for navigation algorithms"></a>Road data processing for navigation algorithms</h4><p>대부분의 라우팅 알고리즘은 Dijkstra 또는 A* 알고리즘을 변형한 것이다. 정확한 알고리즘을 다루지는 않겠지만 중요한 점은 이런 모든 알고리즘은 교차점이 노드이고 도로가 엣지인 그래프 데이터 구조에서 동작한다는 것이다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231121002043729.png" alt=""></p>
+<p>이런 알고리즘의 경로 찾기 성능은 대부분 그래프의 크기에 매우 민감하다. 전 세계의 도로망을 하나의 그래프로 표현하면 너무 많은 메모리가 소모되고 그래프가 너무 커서 이런 알고리즘을 효율적으로 실행할 수 없다. 이런 알고리즘이 설계 규모에 맞게 작동하려면 그래프를 관리 가능한 단위로 분할해야 한다.</p>
+<p>전 세계의 도로망을 세분화하는 한 가지 방법은 맵 렌더링에 대해 설명한 타일링 개념과 매우 유사하다. Geohashing과 유사한 세분화 기법을 사용해 전 세계를 작은 그리드로 나눈다. 각 그리드에 대해 그리드 내의 도로를 그리드에 포함된 지리적 영역 내부의 노드(교차로)와 엣지(도로)로 구성된 작은 그래프 데이터 구조로 변환한다. 이런 그리드를 라우팅 타일이라 부른다. 각 라우팅 타일은 연결되는 다른 모든 타일에 대한 참조를 보유한다. 라우팅 알고리즘은 이렇게 상호 연결된 라우팅 타일을 통과하면서 더 큰 도로 그래프를 함께 연결할 수 있다. 라우팅 알고리즘은 도로 네트워크를 필요에 따라 로드할 수 있는 라우팅 타일로 분할해 한 번에 라우팅 타일의 작은 하위 집합만 사용하고 필요할 때만 추가 타일을 로드함으로써 메모리 소비를 크게 줄이고 경로 찾기 성능을 개선할 수 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231121002330947.png" alt=""></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Reminder</span><br><span class="line">위 그림에서 이런 그리드를 라우팅 타일이라 한다. 라우팅 타일은 특정 지리적 영역을 포함하는 그리드라는 점에서 맵 타일과 유사하다. 맵 타일은 PNG 이미지인 반면 라우팅 타일은 타일에 포함된 지역에 대한 도로 데이터의 바이너리 파일이다.</span><br></pre></td></tr></table></figure>
+<p><strong>Hierarchical routing tiles</strong></p>
+<p>효율적인 네비게이션 경로를 설정하려면 적절한 레벨의 세부 도로 데이터가 필요하다. 예를 들어, 국가 간 경로 설정의 경우 매우 상세한 도로 레벨의 경로 타일 세트에 대해 경로 설정 알고리즘을 실행하면 속도가 느려진다. 이런 세부적인 라우팅 타일을 연결해 만든 그래프는 너무 커서 메모리를 많이 소모할 가능성이 높다.</p>
+<p>일반적으로 세부 레벨이 서로 다른 세가지 라우팅 타일 세트가 있다. 가장 세부적인 수준에서는 라우팅 타일이 작고 로컬 도로만 포함한다. 다음 수준에서는 타일이 더 크고 지역과 지역을 연결하는 간선 도로만 포함한다. 가장 낮은 세부 수준에서는 타일이 넓은 지역을 포함하며 도시와 주를 서로 연결하는 주요 고속도로만 포함한다. 각 레벨에는 다른 줌 레벨에서 타일에 연결되는 가장자리가 있을 수 있다. 예를 들어, 지역 도로 A에서 고속도로 F로 연결되는 고속도로 입구의 경우 작은 타일의 노드(도로 A)에서 큰 타일의 노드(고속도로 F)로 연결되는 참조가 있을 수 있다. </p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231121002701560.png" alt=""></p>
+<h3 id="Back-of-the-envelope-estimation"><a href="#Back-of-the-envelope-estimation" class="headerlink" title="Back-of-the-envelope estimation"></a>Back-of-the-envelope estimation</h3><p>이제 기본 사항을 이해했으니 실제 비용을 추정해보자. 설계의 초점이 모바일에 맞춰져 있으므로 데이터 사용량과 배터리 소모량은 고려해야 할 두 가지 중요한 요소다. 추정에 들어가기 전에 참고할 수 있는 몇 가지 야드법 / 미터법 변환을 알아보자.</p>
+<ul>
+<li>1 foot = 0.3048m</li>
+<li>1km = 0.6214 miles</li>
+<li>1km = 1000m</li>
+</ul>
+<h4 id="Storage-usage"><a href="#Storage-usage" class="headerlink" title="Storage usage"></a>Storage usage</h4><p>세 가지 유형의 데이터를 저장해야 한다.</p>
+<ul>
+<li>세계 지도</li>
+<li>메타데이터 : 각 지도 타일의 메타데이터는 크기가 무시할 수 있을 정도로 작을 수 있으므로 계산에서 메타데이터를 생략할 수 있다.</li>
+<li>도로 정보 : 인터뷰 담당자는 외부 소스에서 가져온 도로 데이터가 TB에 달한다고 했다. 우리는 이 데이터 세트를 라우팅 타일로 변환하는데 이 역시 TB 크기일 가능성이 높다.</li>
+</ul>
+<p><strong>Map of the world</strong></p>
+<p>Map 101 섹션에서 맵 타일링의 개념에 대해 설명했다. 각 줌 레벨 마다 하나씩 많은 맵 타일 세트가 있다. 전체 맵 타일 이미지 컬렉션에 대한 스토리지 요구 사항을 파악하려면 먼저 가장 높은 줌 레벨에서 가장 큰 타일 세트의 크기를 추정하는 것이 도움이 된다. 줌 레벨 21에는 약 4조 3,000억개의 타일이 있다. 각 타일이 256 <em> 256 픽셀로 압축된 PNG 이미지이고 이미지 크기가 약 100KB라고 가정해 본다. 가장 높은 줌 레벨에서 전체 세트는 약 4조 4천억 </em> 100KB = 440PB가 필요하다.</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:left"><strong>Zoom</strong></th>
+<th style="text-align:left"><strong>Number of Tiles</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">0</td>
+<td style="text-align:left">1</td>
+</tr>
+<tr>
+<td style="text-align:left">1</td>
+<td style="text-align:left">4</td>
+</tr>
+<tr>
+<td style="text-align:left">2</td>
+<td style="text-align:left">16</td>
+</tr>
+<tr>
+<td style="text-align:left">3</td>
+<td style="text-align:left">64</td>
+</tr>
+<tr>
+<td style="text-align:left">4</td>
+<td style="text-align:left">256</td>
+</tr>
+<tr>
+<td style="text-align:left">5</td>
+<td style="text-align:left">1 024</td>
+</tr>
+<tr>
+<td style="text-align:left">6</td>
+<td style="text-align:left">4 096</td>
+</tr>
+<tr>
+<td style="text-align:left">7</td>
+<td style="text-align:left">16 384</td>
+</tr>
+<tr>
+<td style="text-align:left">8</td>
+<td style="text-align:left">65 536</td>
+</tr>
+<tr>
+<td style="text-align:left">9</td>
+<td style="text-align:left">262 144</td>
+</tr>
+<tr>
+<td style="text-align:left">10</td>
+<td style="text-align:left">1 048 576</td>
+</tr>
+<tr>
+<td style="text-align:left">11</td>
+<td style="text-align:left">4 194 304</td>
+</tr>
+<tr>
+<td style="text-align:left">12</td>
+<td style="text-align:left">16 777 216</td>
+</tr>
+<tr>
+<td style="text-align:left">13</td>
+<td style="text-align:left">67 108 864</td>
+</tr>
+<tr>
+<td style="text-align:left">14</td>
+<td style="text-align:left">268 435 456</td>
+</tr>
+<tr>
+<td style="text-align:left">15</td>
+<td style="text-align:left">1 073 741 824</td>
+</tr>
+<tr>
+<td style="text-align:left">16</td>
+<td style="text-align:left">4 294 967 296</td>
+</tr>
+<tr>
+<td style="text-align:left">17</td>
+<td style="text-align:left">17 179 869 184</td>
+</tr>
+<tr>
+<td style="text-align:left">18</td>
+<td style="text-align:left">68 719 476 736</td>
+</tr>
+<tr>
+<td style="text-align:left">19</td>
+<td style="text-align:left">274 877 906 944</td>
+</tr>
+<tr>
+<td style="text-align:left">20</td>
+<td style="text-align:left">1 099 511 627 776</td>
+</tr>
+<tr>
+<td style="text-align:left">21</td>
+<td style="text-align:left">4 398 046 511 104</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>하지만 전 세계 지표면의 약 90%는 바다, 사막, 호수, 산과 같은 자연 지역이며 대부분 사람이 살지 않는 곳이라는 점을 기억해야 한다. 이런 지역은 이미지 압축률이 높기 때문에 보수적으로 예상 저장 용량을 80~90% 까지 줄일 수 있다. 이렇게 하면 스토리지 크기를 44~88PB 범위로 줄일 수 있다. 간단히 반올림해 50PB를 선택한다.</p>
+<p>다음으로, 이후의 각 하위 줌 레벨에서 얼마나 많은 스토리지가 필요한지 추정해 본다. 줌  레벨이 낮아질 때마다 남북 및 동서 방향의 타일 수가 절반으로 줄어든다. 이렇게 하면 타일 수가 총 4배 감소하므로 줌 레벨의 스토리지 크기도 4배 감소한다. 각 낮은 줌 레벨에서 스토리지 크기가 4배씩 감소하므로 총 크기에 대한 수학 공식은 다음과 같다. 50 + 50 / 4 + 50 / 16 + 50 / 64 + … =~ 67PB. 이건 대략적 추정치일 뿐이다. 다양한 세부 레벨의 맵 타일을 모두 저장하려면 대략 100PB 정도가 필요하다는 것을 알면 충분하다.</p>
+<h4 id="Server-throughput"><a href="#Server-throughput" class="headerlink" title="Server throughput"></a>Server throughput</h4><p>서버 처리량을 예측하기 위해 지원해야 하는 요청 유형을 검토해 본다. 요청에는 크게 두 가지 유형이 있다. 첫 번째는 탐색 요청이다. 클라이언트가 네비게이션 세션을 시작하기 위해 보내는 요청이다. 두 번째는 위치 업데이트 요청이다. 네비게이션 세션중에 사용자가 이동할 때 클라이언트가 보내는 요청이다. 위치 데이터는 다운 스트림 서비스에서 다양한 방식으로 사용된다. 예를 들어, 위치 데이터는 실시간 교통 데이터의 입력 중 하나다. </p>
+<p>이제 네비게이션 요청에 대한 서버 처리량을 분석할 수 있다. DAU가 10억명이고 각 사용자가 일주일에 총 35분 동안 네비게이션을 사용한다고 가정하자. 이는 주당 350억 분 또는 하루 50억 분에 해당한다.</p>
+<p>한 가지 간단한 접근 방식은 매 초마다 GPS 좌표를 전송하는 것으로 하루에 3,000억(50억 min * 60) 요청 또는 300만 QPS를 발생시킨다. 그러나 클라이언트가 매초마다 GPS 업데이트를 전송할 필요는 없다. 클라이언트에서 이를 일괄 처리하고 훨씬 더 낮은 빈도로 전송해 쓰기 QPS를 줄일 수 있다. 실제 빈도는 사용자의 이동 속도와 같은 요인에 따라 달라질 수 있다. 클라이언트가 트래픽에 갇히면 GPS 업데이트 속도가 느려질 수 있다. 우리 설계에서는 GPS 업데이트가 일괄 처리된 후 15초 마다 서버로 전송된다고 가정한다. 이 일괄 처리 방식을 사용하면 QPS가 200,000(3M / 15)로 감소한다. 피크 QPS가 평균의 5배라고 가정하면 최대 QPS는 1M이다.</p>
+<h2 id="Step-2-Propose-High-Level-Design-and-Get-Buy-In"><a href="#Step-2-Propose-High-Level-Design-and-Get-Buy-In" class="headerlink" title="Step 2 - Propose High-Level Design and Get Buy-In"></a>Step 2 - Propose High-Level Design and Get Buy-In</h2><h3 id="High-level-design"><a href="#High-level-design" class="headerlink" title="High-level design"></a>High-level design</h3><p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231121003911488.png" alt=""></p>
+<h4 id="Location-service"><a href="#Location-service" class="headerlink" title="Location service"></a>Location service</h4><p>위치 서비스는 사용자의 위치 업데이트를 기록하는 역할을 담당한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231121003941984.png" alt=""></p>
+<p>기본 설계에서는 클라이언트가 t초 마다 위치 업데이트를 보내도록 되어 있으며, 여기서 t는 구성 가능한 간격이다. 주기적인 업데이트에는 몇 가지 이점이 있다. 첫째, 위치 데이터 스트림을 활용해 시간이 지남에 따라 시스템을 개선할 수 있다. 예를 들어, 데이터를 사용해 실시간 교통 상황을 모니터링하고, 새로 생기거나 폐쇄된 도로를 감지하고, 사용자 행동을 분석해 개인화를 구현할 수 있다. 둘째, 위치 데이터를 거의 실시간으로 활용해 사용자에게 보다 정확한 예상 소요 시간을 제공하고 필요한 경우 교통 체증을 우회하여 경로를 변경할 수 있다.</p>
+<p>하지만 모든 위치 업데이트를 서버로 즉시 전송해야 할까? 대답은 아마도 “아니오”다. 위치 기록은 클라이언트에서 버퍼링한 후 훨씬 낮은 빈도로 서버로 일괄 전송할 수 있다. 예를 들어 아래 표시된 것처럼 위치 업데이트는 매초마다 기록되지만 15초 마다 일괄적으로 서버에 전송된다. 이렇게 하면 모든 클라이언트에서 전송되는 총 업데이트 트래픽이 크게 준다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231121004351074.png" alt=""></p>
+<p>구글 지도와 같은 시스템의 경우 위치 업데이트가 일괄 처리되더라도 쓰기 볼륨은 여전히 매우 높다. 따라서 높은 쓰기 볼륨에 최적화되어 있고 확장성이 뛰어난 데이터베이스가 필요하다. 또한 추가 처리를 위해 Kafka와 같은 스트림 처리 엔진을 사용해 위치 데이터를 로깅해야 할 수도 있다. </p>
+<p>여기에는 어떤 통신 프로토콜이 적합할까? Keep-Alive 옵션이 있는 HTTP는 매우 효율적이기 때문에 좋은 선택이다. </p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">POST /v1/locations</span><br><span class="line">Parameters</span><br><span class="line">  locs: JSON encoded array of (latitude, longitude, timestamp) tuples.</span><br></pre></td></tr></table></figure>
+<h4 id="Navigation-service"><a href="#Navigation-service" class="headerlink" title="Navigation service"></a>Navigation service</h4><p>이 구성 요소는 A지점에서 B지점까지 합리적으로 빠른 경로를 찾는 역할을 담당하며, 약간의 지연 시간은 용인할 수 있다. 계산된 경로가 가장 빠를 필요는 없지만 정확성이 중요하다.</p>
+<p>아래서 보듯이 사용자는 로드 밸런서를 통해 네비게이션 서비스에 HTTP 요청을 보낸다. 요청에는 출발지와 목적지가 매개변수로 포함된다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">GET /v1/nav?origin=1355+market+street,SF&amp;destination=Disneyland</span><br></pre></td></tr></table></figure>
+<p>응답은 아래와 같다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  &#x27;distance&#x27;: &#123;&#x27;text&#x27;:&#x27;0.2 mi&#x27;, &#x27;value&#x27;: 259&#125;,</span><br><span class="line">  &#x27;duration&#x27;: &#123;&#x27;text&#x27;: &#x27;1 min&#x27;, &#x27;value&#x27;: 83&#125;,</span><br><span class="line">  &#x27;end_location&#x27;: &#123;&#x27;lat&#x27;: 37.4038943, &#x27;Ing&#x27;: -121.9410454&#125;,</span><br><span class="line">  &#x27;html_instructions&#x27;: &#x27;Head &lt;b&gt;northeast&lt;/b&gt; on &lt;b&gt;Brandon St&lt;/b&gt; toward &lt;b&gt;Lumin Way&lt;/b&gt;&lt;div style=&quot;font-size:0.9em&quot;&gt;Restricted usage road&lt;/div&gt;&#x27;,</span><br><span class="line">  &#x27;polyline&#x27;: &#123;&#x27;points&#x27;: &#x27;_fhcFjbhgVuAwDsCal&#x27;&#125;,</span><br><span class="line">  &#x27;start_location&#x27;: &#123;&#x27;lat&#x27;: 37.4027165, &#x27;lng&#x27;: -121.9435809&#125;,</span><br><span class="line">  &#x27;geocoded_waypoints&#x27;: [</span><br><span class="line">    &#123;</span><br><span class="line">       &quot;geocoder_status&quot; : &quot;OK&quot;,</span><br><span class="line">       &quot;partial_match&quot; : true,</span><br><span class="line">       &quot;place_id&quot; : &quot;ChIJwZNMti1fawwRO2aVVVX2yKg&quot;,</span><br><span class="line">       &quot;types&quot; : [ &quot;locality&quot;, &quot;political&quot; ]</span><br><span class="line">    &#125;,</span><br><span class="line">    &#123;</span><br><span class="line">       &quot;geocoder_status&quot; : &quot;OK&quot;,</span><br><span class="line">       &quot;partial_match&quot; : true,</span><br><span class="line">       &quot;place_id&quot; : &quot;ChIJ3aPgQGtXawwRLYeiBMUi7bM&quot;,</span><br><span class="line">       &quot;types&quot; : [ &quot;locality&quot;, &quot;political&quot; ]</span><br><span class="line">    &#125;</span><br><span class="line">  ],</span><br><span class="line">  &#x27;travel_mode&#x27;: &#x27;DRIVING&#x27;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>지금까지는 경로 변경 및 교통량 변화를 고려하지 않았다. 이런 문제는 추후 Adaptive ETA 서비스에서 다루겠다.</p>
+<h4 id="Map-rendering-1"><a href="#Map-rendering-1" class="headerlink" title="Map rendering"></a>Map rendering</h4><p>앞서 설명했듯이, 다양한 줌 레벨에서 맵 타일의 전체 컬렉션은 약 100PB다. 클라이언트에 전체 데이터 집합을 보유하는 것은 실용적이지 않다. 맵 타일은 클라이언트의 위치와 클라이언트 뷰포트의 줌 레벨에 따라 서버에서 온디맨드 방식으로 가져와야 한다. 클라이언트는 언제 서버에서 새 맵 타일을 가져와야 할까? 다음은 몇 가지 시나리오다.</p>
+<ul>
+<li>사용자가 클라이언트에서 맵 뷰포인트를 줌하고 패닝해 주변 환경을 탐색하는 경우</li>
+<li>탐색 중에 사용자가 현재 맵 타일에서 근처 타일로 이동하는 경우</li>
+</ul>
+<p>우리는 많은 데이터를 다루기 때문에 서버에서 이런 지도 타일을 효율적으로 제공할 수 있는 방법을 살펴보자.</p>
+<p><strong>Option 1</strong></p>
+<p>서버는 클라이언트 뷰포트의 클라이언트 위치 및 줌 레벨에 따라 맵 타일을 즉시 빌드한다. 위치와 줌 레벨 조합이 무한히 많다는 점을 고려할 때 맵 타일을 동적으로 생성하는 데에는 몇 가지 심각한 단점이 있다.</p>
+<ul>
+<li>모든 맵 타일을 동적으로 생성하려면 서버 클러스터에 엄청난 부하가 발생한다. </li>
+<li>맵 타일이 동적으로 생성되므로 캐싱을 활용하기 어렵다.</li>
+</ul>
+<p><strong>Option 2</strong></p>
+<p>또 다른 옵션은 각 줌 레벨에서 미리 생성된 맵 타일 세트를 제공하는 것이다. 맵 타일은 정적이며, 각 타일은 geohashing과 같은 세분화 체계를 사용해 고정된 직사각형 그리드를 덮는다. 따라서 각 타일은 해당 geohash로 표시된다. 즉, 각 그리드에 연결된 고유한 geohash가 있다. 클라이언트는 지도 타일이 필요할 때 먼저 줌 레벨에 따라 사용할 지도 타일 컬렉션을 결정한다. 그런 다음 해당 위치를 적절한 줌 레벨에서 geohash로 변환해 맵 타일 URL을 계산한다. 이렇게 미리 생성된 정적 이미지는 CDN을 통해 제공된다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231121005322202.png" alt=""></p>
+<p>위 다이어그램에서 모바일 사용자는 CDN에서 타일을 가져오기 위해 HTTP 요청을 한다. CDN이 이전에 특정 타일을 제공한 적이 없는 경우 원본 서버에서 사본을 가져와 로컬에 캐시한 후 사용자에게 반환한다. 이후 요청이 다른 사용자로부터 온 요청일 지라도 CDN은 원본 서버에 연결하지 않고 캐시된 사본을 반환한다. 이 접근 방식은 아래와 같이 맵 타일이 클라이언트와 가장 가까운 지점(Point Of Presence, POP)에서 제공되기 때문에 확장성과 성능이 더 뛰어나다. 맵 타일의 정적 특성으로 인해 캐시 가능성이 높다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231121005517881.png" alt=""></p>
+<p>모바일 데이터 사용량을 낮게 유지하는 것이 중요하다. 일반적인 탐색 세션 중에 클라이언트가 로드해야 하는 데이터의 양을 계산해 보자. 다음 계산에는 클라이언트 측 캐싱이 고려되지 않았다. 사용자가 매일 이동하는 경로가 비슷할 수 있으므로 클라이언트 측 캐싱을 사용하면 데이터 사용량이 훨씬 더 낮아질 수 있다.</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Data usage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">사용자가 시속 30km로 이동하고 각 이미지가 200m <em> 200m의 블록(블록은 256 </em> 256 픽셀 이미지로 표현할 수 있으모 평균 이미지 크기는 100KB)을 커버하는 줌 레벨에서 이동한다고 가정해 보자. 1km <em> 1km 면적의 경우 25개 이미지 또는 2.5MB(25 </em> 100KB)의 데이터가 필요하다. 따라서 속도가 30km/h인 경우 시간당 75MB(30 * 2.5MB) 또는 분당 1.25MB의 데이터가 필요하다.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>다음으로 CDN 데이터 사용량을 추정하자. 이 정도 규모에서 비용은 고려해야 할 중요한 요소다.</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Traffic through CDN</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">앞서 언급한 바와 같이 우리는 하루에 50억 분의 네비게이션을 제공한다. 이는 50억 * 1.25MB = 62.5억 MB / day로 해석된다. 따라서 초당 62,500MB(62억 5,000만 / 10^5 sec)의 지도 데이터를 제공한다. CDN을 사용하면 이런 지도 이미지가 전 세계 POP에서 제공될 것이다. 200개의 POP이 있다고 가정해보자. 각 POP은 초당 수백MB(62,500/200)의 데이터만 전송하면 된다.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>지도 렌더링 디자인에 대해 간략히 살펴보기만 한 마지막 세부 사항이 하나 있다. 클라이언트가 CDN에서 맵 타일을 가져오는데 사용할 URL을 어떻게 알 수 있을까? 위에서 설명한 대로 옵션 2를 사용하고 있다는 점을 생각해보자. 이 옵션을 사용하면 맵 타일이 정적이고 고정된 그리드 세트를 기반으로 미리 생성되며, 각 세트는 개별적인 줌 레벨을 나타낸다. </p>
+<p>그리드를 geohash로 인코딩하고 그리드당 고유한 geohash가 하나씩 있기 때문에, 계산적으로 맵 타일에 대해 클라이언트의 위치(위도 및 경도)와 줌 레벨에서 geohash로 이동하는 것이 매우 효율적이다. 이 계산은 클라이언트에서 수행할 수 있으며 CDN에서 정적 이미지 타일을 가져올 수 있다. 예를 들어, 구글 본사의 이미지 타일에 대한 URL은 <code>https://cdn.map-provider.com/tiles/9q9hvu.png</code>다.</p>
+<p>클라이언트에서 geohash를 계산하면 잘 작동한다. 하지만 이 알고리즘은 모든 플랫폼의 모든 클라이언트에 하드 코딩되어 있다는 점에 유의해야 한다. 모바일 앱으로 변경 사항을 전송하는 것은 시간이 많이 걸리고 다소 위험한 프로세스다. Geohashing이 맵 타일 컬렉션을 인코딩 하는데 장기적으로 사용할 방법이며 변경될 가능성이 낮다는 점을 확신해야 한다. 어떤 이유로 다른 인코딩 방법으로는 전환해야 하는 경우 많은 노력이 필요하고 위험도 낮지 않다.</p>
+<p>고려할만한 또 다른 옵션이 있다. lat/lng(위도 / 경도) 쌍과 줌 레벨을 타일 URL로 변환하기 위해 하드 코딩된 클라이언트 측 알고리즘을 사용하는 대신 위에서 언급한 것과 동일한 입력을 기반으로 타일 URL을 구성하는 중개자 역할을 하는 서비스를 도입할 수 있다. 이것은 매우 간단한 서비스다. 운영 유연성이 추가된다면 그만한 가치가 있을 것이다. 이 부분은 면접관과 매우 흥미로는 장단점을 논의할 수 있는 부분이다. 이를 사용한 지도 렌더링 흐름은 아래와 같다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231121010810885.png" alt=""></p>
+<p>사용자가 새로운 위치로 이동하거나 새로운 줌 레벨로 이동하면 지도 타일 서비스는 필요한 타일을 결정하고 해당 정보를 검색할 타일 URL 집합으로 변환한다.</p>
+<ol>
+<li>모바일 사용자가 맵 타일 서비스를 호출해 타일 URL을 가져온다. 요청이 로드 밸런서로 전송된다. </li>
+<li>로드 밸런서는 요청을 맵 타일 서비스로 전달한다.</li>
+<li>맵 타일 서비스는 클라이언트의 위치와 줌 레벨을 입력으로 받아 9개의 타일 URL을 클라이언트에 반환한다. 이 타일에는 렌더링할 타일과 주변 타일 8개가 포함횐다.</li>
+<li>모바일 클라이언트는 CDN에서 타일을 다운로드 한다.</li>
+</ol>
+<h2 id="Step-3-Design-Deep-Dive"><a href="#Step-3-Design-Deep-Dive" class="headerlink" title="Step 3 - Design Deep Dive"></a>Step 3 - Design Deep Dive</h2><h3 id="Data-model"><a href="#Data-model" class="headerlink" title="Data model"></a>Data model</h3><p>라우팅 타일, 사용자 위치 데이터, geocoding 데이터, 전 세계의 미리 계산된 지도 타일 등 네 가지 유형의 데이터를 다루고 있다.</p>
+<h4 id="Routing-tiles"><a href="#Routing-tiles" class="headerlink" title="Routing tiles"></a>Routing tiles</h4><p>앞서 언급했듯이 초기 도로 데이터 세트는 다양한 출처와 기관에서 가져온다. 여기에는 테라바이트의 데이터가 포함된다. 이 데이터 세트는 애플리케이션이 애플리케이션을 사용하면서 사용자로부터 지속적으로 수집하는 위치 데이터에 의해 시간이 지남에 따라 개선된다.</p>
+<p>이 데이터 세트에는 수 많은 도로와 이름, 카운티, 경도, 위도와 같은 관련 메타데이터가 포함되어 있다. 이 데이터는 그래프 데이터 구조로 구성되어 있지 않으며 대부분의 라우팅 알고리즘에서 사용할 수 없다. 라우팅 타일 처리 서비스라는 주기적인 오프라인 처리 파이프라인을 실행해 이 데이터 세트를 라우팅 타일로 변환한다. 이 서비스는 주기적으로 실행되어 도로 데이터의 새로운 변경 사항을 캡처한다. 라우팅 타일 처리 서비스의 출력은 라우팅 타일이다. Map 101 섹션에서 설명한 대로 해상도가 다른 세 세트의 타일이 있다. 각 타일에는 타일이 포함된 영역 내의 교차로와 도로를 나타내는 그래프 노드 및 엣지 목록이 포함되어 있다. 또한 도로가 연결된 다른 타일에 대한 참조도 포함되어 있다. 이런 타일은 라우팅 알고리즘이 점진적으로 사용할 수 있는 상호 연결된 도로 네트워크를 형성한다.</p>
+<p>라우팅 타일 처리 서비스는 이런 타일을 어디에 저장해야 할까? 대부분의 그래프 데이터는 메모리에서 인접성 목록으로 표현된다. 인접성 목록의 전체 집합을 메모리에 보관하기에는 타일이 너무 많다. 노드와 엣지를 데이터베이스에 행으로 저장할 수도 있지만, 데이터베이스를 저장소로만 사용하게 되고 데이터 비트를 저장하는데 비용이 많이 드는 방식이 될 것이다. 또한 라우팅 타일에는 데이터베이스 기능이 필요하지 않다.</p>
+<p>이런 타일을 저장하는 더 효율적인 방법은 S3와 같은 Ojbect Storage에 저장하고 해당  타일을 사용하는 라우팅 서비스에서 적극적으로 캐싱하는 것이다. 인접성 목록을 바이너리 파일로 직렬화하는 데 사용할 수 있는 고성는 소프트웨어 패키지가 많이 있다. 오브젝트 스토리지에서 geohash를 기준으로 이런 타일을 구성할 수 있다. 이렇게 하면 위도 / 경도 쌍으로 타일을 찾을 수 있는 빠른 조회 메커니즘이 제공된다.</p>
+<h4 id="User-location-data"><a href="#User-location-data" class="headerlink" title="User location data"></a>User location data</h4><p>사용자 위치 데이터를 사용해 도로 데이터와 경로 타일을 업데이트한다. 또한 실시간 및 과거 교통 데이터의 데이터베이스를 구축하는 데도 사용한다. 이 위치 데이터는 지도 데이터를 업데이트하기 위해 여러 데이터 스트림 처리 서비스에서도 사용된다.</p>
+<p>사용자 위치 데이터의 경우 쓰기 작업이 많은 워크로드를 잘 처리할 수 있고 수평적으로 확장할 수 있는 데이터베이스가 필요하다. 카산드라가 좋은 후보가 될 수 있다. 다음은 단일 row의 모습이다.</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th><strong>user_id</strong></th>
+<th><strong>timestamp</strong></th>
+<th><strong>user_mode</strong></th>
+<th><strong>driving_mode</strong></th>
+<th><strong>location</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>101</td>
+<td>1635740977</td>
+<td>active</td>
+<td>driving</td>
+<td>(20.0, 30.5)</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h4 id="Geocoding-database"><a href="#Geocoding-database" class="headerlink" title="Geocoding database"></a>Geocoding database</h4><p>이 데이터베이스는 장소와 해당 위도 / 경도 쌍을 저장한다. 읽기는 빈번하고 쓰기는 드물기 때문에 빠른 읽기를 위해 Redis와 같은 KV Store를 사용할 수 있다. 이 데이터베이스를 사용해 경로 플래너 서비스에 전달하기 전에 출발지 또는 목적지를 위도 / 경도 쌍으로 변환한다.</p>
+<h4 id="Precomputed-images-of-the-world-map"><a href="#Precomputed-images-of-the-world-map" class="headerlink" title="Precomputed images of the world map"></a>Precomputed images of the world map</h4><p>디바이스에서 특정 지역의 지도를 요청하면 주변 도로를 가져와 모든 도로와 관련 세부 정보가 포함된 해당 지역을 나타내는 이미지를 계산해야 한다. 이런 계산은 무겁고 중복되므로 한 번만 계산한 다음 이미지를 캐시하면 도움이 될 수 있다. 다양한 확대 / 축소 수준에서 이미지를 미리 계산해 Amazon S3와 같은 클라우드 스토리지로 뒷받침되는 CDN에 저장한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231121215144618.png" alt=""></p>
+<h3 id="Services"><a href="#Services" class="headerlink" title="Services"></a>Services</h3><p>데이터 모델에 대해 살펴봤으니 이제 가장 중요한 서비스인 위치 서비스, 지도 렌더링 서비스, 네비게이션 서비스에 대해 자세히 살펴본다.</p>
+<h4 id="Location-service-1"><a href="#Location-service-1" class="headerlink" title="Location service"></a>Location service</h4><p>고수준 디자인에서는 위치 서비스가 어떻게 작동하는지에 대해 설명했다. 이 섹션에서는 이 서비스를 위한 데이터베이스 설계와 사용자 위치가 어떻게 사용되는지 자세히 살펴본다. </p>
+<p>아래 다이어그램에서 KV Store는 사용자 위치 데이터를 저장하는데 사용된다. 고수준 설계에서는 위치 서비스가 어떻게 작동하는지 설명했다. 이 섹션에서는 이 서비스를 위한 데이터베이스 설계와 사용자 위치가 어떻게 사용되는지 살펴본다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231121215354032.png" alt=""></p>
+<p>초당 1백만 건의 위치 업데이트가 발생 하므로 빠른 쓰기를 지원하는 데이터베이스가 필요하다. 여기에는 No-SQL KV Store 또는 column-oriented 데이터베이스가 좋은 선택이 될 것이다. 또한 사용자의 위치는 지속적으로 변경되며 새로운 업데이트가 도착하는 즉시 오래된 정보가 된다. 따라서 일관성 보다 가용성을 우선시할 수 있다. CAP 정리에 따르면 일관성, 가용성, 파티션 허용 오차 중에서 두 가지 속성을 선택할 수 있다. 제약 조건이 주어지면 가용성과 파티션 허용 오차를 선택한다. 적합한 데이터베이스 중 하나는 카산드라다. 강력한 가용성 보장으로 이 규모를 처리할 수 있다.</p>
+<p>키는 (user_id, timestamp)의 조합이고 값을 위도 / 경도 쌍이다. 이 설정에서 user_id는 기본 키이고 timestamp는 클러스터링 키다. user_id를 파티션 키로 사용하면 특정 사용자의 최신 위치를 빠르게 읽을 수 있다는 이점이 있다. 동일한 파티션 키를 가진 모든 데이터는 타임스탬프별로 정렬되어 함께 저장된다. 이런 배열을 통해 특정 사용자의 시간 범위 내 위치 데이터를 검색하는 것이 매우 효율적이다.</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th><strong>key (user_id)</strong></th>
+<th><strong>timestamp</strong></th>
+<th><strong>lat</strong></th>
+<th><strong>long</strong></th>
+<th><strong>user_mode</strong></th>
+<th><strong>navigation_mode</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>51</td>
+<td>132053000</td>
+<td>21.9</td>
+<td>89.8</td>
+<td>active</td>
+<td>driving</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>How do we use the user location data?</strong></p>
+<p>사용자 위치 데이터는 필수다. 다양한 사용 사례를 지원한다. 우리는 이 데이터를 사용해 최근에 폐쇄된 도로와 새로운 도로를 감지한다. 시간이 지남에 따라 지도의 정확도를 개선하기 위한 입력 중 하나로 사용한다. 또한 실시간 교통 데이터를 위한 입력이기도 하다.</p>
+<p>이런 사용 사례를 지원하기 위해 현재 사용자 위치를 데이터베이스에 기록하는 것 외에도 이 정보를 Kafka와 같은 메세지 큐에 기록한다. Kafka는 실시간 데이터 피드를 위해 설계된 지연 시간이 짧고 처리량이 많은 통합 데이터 스트리밍 플랫폼이다. 아래는 개선된 설계에서 Kafka가 어떻게 사용되는지 보여준다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231121220045662.png" alt=""></p>
+<p>다른 서비스들은 다양한 사용 사례를 위해 Kafka의 위치 데이터 스트림을 소비한다. 예를 들어, 실시간 교통 서비스는 출력 스트림을 소화해 실시간 교통 데이터베이스를 업데이트 한다. 라우팅 타일 처리 서비스는 새로 생기거나 폐쇄된 도로를 감지하고 오브젝트 스토리지에서 영향을 받는 라우팅 타일을 업데이트해 세계 지도를 개선한다. 다른 서비스도 다양한 목적으로 스트림을 활용할 수 있다.</p>
+<h4 id="Rendering-map"><a href="#Rendering-map" class="headerlink" title="Rendering map"></a>Rendering map</h4><p>이 섹션에서는 미리 계산된 맵 타일과 맵 렌더링 최적화에 대해 자세히 살펴본다.</p>
+<h5 id="Precomputed-tiles"><a href="#Precomputed-tiles" class="headerlink" title="Precomputed tiles"></a>Precomputed tiles</h5><p>앞서 언급했듯이 클라이언트의 뷰포트 크기와 줌 레벨에 따라 사용자에게 적절한 수준의 지도 세부 정보를 제공하기 위해 다양한 줌 레벨에서 미리 계산된 다양한 맵 타일 세트가 있다. 구글 지도는 21가지 줌 레벨을 사용한다. 우리도 이 방식을 채용한다.</p>
+<p>레벨 0은 가장 축소된 레벨이다. 전체 지도는 256 <em> 256 픽셀 크기의 단일 타일로 표시된다. 줌 레벨 수준이 증가할 때마다 맵 타일의 수는 남북 방향과 동서 방향 모두 에서 두 배로 증가하지만 각 타일의 크기는 256 </em> 256 픽셀로 유지된다. 아래 표시된 것처럼 줌 레벨 1에서는 2 <em> 2 타일이 있으며 총 합산 해상도는 512 </em> 512 픽셀이다. 줌 레벨 2에서는 4 <em> 4 타일이 있으며 총 합산 해당소는 1024 </em> 1024 픽셀이다. 각 단계가 증가할 때마다 전체 타일 세트의 픽셀 수는 이전 단계보다 4배 증가한다. 픽셀 수가 증가하면 사용자에게 더 높은 수준의 디테일을 제공한다. 따라서 클라이언트는 타일을 과도하게 상세하게 다운로드하기 위해 많은 대역폭을 소비하지 않고도 클라이언트의 줌 레벨에 따라 최상위 세밀도로 지도를 렌더링할 수 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231121220606196.png" alt=""></p>
+<h5 id="Optimization-use-vectors"><a href="#Optimization-use-vectors" class="headerlink" title="Optimization: use vectors"></a>Optimization: use vectors</h5><p>WebGL의 개발 및 구현과 함께 한 가지 잠재적 개선 사항은 네트워크를 통해 이미지를 전송하는 방식에서 벡터 정보(경로 및 다각형)을 전송하는 방식으로 디자인을 변경하는 것이다. 클라이언트는 벡터 정보에서 경로와 다각형을 그린다.</p>
+<p>벡터 타일의 한 가지 분명한 장점은 벡터 데이터가 이미지보다 훨씬 더 잘 압축된다는 것이다. 대역폭을 크게 절약할 수 있다. 덜 분명한 장점은 벡터 타일이 훨씬 더 나은 줌 환경을 제공한다는 것이다. 래스터화된 이미지를 사용하면 클라이언트가 한 레벨에서 다른 레벨로 확대할 때 모든 것이 늘어나서 픽셀화되어 보인다. 시각적 효과가 상당히 어색하다. 벡터화된 이미지를 사용하면 클라이언트가 각 요소의 크기를 적절하게 조정할 수 있어 훨씬 부드러운 줌 환경을 제공한다.</p>
+<h4 id="Navigation-service-1"><a href="#Navigation-service-1" class="headerlink" title="Navigation service"></a>Navigation service</h4><p>이제 네비게이션 서비스에 대해 자세히 알아보자. 이 서비스는 가장 빠른 경로를 찾는 역할을 한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231121220955914.png" alt=""></p>
+<h5 id="Geocoding-service"><a href="#Geocoding-service" class="headerlink" title="Geocoding service"></a>Geocoding service</h5><p>먼저 주소를 위도와 경도 쌍의 위치로 해석하는 서비스가 필요하다. 주소는 장소 이름이나 텍스트 주소 등 다양한 형식이 될 수 있다. 다음은 구글의 geocoding API의 요청 및 응답 예시다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line">Request</span><br><span class="line"></span><br><span class="line">https://maps.googleapis.com/maps/api/geocode/json?address=1600+Amphitheatre+Parkway,+Mountain+View,+CA</span><br><span class="line"></span><br><span class="line">JSON response</span><br><span class="line"></span><br><span class="line">&#123;</span><br><span class="line">   &quot;results&quot; : [</span><br><span class="line">      &#123;</span><br><span class="line">         &quot;formatted_address&quot; : &quot;1600 Amphitheatre Parkway, Mountain View, CA 94043, USA&quot;,</span><br><span class="line">         &quot;geometry&quot; : &#123;</span><br><span class="line">            &quot;location&quot; : &#123;</span><br><span class="line">               &quot;lat&quot; : 37.4224764,</span><br><span class="line">               &quot;lng&quot; : -122.0842499</span><br><span class="line">            &#125;,</span><br><span class="line">            &quot;location_type&quot; : &quot;ROOFTOP&quot;,</span><br><span class="line">            &quot;viewport&quot; : &#123;</span><br><span class="line">               &quot;northeast&quot; : &#123;</span><br><span class="line">                  &quot;lat&quot; : 37.4238253802915,</span><br><span class="line">                  &quot;lng&quot; : -122.0829009197085</span><br><span class="line">               &#125;,</span><br><span class="line">               &quot;southwest&quot; : &#123;</span><br><span class="line">                  &quot;lat&quot; : 37.4211274197085,</span><br><span class="line">                  &quot;lng&quot; : -122.0855988802915</span><br><span class="line">               &#125;</span><br><span class="line">            &#125;</span><br><span class="line">         &#125;,</span><br><span class="line">         &quot;place_id&quot; : &quot;ChIJ2eUgeAK6j4ARbn5u_wAGqWA&quot;,</span><br><span class="line">         &quot;plus_code&quot;: &#123;</span><br><span class="line">            &quot;compound_code&quot;: &quot;CWC8+W5 Mountain View, California, United States&quot;,</span><br><span class="line">            &quot;global_code&quot;: &quot;849VCWC8+W5&quot;</span><br><span class="line">         &#125;,</span><br><span class="line">         &quot;types&quot; : [ &quot;street_address&quot; ]</span><br><span class="line">      &#125;</span><br><span class="line">   ],</span><br><span class="line">   &quot;status&quot; : &quot;OK&quot;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>네비게이션 서비스는 이 서비스를 호출해 위도 / 경도 쌍을 전달하기 전에 출발지와 목적지를 geocoding한 후 경로를 찾는다.</p>
+<h5 id="Route-planner-service"><a href="#Route-planner-service" class="headerlink" title="Route planner service"></a>Route planner service</h5><p>이 서비스는 현재 교통 및 도로 상황에 따라 이동 시간에 최적화된 추천 경로를 계산한다. 이 서비스는 다음에 설명할 여러 서비스와 상호작용 한다.</p>
+<h5 id="Shortest-path-service"><a href="#Shortest-path-service" class="headerlink" title="Shortest-path service"></a>Shortest-path service</h5><p>최단 경로 서비스는 출발지와 목적지를 위도 / 경도 쌍으로 수신하고 교통량이나 현재 상태를 고려하지 않고 상위 k개의 최단 경로를 반환한다. 이 계산은 도로의 구조에만 의존한다. 여기에서는 그래프가 거의 변하지 않기 때문에 경로를 캐싱하는 것이 유용할 수 있다.</p>
+<p>최단 경로 서비스는 오브젝트 스토리지의 라우팅 타일에 대해 다양한 A* 경로 찾기 알고리즘을 실행한다.</p>
+<ul>
+<li>알고리즘은 위도 / 경도 쌍으로 원점과 목적지를 수신한다. 위도 / 경도 쌍은 geohash로 변환된 다음 라우팅 타일의 시작점과 끝점을 로드하는데 사용된다.</li>
+<li>알고리즘은 원점 라우팅 타일에서 시작해 그래프 데이터 구조를 탐색하고 검색 영역을 확장하면서 오브젝트 스토리지(혹은 로컬 캐시)에서 인접한 타일을 추가로 로드한다. 한 레벨의 타일에서 다른 레벨의 타일로 동일한 영역을 포함하는 연결이 있다는 점에 주목할 필요가 있다. 예를 들어, 알고리즘이 고속도로만 포함된 더 큰 타일에 진입할 수 있는 방법이다. 알고리즘은 최적의 경로를 찾을 때 까지 필요에 따라 인접한 타일(또는 해상도가 다른 타일)을 더 추가해 검색을 계속 확장한다.</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231121221751192.png" alt=""></p>
+<h5 id="ETA-service"><a href="#ETA-service" class="headerlink" title="ETA service"></a>ETA service</h5><p>경로 플래너가 가능한 최단 경로 목록을 받으면 가능한 각 경로에 대해 ETA 서비스를 호출하고 예상 시간을 가져온다. 이를 위해 ETA 서비스는 머신 러닝을 사용해 현재 교통량과 과거 데이터를 기반으로 예상 소요 시간을 예측한다.</p>
+<p>여기서 도전 과제 중 하나는 실시간 교통 데이터 뿐만 아니라 10분 또는 20분 후의 교통 상황을 예측해야 한다는 것이다. 이런 종류의 과제는 알고리즘 수준에서 해결해야 하므로 이 섹션에서는 다루지 않는다.</p>
+<p><strong>Ranker service</strong></p>
+<p>마지막으로 경로 플래너가 예상 도착 시간을 얻은 후 이 정보를 순위 결정자에게 전달해 사용자가 정의한 대로 가능한 필터를 적용한다. 몇 가지 예시 필터에는 유료 도로를 피하거나 고속도로를 피하는 옵션이 포함된다. 그러면 라우터 서비스가 가능한 경로의 순위를 가장 빠른 경로부터 가장 느린 경로까지 매겨서 네비게이션 서비스에 상위 K 결과를 반환한다.</p>
+<h5 id="Updater-services"><a href="#Updater-services" class="headerlink" title="Updater services"></a>Updater services</h5><p>이런 서비스는 카프카 위치 업데이트 스트림을 활용해 일부 중요한 데이터베이스를 비동기적으로 업데이트하여 최신 상태로 유지한다. 교통 데이터베이스와 라우팅 타일이 그 예다.</p>
+<p>라우팅 타일 처리 서비스는 새로 발견된 도로와 도로 폐쇄가 포함된 도로 데이터 세트를 지속적으로 업데이트되는 라우팅 타일 집합으로 변환하는 역할을 담당한다. 이를 통해 최단 경로 서비스가 더 정확해질 수 있다.</p>
+<p>교통 업데이트 서비스는 활성 사용자가 전송하는 위치 업데이트 스트림에서 교통 상황을 추출한다. 이 인사이트는 실시간 교통 데이터베이스에 입력된다. 이를 통해 ETA 서비스가 더 정확한 예상 소요 시간을 제공할 수 있다.</p>
+<h5 id="Improvement-adaptive-ETA-and-rerouting"><a href="#Improvement-adaptive-ETA-and-rerouting" class="headerlink" title="Improvement: adaptive ETA and rerouting"></a>Improvement: adaptive ETA and rerouting</h5><p>현재 설계는 적응형 도착 예정 시간 및 경로 변경을 지원하지 않는다. 이 문제를 해결하려면 서버가 모든 활성 네비게이션 사용자를 추적하고 교통 상황이 변경될 때마다 ETA를 지속적으로 업데이트해야 한다. 여기서 몇 가지 중요한 질문에 답해야 한다.</p>
+<ul>
+<li>활발하게 탐색 중인 사용자를 어떻게 추적할 것인가?</li>
+<li>수백만 개의 네비게이션 경로 중에서 교통 상황 변화에 영향을 받는 사용자를 효율적으로 찾을 수 있도록 데이터를 어떻게 저장해야 할까?</li>
+</ul>
+<p>단순한 해결책부터 시작하자. 아래에서 user_1의 탐색 경로는 라우팅 타일 r_1, r_2, r_3, …, r_7으로 표시되어 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231121225550804.png" alt=""></p>
+<p>데이터베이스는 적극적으로 탐색하는 사용자를 저장하고 다음과 같은 정보를 라우팅한다.</p>
+<p>user_1: r_1, r_2, r_3, …, r_k</p>
+<p>user_2: r_4, r_6, r_9, …, r_n</p>
+<p>user_3: r_2, r_8, r_9, …, r_m</p>
+<p>…</p>
+<p>user_n: r_2, r_10, r21, …, r_l</p>
+<p>이제 라우팅 타일 2(r_2)에 트래픽 사고가 발생했다고 가정해보자. 영향을 받는 사용자를 파악하기 위해 각 행을 스캔해 라우팅 타일 2가 라우팅 타일 목록에 있는지 확인한다.</p>
+<p>user_1: r_1, <strong>r_2</strong>, r_3, …, r_k</p>
+<p>user_2: r_4, r_6, r_9, …, r_n</p>
+<p>user_3: <strong>r_2</strong>, r_8, r_9, …, r_m</p>
+<p>…</p>
+<p>user_n: <strong>r_2</strong>, r_10, r_21, …, r_l</p>
+<p>테이블의 행 수가 n이고 탐색 경로의 평균 길이가 m이라고 가정할 때 트래픽 변경의 영향을 받는 모든 사용자를 찾는 시간 복잡도는 O(n * m)이다. 이</p>
+<p>프로세스를 더 빠르게 만들 수 있을까? 다른 접근 방식을 살펴보자. 탐색 중인 각 사용자에 대해 현재 라우팅 타일과 해당 사용자가 포함된 다음 해상도 수준의 라우팅 타일을 유지하고, 해당 타일에서 사용자의 목적지도 찾을 때까지 다음 해상도 수준에서 라우팅 타일을 재귀적으로 찾는다. 이렇게 하면 다음과 같은 데이터베이스 테이블의 행을 얻을 수 있다.</p>
+<p>user_1, r_1, super(r_1), super(super(r_1)), …</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231121225825143.png" alt=""></p>
+<p>사용자가 트래픽 변경의 영향을 받는지 확인하려면 라우팅 타일이 데이터베이스에서 행의 마지막 라우팅 타일 안에 있는지 확인하기만 하면 된다. 그렇지 않은 경우 사용자는 영향을 받지 않는다. 이렇게 하면 많은 사용자를 빠르게 필터링할 수 있다.</p>
+<p>이 접근 방식은 트래픽이 해제될 때 어떤 일이 발생하는지 지정하지 않는다. 예를 들어 라우팅 타일 2가 해제되어 사용자가 이전 경로로 돌아갈 수 있는 경우 사용자가 경로 변경이 가능하다는 것을 어떻게 알 수 있을까? 한 가지 아이디어는 네비게이션 사용자에게 가능한 모든 경로를 추적하고 정기적으로 예상 소요 시간을 다시 계산해 더 짧은 예상 소요 시간을 가진 새 경로가 발견되면 사용자에게 알리는 것이다.</p>
+<p><strong>Delivery protocols</strong></p>
+<p>네비게이션 중에는 경로 조건이 변경될 수 있으며 서버는 모바일 클라이언트에 데이터를 푸시할 수 있는 안정적인 방법이 필요한 것이 현실이다. 서버에서 클라이언트로의 전송 프로토콜에는 모바일 푸시 알림, 롱 폴링, 웹소켓, SSE(Server Sent Events)가 있다.</p>
+<ul>
+<li>모바일 푸시 알림은 페이로드 크기가 매우 제한적이고 웹 애플리케이션을 지원하지 않기 때문에 좋은 옵션은 아니다.</li>
+<li>웹소켓은 서버에 차지하는 공간이 매우 적기 때문에 일반적으로 롱 폴링보다 더 나은 옵션으로 간주된다.</li>
+<li>모바일 푸시 알림과 롱 폴링을 배제했기 때문에 주로 WebSocket과 SSE중 하나를 선택해야 한다. 둘 다 작동할 수 있지만, 양방향 통신을 지원하고 라스트 마일 배송과 같은 기능에는 양방향 실시간 통신이 필요할 수 있기 때문에 WebSocket을 선호한다.</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231121232218877.png" alt=""></p>
+<h2 id="Step-4-Wrap-Up"><a href="#Step-4-Wrap-Up" class="headerlink" title="Step 4 - Wrap Up"></a>Step 4 - Wrap Up</h2><p>시간, 경로 계획, 지도 랜더링과 같은 주요 기능을 갖춘 간소화된 구글 지도 애플리케이션을 설계했다. 시스템을 확장하는데 관심이 있다면 비즈니스 고객을 위한 멀티 스톱 네비게이션 기능을 제공하는 것이 한 가지 잠재적인 개선 사항이다. 예를 들어, 주어진 목적지 집합에 대해 모든 목적지를 방문할 수 있는 최적의 순서를 찾고 실시간 교통 상황을 기반으로 적절한 네비게이션을 제공해야 한다. 이는 Door dash, Uber, Lyft 등과 같은 배달 서비스에 유용할 수 있다.</p>
+<h2 id="Chapter-Summary"><a href="#Chapter-Summary" class="headerlink" title="Chapter Summary"></a>Chapter Summary</h2><p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231121232413686.png" alt=""></p>
+<!-- flag of hidden posts --></div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined">Song Hayoung</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="https://songhayoung.github.io/2023/11/20/System%20Design/ByteByteGo/book/google-maps/">https://songhayoung.github.io/2023/11/20/System%20Design/ByteByteGo/book/google-maps/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/System-Design/">System Design</a></div><nav id="pagination"></nav><div id="gitalk-container"></div><script>var gitalk = new Gitalk({
+  clientID: '3604b61642355579f55e',
+  clientSecret: 'f552120f18ac5aee3f6297e05e97d94c0a25cd4b',
+  repo: 'SongHayoung.github.io',
+  owner: 'SongHayoung',
+  admin: 'SongHayoung',
+  id: md5(decodeURI(location.pathname)),
+  language: 'en'
+})
+gitalk.render('gitalk-container')</script></div></div><footer class="footer-bg" style="background-image: url(https://xxxx.jpg)"><div class="layout" id="footer"><div class="copyright">&copy;2020 - 2023 By Song Hayoung</div><div class="framework-info"><span>Driven - </span><a target="_blank" rel="noopener" href="http://hexo.io"><span>Hexo</span></a><span class="footer-separator">|</span><span>Theme - </span><a target="_blank" rel="noopener" href="https://github.com/Molunerfinn/hexo-theme-melody"><span>Melody</span></a></div><div class="footer_custom_text">Learning how to walk slowly to not miss important things</div><div class="busuanzi"><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><span id="busuanzi_container_page_pv"><i class="fa fa-file"></i><span id="busuanzi_value_page_pv"></span><span></span></span></div></div></footer><i class="fa fa-arrow-up" id="go-up" aria-hidden="true"></i><script src="https://cdn.jsdelivr.net/npm/animejs@latest/anime.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@latest/velocity.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-ui-pack@latest/velocity.ui.min.js"></script><script src="/js/utils.js?version=1.7.0"></script><script src="/js/fancybox.js?version=1.7.0"></script><script src="/js/sidebar.js?version=1.7.0"></script><script src="/js/copy.js?version=1.7.0"></script><script src="/js/fireworks.js?version=1.7.0"></script><script src="/js/transition.js?version=1.7.0"></script><script src="/js/scroll.js?version=1.7.0"></script><script src="/js/head.js?version=1.7.0"></script><script src="/js/search/algolia.js"></script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+    processEscapes: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  },
+  CommonHTML: {
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "HTML-CSS": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "SVG": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  }
+});
+</script><script type="text/x-mathjax-config">MathJax.Hub.Queue(function() {
+  var all = MathJax.Hub.getAllJax(), i;
+  for (i=0; i < all.length; i += 1) {
+    all[i].SourceElement().parentNode.className += ' has-jax';
+  }
+});
+</script><script src="https://cdn.jsdelivr.net/npm/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><script>if(/Android|webOS|iPhone|iPod|iPad|BlackBerry/i.test(navigator.userAgent)) {
+  $('#nav').addClass('is-mobile')
+  $('footer').addClass('is-mobile')
+  $('#top-container').addClass('is-mobile')
+}</script><div class="search-dialog" id="algolia-search"><div class="search-dialog__title" id="algolia-search-title">Algolia</div><div id="algolia-input-panel"><div id="algolia-search-input"></div></div><hr><div id="algolia-search-results"><div id="algolia-hits"></div><div id="algolia-pagination"></div><div id="algolia-stats"></div></div><span class="search-close-button"><i class="fa fa-times"></i></span></div><div class="search-mask"></div></body></html>

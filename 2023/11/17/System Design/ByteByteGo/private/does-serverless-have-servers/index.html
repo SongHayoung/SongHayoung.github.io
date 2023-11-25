@@ -1,0 +1,145 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="description" content="[ByteByteGo] Does Serverless Have Servers?"><meta name="keywords" content="System Design"><meta name="author" content="Song Hayoung"><meta name="copyright" content="Song Hayoung"><title>[ByteByteGo] Does Serverless Have Servers? | SUMFIのBlog</title><meta name="robots" content="noindex"><link rel="shortcut icon" href="/songcon.ico"><link rel="stylesheet" href="/css/index.css?version=1.7.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@latest/css/font-awesome.min.css?version=1.7.0"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css?version=1.7.0"><meta name="format-detection" content="telephone=no"><meta http-equiv="x-dns-prefetch-control" content="on"><link rel="dns-prefetch" href="https://cdn.jsdelivr.net"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.css"><script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.js" defer></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@latest/dist/gitalk.min.js"></script><script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.10.0/js/md5.min.js"></script><link rel="dns-prefetch" href="https://www.google-analytics.com"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-169368422-1', 'auto');
+ga('send', 'pageview');</script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: {"appId":"7LZ6OJ4D6C","apiKey":"9a84e13f74ea78c3fd54512c10139c56","indexName":"git blog","hits":{"per_page":10},"languages":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}.","hits_stats":"${hits} results found in ${time} ms"}},
+  localSearch: undefined,
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  }
+} </script><meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/rss2.xml" title="SUMFIのBlog" type="application/rss+xml">
+</head><body><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar" data-display="true"><div class="toggle-sidebar-info text-center"><span data-toggle="Toggle article">Toggle site</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">Catalog</div><div class="sidebar-toc__progress"><span class="progress-notice">You've read</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Does-Serverless-Have-Servers"><span class="toc-number">1.</span> <span class="toc-text">Does Serverless Have Servers?</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#The-Evolution-of-Serverless"><span class="toc-number">2.</span> <span class="toc-text">The Evolution of Serverless</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#FaaS-and-Event-Driven-Architecture"><span class="toc-number">3.</span> <span class="toc-text">FaaS and Event-Driven Architecture</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#FaaS"><span class="toc-number">4.</span> <span class="toc-text">FaaS</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Cold-Start-Process"><span class="toc-number">4.1.</span> <span class="toc-text">Cold Start Process</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Cost-Model"><span class="toc-number">4.2.</span> <span class="toc-text">Cost Model</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#BaaS"><span class="toc-number">5.</span> <span class="toc-text">BaaS</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Serverless-Has-Servers"><span class="toc-number">6.</span> <span class="toc-text">Serverless Has Servers</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Firecracker-MicroVMAWS"><span class="toc-number">6.1.</span> <span class="toc-text">Firecracker MicroVMAWS</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Synchronous-Execution"><span class="toc-number">6.2.</span> <span class="toc-text">Synchronous Execution</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Asynchronous-Execution"><span class="toc-number">6.3.</span> <span class="toc-text">Asynchronous Execution</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Limitations"><span class="toc-number">7.</span> <span class="toc-text">Limitations</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Serverless-Framework"><span class="toc-number">8.</span> <span class="toc-text">Serverless Framework</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Summary"><span class="toc-number">9.</span> <span class="toc-text">Summary</span></a></li></ol></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="https://avatars3.githubusercontent.com/u/37806785?s=460&amp;u=8c68d685faf7c5280cfbd736a6b1730b55fb4203&amp;v=4"></div><div class="author-info__name text-center">Song Hayoung</div><div class="author-info__description text-center"></div><div class="follow-button"><a target="_blank" rel="noopener" href="https://www.linkedin.com/in/hayoung-song-9523b61bb/">Follow Me</a></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="/archives"><span class="pull-left">Articles</span><span class="pull-right">9614</span></a><a class="author-info-articles__tags article-meta" href="/tags"><span class="pull-left">Tags</span><span class="pull-right">191</span></a><a class="author-info-articles__categories article-meta" href="/categories"><span class="pull-left">Categories</span><span class="pull-right">60</span></a></div><hr><div class="author-info-links"><div class="author-info-links__title text-center">VISITED</div><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Seoul Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Jeju Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">British Columbia Canada</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Boracay Philippines</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">三重　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">大阪　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">名古屋　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">静岡　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">札幌　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">京都　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Bangkok Thailand</a></div></div></div><div id="content-outer"><div id="top-container" style="background-image: url(https://xxxx.jpg)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="/">SUMFIのBlog</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus">   <a class="site-page" href="/">Home</a><a class="site-page" href="/archives">Archives</a><a class="site-page" href="/tags">Tags</a><a class="site-page" href="/categories">Categories</a><a class="site-page" href="/about">About</a></span><span class="pull-right"><a class="site-page social-icon search"><i class="fa fa-search"></i><span> Search</span></a></span></div><div id="post-info"><div id="post-title">[ByteByteGo] Does Serverless Have Servers?</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2023-11-17</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/">System Design</a><i class="fa fa-angle-right" aria-hidden="true"></i><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/Byte-Byte-Go/">Byte Byte Go</a><div class="post-meta-wordcount"><span>Word count: </span><span class="word-count">1.9k</span><span class="post-meta__separator">|</span><span>Reading time: 12 min</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div class="article-container" id="post-content"><h2 id="Does-Serverless-Have-Servers"><a href="#Does-Serverless-Have-Servers" class="headerlink" title="Does Serverless Have Servers?"></a>Does Serverless Have Servers?</h2><span id="more"></span>
+<p>서버리스 컴퓨팅은 기본 서버를 관리하지 않고 애플리케이션을 빌드하고 실행하는 패러다임을 말한다. 서버리스에서는 클라우드 제공업체가 개발자로부터 서버, 런타임, 확장 및 용량 계획을 추상화한다. 개발자는 애플리케이션 코드와 비즈니스 로직에 집중하고 클라우드 제공업체는 서버 프로비저닝, 자동 확장, 모니터링 등을 내부에서 처리한다. 지난 10년 동안 이런 “no-ops” 접근 방식은 클라우드 네이티브 애플리케이션 배포를 크게 간소화했다.</p>
+<p>서버가 여전히 관여하기 때문에 “serverless”라는 용어는 오해의 소지가 있다. 하지만 개발자의 관점에서 보면 관리해야 할 서버가 눈에 보이지 않는다. 클라우드 제공업체가 서버, 운영체제 및 런타임을 처리한다. 이 모델을 사용하면 개발자는 인프라에 대한 걱정 없이 이벤트 중심의 자동 확장 기능 및 API를 배포할 수 있다.</p>
+<p>서버리스 컴퓨팅을 가능하게 하는 몇 가지 주요 요소로는 FaaS(Function- as-a-Service), BaaS(Backend-as-a-Service) containers, Microservices, auto-scaling 이 있다. 이 포스트에서는 서버리스 개념, 아키텍처, 사용 사례, 제한 사항 등에 대해 자세히 살펴본다.</p>
+<h2 id="The-Evolution-of-Serverless"><a href="#The-Evolution-of-Serverless" class="headerlink" title="The Evolution of Serverless"></a>The Evolution of Serverless</h2><p>서버리스 컴퓨팅은 2014년경 AWS Lambda가 출시되면서 각광을 받기 시작했다. 이를 통해 개발자는 백엔드 서버를 프로비저닝할 필요 없이 이벤트 중심 애플리케이션을 실행할 수 있었다. AWS가 인프라를 처리하는 동안 함수는 부하에 따라 자동 확장된다. Azure Functions와 Google Cloud Functions의 출시로 이 FaaS 모델이 더욱 대중화 되었다.</p>
+<p>2013년부터 2014년 사이에는 컨테이너화와 마이크로서비스의 등장으로 서버리스 애플리케이션을 쉽게 배포할 수 있게 되었고 서버리스 컴퓨팅의 도입이 가속화 되었다.</p>
+<p>2018년 CNCF(Cloud Native Compution Foundation)은 Serverless Whitepaper 1.0을 발표했다. 이 백서에는 서버리스를 서비스형 컨테이너(CaaS) 및 서비스형 플랫폼(PaaS)와 비교해 새로운 클라우드 네이티브 접근 방식으로 포지셔닝 했다.</p>
+<p>아레는 각 모델의 주요 장점과 단점이 나와있따. CaaS는 인프라를 완전히 제어할 수 있지만 모니터링, 로깅 및 용량 관리에 더 많은 노력이 필요하다. PaaS는 애플리케이션 배포와 자동 확장이 용이하지만 컨테이너 이동성이 없다. 서버리스는 인프라 관리에 대한 요구 사항이 가장 낮으며 자동 확장, 운영 감소, 사용량 기반 과금 등이 중요한 이점으로 작용한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231117200131993.png" alt=""></p>
+<p>오늘날 서버리스는 스타트업이 제품 시장에 적합한 애플리케이션을 빠르게 빌드하고 반복할 수 있는 인기 있는 옵션이 되었다. 서버리스 컴퓨팅을 도입하면 아래와 같은 이점이 있다.</p>
+<ol>
+<li>비용 절감 : 서버리스 컴퓨팅을 사용하면 제공 업체는 사용량에 따른 종량제 과금 모델을 채택한다. 개발자는 기능이 실행될 때 사용된 특정 컴퓨팅 리소스에 대해서만 비용을 지불한다. 용량을 미리 과도하게 프로비저닝하거나 유휴 리소스에 대한 비용을 지불할 필요가 없다. 이 과금 모델을 사용하면 고정 용량의 서버나 가상 머신을 프로비저닝할 때보다 리소스를 효율적으로 활용하고 비용을 크게 절감할 수 있다.</li>
+<li>시장 출시 시간 단축 : 서버리스 컴퓨팅을 사용하면 개발자는 용량 계획과 같은 인프라 관리 작업에 시간을 할애할 필요가 없다. 개발자는 코드와 비즈니스 로직 작성에 집중할 수 있으므로 애플리케이션을 빠르게 배포할 수 있다.</li>
+<li>자동 확장 : 서버리스 애플리케이션은 트래픽 패턴에 따라 자동으로 확장 및 축소할 수 있다. 개발자는 초기에 최소한의 컴퓨팅 리소스로 프로비저닝할 수 있다. 들어오는 요청이 증가하면 플랫폼이 자동으로 더 많은 리소스를 할당해 부하를 처리한다. 트래픽이 감소하면 초과된 용량이 해제된다.</li>
+<li>개발자 기술 확장 : 서버리스 컴퓨팅은 컴퓨팅과 스토리지를 기능과 서비스로 모듈화해 인프라 및 운영 문제를 추상화한다. 이를 통해 프론트엔드 개발자는 간단한 백엔드 서비스 작업도 수행할 수 있다.</li>
+</ol>
+<h2 id="FaaS-and-Event-Driven-Architecture"><a href="#FaaS-and-Event-Driven-Architecture" class="headerlink" title="FaaS and Event-Driven Architecture"></a>FaaS and Event-Driven Architecture</h2><p>서버리스라는 용어는 서로 연관되어 있지만 서로 다른 두 가지 의미를 가지고 있다.</p>
+<p>좁은 의미에서 서버리스는 특히 FaaS를 의미한다. FaaS를 사용하면 개발자는 서버를 프로비저닝하지 않고도 자동 확장 기능 코드를 배포할 수 있다. 함수는 이벤트 트리거에 따라 온디맨드 방식으로 실행된다. FaaS 함수는 stateless이며 임시적이다. BaaS는 FaaS와 결합해 클라우드 공급자가 유지 관리하는 API 기반 서비스를 제공하고 스토리지, 데이터 베이스 등과 같은 상태 저장 기능을 제공한다.</p>
+<p>더 넓게 보면 서버리스는 개발자가 백엔드 서버나 인프라를 관리하지 않는 “NoOps” 접근 방식을 의미한다. 이 개념에는 FaaS, BaaS 및 데이터베이스, 스토리지 등과 같은 기타 관리형 클라우드 서비스가 포함된다.</p>
+<p>이런 의미에서 서버리스는 서버가 개발자로부터 추상화된다는 것을 의미한다. 클라우드 제공업체가 모든 서버 프로비저닝, 확장, 가용성 등을 처리한다. 개발자는 API를 통해 서비스를 사용하기만 하고 백엔드를 운영하지 않는다.</p>
+<p>아래 다이어그램은 두 가지 유형의 서버리스 범위를 설명한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231117214144957.png" alt=""></p>
+<p>함수와 이벤트 트리거는 클라우드 네이티브 아키텍처의 두 가지 핵심 구성 요소다. 아래 다이어그램은 이들의 진화를 보여준다. 컨테이너, PaaS, 마이크로 서비스의 발전은 FaaS 개발의 토대를 마련했다. 이벤트 중심 워크플로는 시스템은 비즈니스 로직을 포함할 수 있는 사전 정의된 단계 집합으로 정의한다. 이 두 가지 아키텍처의 발전으로 서버리스 컴퓨팅이 대중적인 선택이 되었다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231117214256186.png" alt=""></p>
+<h2 id="FaaS"><a href="#FaaS" class="headerlink" title="FaaS"></a>FaaS</h2><p>CaaS와 달리 FaaS는 런타임 환경을 처리하므로 개발자는 기능 기반 애플리케이션 로직에만 집중할 수 있다. 아래 다이어그램은 FaaS가 일반 서비스 프로세스와 어떻게 다르게 작동하는지 보여준다.</p>
+<p>CaaS에서는 종속성을 도커와 같은 컨테이너에 번들로 묶는다. 전체 애플리케이션 컨텍스트와 런타임 환경을 관리해야 한다. </p>
+<p>FaaS에서는 클라우드 공급자가 런타임 환경을 정의한다. 우리는 종속성이나 런타임 관리에 대한 걱정 없이 함수 로직만 코딩화면 된다. 함수 실행이 완료되면 런타임은 함수와 함께 소멸된다. 함수는 이벤트 트리거를 통해 상호 작용하고 수요에 따라 자동으로 확장되며 더 많은 요청을 처리하기 위해 새 인스턴스가 스핀업되고 트래픽이 감소하면 스케일 다운된다.</p>
+<p>주요 차이점은 FaaS는 런타임 관리와 확장을 추상화해 개발자가 코드 작성에 집중할 수 있다는 것이다. 요청이 함수 실행을 트리거할 때만 리소스에 대한 비용을 지불한다. CaaS는 종속성과 런타임을 더 잘 제어할 수 있지만 환경을 구성하고 관리해야 한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231117215202391.png" alt=""></p>
+<p>FaaS의 주요 이점 중 하나는 기존 서버에 비해 빠른 콜드 스타트를 통한 빠른 확장이다. 하지만 실제로 FaaS의 콜드 스타트는 얼마나 빠를까?</p>
+<h3 id="Cold-Start-Process"><a href="#Cold-Start-Process" class="headerlink" title="Cold Start Process"></a>Cold Start Process</h3><p>기존 서버에서는 앱을 재시작하고 실행하는 데 몇 분이 걸렸다. 이와는 대조적으로 FaaS 함수는 훨씬 빠르게 실행을 시작할 수 있다.</p>
+<ul>
+<li>Function complexity : 종속성이 거의 없는 간단한 함수는 수십 밀리초 안에 시작할 수 있다.</li>
+<li>코드가 많고 서드 파티 종속성이 많은 대규모 함수는 콜드 스타트에 몇 초가 걸릴 수 있다.</li>
+</ul>
+<p>아래 다이어그램은 콜드 스타트 프로세스를 간략히 설명한다. 파란색 상자는 클라우드 제공업체가 관리하고 빨간색 상자는 함수 소유자가 관리한다. 콜드 스타트 시간은 함수 호출부터 인스턴스 준비 완료까지 측정된다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231117215432370.png" alt=""></p>
+<p>FaaS 콜드 스타트는 기존 서버보다 훨씬 빠르지만 10ms 미만의 응답 시간이 필요한 애플리케이션에는 여전히 지연 시간이 너무 길다. 이런 짧은 지연 시간이 필요한 사용 사례에서 콜드 스타트는 예측 불가능성과 테일 레이턴시 급증과 관련된 문제를 야기한다.</p>
+<p>콜드 스타트 지연 시간을 환화하는데 도움이 되는 최적화 기술이 있다.</p>
+<ul>
+<li>클라우드 제공업체는 콜드 스타트를 최적화하기 위해 기능 코드와 종속성을 미리 다운로드 한다.</li>
+<li>인스턴스를 예약하면 이후 호출 시 콜드 스타트를 피할 수 있지만, 일정 시간 동안 사용하지 않으면 인스턴스가 여전히 삭제될 수 있다. 인스턴스를 예약하면 추가 비용이 발생한다.</li>
+<li>AWS SnapStart와 같은 서비스를 통해 메모리 / 디스크 스냅샷을 캐싱하면 콜드 스타트를 개선할 수 있따.</li>
+</ul>
+<p>콜드 스타트 지연 시간을 모니터링하고 측정하는 것은 사용자 대면 애플리케이션의 성능을 이해하고 개선하는 데 필수적이다.</p>
+<h3 id="Cost-Model"><a href="#Cost-Model" class="headerlink" title="Cost Model"></a>Cost Model</h3><p>사용량 기반 요금 모델은 요청이 들어올 때만 비용을 지불하기 때문에 초기 비용을 낮춘다. 비용 모델을 살펴보고 왜 이 기능이 인기가 있는지 이해해 보자. 고려해야 할 몇 가지 차원의 비용이 있다.</p>
+<ol>
+<li>Number of function invocations : 함수 호출이 많을 수록 비용이 높아지므로 트래픽 변동에 따라 비용이 증가한다.</li>
+<li>Duration of each invocation : 요금은 호출당 사용되는 CPU-seconds에 따라 책정된다.</li>
+<li>Memory allocated to the function : 함수에 할당된 메모리는 비용에 영향을 준다. 일반적으로 메모리가 많은수록 총 할당량에 비례해 요금이 증가한다.</li>
+<li>CPU and memory scaling : 일부 공급업체는 CPU 코어와 메모리를 묶어 더 많은 메모리가 처리 능력을 높일 수 있도록 한다. 메모리를 최적화하면 성능이 향상되고 전체 비용이 증가한다.</li>
+</ol>
+<p>핵심 가격 책정 기준은 공급 업체마다 비슷하지만 네트워크 사용량 및 사용 계층과 같이 총 비용에 영향을 미치는 추가 요소가 있을 수 있다. 그럼에도 불구하고 사용량 기반 지불 모델은 FaaS의 상당한 비용 이점을 제공한다.</p>
+<p>FaaS의 진정한 가치는 높은 처리량과 짧은 지연 시간으로 서비스와 데이터를 오케스트레이션하는 데서 드러난다. 경량의 이벤트 중심 모델은 간헐적인 IoT 디바이스를 연결하는 데 적합하다. 예를 들어, 가전제품과 가젯에서 데이터 전송 작업을 처리하기 위해 FaaS를 점점 더 많이 활용하고 있다.</p>
+<h2 id="BaaS"><a href="#BaaS" class="headerlink" title="BaaS"></a>BaaS</h2><p>BaaS(Backend-as-a-Service)는 애플리케이션의 핵심 백엔드 기능을 대체하는 API 기반 서비스를 제공한다. BaaS는 이러한 API를 자동 확장되는 관리형 서비스로 제공함으로써 개발자에게 백엔드 작업을 효과적으로 서버리스로 만드는 추상화 계층을 생성한다. 이런 추상화를 통해 개발자는 서버를 관리하지 않고도 복잡한 작업에 API를 활용할 수 있으므로 개발이 단순화되고 가속화된다.</p>
+<p>서버리스 아키텍처에서 BaaS는 stateless FaaS를 보완한다. FaaS는 이벤트에 대한 응답으로 로직을 실행하는데 탁월하지만, BaaS는 데이터베이스 상호 작용과 같은 부족한 부분을 채워준다. 예를 들어, 개발자는 데이터 지속성을 위해 BaaS 서비스를 활용해 stateless FaaS 환경에서 데이터베이스 운영을 직접 관리할 필요가 없다.</p>
+<p>BaaS의 진화는 종종 마이크로서비스 접근 방식과 대조된다. 모놀리식 백엔드 서비스를 BaaS API로 전환하면 데이터 및 서비스를 위한 자동 확장, NoOps 인터페이스로 효과적으로 전환할 수 있다. 일반적인 BaaS 사용 사례에는 인증, 원격 업데이트, 클라우드 스토리지 및 데이터베이스 관리가 포함된다. </p>
+<p>“NoOps” 개념은 서버리스 컴퓨팅과 함께 등장했다. NoOps를 사용하면 개발자는 새로운 기능에 집중하고 운영은 클라우드 제공업체에 맡길 수 있다. 서버리스 컴퓨팅의 두 축인 FaaS와 BaaS를 결합하는 것이 일반적인 아키텍처다.</p>
+<ul>
+<li>FaaS는 이벤트에 대응하는 비즈니스 로직 및 처리 작업을 처리한다.</li>
+<li>BaaS는 확장 가능한 데이터 처리 및 백엔드 서비스를 제공한다.</li>
+<li>Backend for Frontend(BFF)는 FaaS 계층에서 생성된 데이터를 처리 및 구성하여 다양한 프론트엔드 디바이스에서 사용할 수 있도록 맞춤화 한다.</li>
+</ul>
+<p>이런 계층화된 아키텍처를 통해 프론트엔드는 사용자 경험에 집중하고, BFF 계층은 기존에 모델과 컨트롤러가 수행하던 데이터 처리를 관리한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231117221654906.png" alt=""></p>
+<h2 id="Serverless-Has-Servers"><a href="#Serverless-Has-Servers" class="headerlink" title="Serverless Has Servers"></a>Serverless Has Servers</h2><p>서버리스의 개념은 클라우드 사용자 관점에서 바라본 것이다. 실제로는 여전히 클라우드 제공업체가 관리하는 서버에서 FaaS 및 BaaS 기능을 실행해야 한다.</p>
+<h3 id="Firecracker-MicroVMAWS"><a href="#Firecracker-MicroVMAWS" class="headerlink" title="Firecracker MicroVMAWS"></a>Firecracker MicroVMAWS</h3><p>Lambda는 Firecracker 경량 가상 머신(microVM)을 사용해 Lambda fucntions를 격리하고 실행한다. Firecracker는 AWS에서 개발한 오픈 소스 가상화 기술로서 Rust로 작성되었으며, 아래 다이어그램은 AWS Lambda 실행 환경을 보여준다. 람다 함수는 람다 워커라고 하는 AWS EC2 인스턴스의 microVM에서 실행된다. 각 워커는 여러 개의 격리된 microVM을 실행해 멀티테넌트 컨테이너 및 함수 기반 서비스를 지원할 수 있다. 사용자는 함수 코드에 대해서만 걱정하면 되고 기본 인프라는 AWS가 처리한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231117221957444.png" alt=""></p>
+<h3 id="Synchronous-Execution"><a href="#Synchronous-Execution" class="headerlink" title="Synchronous Execution"></a>Synchronous Execution</h3><p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231117222034358.png" alt=""></p>
+<ul>
+<li>Step 1 : Worker Manager가 Placement 서비스와 통신해 Worker 노드에 microVM을 할당하고 위치를 반환한다.</li>
+<li>Step 2 : Worker Manager는 Init()을 호출해 S3에서 코드 패키지를 다운로드하고 람다 런타임을 설정해 실행을 위한 함수를 초기화 한다.</li>
+<li>Step 3 : Frontend Worker가 Invoke()를 호출해 함수를 동기적으로 실행한다.</li>
+</ul>
+<h3 id="Asynchronous-Execution"><a href="#Asynchronous-Execution" class="headerlink" title="Asynchronous Execution"></a>Asynchronous Execution</h3><p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231117222221502.png" alt=""></p>
+<ul>
+<li>Step 1 : 애플리케이션 로드 밸런서가 호출 이벤트를 사용 가능한 Frontend Worker로 전달하고 이 워커는 내부 SQS 큐에 이벤트를 배치한다.</li>
+<li>Step 2 : Poller 프로세스가 큐에서 이벤트를 가져와 Frontend Worker에서 함수를 동기적으로 호출한다. Frontend Worker는 위에서 다룬 동기 호출 패턴을 따른다.</li>
+</ul>
+<p>AWS Lambda와 같은 서버리스 플랫폼은 인프라 관리가 필요 없지만 몇 가지 한계가 있다. PaaS, CaaS, FaaS 간의 장단점을 잘 따져봐야 한다.</p>
+<h2 id="Limitations"><a href="#Limitations" class="headerlink" title="Limitations"></a>Limitations</h2><p>FaaS와 BaaS는 인프라 관리를 추상화 하지만 디버깅을 어렵게 만들 수 있다. 오류가 발생하면 기본 구현에 대한 가시성이 없으면 디버깅이 어렵다. 제한된 로그는 근본 원인을 파악하기에 충분한 컨텍스트를 제공하지 못할 수 있다.</p>
+<p>모든 것을 서버리스로 재설계하고 싶은 유혹에 빠지기 쉽지만 과도한 엔지니어링은 피해야 한다. 작은 기능을 남용하면 유지 관리가 어려운 복잡한 아키텍처로 이어진다. 예를 들어, Amazon Prime Video는 모놀리식 아키텍처로 돌아간 후 비용을 90% 절감했다. 아키텍처는 시관과 요구사항에 따라 변화한다는 교훈을 얻을 수 있다. “serverless first” 사고방식을 채택하되 “serverless only”를 기본으로 삼아서는 안된다.</p>
+<p>런타임 환경도 클라우드 제공업체마다 다르다. AWS Lambda에서 작동하는 코드가 Google Cloud Functions에서는 작동하지 않을 수 있다. 오픈소스 크로스벤더 프레임워크가 도움이 되기는 하지만, 일부 벤더 종속은 불가피하다.</p>
+<h2 id="Serverless-Framework"><a href="#Serverless-Framework" class="headerlink" title="Serverless Framework"></a>Serverless Framework</h2><p>2015년에 처음 출시된 서버시르 프레임워크(serverless.com)은 최초의 오픈 소스 크로스 클라우드 서버리스 배포 도구였다. 서버리스 아키텍처의 개발, 배포, 운영을 간소화할 수 있는 CLI 및 호스팅 대시보드를 제공한다.</p>
+<ul>
+<li>모든 주요 클라우드 공급업체 지원</li>
+<li>redundancy를 위해 다중 클라우드 배포 지원</li>
+<li>Nodes.js, Python, Java, Go 등의 런타임 지원</li>
+</ul>
+<p>이런 프레임워크는 특히 대기업의 서버리스 도입 장벽을 낮춰준다. 이런 프레임워크는 모든 규모의 기업에 도움이 되는 플러그인 및 통합 생태계를 조성한다. 또한 오픈소스 특성상 클라우드 공급업체 간에 이식성이 보장된다. 이러한 프레임워크는 공급업체 종속 위험을 줄이고 서버리스 아키텍처 활용을 간소화한다.</p>
+<h2 id="Summary"><a href="#Summary" class="headerlink" title="Summary"></a>Summary</h2><p>서버리스 컴퓨팅은 지난 10년 동안 클라우드 애플리케이션 개발에 혁신을 가져왔다. 서버리스 모델은 인프라 관리를 추상화함으로써 개발자가 코드와 비즈니스 로직 작성에 집중할 수 있도록 지원한다. 이벤트 중심 FaaS와 관리형 BaaS의 조합은 운영 오버헤드를 최소화하면서 풀스택 애플리케이션 구축을 간소화한다.</p>
+<p>서버리스의 자동 확장, 사용량 기반 지불 방식은 제품을 빠르게 빌드하고 반복하려는 스타트업에 이상적인 것으로 입증되었다. 클라우드 제공업체의 관리형 서비스를 활용할 수 있는 기능도 시장 출시 기간을 단축한다. 디버깅 가능성과 공급업체 종속성에 대한 제한은 여전히 존재하지만, 오픈 소스 도구는 이런 장단점을 완화하기 위해 계속 발전하고 있다.</p>
+<p>서버리스 프레임워크와 모법 사례가 성숙해짐에 따라 더 많은 대기업이 적절한 경우 서버리스를 채택할 것이다. 개발 속도, 운영 오버헤드, 비용을 최적화하려면 서버리스 아키텍처와 기존 아키텍처 간의 적절한 균형을 맞추는 것이 핵심이 된다. 서버리스는 개발자를 위한 클라우드 네이티브 툴킷에서 빼놓을 수 없는 부분이다.</p>
+<!-- flag of hidden posts --></div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined">Song Hayoung</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="https://songhayoung.github.io/2023/11/17/System%20Design/ByteByteGo/private/does-serverless-have-servers/">https://songhayoung.github.io/2023/11/17/System%20Design/ByteByteGo/private/does-serverless-have-servers/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/System-Design/">System Design</a></div><nav id="pagination"></nav><div id="gitalk-container"></div><script>var gitalk = new Gitalk({
+  clientID: '3604b61642355579f55e',
+  clientSecret: 'f552120f18ac5aee3f6297e05e97d94c0a25cd4b',
+  repo: 'SongHayoung.github.io',
+  owner: 'SongHayoung',
+  admin: 'SongHayoung',
+  id: md5(decodeURI(location.pathname)),
+  language: 'en'
+})
+gitalk.render('gitalk-container')</script></div></div><footer class="footer-bg" style="background-image: url(https://xxxx.jpg)"><div class="layout" id="footer"><div class="copyright">&copy;2020 - 2023 By Song Hayoung</div><div class="framework-info"><span>Driven - </span><a target="_blank" rel="noopener" href="http://hexo.io"><span>Hexo</span></a><span class="footer-separator">|</span><span>Theme - </span><a target="_blank" rel="noopener" href="https://github.com/Molunerfinn/hexo-theme-melody"><span>Melody</span></a></div><div class="footer_custom_text">Learning how to walk slowly to not miss important things</div><div class="busuanzi"><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><span id="busuanzi_container_page_pv"><i class="fa fa-file"></i><span id="busuanzi_value_page_pv"></span><span></span></span></div></div></footer><i class="fa fa-arrow-up" id="go-up" aria-hidden="true"></i><script src="https://cdn.jsdelivr.net/npm/animejs@latest/anime.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@latest/velocity.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-ui-pack@latest/velocity.ui.min.js"></script><script src="/js/utils.js?version=1.7.0"></script><script src="/js/fancybox.js?version=1.7.0"></script><script src="/js/sidebar.js?version=1.7.0"></script><script src="/js/copy.js?version=1.7.0"></script><script src="/js/fireworks.js?version=1.7.0"></script><script src="/js/transition.js?version=1.7.0"></script><script src="/js/scroll.js?version=1.7.0"></script><script src="/js/head.js?version=1.7.0"></script><script src="/js/search/algolia.js"></script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+    processEscapes: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  },
+  CommonHTML: {
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "HTML-CSS": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "SVG": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  }
+});
+</script><script type="text/x-mathjax-config">MathJax.Hub.Queue(function() {
+  var all = MathJax.Hub.getAllJax(), i;
+  for (i=0; i < all.length; i += 1) {
+    all[i].SourceElement().parentNode.className += ' has-jax';
+  }
+});
+</script><script src="https://cdn.jsdelivr.net/npm/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><script>if(/Android|webOS|iPhone|iPod|iPad|BlackBerry/i.test(navigator.userAgent)) {
+  $('#nav').addClass('is-mobile')
+  $('footer').addClass('is-mobile')
+  $('#top-container').addClass('is-mobile')
+}</script><div class="search-dialog" id="algolia-search"><div class="search-dialog__title" id="algolia-search-title">Algolia</div><div id="algolia-input-panel"><div id="algolia-search-input"></div></div><hr><div id="algolia-search-results"><div id="algolia-hits"></div><div id="algolia-pagination"></div><div id="algolia-stats"></div></div><span class="search-close-button"><i class="fa fa-times"></i></span></div><div class="search-mask"></div></body></html>
