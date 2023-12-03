@@ -1,0 +1,425 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="description" content="[ByteByteGo] Metrics Monitoring and Alerting System"><meta name="keywords" content="System Design"><meta name="author" content="Song Hayoung"><meta name="copyright" content="Song Hayoung"><title>[ByteByteGo] Metrics Monitoring and Alerting System | SUMFIのBlog</title><meta name="robots" content="noindex"><link rel="shortcut icon" href="/songcon.ico"><link rel="stylesheet" href="/css/index.css?version=1.7.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@latest/css/font-awesome.min.css?version=1.7.0"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css?version=1.7.0"><meta name="format-detection" content="telephone=no"><meta http-equiv="x-dns-prefetch-control" content="on"><link rel="dns-prefetch" href="https://cdn.jsdelivr.net"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.css"><script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.js" defer></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@latest/dist/gitalk.min.js"></script><script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.10.0/js/md5.min.js"></script><link rel="dns-prefetch" href="https://www.google-analytics.com"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-169368422-1', 'auto');
+ga('send', 'pageview');</script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: {"appId":"7LZ6OJ4D6C","apiKey":"9a84e13f74ea78c3fd54512c10139c56","indexName":"git blog","hits":{"per_page":10},"languages":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}.","hits_stats":"${hits} results found in ${time} ms"}},
+  localSearch: undefined,
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  }
+} </script><meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/rss2.xml" title="SUMFIのBlog" type="application/rss+xml">
+</head><body><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar" data-display="true"><div class="toggle-sidebar-info text-center"><span data-toggle="Toggle article">Toggle site</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">Catalog</div><div class="sidebar-toc__progress"><span class="progress-notice">You've read</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Metrics-Monitoring-and-Alerting-System"><span class="toc-number">1.</span> <span class="toc-text">Metrics Monitoring and Alerting System</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Step-1-Understand-the-Problem-and-Establish-Design-Scope"><span class="toc-number">2.</span> <span class="toc-text">Step 1 - Understand the Problem and Establish Design Scope</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#High-level-requirements-and-assumptions"><span class="toc-number">2.1.</span> <span class="toc-text">High-level requirements and assumptions</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Non-functional-requirements"><span class="toc-number">2.2.</span> <span class="toc-text">Non-functional requirements</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Step-2-Propose-High-Level-Design-and-Get-Buy-In"><span class="toc-number">3.</span> <span class="toc-text">Step 2 - Propose High-Level Design and Get Buy-In</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Fundamentals"><span class="toc-number">3.1.</span> <span class="toc-text">Fundamentals</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Data-model"><span class="toc-number">3.2.</span> <span class="toc-text">Data model</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Data-access-pattern"><span class="toc-number">3.2.1.</span> <span class="toc-text">Data access pattern</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Data-storage-system"><span class="toc-number">3.2.2.</span> <span class="toc-text">Data storage system</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#High-level-design"><span class="toc-number">3.3.</span> <span class="toc-text">High-level design</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Step-3-Design-Deep-Dive"><span class="toc-number">4.</span> <span class="toc-text">Step 3 - Design Deep Dive</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Metrics-collection"><span class="toc-number">4.1.</span> <span class="toc-text">Metrics collection</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Pull-vs-push-models"><span class="toc-number">4.1.1.</span> <span class="toc-text">Pull vs push models</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#Pull-model"><span class="toc-number">4.1.1.1.</span> <span class="toc-text">Pull model</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#Push-model"><span class="toc-number">4.1.1.2.</span> <span class="toc-text">Push model</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#Pull-or-push"><span class="toc-number">4.1.1.3.</span> <span class="toc-text">Pull or push?</span></a></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Scale-the-metrics-transmission-pipeline"><span class="toc-number">4.2.</span> <span class="toc-text">Scale the metrics transmission pipeline</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Scale-through-Kafka"><span class="toc-number">4.2.1.</span> <span class="toc-text">Scale through Kafka</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Alternative-to-Kafka"><span class="toc-number">4.2.2.</span> <span class="toc-text">Alternative to Kafka</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Where-aggregations-can-happen"><span class="toc-number">4.3.</span> <span class="toc-text">Where aggregations can happen</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Query-service"><span class="toc-number">4.4.</span> <span class="toc-text">Query service</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Cache-layer"><span class="toc-number">4.4.1.</span> <span class="toc-text">Cache layer</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#The-case-against-query-service"><span class="toc-number">4.4.2.</span> <span class="toc-text">The case against query service</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Time-series-database-query-language"><span class="toc-number">4.4.3.</span> <span class="toc-text">Time-series database query language</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Storage-layer"><span class="toc-number">4.5.</span> <span class="toc-text">Storage layer</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Choose-a-time-series-database-carefully"><span class="toc-number">4.5.1.</span> <span class="toc-text">Choose a time-series database carefully</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Space-optimization"><span class="toc-number">4.5.2.</span> <span class="toc-text">Space optimization</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#Data-encoding-and-compression"><span class="toc-number">4.5.2.1.</span> <span class="toc-text">Data encoding and compression</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#Downsampling"><span class="toc-number">4.5.2.2.</span> <span class="toc-text">Downsampling</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#Cold-storage"><span class="toc-number">4.5.2.3.</span> <span class="toc-text">Cold storage</span></a></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Alerting-system"><span class="toc-number">4.6.</span> <span class="toc-text">Alerting system</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Alerting-system-build-vs-buy"><span class="toc-number">4.6.1.</span> <span class="toc-text">Alerting system - build vs buy</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Visualization-system"><span class="toc-number">4.7.</span> <span class="toc-text">Visualization system</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Step-4-Wrap-Up"><span class="toc-number">5.</span> <span class="toc-text">Step 4 - Wrap Up</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Chapter-Summary"><span class="toc-number">6.</span> <span class="toc-text">Chapter Summary</span></a></li></ol></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="https://avatars3.githubusercontent.com/u/37806785?s=460&amp;u=8c68d685faf7c5280cfbd736a6b1730b55fb4203&amp;v=4"></div><div class="author-info__name text-center">Song Hayoung</div><div class="author-info__description text-center"></div><div class="follow-button"><a target="_blank" rel="noopener" href="https://www.linkedin.com/in/hayoung-song-9523b61bb/">Follow Me</a></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="/archives"><span class="pull-left">Articles</span><span class="pull-right">9689</span></a><a class="author-info-articles__tags article-meta" href="/tags"><span class="pull-left">Tags</span><span class="pull-right">191</span></a><a class="author-info-articles__categories article-meta" href="/categories"><span class="pull-left">Categories</span><span class="pull-right">60</span></a></div><hr><div class="author-info-links"><div class="author-info-links__title text-center">VISITED</div><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Seoul Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Jeju Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">British Columbia Canada</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Boracay Philippines</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">三重　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">大阪　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">名古屋　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">静岡　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">札幌　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">京都　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Bangkok Thailand</a></div></div></div><div id="content-outer"><div id="top-container" style="background-image: url(https://xxxx.jpg)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="/">SUMFIのBlog</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus">   <a class="site-page" href="/">Home</a><a class="site-page" href="/archives">Archives</a><a class="site-page" href="/tags">Tags</a><a class="site-page" href="/categories">Categories</a><a class="site-page" href="/about">About</a></span><span class="pull-right"><a class="site-page social-icon search"><i class="fa fa-search"></i><span> Search</span></a></span></div><div id="post-info"><div id="post-title">[ByteByteGo] Metrics Monitoring and Alerting System</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2023-11-28</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/">System Design</a><i class="fa fa-angle-right" aria-hidden="true"></i><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/Byte-Byte-Go/">Byte Byte Go</a><div class="post-meta-wordcount"><span>Word count: </span><span class="word-count">3.3k</span><span class="post-meta__separator">|</span><span>Reading time: 20 min</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div class="article-container" id="post-content"><h2 id="Metrics-Monitoring-and-Alerting-System"><a href="#Metrics-Monitoring-and-Alerting-System" class="headerlink" title="Metrics Monitoring and Alerting System"></a>Metrics Monitoring and Alerting System</h2><span id="more"></span>
+<p>이번 포스트에서는 확장 가능한 메트릭 모니터링 및 알림 시스템의 설계에 대해 살펴본다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231128223850460.png" alt=""></p>
+<h2 id="Step-1-Understand-the-Problem-and-Establish-Design-Scope"><a href="#Step-1-Understand-the-Problem-and-Establish-Design-Scope" class="headerlink" title="Step 1 - Understand the Problem and Establish Design Scope"></a>Step 1 - Understand the Problem and Establish Design Scope</h2><h3 id="High-level-requirements-and-assumptions"><a href="#High-level-requirements-and-assumptions" class="headerlink" title="High-level requirements and assumptions"></a>High-level requirements and assumptions</h3><ul>
+<li>모니터링 중인 인프라가 대규모다.<ul>
+<li>DAU 100M</li>
+<li>서버 풀이 1000개, 풀당 머신이 100대, 머신당 메트릭이 100개 ~= 약 10M의 메트릭이 있다고 가정</li>
+<li>1년 데이터 보존 정책</li>
+<li>데이터 보존 정책 : 7일 동안 raw 형태, 30일 동안 1분 단위 resolution, 1년 동안 1시간 단위 resolution</li>
+</ul>
+</li>
+<li>다양한 메트릭 수집 가능<ul>
+<li>CPU usage</li>
+<li>Request count</li>
+<li>Memory usage</li>
+<li>Message count in message queues</li>
+</ul>
+</li>
+</ul>
+<h3 id="Non-functional-requirements"><a href="#Non-functional-requirements" class="headerlink" title="Non-functional requirements"></a>Non-functional requirements</h3><ul>
+<li>확장성 : 시스템은 증가하는 지표와 알림 볼륨을 수용할 수 있도록 확장 가능해야 한다.</li>
+<li>짧은 지연 시간 : 대시보드 및 알림에 대한 쿼리 지연 시간이 짧아야 한다.</li>
+<li>신뢰성 : 중요한 알림을 놓치지 않도록 시스템의 신뢰성이 높아야 한다.</li>
+<li>유연성 : 기술을 계속 변화하므로 파이프라인은 향후 새로운 기술을 쉽게 통합할 수 있을 만큼 유연해야 한다.</li>
+</ul>
+<p>어떤 요구 사항을 충족해야 할까?</p>
+<ul>
+<li>Log monitoring. ELK 스택은 로그를 수집하고 모니터링 하는 데 매우 인기가 있다.</li>
+<li>Distributed system tracing. 분산 추적은 서비스 요청이 분산 시스템을 통과할 때 추적하는 추적 솔루션을 말한다. 요청이 한 서비스에서 다른 서비스로 이동할 때 데이터를 수집한다.</li>
+</ul>
+<h2 id="Step-2-Propose-High-Level-Design-and-Get-Buy-In"><a href="#Step-2-Propose-High-Level-Design-and-Get-Buy-In" class="headerlink" title="Step 2 - Propose High-Level Design and Get Buy-In"></a>Step 2 - Propose High-Level Design and Get Buy-In</h2><h3 id="Fundamentals"><a href="#Fundamentals" class="headerlink" title="Fundamentals"></a>Fundamentals</h3><p>지표 모니터링 및 알림 시스템에는 일반적으로 아래와 같이 다섯 가지 구성 요소가 포함된다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231128224625726.png" alt=""></p>
+<ul>
+<li>데이터 수집 : 다양한 소스에서 메트릭 데이터를 수집한다.</li>
+<li>데이터 전송 : 소스에서 메트릭 모니터링 시스템으로 데이터를 전송한다.</li>
+<li>데이터 저장 : 들어오는 데이터를 정리하고 저장한다.</li>
+<li>알림 : 수신 데이터를 분석하고, 이상 징후를 감지하고, 알림을 생성한다. 시스템은 다양한 커뮤니케이션 채널로 경고를 보낼 수 있어야 한다.</li>
+<li>시각화 : 데이터를 그래프, 차트 등으로 표시한다. 엔지니어는 데이터가 시각적으로 표시될 때 패턴, 추세 또는 문제를 더 잘 식별할 수 있으므로 시각화 기능이 필요하다.</li>
+</ul>
+<h3 id="Data-model"><a href="#Data-model" class="headerlink" title="Data model"></a>Data model</h3><p>메트릭 데이터는 일반적으로 관련 타임스탬프와 함께 값 집합을 포함하는 시계열로 기록된다. 시계열 자체는 그 이름으로 고유하게 식별될 수 있으며, 선택적으로 레이블 세트로도 식별할 수 있다. 몇 가지 예를 살펴보자.</p>
+<ul>
+<li>Example 1. 20:00에 프로덕션 서버 인스턴스 i631의 CPU 로드는 얼마인가?</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231128224902114.png" alt=""></p>
+<p>위에 하이라이트 된 포인트의 데이터는 아래 표와 같다.</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:left"><strong>metric_name</strong></th>
+<th style="text-align:left">cpu.load</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><strong>labels</strong></td>
+<td style="text-align:left">host:i631,env:prod</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>timestamp</strong></td>
+<td style="text-align:left">1613707265</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>value</strong></td>
+<td style="text-align:left">0.29</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>이 예에서 시계열은 메트릭 이름, 레이블(host:i631, env:prd), 특정 시간의 단일 지점 값으로 표시된다.</p>
+<ul>
+<li>Example 2 : 지난 10분 동안 미국 서부 지역의 모든 웹 서버에 대한 평균 CPU 로드는 얼마인가?</li>
+</ul>
+<p>개념적으로 메트릭 이름이 “CPU.load”이고 지역 레이블이 “us-west”인 스토리지에서 이와 같은 것을 가져올 수 있다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">CPU.load host=webserver01,region=us-west 1613707265 50</span><br><span class="line"></span><br><span class="line">CPU.load host=webserver01,region=us-west 1613707265 62</span><br><span class="line"></span><br><span class="line">CPU.load host=webserver02,region=us-west 1613707265 43</span><br><span class="line"></span><br><span class="line">CPU.load host=webserver02,region=us-west 1613707265 53</span><br><span class="line"></span><br><span class="line">...</span><br><span class="line"></span><br><span class="line">CPU.load host=webserver01,region=us-west 1613707265 76</span><br><span class="line"></span><br><span class="line">CPU.load host=webserver01,region=us-west 1613707265 83</span><br></pre></td></tr></table></figure>
+<p>각 줄 끝에 있는 값의 평균을 구하면 평균 CPU 부하를 계산할 수 있다. 위 예제에서 각 행의 형식을 line protocol이라 한다. 이는 시중에 나와 있는 많은 모니터링 소프트웨어의 일반적인 입력 형식이다. 모든 시계열은 아래와 같이 구성된다.</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Name</th>
+<th style="text-align:left">Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">A metric name</td>
+<td style="text-align:left">String</td>
+</tr>
+<tr>
+<td style="text-align:left">A set of tags/labels</td>
+<td style="text-align:left">List of <key:value> pairs</td>
+</tr>
+<tr>
+<td style="text-align:left">An array of values and their timestamps</td>
+<td style="text-align:left">An array of <value, timestamp> pairs</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h4 id="Data-access-pattern"><a href="#Data-access-pattern" class="headerlink" title="Data access pattern"></a>Data access pattern</h4><p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231128225228538.png" alt=""></p>
+<p>위 그림에서 Y축의 각 레이블은 시계열(이름과 레이블로 고유하게 식별됨)을 나타내고, X축은 시간을 나타낸다.</p>
+<p>쓰기 부하가 크다. 보다시피, 한 순간에 많은 시계열 데이터 요소가 기록될 수 있다. “High-level requirements”에서 언급했듯이, 하루에 약 1,000만 개의 운영 메트릭이 작성되고 많은 메트릭이 높은 빈도로 수집되므로 트래픽은 의심할 여지 없이 쓰기 부하가 높다.</p>
+<p>동시에 읽기 부하도 급증한다. 시각화 및 알림 서비스 모두 데이터베이스에 쿼리를 전송하며, 그래프와 알림의 액세스 패턴에 따라 읽기 볼륨이 폭증할 수 있다.</p>
+<p>즉, 읽기 부하가 급증하는 동안 시스템은 지속적으로 과중한 쓰기 부하를 받고 있는 것이다.</p>
+<h4 id="Data-storage-system"><a href="#Data-storage-system" class="headerlink" title="Data storage system"></a>Data storage system</h4><p>데이터 저장 시스템은 디자인의 핵심이다. 이 작업에는 자체 스토리지 시스템을 구축하거나 범용 스토리지 시스템(e.g. MySQL)을 사용하는 것은 권장하지 않는다.</p>
+<p>범용 데이터베이스는 이론적으로는 시계열 데이터를 지원할 수 있지만, 우리 규모에 맞게 작동하려면 전문가 수준의 튜닝이 필요하다. 특히, 관계형 데이터베이스는 시계열 데이터에 대해 일반적으로 수행하는 작업에 최적화되어 있지 않다. 예를 들어, rolling time window에서 이동 평균을 계선하려면 읽기 어려운 복잡한 SQL이 필요하다. 게다가 태그 / 라벨링 데이터를 지원하려면 각 태그에 대한 인덱스를 추가해야 한다. 또한 범용 관계형 데이터베이스는 지속적으로 많은 쓰기 부하가 걸리면 성능이 좋지 않다. 우리 규모에서는 데이터베이스를 튜닝하는데 상당한 노력을 기울여야 하며, 그렇게 해도 성능이 좋지 않을 수 있다.</p>
+<p>NoSQL은 어떨까? 이론상으로는 시중에 나와있는 몇 가지 NoSQL 데이터베이스가 시계열 데이터를 효과적으로 처리할 수 있다. 예를 들어, Cassandra와 Bigtable은 시계열 데이터에 모두 사용할 수 있다. 그러나 시계열 데이터를 효과적으로 저장하고 쿼리하기 위한 확장 가능한 스키마를 고안하려면 각 NoSQL의 내부 작동 방식에 대한 깊은 지식이 필요하다. 대규모의 시계열 데이터베이스를 쉽게 사용할 수 있는 상황에서 범용 NoSQL 데이터베이스를 사용하는 것은 매력적이지 않다.</p>
+<p>시계열 데이터에 최적화된 스토리지 시스템이 많이 있다. 이런 최적화를 통해 동일한 양의 데이터를 처리하는데 훨씬 적은 수의 서버를 사용할 수 있다. 또한 이런 데이터베이스 중 상당수는 시계열 데이터 분석을 위해 특별히 설계된 사용자 지정 쿼리 인터페이스를 갖추고 있어 SQL보다 훨씬 더 쉽게 사용할 수 있다. 일부는 데이터 보존 및 데이터 집계를 관리하는 기능도 제공한다. 다음은 시계열 데이터베이스의 몇 가지 예다.</p>
+<p>OpenTSDB는 분산형 시계열 데이터베이스이지만, Hadoop과 HBase를 기반으로 하기 때문에 Hadoop / HBase 클러스터를 실행하면 복잡성이 증가한다. 트위터는 MetricsDB를 사용하며 아마존은 시계열 데이터베이스로 Timestream을 제공한다. DB-engines에 따르면 가장 많이 사용되는 시계열 데이터베이스는 대량의 시계열 데이터를 저장하고 해당 데이터에 대한 실시간 분석을 신속하게 수행하도록 설계된 InfluxDB와 Prometheus다. 두 데이터베이스 모두 주로 인메모리 캐시와 온디스크 스토리지에 의존한다. 그리고 둘 다 내구성과 성능이 상당히 우수하다. 아래서 볼 수 있듯이, 8개의 코어와 32GB RAM을 갖춘 InfluxDB는 초당 250,000회 이상의 쓰기를 처리할 수 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231128230132776.png" alt=""></p>
+<p>시계열 데이터베이스는 전문 데이터베이스이므로 이력서에 명시적으로 언급하지 않는 한 면접에서 내부를 이해할 것을 기대하기는 어렵다. 면접을 위해서는 메트릭 데이터가 본질적으로 시계열이라는 것을 이해하는 것이 중요하며, 이를 저장하기 위한 스토리지로 InfluxDB와 같은 시계열 데이터베이스를 선택할 수 있다.</p>
+<p>강력한 시계열 데이터베이스의 또 다른 특징은 대량의 시계열 데이터를 레이블(혹은 태그)별로 효율적으로 집계하고 분석할 수 있다는 점이다. 예를 들어, InfluxDB는 레이블에 인덱스를 구축해 레이블별로 시계열을 빠르게 조회할 수 있도록 한다. 데이터베이스에 과부하를 주지 않으면서 레이블을 사용하는 방법에 대한 명확한 모범 사례 지침을 제공한다. 핵심은 각 레이블의 카디널리티가 낮은지 확인하는 것이다. 이 기능은 시각화에 매우 중요하며, 범용 데이터베이스로 이를 구축하려면 많은 노력이 필요하다.</p>
+<h3 id="High-level-design"><a href="#High-level-design" class="headerlink" title="High-level design"></a>High-level design</h3><p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231128232118692.png" alt=""></p>
+<ul>
+<li>Metrics source : 애플리케이션 서버, SQL 데이터베이스, 메세지 대기열 등이 된다.</li>
+<li>Metrics collector : 메트릭 데이터를 수집해 시계열 데이터베이스에 데이터를 쓴다.</li>
+<li>Time-series database : 메트릭 데이터를 시계열로 저장한다. 일반적으로 대량의 시계열 데이터를 분석하고 요약하기 위한 사용자 지정 쿼리 인터페이스를 제공한다. 레이블에 대한 인덱스를 유지관리해 레이블별로 시계열 데이터를 빠르게 조회할 수 있도록 한다.</li>
+<li>Query service : 쿼리 서비스를 사용하면 시계열 데이터베이스에서 데이터를 쉽게 쿼리하고 검색할 수 있다. 좋은 시계열 데이터베이스를 선택한다면 이것은 매우 얇은 wrapper가 될 것이다. 시계열 데이터베이스의 자체 쿼리 인터페이스로 완전히 대체할 수 있다.</li>
+<li>Alerting system : 다양한 알림 대상에 알림을 보낸다.</li>
+<li>Visualization system : 다양한 그래프 / 차트의 형태로 메트릭을 표시한다.</li>
+</ul>
+<h2 id="Step-3-Design-Deep-Dive"><a href="#Step-3-Design-Deep-Dive" class="headerlink" title="Step 3 - Design Deep Dive"></a>Step 3 - Design Deep Dive</h2><p>이 섹션에서는 아래의 주제에 대해 살펴본다.</p>
+<ul>
+<li>Metrics collection</li>
+<li>Scaling the metrics transmission pipeline</li>
+<li>Query service</li>
+<li>Storage layer</li>
+<li>Alerting system</li>
+<li>Visualization system</li>
+</ul>
+<h3 id="Metrics-collection"><a href="#Metrics-collection" class="headerlink" title="Metrics collection"></a>Metrics collection</h3><p>카운터나 CPU와 같은 메트릭 수집의 경우, 가끔 데이터가 손실된다고 해서 세상이 끝나는 것은 아니다. 클라이언트가 실행하고 잊어버리는 것은 허용된다. 메트릭 수집 흐름을 살펴보자.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231129161449014.png" alt=""></p>
+<h4 id="Pull-vs-push-models"><a href="#Pull-vs-push-models" class="headerlink" title="Pull vs push models"></a>Pull vs push models</h4><p>메트릭 데이터를 수집하는 방법에는 pull model과 push model 두 가지가 있다. 어느 것이 더 나은지에 대한 명확한 답은 없다.</p>
+<h5 id="Pull-model"><a href="#Pull-model" class="headerlink" title="Pull model"></a>Pull model</h5><p>아래는 HTTP를 통한 풀 모델을 사용한 데이터 수집을 보여준다. 실행 중인 애플리케이션에서 주기적으로 메트릭 값을 가져오는 전용 메트릭 수집기가 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231129161558688.png" alt=""></p>
+<p>이 접근 방식에는 메트릭 수집기가 데이터를 가져올 서비스 엔드포인트의 전체 목록을 알고 있어야 한다. 한 가지 단순한 접근 방식은 파일을 사용해 “Metrics Collector” 서버의 모든 서비스 엔드포인트에 대한 DNS / IP 정보를 보관하는 것이다. 아이디어는 간단하지만, 서버가 자주 추가되거나 제거되는 대규모 환경에서는 유지하기 어렵고, 메트릭 수집기가 새로운 서버에서 메트릭을 수집하는 것을 놓치지 않기를 원한다. 다행이도 etcd, Zookeeper 등에서 제공하는 서비스 디스커버리를 통해 안정적이고 확장 가능하며 유지 관리가 가능한 솔루션을 사용할 수 있는데, 이 솔루션은 서비스가 가용성을 등록하고 서비스 엔드포인트 목록이 변경될 때마다 서비스 디스커버리 설정에 의해 메트릭 수집기가 알림을 받을 수 있다.</p>
+<p>서비스 디스커버리에는 아래와 같이 메트릭을 수집할 시기와 위치에 대한 설정 규칙이 포함되어 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231129161914355.png" alt=""></p>
+<p>아래는 pull model의 예이다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231129161930954.png" alt=""></p>
+<ol>
+<li><p>메트릭 수집기는 서비스 디스커버리에서 서비스 엔드포인트의 설정 메타데이터를 가져온다. 메타데이터에는 pulling interval, IP address, timeout, retry parameter 등이 포함된다.</p>
+</li>
+<li><p>메트릭 수집기는 미리 정의된 HTTP 엔드포인트 (e.g. /metrics)를 통해 메트릭 데이터를 가져온다. 엔드포인트를 노출하려면 일반적으로 서비스에 클라이언트 라이브러리를 추가해야 한다. </p>
+</li>
+<li>선택적으로 메트릭 수집기는 서비스 엔드포인트가 변경될 때마다 업데이트를 받기 위해 서비스 디스커버리에 변경 이벤트 알림을 등록한다. 또는 메트릭 수집기가 주기적으로 엔드포인트 변경을 polling할 수도 있다.</li>
+</ol>
+<p>이 규모에서는 단일 메트릭 수집기로는 수천 대의 서버를 처리할 수 없다. 따라서 메트릭 수집기 pool을 사용해 수요를 처리해야 한다. 여러 수집기가 있을 때 흔히 발생하는 문제 중 하나는 여러 인스턴스가 동일한 리소스에서 데이터를 가져와 중복 데이터를 생성할 수 있다는 것이다. 이를 방지하려면 인스턴스 간에 어떤 코디네이션 체계가 있어야 한다.</p>
+<p>한 가지 가능한 접근 방식은 각 수집기를 consistent hash ring의 범위에 지정한 다음, 모니터링 중인 모든 서버를 해시 링의 고유 이름으로 매핑하는 것이다. 이렇게 하면 하나의 메트릭 소스 서버가 하나의 수집기에 의해서만 처리된다.</p>
+<p>아래 표시된 것처럼 4개의 수집기과 6개의 메트릭 소스 서버가 있다. 각 수집기는 별개의 서버 집합에서 메트릭을 수집할 책임이 있다. 수집기 2는 서버 1과 서버 5에서 메트릭을 수집할 책임이 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231129162418731.png" alt=""></p>
+<h5 id="Push-model"><a href="#Push-model" class="headerlink" title="Push model"></a>Push model</h5><p>푸시 모델에서는 웹 서버, 데이터베이스 서버 등 다양한 메트릭 소스가 메트릭 수집기로 직접 메트릭을 전송한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231129162457722.png" alt=""></p>
+<p>푸시 모델에서는 일반적으로 모니터링되는 모든 서버에 수집 에이전트가 설치된다. 수집 에이전트는 서버에서 실행 중인 서비스에서 메트릭을 수집하고 해당 메트릭을 주기적으로 메트릭 수집기로 푸시하는 장기 실행 소프트웨어다. 수집 에이전트는 메트릭 수집기로 보내기 전에 로컬에서 메트릭을 집계할 수도 있다.</p>
+<p>집계는 메트릭 수집기로 전송되는 데이터의 양을 줄이는 효과적인 방법이다. 푸시 트래픽이 많고 메트릭 수집기가 오류와 함께 푸시를 거부하는 경우, 에이전트는 작은 데이터 버퍼를 로컬에 보관하고 나중에 다시 전송할 수 있다. 그러나 서버가 자주 교체되는 오토 스케일링 그룹에 속해 있는 경우 데이터를 로컬에 보관하면 일시적으로라도 메트릭 수집기가 뒤처질 때 데이터가 손실될 수 있다.</p>
+<p>푸시 모델에서 메트릭 수집기가 뒤처지는 것을 방지하려면 메트릭 수집기가 로드 밸런서가 앞에 있는 오토 스케일링 클러스터에 있어야 한다. 클러스터는 메트릭 수집기 서버의 CPU 부하에 따라 확장 및 축소되어야 한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231129162748814.png" alt=""></p>
+<h5 id="Pull-or-push"><a href="#Pull-or-push" class="headerlink" title="Pull or push?"></a>Pull or push?</h5><p>그렇다면 어느 쪽이 더 나은 선택일까? 이 문제에 대한 명확한 답은 없다. 두 모델 모두 실제 사용 사례에서 널리 채택되고 있다.</p>
+<ul>
+<li>Pull 아키텍처의 예로는 Prometheus가 있다.</li>
+<li>Push 아키텍처의 예로는 Amazon CloudWatch, Graphite가 있다.</li>
+</ul>
+<p>각 접근 방식의 장단점을 아는 것이 승자를 고르는 것 보다 중요하다.</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th></th>
+<th><strong> Pull</strong></th>
+<th><strong>Push</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Easy debugging</td>
+<td>메트릭을 가져오는데 사용되는 애플리케이션 서버의 /metrics 엔드포인트는 언제든지 메트릭을 보는 데 사용할 수 있다. 노트북에서도 이 작업을 수행할 수 있다. <strong>Pull wins</strong>.</td>
+<td>메트릭 수집기가 메트릭을 수신하지 못한다면 네트워크 문제로 인한 문제일 수 있다.</td>
+</tr>
+<tr>
+<td>Health check</td>
+<td>애플리케이션 서버가 풀에 응답하지 않으면 애플리케이션 서버가 다운되었는지 빠르게 파악할 수 있다. <strong>Pull wins</strong>.</td>
+<td>메트릭 수집기가 메트릭을 수신하지 못한다면 네트워크 문제로 인한 문제일 수 있다.</td>
+</tr>
+<tr>
+<td>Short-lived jobs</td>
+<td></td>
+<td>일부 배치 작업은 수명이 짧아 pull 될 만큼 오래 지속되지 않을 수 있다. <strong>Push wins</strong>. Pull 모델에 <a target="_blank" rel="noopener" href="https://github.com/prometheus/pushgateway">푸시 게이트웨이</a>를 도입하면 이 문제를 해결할 수 있다.</td>
+</tr>
+<tr>
+<td>Firewall or complicated network setups</td>
+<td>메트릭을 가져오는 서버를 두려면 모든 메트릭 엔드포인트에 연결할 수 있어야 한다. 이는 여러 데이터 센터 설정에서 잠재적으로 문제가 될 수 있다. 보다 정교한 네트워크 인프라가 필요할 수도 있다.</td>
+<td>로드 밸런서와 오토 스케일링 그룹으로 메트릭 수집기를 설정하면 어디서든 데이터를 수신할 수 있다. <strong>Push wins.</strong></td>
+</tr>
+<tr>
+<td>Performance</td>
+<td>Pull methods 는 일반적으로  TCP를 사용한다.</td>
+<td>Push methods 는 일반적으로 UDP를 사용한다. 즉 푸시 방식은 지연 시간이 짧은 메트릭 전송을 제공한다. 이에 대한 반론은 메트릭 페이로드를 전송하는 것에 비해 TCP 연결을 설정하는데 드는 비용이 적다는 것이다.</td>
+</tr>
+<tr>
+<td>Data authenticity</td>
+<td>메트릭을 수집할 애플리케이션 서버는 설정 파일에 미리 정의되어 있다. 이런 서버에서 수집된 지표는 원본이 보장된다.</td>
+<td>모든 종류의 클라이언트가 메트릭 수집기에 메트릭을 푸시할 수 있다. 이 문제는 메트릭을 허용할 서버를 화이트리스트에 추가하거나 인증을 요구해 해결할 수 있다.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>위에서 언급했듯이 Pull과 Push는 일반적인 논쟁 주제이며 정답은 없다. 특히 요즘은 서버리스가 인기를 끌고 있기 때문에 대규모 조직에서는 두 가지를 모두 지원해야할 수 도 있다. 처음부터 데이터를 푸시할 수 있는 에이전트를 설치하는 방법이 없을 수도 있다.</p>
+<h3 id="Scale-the-metrics-transmission-pipeline"><a href="#Scale-the-metrics-transmission-pipeline" class="headerlink" title="Scale the metrics transmission pipeline"></a>Scale the metrics transmission pipeline</h3><p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231129163544668.png" alt=""></p>
+<p>메트릭 수집기와 시계열 데이터베이스를 더 살펴보자. 푸시 모델을 사용하든 풀 모델을 사용하든 메트릭 수집기는 서버의 클러스터이며, 이 클러스터는 엄청난 양의 데이터를 수신한다. 푸시 또는 풀의 경우, 메트릭 수집기 클러스터는 오토 스케일링을 위해 설정되어 수요를 처리할 수 있는 적절한 수의 수집기 인스턴스가 있는지 확인한다.</p>
+<p>그러나 시계열 데이터베이스를 사용할 수 없는 경우 데이터 손실의 위험이 있다. 이 문제를 완화하기 위해 아래와 같이 Queue 를 도입한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231129163712155.png" alt=""></p>
+<p>이 설계에서는 메트릭 수집기가 메트릭 데이터를 Kafka와 같은 큐 시스템으로 보낸다. 그러면 소비자 또는 Apache Storm, Flink, Spark와 같은 스트리밍 처리 서비스가 데이터를 처리해 시계열 데이터베이스로 푸시한다. 이 접근 방식에는 몇 가지 장점이 있다.</p>
+<ul>
+<li>Kafka는 매우 안정적이고 확장성이 뛰어난 분산 메세징 플랫폼으로 사용된다.</li>
+<li>데이터 수집과 데이터 처리 서비스를 서로 분리한다.</li>
+<li>데이터베이스를 사용할 수 없을 때 데이터를 Kafka에 보관해 데이터 손실을 쉽게 방지할 수 있다.</li>
+</ul>
+<h4 id="Scale-through-Kafka"><a href="#Scale-through-Kafka" class="headerlink" title="Scale through Kafka"></a>Scale through Kafka</h4><p>Kafka의 기본 제공 파티션 메커니즘을 활용해 시스템을 확장할 수 있는 몇 가지 방법이 있다.</p>
+<ul>
+<li>처리량 요구 사항에 따라 파티션 수를 구성한다.</li>
+<li>메트릭 이름별로 메트릭 데이터를 파티션해 소비자가 메트릭 이름별로 데이터를 집계할 수 있도록 한다.</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231129163930834.png" alt=""></p>
+<ul>
+<li>태그 / 레이블로 메트릭 데이터를 더욱 세분화한다.</li>
+<li>중요한 메트릭을 먼저 처리할 수 있도록 메트릭을 분류하고 우선순위를 지정한다.</li>
+</ul>
+<h4 id="Alternative-to-Kafka"><a href="#Alternative-to-Kafka" class="headerlink" title="Alternative to Kafka"></a>Alternative to Kafka</h4><p>프로덕션 규모의 카프카 시스템을 유지 관리하는 것은 결코 쉬운 일이 아니다. 면접관으로 부터 이에 대한 반발을 받을 수도 있다. 중간 큐를 사용하지 않고 대규모 모니터링 시스템을 사용하는 곳도 있다. Facebook의 Gorilla 인메모리 시계열 데이터베이스가 대표적인 예로, 부분적인 네트워크 장애가 발생하더라도 쓰기 가용성을 높게 유지하도록 설계되어 있다. 이런 설계는 카프카와 같은 중간 큐를 사용하는 것만큼이나 안정적이라고 주장할 수 있다.</p>
+<h3 id="Where-aggregations-can-happen"><a href="#Where-aggregations-can-happen" class="headerlink" title="Where aggregations can happen"></a>Where aggregations can happen</h3><p>Collection agent(on the client-side), ingestion pipeline(before writing to storage), query side(after writing to storage) 등 다양한 위치에서 메트릭을 집계할 수 있다. </p>
+<ul>
+<li>Collection agent. 클라이언트 측에 설치된 수집 에이전트는 간단한 집계 로직만 지원한다. 예를 들어, 카운터를 메트릭 수집기로 보내기 전에 매분마다 카운터를 집계한다.</li>
+<li>Ingestion pipeline. 스토리지에 쓰기 전에 데이터를 집계하려면 일반적으로 Flink와 같은 스트림 처리 엔진이 필요하다. 계산된 결과만 데이터베이스에 기록되므로 쓰기 볼륨이 크게 줄어든다. 하지만 늦게 도착하는 이벤트를 처리하는 것이 어려울 수 있으며 원시 데이터를 더 이상 저장하지 않기 때문에 데이터의 정확성과 유연성이 떨어진다는 단점이 있다.</li>
+<li>Query side. 원시 데이터는 쿼리 시점에 특정 기간동안 집계할 수 있다. 이 접근 방식에서는 데이터 손실이 없지만, 쿼리 결과가 쿼리 시점에 계산되고 전체 데이터 세트에 대해 실행되기 때문에 쿼리 속도가 느려질 수 있다.</li>
+</ul>
+<h3 id="Query-service"><a href="#Query-service" class="headerlink" title="Query service"></a>Query service</h3><p>쿼리 서비스는 시계열 데이터베이스에 액세스하고 시각화 또는 알림 시스템의 요청을 처리하는 쿼리 서버 클러스터로 구성된다. 전용 쿼리 서버 세트를 사용하면 시계열 데이터베이스를 클라이언트(시각화 및 알림 시스템)에서 분리할 수 있다. 이를 통해 필요할 때마다 시계열 데이터베이스나 시각화 및 알림 시스템을 유연하게 변경할 수 있다.</p>
+<h4 id="Cache-layer"><a href="#Cache-layer" class="headerlink" title="Cache layer"></a>Cache layer</h4><p>시계열 데이터베이스의 부하를 줄이고 쿼리 서비스의 성능을 향상시키기 위해 아래와 같이 쿼리 결과를 저장하는 캐시 서버가 추가된다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231129164829668.png" alt=""></p>
+<h4 id="The-case-against-query-service"><a href="#The-case-against-query-service" class="headerlink" title="The case against query service"></a>The case against query service</h4><p>대부분의 대규모의 시각화 및 알림 시스템에는 시중의 잘 알려진 시계열 데이터베이스와 인터페이스하는 강력한 플러그인이 있기 때문에 자체 추상화(쿼리 서비스)를 도입할 필요가 없을 수도 있다. 그리고 시계열 데이터베이스를 잘 선택하면 자체 캐싱을 추가할 필요도 없다.</p>
+<h4 id="Time-series-database-query-language"><a href="#Time-series-database-query-language" class="headerlink" title="Time-series database query language"></a>Time-series database query language</h4><p>Prometheus나 InfluxDB와 같이 널리 사용되는 대부분의 메트릭 모니터링 시스템은 SQL을 사용하지 않고 자체 쿼리 언어를 사용한다. 그 주된 이유 중 하나는 시계열 데이터를 쿼리하기 위한 SQL 쿼리를 작성하기가 어렵기 때문이다. 예를 들어, 지수 이동 평균을 계산하는 것은 SQL에서 아래와 같이 작성할 수 있다.</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> id,</span><br><span class="line">       temp,</span><br><span class="line">       <span class="built_in">avg</span>(temp) <span class="keyword">over</span> (<span class="keyword">partition</span> <span class="keyword">by</span> group_nr <span class="keyword">order</span> <span class="keyword">by</span> time_read) <span class="keyword">as</span> rolling_avg</span><br><span class="line"><span class="keyword">from</span> (</span><br><span class="line">  <span class="keyword">select</span> id,</span><br><span class="line">         temp,</span><br><span class="line">         time_read,</span><br><span class="line">         interval_group,</span><br><span class="line">         id <span class="operator">-</span> <span class="built_in">row_number</span>() <span class="keyword">over</span> (<span class="keyword">partition</span> <span class="keyword">by</span> interval_group <span class="keyword">order</span> <span class="keyword">by</span> time_read) <span class="keyword">as</span> group_nr</span><br><span class="line">  <span class="keyword">from</span> (</span><br><span class="line">    <span class="keyword">select</span> id,</span><br><span class="line">    time_read,</span><br><span class="line">    &quot;epoch&quot;::<span class="type">timestamp</span> <span class="operator">+</span> &quot;900 seconds&quot;::<span class="type">interval</span> <span class="operator">*</span> (<span class="built_in">extract</span>(epoch <span class="keyword">from</span> time_read)::int4 <span class="operator">/</span> <span class="number">900</span>) <span class="keyword">as</span> interval_group,</span><br><span class="line">    temp</span><br><span class="line">    <span class="keyword">from</span> readings</span><br><span class="line">  ) t1</span><br><span class="line">) t2</span><br><span class="line"><span class="keyword">order</span> <span class="keyword">by</span> time_read;</span><br></pre></td></tr></table></figure>
+<p>시계열 분석에 최적화된 언어인 Flux(InfluxDB)에서는 아래와 같이 표시되고, 이해하기 훨씬 쉽다.</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span>(db:&quot;telegraf&quot;)</span><br><span class="line">  <span class="operator">|</span><span class="operator">&gt;</span> <span class="keyword">range</span>(<span class="keyword">start</span>:<span class="number">-1</span>h)</span><br><span class="line">  <span class="operator">|</span><span class="operator">&gt;</span> <span class="keyword">filter</span>(fn: (r) <span class="operator">=</span><span class="operator">&gt;</span> r._measurement <span class="operator">=</span><span class="operator">=</span> &quot;foo&quot;)</span><br><span class="line">  <span class="operator">|</span><span class="operator">&gt;</span> exponentialMovingAverage(size:<span class="number">-10</span>s)</span><br></pre></td></tr></table></figure>
+<h3 id="Storage-layer"><a href="#Storage-layer" class="headerlink" title="Storage layer"></a>Storage layer</h3><h4 id="Choose-a-time-series-database-carefully"><a href="#Choose-a-time-series-database-carefully" class="headerlink" title="Choose a time-series database carefully"></a>Choose a time-series database carefully</h4><p>Facebook에서 발표한 연구 논문에 따르면 운영 데이터 저장소에 대한 전체 쿼리 중 최소 85%는 지난 26시간 동안 수집된 데이터에 대한 쿼리였다. 이 속성을 활용하는 시계열 데이터베이스를 사용하면 전체 시스템 성능에 상당한 영향을 미칠 수 있다. 스토리지 엔진의 설계에 관심이 있다면 InfluxDB 스토리지 엔진의 설계 문서를 참고한다.</p>
+<h4 id="Space-optimization"><a href="#Space-optimization" class="headerlink" title="Space optimization"></a>Space optimization</h4><p>고수준 요구사항에서 설명한 바와 같이 저장해야 할 메트릭 데이터의 양은 엄청나게 많다. 다음은 이를 해결하기 위한 몇 가지 전략이다.</p>
+<h5 id="Data-encoding-and-compression"><a href="#Data-encoding-and-compression" class="headerlink" title="Data encoding and compression"></a>Data encoding and compression</h5><p>데이터 인코딩과 압축은 데이터의 크기를 크게 줄일 수 있다. 이런 기능은 일반적으로 좋은 시계열 데이터베이스에 내장되어 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231129165335819.png" alt=""></p>
+<p>위에서 볼 수 있듯이 <code>1610087371</code> 과 <code>1610087381</code>는 10초 밖에 차이가 나지 않으며, 전체 타임스탬프가 32비트 인 대신 4비트만 표현한다. 따라서 절대값을 저장하는 대신 다음과 같이 하나의 기준값과 함께 값의 델타를 저장할 수 있다. <code>1610087371, 10, 10, 9, 11</code></p>
+<h5 id="Downsampling"><a href="#Downsampling" class="headerlink" title="Downsampling"></a>Downsampling</h5><p>다운샘플링은 전체 디스크 사용량을 줄이기 위해 고해상도 데이터를 저해상도로 변환하는 프로세스다. 데이터 보존 기간이 1년이므로 오래된 데이터를 다운샘플링할 수 있다. 예를 들어 엔지니어와 데이터 과학자가 다양한 메트릭에 대한 규칙을 정의하도록 할 수 있다.</p>
+<ul>
+<li>Retention: 7 days, no sampling</li>
+<li>Retention: 30 days, downsample to 1-minute resolution</li>
+<li>Retention: 1 year, downsample to 1-hour resolution</li>
+</ul>
+<p>다른 예를 살펴보자. 10초 해상도 데이터를 30초 해상도 데이터로 집계한다.</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th><strong>metric</strong></th>
+<th><strong>timestamp</strong></th>
+<th><strong>hostname</strong></th>
+<th><strong>Metric_value</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>cpu</td>
+<td>2021-10-24T19:00:00Z</td>
+<td>host-a</td>
+<td>10</td>
+</tr>
+<tr>
+<td>cpu</td>
+<td>2021-10-24T19:00:10Z</td>
+<td>host-a</td>
+<td>16</td>
+</tr>
+<tr>
+<td>cpu</td>
+<td>2021-10-24T19:00:20Z</td>
+<td>host-a</td>
+<td>20</td>
+</tr>
+<tr>
+<td>cpu</td>
+<td>2021-10-24T19:00:30Z</td>
+<td>host-a</td>
+<td>30</td>
+</tr>
+<tr>
+<td>cpu</td>
+<td>2021-10-24T19:00:40Z</td>
+<td>host-a</td>
+<td>20</td>
+</tr>
+<tr>
+<td>cpu</td>
+<td>2021-10-24T19:00:50Z</td>
+<td>host-a</td>
+<td>30</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>10초 해상도 데이터에서 30초 해상도 데이터로 롤업한다.</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th><strong>metric</strong></th>
+<th><strong>timestamp</strong></th>
+<th><strong>hostname</strong></th>
+<th><strong>Metric_value (avg)</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>cpu</td>
+<td>2021-10-24T19:00:00Z</td>
+<td>host-a</td>
+<td>19</td>
+</tr>
+<tr>
+<td>cpu</td>
+<td>2021-10-24T19:00:30Z</td>
+<td>host-a</td>
+<td>25</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h5 id="Cold-storage"><a href="#Cold-storage" class="headerlink" title="Cold storage"></a>Cold storage</h5><p>콜드 스토리지는 거의 사용되지 않는 비활성 데이터를 보관하는 스토리지다. 콜드 스토리지의 재정적 비용은 훨씬 저렴하다. 간단히 말해, 자체 시각화 및 알림 시스템을 구축하는 대신 타사의 시각화 및 알림 시스템을 사용하는 것이 좋다.</p>
+<h3 id="Alerting-system"><a href="#Alerting-system" class="headerlink" title="Alerting system"></a>Alerting system</h3><p>이제 알림 시스템을 살펴보자.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231129165744155.png" alt=""></p>
+<p>알림 흐름은 아래와 같다.</p>
+<ol>
+<li>설정 파일을 캐시 서버에 로드한다. 규칙은 디스크에 설정 파일로 정의된다. 규칙을 정의하는데 일반적으로 사용되는 형식은 YAML이다.</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">- name: instance_down</span><br><span class="line">  rules:</span><br><span class="line"></span><br><span class="line">  # Alert for any instance that is unreachable for &gt;5 minutes.</span><br><span class="line">  - alert: instance_down</span><br><span class="line">    expr: up == 0</span><br><span class="line">    for: 5m</span><br><span class="line">    labels:</span><br><span class="line">      severity: page</span><br></pre></td></tr></table></figure>
+<ol>
+<li>Alert manager가 캐시에서 알림 설정을 가져온다.</li>
+<li>설정 규칙에 따라 Alert manager가 미리 정의된 간격으로 쿼리 서비스를 호출한다. 값이 임계값을 위반하면 알림 이벤트가 생성된다. Alert manager는 아래 사항을 담당한다.</li>
+</ol>
+<ul>
+<li>알림 필터링, 병합 및 중복 제거. 다음은 하나의 인스턴스 내에서 짧은 시간 내에 트리거되는 알림을 병합하는 예제다.</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231129170002629.png" alt=""></p>
+<ul>
+<li>액세스 제어. 인적 오류를 방지하고 시스템의 보안을 유지하려면 특정 알림 관리 작업에 대한 액세스를 권한이 있는 사람으로만 제한해야 한다.</li>
+<li>재시도. Alert manager는 알림 상태를 확인하고 알림이 한 번 이상 전송되었는지 확인한다.</li>
+</ul>
+<ol>
+<li>알림 저장소는 모든 알림의 상태(비활성, 보류 중, 실행 중, 해결됨)를 유지하는 카산드라 같은 KV Store다. 알림이 적어도 한 번은 전송되도록 한다.</li>
+<li>적합한 알림이 Kafka에 삽입된다.</li>
+<li>Alert consumers는 Kafka에서 알림 이벤트를 가져온다.</li>
+<li>Alert consumers는 Kafka에서 알림 이벤트를 처리하고 이메일, 문자 메세지, PagerDuty 또는 HTTP 엔드포인트와 같은 다양한 채널로 알림을 전송한다.</li>
+</ol>
+<h4 id="Alerting-system-build-vs-buy"><a href="#Alerting-system-build-vs-buy" class="headerlink" title="Alerting system - build vs buy"></a>Alerting system - build vs buy</h4><p>기성품으로 제공되는 industrial-scale의 알림 시스템이 많이 있으며, 대부분 널리 사용되는 시계열 데이터베이스와 긴밀하게 통합되어 있다. 이런 알림 시스템 중 다수는 이메일 및 PagerDuty와 같은 기존 알림 채널과 잘 통합된다. 현실에서 자체 알림 시스템을 구축하는 것을 정당화하기란 쉽지 않다.</p>
+<h3 id="Visualization-system"><a href="#Visualization-system" class="headerlink" title="Visualization system"></a>Visualization system</h3><p>시각화는 데이터 레이어 위에 구축된다. 메트릭은 메트릭 대시보드에서 다양한 시간 척도로 표시할 수 있고, 알림은 알림 대시보드에서 표시할 수 있다. 아래는 현재 서버 요청, 메모리 / CPU 사용률, 페이지 로드 시간, 트래픽, 로그인 정보와 같은 몇 가지 메트릭을 표시하는 대시보드를 보여준다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231129170507348.png" alt=""></p>
+<p>고품질의 시각화 시스템을 구축하기는 어렵다. 기성 시스템을 사용해야 한다는 주장은 합리적일 수 있다. Grafana와 같은 시스템이 그 예이다. </p>
+<h2 id="Step-4-Wrap-Up"><a href="#Step-4-Wrap-Up" class="headerlink" title="Step 4 - Wrap Up"></a>Step 4 - Wrap Up</h2><p>이 포스트에서는 메트릭 모니터링 및 알림 시스템의 설계에 대해 설명했다. 개략적인 수준에서 데이터 수집, 시계열 데이터베이스, 알림 및 시각화에 대해 이야기했다. 그런 다음 가장  중요한 몇 가지 기술과 구성 요소에 대해 살펴봤다.</p>
+<ul>
+<li>Pull vs pull model for collecting metrics data.</li>
+<li>Utilize Kafka to scale the system.</li>
+<li>Choose the right time-series database.</li>
+<li>Use downsampling to reduce data size.</li>
+<li>Build vs buy options for alerting and visualization systems.</li>
+</ul>
+<p>최종 디자인은 아래와 같다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231129170703827.png" alt=""></p>
+<h2 id="Chapter-Summary"><a href="#Chapter-Summary" class="headerlink" title="Chapter Summary"></a>Chapter Summary</h2><p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231129170726573.png" alt=""></p>
+<!-- flag of hidden posts --></div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined">Song Hayoung</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="https://songhayoung.github.io/2023/11/28/System%20Design/ByteByteGo/book/metrics-monitoring-and-alerting-system/">https://songhayoung.github.io/2023/11/28/System%20Design/ByteByteGo/book/metrics-monitoring-and-alerting-system/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/System-Design/">System Design</a></div><nav id="pagination"></nav><div id="gitalk-container"></div><script>var gitalk = new Gitalk({
+  clientID: '3604b61642355579f55e',
+  clientSecret: 'f552120f18ac5aee3f6297e05e97d94c0a25cd4b',
+  repo: 'SongHayoung.github.io',
+  owner: 'SongHayoung',
+  admin: 'SongHayoung',
+  id: md5(decodeURI(location.pathname)),
+  language: 'en'
+})
+gitalk.render('gitalk-container')</script></div></div><footer class="footer-bg" style="background-image: url(https://xxxx.jpg)"><div class="layout" id="footer"><div class="copyright">&copy;2020 - 2023 By Song Hayoung</div><div class="framework-info"><span>Driven - </span><a target="_blank" rel="noopener" href="http://hexo.io"><span>Hexo</span></a><span class="footer-separator">|</span><span>Theme - </span><a target="_blank" rel="noopener" href="https://github.com/Molunerfinn/hexo-theme-melody"><span>Melody</span></a></div><div class="footer_custom_text">Learning how to walk slowly to not miss important things</div><div class="busuanzi"><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><span id="busuanzi_container_page_pv"><i class="fa fa-file"></i><span id="busuanzi_value_page_pv"></span><span></span></span></div></div></footer><i class="fa fa-arrow-up" id="go-up" aria-hidden="true"></i><script src="https://cdn.jsdelivr.net/npm/animejs@latest/anime.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@latest/velocity.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-ui-pack@latest/velocity.ui.min.js"></script><script src="/js/utils.js?version=1.7.0"></script><script src="/js/fancybox.js?version=1.7.0"></script><script src="/js/sidebar.js?version=1.7.0"></script><script src="/js/copy.js?version=1.7.0"></script><script src="/js/fireworks.js?version=1.7.0"></script><script src="/js/transition.js?version=1.7.0"></script><script src="/js/scroll.js?version=1.7.0"></script><script src="/js/head.js?version=1.7.0"></script><script src="/js/search/algolia.js"></script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+    processEscapes: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  },
+  CommonHTML: {
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "HTML-CSS": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "SVG": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  }
+});
+</script><script type="text/x-mathjax-config">MathJax.Hub.Queue(function() {
+  var all = MathJax.Hub.getAllJax(), i;
+  for (i=0; i < all.length; i += 1) {
+    all[i].SourceElement().parentNode.className += ' has-jax';
+  }
+});
+</script><script src="https://cdn.jsdelivr.net/npm/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><script>if(/Android|webOS|iPhone|iPod|iPad|BlackBerry/i.test(navigator.userAgent)) {
+  $('#nav').addClass('is-mobile')
+  $('footer').addClass('is-mobile')
+  $('#top-container').addClass('is-mobile')
+}</script><div class="search-dialog" id="algolia-search"><div class="search-dialog__title" id="algolia-search-title">Algolia</div><div id="algolia-input-panel"><div id="algolia-search-input"></div></div><hr><div id="algolia-search-results"><div id="algolia-hits"></div><div id="algolia-pagination"></div><div id="algolia-stats"></div></div><span class="search-close-button"><i class="fa fa-times"></i></span></div><div class="search-mask"></div></body></html>

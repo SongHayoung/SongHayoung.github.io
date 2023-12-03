@@ -1,0 +1,113 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="description" content="[ByteByteGo] Unlock Highly Relevant Search with AI"><meta name="keywords" content="System Design"><meta name="author" content="Song Hayoung"><meta name="copyright" content="Song Hayoung"><title>[ByteByteGo] Unlock Highly Relevant Search with AI | SUMFIのBlog</title><meta name="robots" content="noindex"><link rel="shortcut icon" href="/songcon.ico"><link rel="stylesheet" href="/css/index.css?version=1.7.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@latest/css/font-awesome.min.css?version=1.7.0"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css?version=1.7.0"><meta name="format-detection" content="telephone=no"><meta http-equiv="x-dns-prefetch-control" content="on"><link rel="dns-prefetch" href="https://cdn.jsdelivr.net"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.css"><script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.js" defer></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@latest/dist/gitalk.min.js"></script><script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.10.0/js/md5.min.js"></script><link rel="dns-prefetch" href="https://www.google-analytics.com"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-169368422-1', 'auto');
+ga('send', 'pageview');</script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: {"appId":"7LZ6OJ4D6C","apiKey":"9a84e13f74ea78c3fd54512c10139c56","indexName":"git blog","hits":{"per_page":10},"languages":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}.","hits_stats":"${hits} results found in ${time} ms"}},
+  localSearch: undefined,
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  }
+} </script><meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/rss2.xml" title="SUMFIのBlog" type="application/rss+xml">
+</head><body><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar" data-display="true"><div class="toggle-sidebar-info text-center"><span data-toggle="Toggle article">Toggle site</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">Catalog</div><div class="sidebar-toc__progress"><span class="progress-notice">You've read</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#How-agile-teams-can-leverage-LLMs-Vector-Databases-and-friends-to-quickly-launch-cutting-edge-semantic-search-experiences-for-fame-amp-profit"><span class="toc-number">1.</span> <span class="toc-text">How agile teams can leverage LLMs, Vector Databases, and friends to quickly launch cutting-edge semantic search experiences for fame &amp; profit</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Semantic-Search"><span class="toc-number">2.</span> <span class="toc-text">Semantic Search</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#MVP"><span class="toc-number">3.</span> <span class="toc-text">MVP</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Indexing"><span class="toc-number">3.1.</span> <span class="toc-text">Indexing</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Querying"><span class="toc-number">3.2.</span> <span class="toc-text">Querying</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Tracking"><span class="toc-number">3.3.</span> <span class="toc-text">Tracking</span></a></li></ol></li></ol></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="https://avatars3.githubusercontent.com/u/37806785?s=460&amp;u=8c68d685faf7c5280cfbd736a6b1730b55fb4203&amp;v=4"></div><div class="author-info__name text-center">Song Hayoung</div><div class="author-info__description text-center"></div><div class="follow-button"><a target="_blank" rel="noopener" href="https://www.linkedin.com/in/hayoung-song-9523b61bb/">Follow Me</a></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="/archives"><span class="pull-left">Articles</span><span class="pull-right">9689</span></a><a class="author-info-articles__tags article-meta" href="/tags"><span class="pull-left">Tags</span><span class="pull-right">191</span></a><a class="author-info-articles__categories article-meta" href="/categories"><span class="pull-left">Categories</span><span class="pull-right">60</span></a></div><hr><div class="author-info-links"><div class="author-info-links__title text-center">VISITED</div><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Seoul Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Jeju Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">British Columbia Canada</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Boracay Philippines</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">三重　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">大阪　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">名古屋　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">静岡　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">札幌　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">京都　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Bangkok Thailand</a></div></div></div><div id="content-outer"><div id="top-container" style="background-image: url(https://xxxx.jpg)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="/">SUMFIのBlog</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus">   <a class="site-page" href="/">Home</a><a class="site-page" href="/archives">Archives</a><a class="site-page" href="/tags">Tags</a><a class="site-page" href="/categories">Categories</a><a class="site-page" href="/about">About</a></span><span class="pull-right"><a class="site-page social-icon search"><i class="fa fa-search"></i><span> Search</span></a></span></div><div id="post-info"><div id="post-title">[ByteByteGo] Unlock Highly Relevant Search with AI</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2023-12-02</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/">System Design</a><i class="fa fa-angle-right" aria-hidden="true"></i><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/Byte-Byte-Go/">Byte Byte Go</a><div class="post-meta-wordcount"><span>Word count: </span><span class="word-count">1.3k</span><span class="post-meta__separator">|</span><span>Reading time: 8 min</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div class="article-container" id="post-content"><h2 id="How-agile-teams-can-leverage-LLMs-Vector-Databases-and-friends-to-quickly-launch-cutting-edge-semantic-search-experiences-for-fame-amp-profit"><a href="#How-agile-teams-can-leverage-LLMs-Vector-Databases-and-friends-to-quickly-launch-cutting-edge-semantic-search-experiences-for-fame-amp-profit" class="headerlink" title="How agile teams can leverage LLMs, Vector Databases, and friends to quickly launch cutting-edge semantic search experiences for fame &amp; profit"></a>How agile teams can leverage LLMs, Vector Databases, and friends to quickly launch cutting-edge semantic search experiences for fame &amp; profit</h2><p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231202172841908.png" alt=""></p>
+<p>훌륭한 검색 기능을 통해 얼마나 많은 것들이 개선 될 수 있는지는 흥미로운 주제다. 구글은 일반인들이 아무리 애매한 정보라도 온라인에서 필요한 정보를 쉽게 찾을 수 있도록 했다. 젯브레인의 fuzzy matching 및 symbol search는 프로그래머가 코드 베이스의 디렉토리 구조를 잊어버리는 것을 방지했다. 잘 만들어진 검색 기능은 습관을 형성하는 상징적인 제품에 wow facotr를 더한다.</p>
+<p>이 포스트에서는 빠르게 변화하는 팀이 어떻게 대규모 언어 모델(LLM), 벡터 데이터베이스, 머신 러닝 및 기타 기술을 활용해 스타트업의 예산과 시간 제약 속에서 감탄을 자아내는 검색 및 discovery experience를 만들 수 있는지에 대해 이야기한다.</p>
+<h2 id="Semantic-Search"><a href="#Semantic-Search" class="headerlink" title="Semantic Search"></a>Semantic Search</h2><p>시맨틱 검색은 쿼리의 의미, 문맥, 콘텐츠에 따라 관련성이 높은 결과를 표시하는 검색 방법이다. 단순한 키워드 색인이나 필터링을 넘어서는 검색 방식이다. 시맨틱 검색은 매우 정교하지만 딱딱한 기존의 연관성 방식보다 뉘앙스를 더 잘 지원하면서 사용자가 더 자연스럽게 원하는 것을 찾을 수 있게 한다. 마치 실제 사람에게 물어보는 것과 기계와 대화하는 것의 차이처럼 느껴진다.</p>
+<p>전 세계의 테크 기업들이 기존 제품에 이러한 기능을 통합하기 위해 경쟁하고 있다. Instacart는 <a target="_blank" rel="noopener" href="https://tech.instacart.com/how-instacart-uses-machine-learning-driven-autocomplete-to-help-people-fill-their-carts-9bc56d22bafb?gi=0a506c5b7247">검색 환경에 시맨틱 중복 제거 기능을 추가한 방법</a>에 대한 글을 게시했다. 이 외에도 다양한 회사에서 시맨틱 검색을 구현하고 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231202173344751.png" alt=""></p>
+<p>시맨틱 검색의 도입 동기는 간단하다. 관련성 높은 검색 결과가 고객 만족도와 매출 증대로 이어지기 때문이다. 검색, 관련성, 신뢰성은 이커머스에서 가장 해결하기 어려운 문제 중 하나다. 기업이 이런 문제를 해결하는데 도움이 되는 솔루션 에코시스템이 존재한다.</p>
+<p>오늘날 많은 솔루션은 의미를 벡터로 표현하는 문서 임베딩에 의존한다. 시맨틱 검색만으로는 관련성 높은 결과를 충분히 제공하지 못할 수 있기 때문에, 기존의 full text 검색을 사용해 결과를 보완하는 경우가 많다. 사용자 상호작용(클릭, 좋아요 등)을 기반으로 하는 피드백 루프틑 관련성을 지속적으로 개선하기 위한 정보를 제공한다.</p>
+<p>주요 프로세스는 indexing, querying, tracking이다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231202173558879.png" alt=""></p>
+<p><strong>Indexing</strong>은 text-to-vector 인코더(e.g OpenAI’s Embeddings API)를 통해 문서의 콘텐츠를 임베딩 벡터로 변환하는 방식으로 이루어진다. 벡터는 벡터 데이터베이스(e.g Qdrant, Milvus, Pinecone)에 삽입된다. 문장 변환기와 같은 text-to-vector 인코딩 모델은 텍스트 스니펫을 텍스트 간의 의미론적 의미와 유사성을 포착하는 숫자 벡터 표현으로 변환한다. 문서는 기존의 전문 검색 엔진(e.g Elasticsearch)에서도 색인된다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231202173826842.png" alt=""></p>
+<p><strong>Querying</strong>은 들어오는 쿼리를 벡터로 인코딩하는데 의존하며, 가급적이면 인덱싱과 동일한 인코더를 사용하는게 좋다. 이런 벡터는 벡터 데이터베이스를 쿼리하는데 사용된다. 이런 결과는 기존의 전체 텍스트 검색 결과와 결합되어 관련성을 높이기 위해 순위가 재조정된다. 이런 시맨틱 검색과 전문 검색의 조합을 “하이브리드 검색”이라 한다.</p>
+<p>검색 결과 재랭크는 머신러닝 모델과 휴리스틱을 혼합해 관련성을 최적화한다. </p>
+<p><strong>Tracking</strong>은 결과 클릭, 항목에 좋아요 표시 등 중요한 사용자 상호 작용을 캡처하는 것이 포함된다. 이런 이벤트는 순위 변경을 지원하는 머신 러닝 모델을 업데이트하는 데 사용된다. 이렇게 하면 피드백 루프가 생성되어 사용자 행동을 활용해 검색 관련성을 지속적으로 개선할 수 있다.</p>
+<h2 id="MVP"><a href="#MVP" class="headerlink" title="MVP"></a>MVP</h2><p>대부분의 기업, 특히 스타트업은 여러 가지 제약 조건이 있기 대문에 대기업의 아키텍처를 모방해서는 안된다. 하지만 몇 가지 요령을 빌려 제한된 예산과 시간 내에 합리적으로 좋은 솔루션을 구현할 수는 있다.</p>
+<p>여기서는 시맨틱 검색과 전문 검색 결과, 관련성에 대한 순위 재조정, 사용자 추적을 결합한 하이브리드 검색(full text + semantic) 및 학습을 통한 순위 재조정(closed loop re-rank) 시스템을 사용한다.</p>
+<p>백터 유사도 검색은 뛰어난 개발자 경험을 갖춘 빠른 벡터 데이터베이스인 Qdrant에서 처리한다. Qdrant는 시작하기 쉽고, 커뮤니티 활성화가 잘 되어있어 벡터 검색을 갖추기 위한 좋은 출발점이 될 수 있다.</p>
+<p>텍스트 임베딩은 OpenAI의 임베딩 API에 의해 생성된다. 이 회사의 text-embedding-ada-002 모델은 고품질 임베딩을 제공한다. 물론 다른 대체 모델이나 self-hosted 모델도 사용 가능하다. 하지만 단순성을 위해 클라우드 호스팅으로 시작하는 것이 좋다.</p>
+<p>완전한 기능을 갖춘 성숙한 검색 시스템인 ElasticSearch는 전문 검색을 처리한다. 흥미롭게도 Elastic은 벡터 검색 기능에 깊은 관심을 표하고 있어서 지켜볼 부분이다.</p>
+<p>순위 변경은 Metarank에서 처리한다. 검색 순위 변경은 복잡한 문제이기 때문에 비교적 사용자 친화적인 오픈 소스 솔루션을 사용할 수 있다는 사실에 강점을 지닌다. 순위 변경 작업은 특히 모델을 미세 조정할 때 다소 복잡할 수 있으므로 기본적인 색인 및 검색 기능을 먼저 작동시키는 것이 좋다. 이런 기반이 마련되면 그 위에 re-ranking을 추가할 수 있다. 이렇게 하면 간단한 검색을 실행한 다음 re-ranking을 통합해 개선하는 반복적인 접근 방식이 가능하다. 간단한 검색을 실행한 다음, re-ranking을 통합해 개선해 나가면서 시간이 지남에 따라 보다 고급의 관련성 순위 접근 방식을 구축해야 한다.</p>
+<p><em>Note: 일반적으로 의미론적 검색과 전문 검색 결과를 결합하는 이유는 의미론적 검색이 충분한 결과를 제공하지 못할 수 있기 때문이다. 모든 상황이 다를 수 있으니 다양한 조합으로 자유롭게 실험해 봐야한다.</em></p>
+<h3 id="Indexing"><a href="#Indexing" class="headerlink" title="Indexing"></a>Indexing</h3><p>첫 번째 단계는 검색할 항목을 색인하는 것이다. 항목은 제품, 위치, 판매자, 이미지 등 무엇이든 될 수 있다. 항목은 기본 데이터베이스에 저장되며, 이 데이터베이스가 data source 역할을 한다.</p>
+<p>항목을 색인하기 위해 변경 사항(insert, update, delete)을 Kafka 토픽에 푸시하면 여러 프로세서가 이를 소비하게 된다. Redis Queue도 물론 된다. 이것은 pull-type 아키텍처이며 프로덕션 환경에서 매우 견고한 모습을 보인다. Items API에서 각 시스템을 호출할 수도 있지만, 이렇게 하면 부분적으로 색인된 항목이 쉽게 발생할 수 있다.</p>
+<p>세 개의 프로세서가 이 토픽을 사용한다.</p>
+<ul>
+<li>Full Text Indexer : 전문 텍스트 인덱스를 업데이트 한다.</li>
+<li>Semantic Indexer : Item 변경 사항(e.g 제품 제목 + 설명)에서 텍스트 문자열을 조합해 벡터 임베딩으로 인코딩한 다음 벡터 데이터베이스에 저장한다.</li>
+<li>Item Ranking Updater : 메타 랭크의 아이템 메타 데이터를 업데이트 한다.</li>
+</ul>
+<p>이런 시스템 중 어떤 것도 일반적으로 비용이 많이 들면서 불필요하게 전체 아이템 데이터를 포함하지 않는다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231202175358022.png" alt=""></p>
+<h3 id="Querying"><a href="#Querying" class="headerlink" title="Querying"></a>Querying</h3><p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231202175431064.png" alt=""></p>
+<p>검색 API는 크게 네 가지 프로세스로 작동한다.</p>
+<ul>
+<li>Search : 첫 번째 단계는 쿼리를 full-text(Elastic Search)와 Semantic(Qdrant)로 전달하는 것이다.<ul>
+<li>Semantic search provider는 먼저 시맨틱 인덱서와 마찬가지로 쿼리를 벡터 임베딩으로 변환해야 한다. 벡터 유사성 검색은 검색 쿼리 텍스트의 벡터 임베딩을 가져온 다음, 고차원 공간에서 벡터 간의 기하학적 비교와 거리 계산을 기반으로 가장 유사한 텍스트 벡터 임베딩으로 색인된 항목을 식별하는 방식으로 작동한다. 이를 통해 키워드 뿐만 아니라 의미론적 관련성 까지 일치시킬 수 있다.</li>
+<li>간단한 기준(e.g category, geographical radius 등..)을 적용하는 등 사전 필터링을 수행하기 좋은 곳이다.</li>
+</ul>
+</li>
+<li>Re-ranking : 검색 서비스가 모든 히트를 수집하면 전체 집합을 re-ranker로 라우팅한 뒤 메타랭크를 사용해 관련성에 따라 순위를 재조정한다.<ul>
+<li>메타랭크는 일부 초기 데이터 없이는 작동하지 않는다. 이 콜드 스타트 문제는 간단한 랭커를 fallback으로 사용하면 해결할 수 있다. 상위 3개의 시맨틱 결과 히트를 맨 위에 추가하고 그 뒤에 전문 검색 결과 히트를 추가하는 것만으로도 좋은 결과를 얻을 수 있었다. 이는 일반적으로 나쁘지 않은 결과이며, 실제 사용자가 시스템을 사용하기 시작할 때 잠시 동안의 문제일 뿐이다. 보다 정교한 접근 방식에 대해서는 <a target="_blank" rel="noopener" href="https://www.pinecone.io/learn/metarank/">Metarank의 창업자가 작성한 글</a>을 참조한다.</li>
+</ul>
+</li>
+<li>Result Generation : 검색 결과에는 일반적으로 모든 항목 정보가 포함되어 있지 않다. 사람이 읽을 수 있는 완전한 결과 집합을 반환하기 위해 순위가 매겨진 히트 목록을 순위가 매겨진 항목 목록으로 “hydrate”한다.<ul>
+<li>이는 비교적 짧은 TTL로 결과 목록을 캐시하기에 좋은 장소다. 이렇게 하면 페이지네이션이나 정렬과 같은 작업에 많은 도움이 된다.</li>
+<li>검색 세션 메타데이터를 여기에 저장할 수도 있다. 이는 일반적으로 사용자 세션과 동일하지 않다. 이를 통해 나중에 분석 및 머신러닝을 위해 검색 및 결과 쿼리를 그룹화할 수 있으며 순위 관련성을 개선하기 위해 Metarank에 전달할 수 있는 매개변수다.</li>
+</ul>
+</li>
+<li>Result Tracking : 완전히 채워지고 페이지가 지정된 결과 집합이 완성되면 사용자에게 표시할 정확한 항목 목록으로 메타랭크를 업데이트 한다.<ul>
+<li>이 API를 간단하고 빠르게 유지하려면 프런트엔드에서 이 작업을 수행할 수도 있다.</li>
+</ul>
+</li>
+</ul>
+<p><em>Note: 명확성을 위해 여러 구성 요소를 매핑했다. 소규모 팀이나 스타트업에서 운영하는 경우 수많은 마이크로 서비스를 만드는 것은 권장하지 않는다. 초기에 일을 단순하게 유지하면 빠르게 반복할 수 있다.</em></p>
+<h3 id="Tracking"><a href="#Tracking" class="headerlink" title="Tracking"></a>Tracking</h3><p>학습을 통해 순위를 매기는 피드백 루프를 만들려면 사용자가 결과와 상호 작용하는 방식을 추적해야 한다. 추적되는 상호 작용의 예로는 결과 보기, 클릭, 좋아요 등이 있다. 최소한 클릭 정보는 추적해야 한다.</p>
+<p>이는 이런 이벤트를 경량 추적 API로 전송해 Kafka 토픽으로 빠르게 푸시함으로써 이루어진다. 프런트엔드에서 모든 데이터를 사용할 수 있는 것은 아니므로 먼저 내부 메타데이터로 이벤트를 보강할 수 있다. 마지막으로, 이 보강된 이벤트는 향후 분석을 위해 Metarank와 Data Lake로 전송된다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231202182616910.png" alt=""></p>
+<p>또한, 요즘에는 이러한 데이터 파이프라인을 수작업으로 구축하는 것은 특히 소규모 팀의 경우 일반적으로 권장되지 않기 때문에 높은 수준으로 유지하고 있다. 강력한 데이터 파이프라인을 구축하거나 메타랭크를 기존 파이프라인에 연결할 수 있는 훌륭한 도구 (e.g., Segment, Rudderstack, Fivetran, dbt, Snowplow, etc.) 가 많이 있다. 예를 들어, 다음은 메타링크와 스노우플로우의 통합을 보여주는 흐름이다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231202182753864.png" alt=""></p>
+<p><em>Note: Full learn-to-rank 시스템을 구축하면 상당한 복잡성이 추가된다. 포괄적인 랭킹 접근 방식을 사용하려는 경우에만 이 시스템을 구현하는 것이 좋다. 많은 사용 사례의 경우, 특히 초기에는 더 간단한 하이브리드 검색 시스템으로 충분할 수 있다.</em></p>
+<!-- flag of hidden posts --></div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined">Song Hayoung</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="https://songhayoung.github.io/2023/12/02/System%20Design/ByteByteGo/private/unlock-highly-relevant-search-with-ai/">https://songhayoung.github.io/2023/12/02/System%20Design/ByteByteGo/private/unlock-highly-relevant-search-with-ai/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/System-Design/">System Design</a></div><nav id="pagination"></nav><div id="gitalk-container"></div><script>var gitalk = new Gitalk({
+  clientID: '3604b61642355579f55e',
+  clientSecret: 'f552120f18ac5aee3f6297e05e97d94c0a25cd4b',
+  repo: 'SongHayoung.github.io',
+  owner: 'SongHayoung',
+  admin: 'SongHayoung',
+  id: md5(decodeURI(location.pathname)),
+  language: 'en'
+})
+gitalk.render('gitalk-container')</script></div></div><footer class="footer-bg" style="background-image: url(https://xxxx.jpg)"><div class="layout" id="footer"><div class="copyright">&copy;2020 - 2023 By Song Hayoung</div><div class="framework-info"><span>Driven - </span><a target="_blank" rel="noopener" href="http://hexo.io"><span>Hexo</span></a><span class="footer-separator">|</span><span>Theme - </span><a target="_blank" rel="noopener" href="https://github.com/Molunerfinn/hexo-theme-melody"><span>Melody</span></a></div><div class="footer_custom_text">Learning how to walk slowly to not miss important things</div><div class="busuanzi"><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><span id="busuanzi_container_page_pv"><i class="fa fa-file"></i><span id="busuanzi_value_page_pv"></span><span></span></span></div></div></footer><i class="fa fa-arrow-up" id="go-up" aria-hidden="true"></i><script src="https://cdn.jsdelivr.net/npm/animejs@latest/anime.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@latest/velocity.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-ui-pack@latest/velocity.ui.min.js"></script><script src="/js/utils.js?version=1.7.0"></script><script src="/js/fancybox.js?version=1.7.0"></script><script src="/js/sidebar.js?version=1.7.0"></script><script src="/js/copy.js?version=1.7.0"></script><script src="/js/fireworks.js?version=1.7.0"></script><script src="/js/transition.js?version=1.7.0"></script><script src="/js/scroll.js?version=1.7.0"></script><script src="/js/head.js?version=1.7.0"></script><script src="/js/search/algolia.js"></script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+    processEscapes: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  },
+  CommonHTML: {
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "HTML-CSS": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "SVG": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  }
+});
+</script><script type="text/x-mathjax-config">MathJax.Hub.Queue(function() {
+  var all = MathJax.Hub.getAllJax(), i;
+  for (i=0; i < all.length; i += 1) {
+    all[i].SourceElement().parentNode.className += ' has-jax';
+  }
+});
+</script><script src="https://cdn.jsdelivr.net/npm/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><script>if(/Android|webOS|iPhone|iPod|iPad|BlackBerry/i.test(navigator.userAgent)) {
+  $('#nav').addClass('is-mobile')
+  $('footer').addClass('is-mobile')
+  $('#top-container').addClass('is-mobile')
+}</script><div class="search-dialog" id="algolia-search"><div class="search-dialog__title" id="algolia-search-title">Algolia</div><div id="algolia-input-panel"><div id="algolia-search-input"></div></div><hr><div id="algolia-search-results"><div id="algolia-hits"></div><div id="algolia-pagination"></div><div id="algolia-stats"></div></div><span class="search-close-button"><i class="fa fa-times"></i></span></div><div class="search-mask"></div></body></html>
