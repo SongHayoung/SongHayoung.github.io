@@ -1,0 +1,760 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="description" content="[System Design] Ad Click Event Aggregation"><meta name="keywords" content="System Design"><meta name="author" content="Song Hayoung"><meta name="copyright" content="Song Hayoung"><title>[System Design] Ad Click Event Aggregation | SUMFIのBlog</title><meta name="robots" content="noindex"><link rel="shortcut icon" href="/songcon.ico"><link rel="stylesheet" href="/css/index.css?version=1.7.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@latest/css/font-awesome.min.css?version=1.7.0"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css?version=1.7.0"><meta name="format-detection" content="telephone=no"><meta http-equiv="x-dns-prefetch-control" content="on"><link rel="dns-prefetch" href="https://cdn.jsdelivr.net"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.css"><script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.js" defer></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@latest/dist/gitalk.min.js"></script><script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.10.0/js/md5.min.js"></script><link rel="dns-prefetch" href="https://www.google-analytics.com"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-169368422-1', 'auto');
+ga('send', 'pageview');</script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: {"appId":"7LZ6OJ4D6C","apiKey":"9a84e13f74ea78c3fd54512c10139c56","indexName":"git blog","hits":{"per_page":10},"languages":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}.","hits_stats":"${hits} results found in ${time} ms"}},
+  localSearch: undefined,
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  }
+} </script><meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/rss2.xml" title="SUMFIのBlog" type="application/rss+xml">
+</head><body><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar" data-display="true"><div class="toggle-sidebar-info text-center"><span data-toggle="Toggle article">Toggle site</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">Catalog</div><div class="sidebar-toc__progress"><span class="progress-notice">You've read</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Ad-Click-Event-Aggregation"><span class="toc-number">1.</span> <span class="toc-text">Ad Click Event Aggregation</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Step-1-Understand-the-Problem-and-Establish-Design-Scope"><span class="toc-number">2.</span> <span class="toc-text">Step 1 - Understand the Problem and Establish Design Scope</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Functional-requirements"><span class="toc-number">2.1.</span> <span class="toc-text">Functional requirements</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Non-functional-requirements"><span class="toc-number">2.2.</span> <span class="toc-text">Non-functional requirements</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Back-of-the-envelope-estimation"><span class="toc-number">2.3.</span> <span class="toc-text">Back-of-the-envelope estimation</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Step-2-Propose-High-Level-Design-and-Get-Buy-In"><span class="toc-number">3.</span> <span class="toc-text">Step 2 - Propose High-Level Design and Get Buy-In</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Query-API-design"><span class="toc-number">3.1.</span> <span class="toc-text">Query API design</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Data-model"><span class="toc-number">3.2.</span> <span class="toc-text">Data model</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Raw-data"><span class="toc-number">3.2.1.</span> <span class="toc-text">Raw data</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Aggregated-data"><span class="toc-number">3.2.2.</span> <span class="toc-text">Aggregated data</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Comparison"><span class="toc-number">3.2.3.</span> <span class="toc-text">Comparison</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Choose-the-right-database"><span class="toc-number">3.2.4.</span> <span class="toc-text">Choose the right database</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#High-level-design"><span class="toc-number">3.3.</span> <span class="toc-text">High-level design</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Asynchronous-processing"><span class="toc-number">3.3.1.</span> <span class="toc-text">Asynchronous processing</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Aggregation-service"><span class="toc-number">3.3.2.</span> <span class="toc-text">Aggregation service</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Main-use-cases"><span class="toc-number">3.3.3.</span> <span class="toc-text">Main use cases</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#Use-case-1-aggregate-the-number-of-clicks"><span class="toc-number">3.3.3.1.</span> <span class="toc-text">Use case 1: aggregate the number of clicks</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#Use-case-2-return-top-N-most-clicked-ads"><span class="toc-number">3.3.3.2.</span> <span class="toc-text">Use case 2: return top N most clicked ads</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#Use-case-3-data-filtering"><span class="toc-number">3.3.3.3.</span> <span class="toc-text">Use case 3: data filtering</span></a></li></ol></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Step-3-Design-Deep-Dive"><span class="toc-number">4.</span> <span class="toc-text">Step 3 - Design Deep Dive</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Streaming-vs-batching"><span class="toc-number">4.1.</span> <span class="toc-text">Streaming vs batching</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Time"><span class="toc-number">4.2.</span> <span class="toc-text">Time</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Aggregation-window"><span class="toc-number">4.3.</span> <span class="toc-text">Aggregation window</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Delivery-guarantees"><span class="toc-number">4.4.</span> <span class="toc-text">Delivery guarantees</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Data-deduplication"><span class="toc-number">4.5.</span> <span class="toc-text">Data deduplication</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Scale-the-system"><span class="toc-number">4.6.</span> <span class="toc-text">Scale the system</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Scale-the-message-queue"><span class="toc-number">4.6.1.</span> <span class="toc-text">Scale the message queue</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Scale-the-aggregation-service"><span class="toc-number">4.6.2.</span> <span class="toc-text">Scale the aggregation service</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Scale-the-database"><span class="toc-number">4.6.3.</span> <span class="toc-text">Scale the database</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Hotspot-issue"><span class="toc-number">4.6.4.</span> <span class="toc-text">Hotspot issue</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Fault-tolerance"><span class="toc-number">4.7.</span> <span class="toc-text">Fault tolerance</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Data-monitoring-and-correctness"><span class="toc-number">4.8.</span> <span class="toc-text">Data monitoring and correctness</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Continuous-monitoring"><span class="toc-number">4.8.1.</span> <span class="toc-text">Continuous monitoring</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Reconciliation"><span class="toc-number">4.8.2.</span> <span class="toc-text">Reconciliation</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Alternative-design"><span class="toc-number">4.9.</span> <span class="toc-text">Alternative design</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Step-4-Wrap-Up"><span class="toc-number">5.</span> <span class="toc-text">Step 4 - Wrap Up</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Chapter-Summary"><span class="toc-number">6.</span> <span class="toc-text">Chapter Summary</span></a></li></ol></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="https://avatars3.githubusercontent.com/u/37806785?s=460&amp;u=8c68d685faf7c5280cfbd736a6b1730b55fb4203&amp;v=4"></div><div class="author-info__name text-center">Song Hayoung</div><div class="author-info__description text-center"></div><div class="follow-button"><a target="_blank" rel="noopener" href="https://www.linkedin.com/in/hayoung-song-9523b61bb/">Follow Me</a></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="/archives"><span class="pull-left">Articles</span><span class="pull-right">9744</span></a><a class="author-info-articles__tags article-meta" href="/tags"><span class="pull-left">Tags</span><span class="pull-right">191</span></a><a class="author-info-articles__categories article-meta" href="/categories"><span class="pull-left">Categories</span><span class="pull-right">60</span></a></div><hr><div class="author-info-links"><div class="author-info-links__title text-center">VISITED</div><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Seoul Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Jeju Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">British Columbia Canada</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Boracay Philippines</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">三重　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">大阪　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">名古屋　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">静岡　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">札幌　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">京都　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Bangkok Thailand</a></div></div></div><div id="content-outer"><div id="top-container" style="background-image: url(https://xxxx.jpg)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="/">SUMFIのBlog</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus">   <a class="site-page" href="/">Home</a><a class="site-page" href="/archives">Archives</a><a class="site-page" href="/tags">Tags</a><a class="site-page" href="/categories">Categories</a><a class="site-page" href="/about">About</a></span><span class="pull-right"><a class="site-page social-icon search"><i class="fa fa-search"></i><span> Search</span></a></span></div><div id="post-info"><div id="post-title">[System Design] Ad Click Event Aggregation</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2023-12-04</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/">System Design</a><i class="fa fa-angle-right" aria-hidden="true"></i><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/System-Design-Interview/">System Design Interview</a><div class="post-meta-wordcount"><span>Word count: </span><span class="word-count">4.4k</span><span class="post-meta__separator">|</span><span>Reading time: 27 min</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div class="article-container" id="post-content"><h2 id="Ad-Click-Event-Aggregation"><a href="#Ad-Click-Event-Aggregation" class="headerlink" title="Ad Click Event Aggregation"></a>Ad Click Event Aggregation</h2><span id="more"></span>
+<p>페이스북, 유투브, 틱톡, 온라인 미디어 경제의 성장으로 디지털 광고가 전체 광고 지출에서 차지하는 비중이 점점 더 커지고 있다. 따라서 광고 클릭 이벤트를 추적하는 것은 매우 중요하다. 이 포스트에서는 페이스북 또는 구글 규모의 광고 클릭 이벤트 집계 시스템을 설계하는 방법을 살펴본다.</p>
+<p>기술적인 설계에 들어가기 전에 이 주제를 더 잘 이해하기 위해 온라인 광고의 핵심 개념에 대해 알아보자. 온라인 광고의 핵심 이점 중 하나는 실시간 데이터로 정량화할 수 있는 measurability다.</p>
+<p>디지털 광고에는 디지털 광고 인벤토리를 사고 파는 실시간 입찰(RTB, Real-Time Bidding)이라는 핵심 프로세스가 있다. 아래는 온라인 광고 프로세스의 작동 방식을 보여준다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231204225031197.png" alt=""></p>
+<p>RTB 프로세스는 보통 1초 이내에 이루어지므로 속도가 중요하다. </p>
+<p>데이터의 정확성 또한 매우 중요하다. 광고 클릭 이벤트 집계는 온라인 광고의 효과를 측정하는데 중요한 역할을 하며, 이는 기본적으로 광고주가 지불하는 금액에 영향을 미친다. 캠페인 관리자는 클릭 집계 결과를 바탕으로 예상을 관리하거나 타겟 오디언스 그룹, 키워드 등을 변경하는 등 입찰 전략을 조정할 수 있다. 클릭률(CTR) 및 전환율(CVR) 등 온라인 광고에 사용되는 주요 측정 지표는 집계된 광고 클릭 데이터에 따라 달라진다.</p>
+<h2 id="Step-1-Understand-the-Problem-and-Establish-Design-Scope"><a href="#Step-1-Understand-the-Problem-and-Establish-Design-Scope" class="headerlink" title="Step 1 - Understand the Problem and Establish Design Scope"></a>Step 1 - Understand the Problem and Establish Design Scope</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">The following set of questions helps to clarify requirements and narrow down the scope.</span><br><span class="line"></span><br><span class="line">Candidate: What is the format of the input data?</span><br><span class="line">Interviewer: It’s a log file located in different servers and the latest click events are appended to the end of the log file. The event has the following attributes: ad_id, click_timestamp, user_id, ip, and country.</span><br><span class="line"></span><br><span class="line">Candidate: What’s the data volume?</span><br><span class="line">Interviewer: 1 billion ad clicks per day and 2 million ads in total. The number of ad click events grows 30% year-over-year.</span><br><span class="line"></span><br><span class="line">Candidate: What are some of the most important queries to support?</span><br><span class="line">Interviewer: The system needs to support the following 3 queries:</span><br><span class="line"></span><br><span class="line">- Return the number of click events for a particular ad in the last M minutes.</span><br><span class="line">- Return the top 100 most clicked ads in the past 1 minute. Both parameters should be configurable. Aggregation occurs every minute.</span><br><span class="line">- Support data filtering by ip, user_id, or country for the above two queries.</span><br><span class="line"></span><br><span class="line">Candidate: Do we need to worry about edge cases? I can think of the following:</span><br><span class="line"></span><br><span class="line">- There might be events that arrive later than expected.</span><br><span class="line">- There might be duplicated events.</span><br><span class="line">- Different parts of the system might be down at any time, so we need to consider system recovery.</span><br><span class="line">Interviewer: That’s a good list. Yes, take these into consideration.</span><br><span class="line"></span><br><span class="line">Candidate: What is the latency requirement?</span><br><span class="line">Interviewer: A few minutes of end-to-end latency. Note that latency requirements for RTB and ad click aggregation are very different. While latency for RTB is usually less than one second due to the responsiveness requirement, a few minutes of latency is acceptable for ad click event aggregation because it is primarily used for ad billing and reporting.</span><br><span class="line"></span><br><span class="line">With the information gathered above, we have both functional and non-functional requirements.</span><br></pre></td></tr></table></figure>
+<h3 id="Functional-requirements"><a href="#Functional-requirements" class="headerlink" title="Functional requirements"></a>Functional requirements</h3><ul>
+<li>지난 몇 분 동안의 ad_id 클릭 수를 집계한다.</li>
+<li>매 분 가장 많이 클릭된 상위 100개의 광고 아이디를 반환한다.</li>
+<li>다양한 속성에 따른 집계 필터링을 지원한다.</li>
+<li>데이터 세트 볼륨은 페이스북 또는 구글 규모다.</li>
+</ul>
+<h3 id="Non-functional-requirements"><a href="#Non-functional-requirements" class="headerlink" title="Non-functional requirements"></a>Non-functional requirements</h3><ul>
+<li>데이터는 RTB 및 광고 과금에 사용되므로 집계 결과의 정확성이 중요하다.</li>
+<li>지연되거나 중복된 이벤트를 적절히 처리해야 한다.</li>
+<li>견고성. 시스템은 부분적인 장애에 대해 복원력이 있어야 한다.</li>
+<li>지연 시간 요건. 엔드 투 엔드 지연 시간은 최대 몇 분 이내여야 한다.</li>
+</ul>
+<h3 id="Back-of-the-envelope-estimation"><a href="#Back-of-the-envelope-estimation" class="headerlink" title="Back-of-the-envelope estimation"></a>Back-of-the-envelope estimation</h3><ul>
+<li>10억 DAU</li>
+<li>각 사용자가 평균적으로 하루에 1개의 광고를 클릭한다고 가정한다. 이는 하루에 10억건의 광고 클릭 이벤트다.</li>
+<li>광고 클릭 QPS = 10^9 events / 10^5 seconds in a day = 10,000</li>
+<li>최대 광고 클릭 QPS가 평균의 5배라고 가정한다. Peak QPS = 50,000</li>
+<li>단일 광고 클릭 이벤트가 0.1KB의 스토리지를 차지한다고 가정한다. 일일 스토리지 요구량은 다음과 같다. 0.1KB * 10억 = 100GB. 월간 스토리지 요구량은 약 3TB다.</li>
+</ul>
+<h2 id="Step-2-Propose-High-Level-Design-and-Get-Buy-In"><a href="#Step-2-Propose-High-Level-Design-and-Get-Buy-In" class="headerlink" title="Step 2 - Propose High-Level Design and Get Buy-In"></a>Step 2 - Propose High-Level Design and Get Buy-In</h2><h3 id="Query-API-design"><a href="#Query-API-design" class="headerlink" title="Query API design"></a>Query API design</h3><p>API 설계의 목적은 클라이언트와 서버 간의 계약을 맺는 것이다. 소비자 앱에서 클라이언트는 일반적으로 제품을 사용하는 최종 사용자다. 그러나 우리의 경우, 클라이언트는 집계 서비스에 대해 쿼리를 실행하는 대시보드 사용자(데이터 과학자, 제품 관리자, 광고주 등)이다.</p>
+<p>API를 더 잘 설계할 수 있도록 기능적 요구사항을 살펴보자.</p>
+<ul>
+<li>지난 M분 동안 ad_id의 클릭 수를 집계한다.</li>
+<li>지난 1분 동안 가장 많이 클릭된 상위 N개의 광고 아이디를 반환한다.</li>
+<li>다양한 속성에 따른 집계 필터링을 지원한다.</li>
+</ul>
+<p>마지막 요구 사항인 필터링은 요청에 쿼리 매개변수를 추가해 지원할 수 있기 때문에 이 세 가지 사용 사례를 지원하는 데는 두 개의 API만 필요하다.</p>
+<p><strong>API 1: Aggregate the number of clicks of <em>ad_id</em> in the last <em>M</em> minutes.</strong></p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:left"><strong>API</strong></th>
+<th style="text-align:left"><strong>Detail</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">GET /v1/ads/{:ad_id}/aggregated_count</td>
+<td style="text-align:left">Return aggregated event count for a given ad_id</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Request parameters are:</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:left"><strong>Field</strong></th>
+<th style="text-align:left"><strong>Description</strong></th>
+<th style="text-align:left"><strong>Type</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">from</td>
+<td style="text-align:left">Start minute (default is now minus 1 minute)</td>
+<td style="text-align:left">long</td>
+</tr>
+<tr>
+<td style="text-align:left">to</td>
+<td style="text-align:left">End minute (default is now)</td>
+<td style="text-align:left">long</td>
+</tr>
+<tr>
+<td style="text-align:left">filter</td>
+<td style="text-align:left">An identifier for different filtering strategies. For example, filter = 001 filters out non-US clicks</td>
+<td style="text-align:left">long</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Response:</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:left"><strong>Field</strong></th>
+<th style="text-align:left"><strong>Description</strong></th>
+<th style="text-align:left"><strong>Type</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">ad_id</td>
+<td style="text-align:left">The identifier of the ad</td>
+<td style="text-align:left">string</td>
+</tr>
+<tr>
+<td style="text-align:left">count</td>
+<td style="text-align:left">The aggregated count between the start and end minutes</td>
+<td style="text-align:left">long</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>API 2: Return top <em>N</em> most clicked <em>ad_ids</em> in the last <em>M</em> minutes</strong></p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:left"><strong>API</strong></th>
+<th style="text-align:left"><strong>Detail</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">GET /v1/ads/popular_ads</td>
+<td style="text-align:left">Return top <em>N</em> most clicked ads in the last <em>M</em> minutes</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Request parameters are:</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:left"><strong>Field</strong></th>
+<th style="text-align:left"><strong>Description</strong></th>
+<th style="text-align:left"><strong>Type</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">count</td>
+<td style="text-align:left">Top <em>N</em> most clicked ads</td>
+<td style="text-align:left">integer</td>
+</tr>
+<tr>
+<td style="text-align:left">window</td>
+<td style="text-align:left">The aggregation window size (<em>M</em>) in minutes</td>
+<td style="text-align:left">integer</td>
+</tr>
+<tr>
+<td style="text-align:left">filter</td>
+<td style="text-align:left">An identifier for different filtering strategies</td>
+<td style="text-align:left">long</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Response:</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:left"><strong>Field</strong></th>
+<th style="text-align:left"><strong>Description</strong></th>
+<th style="text-align:left"><strong>Type</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">ad_ids</td>
+<td style="text-align:left">A list of the most clicked ads</td>
+<td style="text-align:left">array</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3 id="Data-model"><a href="#Data-model" class="headerlink" title="Data model"></a>Data model</h3><p>시스템에는 원시 데이터와 집계 데이터 두 가지 유형의 데이터가 있다.</p>
+<h4 id="Raw-data"><a href="#Raw-data" class="headerlink" title="Raw data"></a>Raw data</h4><p>아래는 raw data의 예이다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[AdClickEvent] ad001, 2021-01-01 00:00:01, user 1, 207.148.22.22, USA</span><br></pre></td></tr></table></figure>
+<p>아래 표는 데이터 필드가 구조화된 방식으로 나열되어 있다. 데이터는 여러 애플리케이션 서버에 흩어져 있다.</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th><strong>ad_id</strong></th>
+<th><strong>click_timestamp</strong></th>
+<th><strong>user</strong></th>
+<th><strong>ip</strong></th>
+<th><strong>country</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ad001</td>
+<td>2021-01-01 00:00:01</td>
+<td>user1</td>
+<td>207.148.22.22</td>
+<td>USA</td>
+</tr>
+<tr>
+<td>ad001</td>
+<td>2021-01-01 00:00:02</td>
+<td>user1</td>
+<td>207.148.22.22</td>
+<td>USA</td>
+</tr>
+<tr>
+<td>ad002</td>
+<td>2021-01-01 00:00:02</td>
+<td>user2</td>
+<td>209.153.56.11</td>
+<td>USA</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h4 id="Aggregated-data"><a href="#Aggregated-data" class="headerlink" title="Aggregated data"></a>Aggregated data</h4><p>광고 클릭 이벤트가 1분마다 집계된다고 가정한다. 아래는 집계의 결과다.</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:left">ad_id</th>
+<th style="text-align:left">click_minute</th>
+<th style="text-align:left">count</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">ad001</td>
+<td style="text-align:left">202101010000</td>
+<td style="text-align:left">5</td>
+</tr>
+<tr>
+<td style="text-align:left">ad001</td>
+<td style="text-align:left">202101010001</td>
+<td style="text-align:left">7</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>광고 필터링을 지원하기 위해 테이블에 filter_id라는 필드를 추가한다. 아래 표시된 것 처럼 ad_id와 click_minute가 동일한 레코드는 filter_id에 따라 그룹화되며, 필터는 아래 표에 정의되어 있다.</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:left">ad_id</th>
+<th style="text-align:left">click_minute</th>
+<th style="text-align:left">filter_id</th>
+<th style="text-align:left">count</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">ad001</td>
+<td style="text-align:left">202101010000</td>
+<td style="text-align:left"><em>0012</em></td>
+<td style="text-align:left">2</td>
+</tr>
+<tr>
+<td style="text-align:left">ad001</td>
+<td style="text-align:left">202101010000</td>
+<td style="text-align:left"><em>0023</em></td>
+<td style="text-align:left">3</td>
+</tr>
+<tr>
+<td style="text-align:left">ad001</td>
+<td style="text-align:left">202101010001</td>
+<td style="text-align:left"><em>0012</em></td>
+<td style="text-align:left">1</td>
+</tr>
+<tr>
+<td style="text-align:left">ad001</td>
+<td style="text-align:left">202101010001</td>
+<td style="text-align:left"><em>0023</em></td>
+<td style="text-align:left">6</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:left">filter_id</th>
+<th style="text-align:left">region</th>
+<th style="text-align:left">IP</th>
+<th style="text-align:left">user_id</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">0012</td>
+<td style="text-align:left">US</td>
+<td style="text-align:left">*</td>
+<td style="text-align:left">*</td>
+</tr>
+<tr>
+<td style="text-align:left">0013</td>
+<td style="text-align:left">*</td>
+<td style="text-align:left">123.1.2.3</td>
+<td style="text-align:left">*</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h4 id="Comparison"><a href="#Comparison" class="headerlink" title="Comparison"></a>Comparison</h4><p>원시 데이터를 저장하는 것과 집계된 데이터를 저장하는 것을 비교하면 아래와 같다.</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th></th>
+<th><strong>Raw data only</strong></th>
+<th><strong>Aggregated data only</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Pros</strong></td>
+<td>완전한 데이터 집합이며 데이터 필터링과 재계산을 지원한다.</td>
+<td>적은 데이터 집합이며 쿼리가 빠르다.</td>
+</tr>
+<tr>
+<td><strong>Cons</strong></td>
+<td>큰 데이터 스토리지가 요구되며 쿼리가 느리다.</td>
+<td>파생된 데이터이기 때문에 데이터 손실이 발생할 수 있다. 예를 들어 10개의 엔트리는 1개의 엔트리로 집계된다.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>원시 데이터를 저장해야 할까 집계된 데이터를 저장해야 할까? 둘 다 저장할 것을 권장한다. 이유를 살펴보자.</p>
+<ul>
+<li>원시 데이터를 보관하는 것이 좋다. 문제가 발생하면 디버깅을 위해 원시 데이터를 사용할 수 있다. 잘못된 버그로 인해 집계 데이터가 손상된 경우 버그가 수정된 후 원시 데이터에서 집계 데이터를 다시 계산할 수 있다.</li>
+<li>집계된 데이터도 저장해야 한다. 원시 데이터의 데이터 크기가 크다. 크기가 크기 때문에 원시 데이터를 직접 쿼리하는 것은 매우 비효율적이다. 이 문제를 완화하기 위해 집계된 데이터에 대해 읽기 쿼리를 실행한다.</li>
+<li>원시 데이터는 백업 데이터로 사용된다. 재계산이 필요한 경우가 아니라면 일반적으로 원시 데이터를 쿼리할 필요가 없다. 오래된 원시 데이터는 비용을 절감하기 위해 콜드 스토리지로 옮길 수 있다.</li>
+<li>집계된 데이터는 활성 데이터로 사용된다. 쿼리 성능을 위해 조정된다.</li>
+</ul>
+<h4 id="Choose-the-right-database"><a href="#Choose-the-right-database" class="headerlink" title="Choose the right database"></a>Choose the right database</h4><p>올바른 데이터베이스를 선택하려면 다음 사항을 평가해야 한다.</p>
+<ul>
+<li>데이터의 형태는 어떤가? 관계형인가, 문서인가 blob인가?</li>
+<li>워크플로우가 읽기 중심인가 쓰기 중심인가 아니면 둘 다인가?</li>
+<li>트랜잭션 지원이 필요한가?</li>
+<li>쿼리가 합계, 카운트와 같은 많은 온라인 분석 처리(OLAP) 함수에 의존하는가?</li>
+</ul>
+<p>먼저 원시데이터를 살펴보자. 정상적인 작업 중에는 원시 데이터를 쿼리할 필요가 없지만, 데이터 과학자나 머신 러닝 엔지니어가 사용자 반응 예측, 행동 타겟팅, 관련성 피드백 등을 연구하는데 원시 데이터는 유용하다.</p>
+<p>추정섹션에서 볼 수 있듯이, 평균 쓰기 QPS는 10,00이고 피크 QPS는 50,000이 될 수 있으므로 시스템은 쓰기 중심적이다. 읽기 측면에서는 원시 데이터가 백업 및 재계산을 위한 소스로 사용되므로 이론적으로는 읽기 볼륨이 낮다.</p>
+<p>관계형 데이터베이스로도 작업을 수행할 수 있지만 쓰기 확장에 어려움이 있을 수 있다. Cassandra 및 InfluxDB와 같은 NoSQL 데이터베이스는 쓰기 및 시간 범위 쿼리에 최적화되어 있으므로 적합하다.</p>
+<p>또 다른 옵션은 ORC, Parquet, AVRO와 같은 컬럼형 데이터 형식 중 하나를 사용해 Amazon S3에 데이터를 저장하는 것이다. 각 파일의 크기에 제한을 두면 원시 데이터 쓰기를 담당하는 스트림 프로세서가 크기 제한에 도달했을 때 파일 로테이션을 처리할 수 있다. 이 설정은 많은 사람들에게 생소할 수 있으므로 이 설계에서는 Cassandra를 예로 든다.</p>
+<p>집계된 데이터의 경우, 본질적으로 시계열이며 워크플로우가 읽기 및 쓰기를 모두 많이 사용한다. 이는 각 광고에 대해 매분마다 데이터베이스를 쿼리하여 고객에 대한 최신 집계 수를 표시해야 하기 때문이다. 이 기능은 대시보드를 자동으로 새로 고치거나 적시에 알림을 트리거하는데 유용하다. 총 200만 개의 광고가 있기 때문에 워크플로는 읽기 중심이다. 데이터는 집계 서비스에 의해 매분 집계되고 쓰여지므로 쓰기 작업도 많이 이루어진다. 동일한 유형의 데이터베이스를 사용하여 원시 데이터와 집계된 데이터를 모두 저장할 수 있다.</p>
+<p>이제 쿼리 API 설계와 데이터 모델에 대해 논의했으니 고수준 설계를 정리해 보자.</p>
+<h3 id="High-level-design"><a href="#High-level-design" class="headerlink" title="High-level design"></a>High-level design</h3><p>실시간 빅데이터 처리에서 데이터는 일반적으로 무제한 데이터 스트림을 통해 처리 시스템 안팎으로 흐른다. 집계 서비스도 같은 방식으로 작동하며, 입력은 원시 데이터(무제한 데이터 스트림)이고 출력은 집계된 결과다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231204233807777.png" alt=""></p>
+<h4 id="Asynchronous-processing"><a href="#Asynchronous-processing" class="headerlink" title="Asynchronous processing"></a>Asynchronous processing</h4><p>현재 우리가 가지고 있는 설계는 동기식이다. 이는 생산자와 소비자의 용량이 항상 같지 않기 때문에 좋지 않다. 트래픽이 갑자기 증가해 생성되는 이벤트 수가 소비자가 처리할 수 있는 수준을 훨씬 초과하는 경우, 소비자에게 메모리 부족 오류가 발생하거나 예기치 않은 종료가 발생할 수 있다. 동기식 링크의 한 구성 요소가 다운되면 전체 시스템이 작동을 멈춘다.</p>
+<p>일반적인 해결책은 생산자와 소비자를 분리하기 위해 메세지 큐(Kafka)를 채팅하는 것이다. 이렇게 하면 전체 프로세스가 비동기화되고 생산자 / 소비자를 독립적으로 확장할 수 있다.</p>
+<p>지금까지 논의한 모든 것을 종합하면 아래와 같은 고수준 설계가 완성된다. 로그 감시자, 집계 서비스, 데이터베이스는 두 개의 메세지 큐로 분리되어 있다. Database writer는 메세지 큐에서 데이터를 폴링하고 데이터를 데이터베이스 형식으로 변환해 데이터베이스에 쓴다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231204234040975.png" alt=""></p>
+<ul>
+<li>첫 번째 메세지 큐에는 어떤게 저장될까?<ul>
+<li>아래와 같이 광고 클릭 이벤트 데이터가 포함된다.</li>
+</ul>
+</li>
+</ul>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th><strong>ad_id</strong></th>
+<th><strong>click_timestamp</strong></th>
+<th><strong>user_id</strong></th>
+<th><strong>ip</strong></th>
+<th><strong>country</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
+<ul>
+<li>두 번째 메세지 큐에는 어떤게 저장될까?<ul>
+<li>두 번째 메세지 큐에는 두 가지 유형의 데이터가 포함된다.</li>
+<li>분 단위로 집계된 광고 클릭 수</li>
+<li>분 단위로 집계된 가장 많이 클릭된 상위 N개의 광고</li>
+</ul>
+</li>
+</ul>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:left">ad_id</th>
+<th style="text-align:left">click_minute</th>
+<th style="text-align:left">count</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"></td>
+<td style="text-align:left"></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:left">update_time_minute</th>
+<th style="text-align:left">most_clicked_ads</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>왜 집계된 결과를 데이터베이스에 직접 쓰지 않는지 궁금할 것이다. 짧게 말해 end-to-end 와 exactly once semantics(atomic commit)을 달성하기 위해 Kafka와 같은 두 번째 메세지 큐가 필요하기 때문이다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231204234326561.png" alt=""></p>
+<h4 id="Aggregation-service"><a href="#Aggregation-service" class="headerlink" title="Aggregation service"></a>Aggregation service</h4><p>MapReduce 프레임워크는 광고 클릭 이벤트를 집계하는 데 좋은 옵션이다. 방향성 비순환 그래프(DAG)가 이를 위한 좋은 모델이다. DAG 모델의 핵심은 아래와 같이 시스템을 map / aggregate / reduce 노드들과 같이 작은 컴퓨팅 단위로 분해하는 것이다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231204234516978.png" alt=""></p>
+<p>각 노드는 하나의 단일 작업을 담당하며 처리 결과를 다운스트림 노드로 전송한다.</p>
+<p><strong>Map node</strong></p>
+<p>Map node는 데이터 소스에서 데이터를 읽은 다음 데이터를 필터링하고 변환한다. 예를 들어, 아래와 같이 Map node는 <code>ad_id % 2 = 0</code>인 광고를 노드 1로 보내고 다른 광고를 노드 2로 보낸다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231204234639528.png" alt=""></p>
+<p>Map node가 왜 필요한지 궁금할 수 있다. 다른 옵션은 Kafka 파티션이나 태그를 설정하고 집계 노드가 직접 Kafka에 가입하도록 하는 것이다. 이 방법은 효과가 있지만 입력 데이터를 집계하거나 정규화해야 할 수 있으며 이런 작업은 Map node에서 수행할 수 있다. 또 다른 이유는 데이터가 생성되는 방식을 제어할 수 없기 때문에 동일한 ad_id를 가진 이벤트가 다른 Kafka 파티션에 저장될 수 있기 때문이다.</p>
+<p><strong>Aggregate node</strong></p>
+<p>Aggregate node는 메모리에서 매분마다 ad_id 별로 광고 클릭 이벤트를 카운트한다. 맵리듀스 패러다임에서 Aggregate node는 리듀스의 일부다. 따라서 map-aggregate-reduce 프로세스는 실제로 map-reduce-reduce를 의미한다.</p>
+<p><strong>Reduce node</strong></p>
+<p>Reduce node는 모든 aggregate node에서 집계된 결과를 최종 결과로 축소한다. 예를 들어, 아래 표시된 것처럼 집계 노드가 3개 있고 각 노드에는 노드 내에서 가장 많이 클릭된 상위 3개 광고가 포함되어 있다. Reduce node는 가장 많이 클릭된 광고의 총 수를 3개로 줄인다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231204235017340.png" alt=""></p>
+<p>DAG 모델은 잘 알려진 맵리듀스 패러다임을 대표한다. 이 모델은 빅데이터를 병렬 분산 컴퓨팅을 통해 작은 크기 또는 일정한 크기의 데이터로 변환하도록 설계되었다.</p>
+<p>DAG 모델에서 중간 데이터는 메모리에 저장될 수 있으며, 서로 다른 노드는 TCP 또는 공유 메모리를 통해 서로 통신한다.</p>
+<h4 id="Main-use-cases"><a href="#Main-use-cases" class="headerlink" title="Main use cases"></a>Main use cases</h4><p>이제 맵리듀스가 어떻게 작동하는지 개략적으로 이해했으니 주요 사용 사례를 지원하기 위해 맵리듀스가 어떻게 활용될 수 있는지 살펴보자.</p>
+<ul>
+<li>지난 M분 동안 광고의 클릭 수를 집계한다.</li>
+<li>지난 M분 동안 가장 많이 클릭한 광고 상위 N개를 반환한다.</li>
+<li>데이터 필터링</li>
+</ul>
+<h5 id="Use-case-1-aggregate-the-number-of-clicks"><a href="#Use-case-1-aggregate-the-number-of-clicks" class="headerlink" title="Use case 1: aggregate the number of clicks"></a>Use case 1: aggregate the number of clicks</h5><p>아래에서 볼 수 있듯이 입력 이벤트는 map node에서 ad_id(ad_id % 3)으로 분할된 뒤 aggregate node에서 집계된다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231204235344171.png" alt=""></p>
+<h5 id="Use-case-2-return-top-N-most-clicked-ads"><a href="#Use-case-2-return-top-N-most-clicked-ads" class="headerlink" title="Use case 2: return top N most clicked ads"></a>Use case 2: return top <em>N</em> most clicked ads</h5><p>아래는 가장 많이 클릭한 상위 3개 광고를 가져오는 단순화된 설계를 보여 주며, 이를 상위 N까지 확장할 수 있다. 입력 이벤트는 ad_id를 사용해 매핑되고 각 aggregate node는 힙 데이터 구조를 유지해 노드 내에서 상위 3개 광고를 효율적으로 가져온다. 마지막 단계에서 reduce node는 9개의 광고(각 집계 노드에서 상위 3개)를 매분 가장 많이 클릭된 상위 3개 광고로 줄인다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231204235519553.png" alt=""></p>
+<h5 id="Use-case-3-data-filtering"><a href="#Use-case-3-data-filtering" class="headerlink" title="Use case 3: data filtering"></a>Use case 3: data filtering</h5><p>“미국 내에서만 ad001에 대한 집계된 CTR 표시”와 같은 데이터 필터링을 지원하기 위해 필터링 기준을 미리 정의하고 이를 기반으로 집계할 수 있다. 예를 들어, ad001과 ad002에 대한 집계 결과는 아래와 같다.</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:left"><strong>ad_id</strong></th>
+<th style="text-align:left"><strong>click_minute</strong></th>
+<th style="text-align:left"><strong>country</strong></th>
+<th style="text-align:left"><strong>count</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">ad001</td>
+<td style="text-align:left">202101010001</td>
+<td style="text-align:left">USA</td>
+<td style="text-align:left">100</td>
+</tr>
+<tr>
+<td style="text-align:left">ad001</td>
+<td style="text-align:left">202101010001</td>
+<td style="text-align:left">GPB</td>
+<td style="text-align:left">200</td>
+</tr>
+<tr>
+<td style="text-align:left">ad001</td>
+<td style="text-align:left">202101010001</td>
+<td style="text-align:left">others</td>
+<td style="text-align:left">3000</td>
+</tr>
+<tr>
+<td style="text-align:left">ad002</td>
+<td style="text-align:left">202101010001</td>
+<td style="text-align:left">USA</td>
+<td style="text-align:left">10</td>
+</tr>
+<tr>
+<td style="text-align:left">ad002</td>
+<td style="text-align:left">202101010001</td>
+<td style="text-align:left">GPB</td>
+<td style="text-align:left">25</td>
+</tr>
+<tr>
+<td style="text-align:left">ad002</td>
+<td style="text-align:left">202101010001</td>
+<td style="text-align:left">others</td>
+<td style="text-align:left">12</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>이 기술을 <a target="_blank" rel="noopener" href="https://learn.microsoft.com/en-us/power-bi/guidance/star-schema">star schema</a>라고 하며 데이터 웨어하우스에서 널리 사용된다. 필터링 필드를 dimensions라 한다. 이 접근 방식에는 아래와 같은 이점이 있다.</p>
+<ul>
+<li>이해하고 구축하기 간단하다.</li>
+<li><p>현재 집계 서비스를 재사용해 스타 스키마에 더 많은 차원을 만들 수 있다. 추가 컴포넌트가 필요없다.</p>
+</li>
+<li><p>결과가 미리 계산되므로 필터링 기준에 따라 데이터에 빠르게 액세스할 수 있다.</p>
+</li>
+</ul>
+<p>이 접근 방식의 한계는 특히 필터링 기준이 많은 경우 더 많은 버킷과 레코드가 생성된다는 것이다.</p>
+<h2 id="Step-3-Design-Deep-Dive"><a href="#Step-3-Design-Deep-Dive" class="headerlink" title="Step 3 - Design Deep Dive"></a>Step 3 - Design Deep Dive</h2><h3 id="Streaming-vs-batching"><a href="#Streaming-vs-batching" class="headerlink" title="Streaming vs batching"></a>Streaming vs batching</h3><p>위에서 제안한 고수준 아키텍처는 일종의 스트림 처리 시스템이다. 아래는 세 가지 유형의 시스템을 비교한 것이다.</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th></th>
+<th><strong>Services (Online system)</strong></th>
+<th><strong>Batch system (offline system)</strong></th>
+<th><strong>Streaming system (near real-time system)</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Responsiveness</strong></td>
+<td>클라이언트에 빠르게 응답</td>
+<td>클라이언트에 응답 필요 없음</td>
+<td>클라이언트에 응답 필요 없음</td>
+</tr>
+<tr>
+<td><strong>Input</strong></td>
+<td>사용자 요청</td>
+<td>바운드가 존재하는 입력. 대량의 데이터</td>
+<td>입력에 바운드가 존재하지 않음</td>
+</tr>
+<tr>
+<td><strong>Output</strong></td>
+<td>사용자에게 응답</td>
+<td>Materialized views, 집계된 메트릭 등</td>
+<td>Materialized views, 집계된 메트릭 등</td>
+</tr>
+<tr>
+<td><strong>Performance measurement</strong></td>
+<td>신뢰성, 저지연</td>
+<td>처리량</td>
+<td>처리량, 저지연</td>
+</tr>
+<tr>
+<td><strong>Example</strong></td>
+<td>Online shopping</td>
+<td>MapReduce</td>
+<td>Flink</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>우리 설계에서는 스트림 처리와 배치 처리를 모두 사용했다. 스트림 프로세싱을 활용해 데이터가 도착하는 대로 처리하고 거의 실시간으로 집계된 결과를 생성했다. 기록 데이터 백업에는 일괄 처리를 활용했다.</p>
+<p>두 가지 처리 방식(배치, 스트리밍)을 동시에 포함하는 경우 이 아키텍처를 <a target="_blank" rel="noopener" href="https://www.databricks.com/glossary/lambda-architecture">람다(lambda)</a>라 한다. 람다 아키텍처의 단점은 처리 경로가 두 개이므로 유지 관리해야할 코드베이스가 두 개라는 것이다. 배치와 스트리밍을 하나의 처리 경로에 결합한 <a target="_blank" rel="noopener" href="https://hazelcast.com/glossary/kappa-architecture/">카파 아키텍처</a>는 이 문제를 해결한다. 핵심 아이디어는 단일 스트림 처리 엔진을 사용해 실시간 데이터 처리와 연속 데이터 재처리를 모두 처리하는 것이다. 아래는 람다 아키텍처와 카파 아키텍처를 비교한 것이다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231205224442092.png" alt=""></p>
+<p>우리의 고수준 설계는 카파 아키텍처를 사용하며, 과거 데이터의 재처리도 실시간 집계 서비스를 통해 이루어진다. </p>
+<p><strong>Data recalculation</strong></p>
+<p>과거 데이터 재생이라고도 하는 집계된 데이터를 다시 계산해야 하는 경우가 있다. 에를 들어, 집계 서비스에서 중대한 버그를 발견한 경우, 버그가 발생한 시점부터 원시 데이터에서 집계 데이터를 다시 계산해야 한다. 아래는 데이터 재계산 흐름을 보여준다.</p>
+<ol>
+<li>재계산 서비스는 원시 데이터 저장소에서 데이터를 검색한다. 이것은 일괄 처리 작업이다.</li>
+<li>검색된 데이터는 전용 집계 서비스로 전송되어 과거 데이터 재생으로 인해 실시간 처리가 영향을 받지 않도록 한다.</li>
+<li>집계된 결과는 두 번째 메세지 대기열로 전송된 다음 집계 데이터베이스에서 업데이트 된다.</li>
+</ol>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231205224954148.png" alt=""></p>
+<p>재계산 프로세스는 데이터 집계 서비스를 재사용하지만 다른 데이터 소스(원시 데이터)를 사용한다.</p>
+<h3 id="Time"><a href="#Time" class="headerlink" title="Time"></a>Time</h3><p>집계를 수행하려면 타임스탬프가 필요하다. 타임스탬프는 두 가지 위치에서 생성할 수 있다.</p>
+<ul>
+<li>Event time : 광고 클릭이 발생한 시점</li>
+<li>Processing time : 클릭 이벤트를 처리하는 집계 서버의 시스템 시간</li>
+</ul>
+<p>네트워크 지연 및 비동기 환경(데이터가 메세지 큐를 거침)으로 인해 이벤트 시간과 처리 시간 간의 차이가 클 수 있다. 아래에서 보듯이 이벤트 1은 집계 서비스에 매우 늦게(5시간 뒤) 도착한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231205225140985.png" alt=""></p>
+<p>이벤트 시간을 집계에 사용하는 경우 지연된 이벤트를 처리해야 한다. 처리 시간을 집계에 사용하면 집계 결과가 정확하지 않을 수 있다. 완벽한 해결책은 없으므로 장단점을 고려해야 한다.</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:left"></th>
+<th style="text-align:left"><strong>Pros</strong></th>
+<th style="text-align:left"><strong>Cons</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">Event time</td>
+<td style="text-align:left">클라이언트가 광고 클릭 시점을 정확히 알기 때문에 집계 결과가 더 정확하다</td>
+<td style="text-align:left">클라이언트 측에서 생성된 타임스탬프에 따라 달라진다. 클라이언트의 시간이 잘못되었거나 타임스탬프가 악의적인 사용자에 의해 생성되었을 수 있다</td>
+</tr>
+<tr>
+<td style="text-align:left">Processing time</td>
+<td style="text-align:left">서버 타임스탬프가 더 안정적이다</td>
+<td style="text-align:left">이벤트가 훨씬 늦은 시간에 시스템에 도달하면 타임스탬프가 정확하지 않다</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>데이터 정확도는 매우 중요하므로 집계에 이벤트 시간을 사용하는 것이 좋다. 이 경우 지연된 이벤트를 올바르게 처리하려면 어떻게 해야할까? 일반적으로 “watermark”라는 기술을 사용하여 약간 지연된 이벤트를 처리한다.</p>
+<p>아래는 광고 클릭 이벤트가 1분 tumbling window에서 집계된다. 이벤트 시간을 사용해 이벤트가 윈도우에 있는지 여부를 결정하는 경우, 윈도우 1은 이벤트 2를 놓치고 윈도우 3은 이벤트 5가 집계 기간의 종료보다 약간 늦게 도착하기 때문에 이벤트 5를 놓치게 된다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231205225515335.png" alt=""></p>
+<p>이 문제를 완화하는 한 가지 방법은 집계 윈도우의 확장으로 간주되는 “워터마크”를 사용하는 것이다. 이렇게 하면 집계 결과의 정확도가 향상된다. 15초(adjustable)의 추가 집계 윈도우를 확장함으로써 window 1은 이벤트 2를 포함할 수 있고 window 3는 이벤트 5를 포함할 수 있다.</p>
+<p>워터마크에 설정된 값은 비즈니스 요구 사항에 따라 달라진다. 워터마크가 길면 매우 늦게 도착하는 이벤트를 포착할 수 있지만 시스템에 더 많은 지연 시간이 추가된다. 워터마크가 짧으면 데이터의 정확도는 떨어지지만 시스템에 지연 시간이 줄어든다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231205225709539.png" alt=""></p>
+<p>워터마크 기법은 지연 시간이 긴 이벤트는 처리하지 않는다. 확률이 낮은 이벤트에 대해 복잡한 설계를 하는 것은 투자 수익률(ROI)에 비해 가치가 없다고 주장할 수 있다. End-of-day reconciliation을 통해 약간의 부정확성을 언제든지 수정할 수 있다. 워터마크를 사용하면 데이터 정확도는 향상되지만 대기 시간이 길어져 전반적인 지연 시간이 증가한다는 점을 고려해야 한다.</p>
+<h3 id="Aggregation-window"><a href="#Aggregation-window" class="headerlink" title="Aggregation window"></a>Aggregation window</h3><p>Martin Kleppmann의 책인 “Designing data-intensive applications” 에 따르면 윈도우 함수에는 tumbling (also called fixed) window, hopping window, sliding window, session window 가 있다. 이 중 우리 시스템과 관련도가 높은 tumbling window와 sliding window에 대해 알아보자.</p>
+<p>텀블링 윈도우에서는 시간이 겹치지 않는 동일한 길이의 청크로 분할된다. 텀블링 윈도우는 매분마다 광고 클릭 이벤트를 집계하는데 적합하다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231205230034739.png" alt=""></p>
+<p>슬라이딩 윈도우에서 이벤트는 지정된 시간 간격에 따라 데이터 스트림을 가로질러 슬라이딩되는 윈도우 내에서 그룹화된다. 슬라이딩 윈도우는 겹치는 창이 될 수 있다. 이는 두 번째 사용 사례인 지난 M분 동안 가장 많이 클릭된 상위 N개의 광고를 표시하는데 적합한 전략이다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231205231817632.png" alt=""></p>
+<h3 id="Delivery-guarantees"><a href="#Delivery-guarantees" class="headerlink" title="Delivery guarantees"></a>Delivery guarantees</h3><p>집계 결과는 billing에 활용되므로 데이터의 정확성과 완전성이 매우 중요하다. 시스템은 다음과 같은 질문에 답할 수 있어야 한다.</p>
+<ul>
+<li>중복 이벤트 처리를 피하는 방법은 무엇인가?</li>
+<li>모든 이벤트가 처리되었는지 확인하는 방법은 무엇인가?</li>
+</ul>
+<p>Kafka와 같은 메세지 큐는 일반적으로 최대 한번, 최소 한번, 정확히 한번이라는 세 가지 전달 의미를 제공한다.</p>
+<p><strong>Which delivery method should we choose?</strong></p>
+<p>대부분의 경우, 소량의 중복이 허용되는 경우 최소 한 번 처리로 충분하다.</p>
+<p>하지만 우리 시스템에서는 그렇지 않다. 데이터 포인트에서 몇 퍼센트의 차이가 발생하면 수백만 달러의 차이가 발생할 수 있다. 따라서 시스템에 대해 정확히 한 번만 제공하는 것이 좋다.</p>
+<h3 id="Data-deduplication"><a href="#Data-deduplication" class="headerlink" title="Data deduplication"></a>Data deduplication</h3><p>가장 일반적인 데이터 품질 문제 중 하나는 중복된 데이터다. 중복 데이터는 다양한 소스에서 발생할 수 있으며, 이 섹션에는 두 가지 일반적인 소스에 대해 설명한다.</p>
+<ul>
+<li>Client-side. 예를 들어, 클라이언트가 동일한 이벤트를 여러 번 재전송할 수 있다. 악의적인 의도로 전송된 중복 이벤트는 광고 사기 / 위험관리 컴포넌트를 통해 처리하는 것이 가장 좋다.</li>
+<li>Server outage. 집계 서비스 노드가 집계 도중에 다운되어 업스트림 서비스가 아직 확인을 받지 못한 경우, 동일한 이벤트가 다시 전송되어 집계될 수 있다. 자세히 살펴보자.</li>
+</ul>
+<p>아래는 집계 서비스 노드의 중단이 어떻게 중복 데이터를 발생시키는지 보여준다. Aggregator는 업스트림 Kafka에 오프셋을 저장해 데이터 소비 상태를 관리한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231205232238777.png" alt=""></p>
+<p>집계 중단으로 인해 6단계가 실패하면 100에서 110까지의 이벤트가 이미 다운스트림으로 전송되었지만 새 오프셋 110은 업스트림 Kafka에서 유지되지 않는다. 이 경우 새 Aggregator는 해당 이벤트가 이미 처리된 경우에도 오프셋 100을 다시 사용하게 되어 데이터가 중복될 수 있다.</p>
+<p>가장 간단한 해결책은 HDFS나 S3와 같은 외부 파일 스토리지를 사용해 오프셋을 기록하는 것이다. 하지만 여기에도 문제가 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231205232409801.png" alt=""></p>
+<p>3단계에서 Aggregator는 외부 스토리지에 저장된 마지막 오프셋이 100인 경우에만 오프셋 100에서 110까지의 이벤트를 처리한다. 스토리지에 저장된 오프셋이 110인 경우, Aggregator는 오프셋 110 이전의 이벤트를 무시한다.</p>
+<p>하지만 이 설계에는 큰 문제가 있다. 집계 결과가 다운스트림으로 전송되기 전에 오프셋이 HDFS / S3에 저장된다(step 3.2) Aggregator중단으로 인해 4단계가 실패하면 외부 스토리지에 저장된 오프셋이 110이기 때문에 100에서 110까지의 이벤트는 새로 가져온 Aggregator에서 절대 처리되지 않는다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231205232549141.png" alt=""></p>
+<p>이 설계에서는 step 5.1이 실행되기 전에 Aggregator가 다운되면 100에서 110까지의 이벤트가 다시 다운스트림으로 전송된다. “정확히 한 번” 처리하려면 4단계에서 6단계 사이의 작업을 하나의 분산 트랜잭션에 넣어야 한다. 분산 트랜잭션은 여러 노드에서 작동하는 트랜잭션이다. 작업 중 하나라도 실패하면 전체 트랜잭션이 롤백된다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231205232709670.png" alt=""></p>
+<p>보다시피 대규모 시스템에서 데이터를 중복 제거하기는 쉽지 않다. 정확히 한 번 처리를 달성하는 방법은 고급 주제다.</p>
+<h3 id="Scale-the-system"><a href="#Scale-the-system" class="headerlink" title="Scale the system"></a>Scale the system</h3><p>대략적인 추정에 따르면 비즈니스가 매년 30%씩 성장하고 있기에 3년마다 트래픽이 두 배로 증가한다는 것을 알 수 있다. 이런 성장을 어떻게 처리해야 할지 살펴보자.</p>
+<p>우리 시스템은 메세지 큐, 집계 서비스, 데이터베이스라는 세 가지 독립적인 구성 요소로 이루어져 있다. 이런 구성 요소는 분리되어 있으므로 각각을 독립적으로 확장할 수 있다.</p>
+<h4 id="Scale-the-message-queue"><a href="#Scale-the-message-queue" class="headerlink" title="Scale the message queue"></a><strong>Scale the message queue</strong></h4><p>메세지 큐를 확장하는 방법은 이미 분산 메세지 큐 설계 포스트에서 다루었기 때문에 몇 가지 간단한 사항만 간략히 다룬다.</p>
+<p><strong>Producers</strong></p>
+<p>프로듀서 인스턴스 수에 제한을 두지 않으므로 프로듀서의 확장성을 쉽게 달성할 수 있다.</p>
+<p><strong>Consumers</strong></p>
+<p>컨슈머 그룹 내에서 리밸런싱 메커니즘은 노드를 추가하거나 제거해 컨슈머를 확장하는 데 도움이 된다. 아래서 보듯이 컨슈머를 두 개 추가하면 각 컨슈머는 하나의 파티션에서 발생한 이벤트만 처리한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231207215801616.png" alt=""></p>
+<p>시스템에 수백 개의 카프카 컨슈머가 있는 경우, 컨슈머 리밸런싱 속도가 상당히 느려질 수 있으며 몇 분 이상 걸릴 수 있다. 따라서 더 많은 컨슈머를 추가해야 하는 경우, 영향을 최소화하기 위해 사용량이 많지 않은 시간대에 추가해야 한다.</p>
+<p><strong>Brokers</strong></p>
+<ul>
+<li><strong>Hashing key</strong><ul>
+<li>동일한 ad_id의 이벤트를 동일한 카프카 파티션에 저장하기 위해 카프카 파티션의 해싱 키로 ad_id를 사용한다. 이 경우 집계 서비스는 하나의 파티션에서 동일한 ad_id의 모든 이벤트를 구독할 수 있다.</li>
+</ul>
+</li>
+<li><strong>The number of partitions</strong><ul>
+<li>파티션 수가 변경되면 동일한 ad_id의 이벤트가 다른 파티션에 매핑될 수 있다. 따라서 프로덕션 환경에서 파티션 수가 동적으로 증가하지 않도록 사전에 충분한 파티션을 미리 할당하는 것이 좋다.</li>
+</ul>
+</li>
+<li><strong>Topic physical sharding</strong><ul>
+<li>일반적으로 하나의 토픽만으로는 충분하지 않다. 데이터를 지역(topic_north_america, topic_europe, topic_asia 등) 또는 비즈니스 유형(topic_web_ads, topic_mobile_ads 등) 별로 분할할 수 있다.</li>
+<li>Pros: 데이터를 여러 토픽으로 분할하면 시스템 처리량을 높이는 데 도움이 될 수 있다. 단일 토픽에 대한 소비자 수가 줄어들면 소비자 그룹을 리벨런싱하는데 걸리는 시간이 줄어든다.</li>
+<li>Cons: 복잡성이 증가하고 유지 관리 비용이 증가한다.</li>
+</ul>
+</li>
+</ul>
+<h4 id="Scale-the-aggregation-service"><a href="#Scale-the-aggregation-service" class="headerlink" title="Scale the aggregation service"></a>Scale the aggregation service</h4><p>고수준 설계에서는 집계 서비스가 맵리듀스 작업이라 했다. 아래는 모든것이 어떻게 연결되는지 보여준다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231207220223598.png" alt=""></p>
+<p>집계 서비스는 노드를 추가하거나 제거해 수평적으로 확장할 수 있다. 흥미로는 질문중 하나는 집계 서비스의 처리량을 어떻게 늘릴것인가에 대한 것이다. 두 가지 옵션이 있다.</p>
+<ul>
+<li>Option 1 : 아래와 같이 서로 다른 ad_id를 가진 이벤트를 서로 다른 스레드에 할당한다.</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231207220401243.png" alt=""></p>
+<ul>
+<li>Option 2 : Apache Hadoop YARN과 같은 리소스 프로바이더에 집계 서비스 노드를 배포한다. 이 접근 방식은 멀티 프로세싱을 활용하는 것으로 생각할 수 있다.</li>
+</ul>
+<p>옵션 1은 구현하기 쉽고 리소스 프로바이더에 의존하지 않는다. 그러나 실제로는 더 많은 컴퓨팅 리소스를 추가해 시스템을 확장할 수 있기 때문에 옵션 2가 더 널리 사용된다.</p>
+<h4 id="Scale-the-database"><a href="#Scale-the-database" class="headerlink" title="Scale the database"></a>Scale the database</h4><p>카산드라는 기본적으로 일관된 해싱과 유사한 방식으로 수평 스케일링을 지원한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231207220535615.png" alt=""></p>
+<p>데이터는 적절한 복제 계수를 통해 모든 노드에 균등히 분산된다. 각 노드는 해시값을 기반으로 링의 자체 부분을 저장하고 다른 가상 노드의 사본도 저장한다.</p>
+<p>클러스터에 새 노드를 추가하면 모든 노드 간에 가상 노드의 밸런스가 자동으로 재조정된다. 수동으로 재샤딩할 필요가 없다.</p>
+<h4 id="Hotspot-issue"><a href="#Hotspot-issue" class="headerlink" title="Hotspot issue"></a>Hotspot issue</h4><p>다른 샤드보다 훨씬 더 많은 데이터를 수신하는 샤드 또는 서비스를 핫스팟이라고 한다. 이는 주요 기업의 광고 예산이 수백만 달러에 달하고 광고가 더 자주 클릭되기 때문에 발생한다. 이벤트는 ad_id를 기준으로 분할되기 때문에 일부 집계 서비스 노드는 다른 노드보다 더 많은 광고 클릭이 이벤트를 수신해 서버 과부하를 일으킬 수 있다.</p>
+<p>인기 광고를 처리하기 위해 더 많은 어그리게이션 노드를 할당하면 이 문제를 완화할 수 있다. 각 어그리게이션 노드가 100개의 이벤트만 처리할 수 있다고 가정하자.</p>
+<ol>
+<li>어그리게이션 노드에 300개의 이벤트가 있기 때문에 노드가 처리할 수 있는 용량을 초과하여 리소스 매니저를 통해 추가 리소스를 신청한다.</li>
+<li>리소스 매니저는 원래 집계 노드에 과부하가 걸리지 않도록 더 많은 리소스를 할당한다.</li>
+<li>원래 집계 노드는 이벤트를 3개의 그룹으로 나누고 각 집계 노드는 100개의 이벤트를 처리한다.</li>
+<li>결과는 원래 집계 노드에 다시 기록된다.</li>
+</ol>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231207220844380.png" alt=""></p>
+<p>글로벌 - 로컬 집계 또는 분할된 고유 집계와 같이 이 문제를 처리하는 더 <a target="_blank" rel="noopener" href="https://nightlies.apache.org/flink/flink-docs-master/docs/dev/table/tuning/">정교한 방법</a>이 있다.</p>
+<h3 id="Fault-tolerance"><a href="#Fault-tolerance" class="headerlink" title="Fault tolerance"></a>Fault tolerance</h3><p>집계 서비스의 내결함성에 대해 알아보자. 집계는 메모리에서 이루어지기 때문에 집계 노드가 다운되면 집계된 결과도 손실된다. 업스트림 카프카 브로커에서 이벤트를 재생해 카운트를 다시 구축할 수 있다.</p>
+<p>카프카의 시작부터 데이터를 재생하는 것은 느리다. 업스트림 오프셋과 같은 “시스템 상태”를 스냅샷에 저장하고 마지막으로 저장된 상태로부터 복구하는 것이 좋다. 우리 설계에서 “시스템 상태”는 업스트림 오프셋 이상의 의미를 갖는데, 지난 M분 동안 가장 많이 클릭된 상위 N개의 광고와 같은 데이터를 저장해야 하기 때문이다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231207221149033.png" alt=""></p>
+<p>스냅샷을 사용하면 집계 서비스의 페일오버 프로세스가 매우 간단하다. 하나의 집계 서비스 노드에 장애가 발생하면 새 노드를 불러와서 최신 스냅샷에서 데이터를 복구한다. 마지막 스냅샷을 찍은 후 새로운 이벤트가 도착하면 새 집계 노드는 재생을 위해 카프카 브로커에서 해당 데이터를 가져온다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231207221303544.png" alt=""></p>
+<h3 id="Data-monitoring-and-correctness"><a href="#Data-monitoring-and-correctness" class="headerlink" title="Data monitoring and correctness"></a>Data monitoring and correctness</h3><p>앞서 언급했듯이 집계 결과는 RTB 및 빌링 목적으로 사용할 수 있다. 시스템의 상태를 모니터링하고 정확성을 보장하는 것이 중요하다.</p>
+<h4 id="Continuous-monitoring"><a href="#Continuous-monitoring" class="headerlink" title="Continuous monitoring"></a>Continuous monitoring</h4><p>다음은 모니터링할 수 있는 몇 가지 메트릭이다.</p>
+<ul>
+<li>지연 시간. 지연 시간은 각 단계에서 발생할 수 있으므로 이벤트가 시스템의 여러 부분을 통과할 때 타임스탬프를 추적하는 것이 매우 중요하다. 이런 타임스탬프 간의 차이는 지연 시간 메트릭으로 노출될 수 있다.</li>
+<li>메세지 대기열 크기. 큐 크기가 갑자기 증가하면 집계 노드를 더 추가해야 할 수도 있다. 카프카는 분산 커밋 로그로 구현된 메세지 큐이므로 대신 records-lag 메트릭을 모니터링해야 한다는 점에 유의해야 한다.</li>
+<li>집계 노드의 시스템 리소스. CPU, disk, JVM, etc.</li>
+</ul>
+<h4 id="Reconciliation"><a href="#Reconciliation" class="headerlink" title="Reconciliation"></a>Reconciliation</h4><p>Reconciliation이란 데이터 무결성을 보장하기 위해 서로 다른 데이터 세트를 비교하는 것을 의미한다. 은행의 기록과 은행의 기록을 비교할 수 있는 은행 업계의 reconciliation과는 달리, 광고 클릭 집계 결과에는 조정할 서드파티 결과가 없다.</p>
+<p>우리가 할 수 있는 일은 배치 잡을 통해 하루가 끝날 때 모든 파티션에서 이벤트를 시간 별로 광고 클릭 이벤트를 정렬하고 실시간 집계 결과와 조정하는 것이다. 더 높은 정확도가 필요한 경우, 더 짧은 집계 기간(예: 1시간)을 사용할 수 있다. 어떤 집계 기간을 사용하든 일부 이벤트가 늦게 도착할 수 있으므로 배치 작업의 결과가 실시간 집계 결과와 정확히 일치하지 않을 수 있다는 점에 유의해야 한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231207221536163.png" alt=""></p>
+<h3 id="Alternative-design"><a href="#Alternative-design" class="headerlink" title="Alternative design"></a>Alternative design</h3><p>제너럴리스트 시스템 디자인 인터뷰는 빅데이터 파이프라인에 사용되는 다양한 전문 소프트웨어의 내부를 알 것을 요구하지 않는다. 자신의 사고 과정을 설명하고 장단점을 논의하는 것이 매우 중요하므로 일반적인 솔루션을 제안한다. 또 다른 옵션은 빠른 쿼리를 위해 구축된 ElasticSearch 계층과 함께 광고 클릭 데이터를 Hive에 저장하는 것이다. 집계는 일반적으로 ClickHouse 또는 Druid와 같은 OLAP 데이터베이스에서 수행된다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231207221913126.png" alt=""></p>
+<h2 id="Step-4-Wrap-Up"><a href="#Step-4-Wrap-Up" class="headerlink" title="Step 4 - Wrap Up"></a>Step 4 - Wrap Up</h2><p>이 포스트에서는 페이스북이나 구글 규모의 광고 클릭 이벤트 집계 시스템을 설계하는 과정을 살펴보며 아래에 대해 다루었다.</p>
+<ul>
+<li>Data model and API design.</li>
+<li>Use MapReduce paradigm to aggregate ad click events.</li>
+<li>Scale the message queue, aggregation service, and database.</li>
+<li>Mitigate hotspot issue.</li>
+<li>Monitor the system continuously.</li>
+<li>Use reconciliation to ensure correctness.</li>
+<li>Fault tolerance</li>
+</ul>
+<p>광고 클릭 이벤트 집계 시스템은 전형적인 빅데이터 처리 시스템이다. 아파치 카프카, 아파치 플링크, 아파치 스파크와 같은 업계 표준 솔루션에 대한 사전 지식이나 경험이 있다면 이해와 설계가 더 쉬울 것이다.</p>
+<h2 id="Chapter-Summary"><a href="#Chapter-Summary" class="headerlink" title="Chapter Summary"></a>Chapter Summary</h2><p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231207222047472.png" alt=""></p>
+<!-- flag of hidden posts --></div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined">Song Hayoung</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="https://songhayoung.github.io/2023/12/04/System%20Design/ByteByteGo/book/ad-click-event-aggregation/">https://songhayoung.github.io/2023/12/04/System%20Design/ByteByteGo/book/ad-click-event-aggregation/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/System-Design/">System Design</a></div><nav id="pagination"></nav><div id="gitalk-container"></div><script>var gitalk = new Gitalk({
+  clientID: '3604b61642355579f55e',
+  clientSecret: 'f552120f18ac5aee3f6297e05e97d94c0a25cd4b',
+  repo: 'SongHayoung.github.io',
+  owner: 'SongHayoung',
+  admin: 'SongHayoung',
+  id: md5(decodeURI(location.pathname)),
+  language: 'en'
+})
+gitalk.render('gitalk-container')</script></div></div><footer class="footer-bg" style="background-image: url(https://xxxx.jpg)"><div class="layout" id="footer"><div class="copyright">&copy;2020 - 2023 By Song Hayoung</div><div class="framework-info"><span>Driven - </span><a target="_blank" rel="noopener" href="http://hexo.io"><span>Hexo</span></a><span class="footer-separator">|</span><span>Theme - </span><a target="_blank" rel="noopener" href="https://github.com/Molunerfinn/hexo-theme-melody"><span>Melody</span></a></div><div class="footer_custom_text">Learning how to walk slowly to not miss important things</div><div class="busuanzi"><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><span id="busuanzi_container_page_pv"><i class="fa fa-file"></i><span id="busuanzi_value_page_pv"></span><span></span></span></div></div></footer><i class="fa fa-arrow-up" id="go-up" aria-hidden="true"></i><script src="https://cdn.jsdelivr.net/npm/animejs@latest/anime.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@latest/velocity.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-ui-pack@latest/velocity.ui.min.js"></script><script src="/js/utils.js?version=1.7.0"></script><script src="/js/fancybox.js?version=1.7.0"></script><script src="/js/sidebar.js?version=1.7.0"></script><script src="/js/copy.js?version=1.7.0"></script><script src="/js/fireworks.js?version=1.7.0"></script><script src="/js/transition.js?version=1.7.0"></script><script src="/js/scroll.js?version=1.7.0"></script><script src="/js/head.js?version=1.7.0"></script><script src="/js/search/algolia.js"></script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+    processEscapes: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  },
+  CommonHTML: {
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "HTML-CSS": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "SVG": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  }
+});
+</script><script type="text/x-mathjax-config">MathJax.Hub.Queue(function() {
+  var all = MathJax.Hub.getAllJax(), i;
+  for (i=0; i < all.length; i += 1) {
+    all[i].SourceElement().parentNode.className += ' has-jax';
+  }
+});
+</script><script src="https://cdn.jsdelivr.net/npm/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><script>if(/Android|webOS|iPhone|iPod|iPad|BlackBerry/i.test(navigator.userAgent)) {
+  $('#nav').addClass('is-mobile')
+  $('footer').addClass('is-mobile')
+  $('#top-container').addClass('is-mobile')
+}</script><div class="search-dialog" id="algolia-search"><div class="search-dialog__title" id="algolia-search-title">Algolia</div><div id="algolia-input-panel"><div id="algolia-search-input"></div></div><hr><div id="algolia-search-results"><div id="algolia-hits"></div><div id="algolia-pagination"></div><div id="algolia-stats"></div></div><span class="search-close-button"><i class="fa fa-times"></i></span></div><div class="search-mask"></div></body></html>

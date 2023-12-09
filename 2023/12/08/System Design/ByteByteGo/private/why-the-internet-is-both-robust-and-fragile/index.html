@@ -1,0 +1,157 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="description" content="[ByteByteGo] Why the Internet Is Both Robust and Fragile	"><meta name="keywords" content="System Design"><meta name="author" content="Song Hayoung"><meta name="copyright" content="Song Hayoung"><title>[ByteByteGo] Why the Internet Is Both Robust and Fragile	 | SUMFIのBlog</title><meta name="robots" content="noindex"><link rel="shortcut icon" href="/songcon.ico"><link rel="stylesheet" href="/css/index.css?version=1.7.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@latest/css/font-awesome.min.css?version=1.7.0"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css?version=1.7.0"><meta name="format-detection" content="telephone=no"><meta http-equiv="x-dns-prefetch-control" content="on"><link rel="dns-prefetch" href="https://cdn.jsdelivr.net"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.css"><script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.js" defer></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@latest/dist/gitalk.min.js"></script><script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.10.0/js/md5.min.js"></script><link rel="dns-prefetch" href="https://www.google-analytics.com"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-169368422-1', 'auto');
+ga('send', 'pageview');</script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: {"appId":"7LZ6OJ4D6C","apiKey":"9a84e13f74ea78c3fd54512c10139c56","indexName":"git blog","hits":{"per_page":10},"languages":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}.","hits_stats":"${hits} results found in ${time} ms"}},
+  localSearch: undefined,
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  }
+} </script><meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/rss2.xml" title="SUMFIのBlog" type="application/rss+xml">
+</head><body><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar" data-display="true"><div class="toggle-sidebar-info text-center"><span data-toggle="Toggle article">Toggle site</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">Catalog</div><div class="sidebar-toc__progress"><span class="progress-notice">You've read</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Why-the-Internet-Is-Both-Robust-and-Fragile"><span class="toc-number">1.</span> <span class="toc-text">Why the Internet Is Both Robust and Fragile</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#DNS-Recap"><span class="toc-number">2.</span> <span class="toc-text">DNS Recap</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#IP-Addresses"><span class="toc-number">2.1.</span> <span class="toc-text">IP Addresses</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#DNS-Resolution-Step-by-Step"><span class="toc-number">2.2.</span> <span class="toc-text">DNS Resolution Step-by-Step</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#How-DNS-Resolvers-Simplify-the-Process"><span class="toc-number">2.3.</span> <span class="toc-text">How DNS Resolvers Simplify the Process</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#How-Packets-Traverse-the-Global-Internet"><span class="toc-number">3.</span> <span class="toc-text">How Packets Traverse the Global Internet</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#BGP-Primer"><span class="toc-number">3.1.</span> <span class="toc-text">BGP Primer</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#BGP-Reachability-Information"><span class="toc-number">3.2.</span> <span class="toc-text">BGP Reachability Information</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Facebook-Global-Outage"><span class="toc-number">4.</span> <span class="toc-text">Facebook Global Outage</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Forensics"><span class="toc-number">4.1.</span> <span class="toc-text">Forensics</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Recovery"><span class="toc-number">4.2.</span> <span class="toc-text">Recovery</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Key-Takeaways"><span class="toc-number">5.</span> <span class="toc-text">Key Takeaways</span></a></li></ol></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="https://avatars3.githubusercontent.com/u/37806785?s=460&amp;u=8c68d685faf7c5280cfbd736a6b1730b55fb4203&amp;v=4"></div><div class="author-info__name text-center">Song Hayoung</div><div class="author-info__description text-center"></div><div class="follow-button"><a target="_blank" rel="noopener" href="https://www.linkedin.com/in/hayoung-song-9523b61bb/">Follow Me</a></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="/archives"><span class="pull-left">Articles</span><span class="pull-right">9744</span></a><a class="author-info-articles__tags article-meta" href="/tags"><span class="pull-left">Tags</span><span class="pull-right">191</span></a><a class="author-info-articles__categories article-meta" href="/categories"><span class="pull-left">Categories</span><span class="pull-right">60</span></a></div><hr><div class="author-info-links"><div class="author-info-links__title text-center">VISITED</div><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Seoul Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Jeju Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">British Columbia Canada</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Boracay Philippines</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">三重　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">大阪　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">名古屋　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">静岡　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">札幌　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">京都　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Bangkok Thailand</a></div></div></div><div id="content-outer"><div id="top-container" style="background-image: url(https://xxxx.jpg)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="/">SUMFIのBlog</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus">   <a class="site-page" href="/">Home</a><a class="site-page" href="/archives">Archives</a><a class="site-page" href="/tags">Tags</a><a class="site-page" href="/categories">Categories</a><a class="site-page" href="/about">About</a></span><span class="pull-right"><a class="site-page social-icon search"><i class="fa fa-search"></i><span> Search</span></a></span></div><div id="post-info"><div id="post-title">[ByteByteGo] Why the Internet Is Both Robust and Fragile	</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2023-12-08</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/">System Design</a><i class="fa fa-angle-right" aria-hidden="true"></i><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/Byte-Byte-Go/">Byte Byte Go</a><div class="post-meta-wordcount"><span>Word count: </span><span class="word-count">2.1k</span><span class="post-meta__separator">|</span><span>Reading time: 13 min</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div class="article-container" id="post-content"><h2 id="Why-the-Internet-Is-Both-Robust-and-Fragile"><a href="#Why-the-Internet-Is-Both-Robust-and-Fragile" class="headerlink" title="Why the Internet Is Both Robust and Fragile"></a>Why the Internet Is Both Robust and Fragile</h2><span id="more"></span>
+<p>인터넷이 불안정해지고 페이스북이 사라졌다. 2021년 10월, 약 6시간 동안 페이스북의 앱이 온라인 세상에서 사라졌다. 이번 포스트에서는 이 심각한 서비스 중단 사태를 자세히 살펴봄으로써 전세계 인터넷을 지원하는 더 깊은 메커니즘을 이해한다.</p>
+<ul>
+<li>루트 서버에서 도메인 확인에 이르기 까지 DNS resolution이 어떻게 동작하는지 알아본다</li>
+<li>분산화된 인터넷을 하나로 묶어주는 접착제인 border gateway protocol(BGP)에 대해 설명한다</li>
+<li>Facebook의 인프라가 사라지게 된 일련의 사건을 살펴본다</li>
+<li>온라인에서 정보 흐름을 유지하는 핵심 프로토콜의 능력과 취약성에 대해 살펴본다.</li>
+</ul>
+<p>DNS와 BGP의 내부를 들여다봄으로써 우리 모두를 온라인에 연결해 주는 인프라에 대해 알아볼 수 있다. 최근 포스트에서는 DNS에 대해 심층적으로 살펴보았다. 이번 포스트에서는 앞서 배운 내용을 예로 들어 인터넷 자체가 어떻게 구성되는지 살펴본다.</p>
+<p>이런 추상적 개념을 현실에 적용하기 위해 2021년 10월 DNS 서버가 지도에서 사라져 발생한 Facebook의 글로벌 서비스 중단 사태를 살펴본다. </p>
+<h2 id="DNS-Recap"><a href="#DNS-Recap" class="headerlink" title="DNS Recap"></a>DNS Recap</h2><h3 id="IP-Addresses"><a href="#IP-Addresses" class="headerlink" title="IP Addresses"></a>IP Addresses</h3><p>인터넷의 모든 컴퓨터에는 통신에 사용하는 숫자 IP 주소가 있다는 개념부터 시작한다. IP 주소에는 두 가지 유형이 있다.</p>
+<ul>
+<li>IPv4: 점으로 구분된 8비트 숫자 4개로 구성된 32비트 숫자(e.g., 192.168.1.1)</li>
+<li>IPv6: 16진수 형식으로 작성된 128비트 숫자(e.g. 2001:db8::1)</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231208192732068.png" alt=""></p>
+<p>인터넷은 훨씬 더 넓은 주소 공간을 지원하기 때문에 IPv6를 더 광범위하게 채택하는 방향으로 서서히 움직이고 있다. 이번 포스트에서는 점으로 구분된 숫자가 예시를 설명하기 쉽기 때문에 간단히 설명하기 위해 IPv4에 초점을 맞춘다.</p>
+<p>이제 IP 주소의 기본 사항을 살펴보았으니 DNS가 도메인 네임을 이러한 기본 IP 주소에 매핑하는 방법을 다시 한 번 정리해 보자.</p>
+<h3 id="DNS-Resolution-Step-by-Step"><a href="#DNS-Resolution-Step-by-Step" class="headerlink" title="DNS Resolution Step-by-Step"></a>DNS Resolution Step-by-Step</h3><p>브라우저에 blog.bytebytego.com과 같은 도메인 이름을 입력하면 컴퓨터가 해당 이름의 IP 주소를 조회해야 한다. 이 작업은 DNS를 통해 수행된다. 컴퓨터는 recursive resolver라고 불리는 ISP 또는 Google의 8.8.8.8, Cloudflare의 1.1.1.1과 같은 주요 프로바이더에서 운영하는 recursive resolver에 연결해 시작한다.</p>
+<p>그런 다음 recursive resolver는 사용자를 대신해 루트 서버부터 시작해 DNS 계층 구조를 쿼리한다.</p>
+<p>이런 루트 DNS서버는 <a target="_blank" rel="noopener" href="https://www.iana.org/domains/root/servers">Internet Assigned Numbers Authority</a>에서 관리하는 잘 알려진 공용 IP 주소를 가지고 있다. 전 세계적으로 13개의 IP 주소가 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231208193128751.png" alt=""></p>
+<p>서버는 전 세계 여러 기관에서 유지 관리 및 운영한다. 기업, 교육 기관, 정부, 다양한 비영리 단체 등이 이에 해당한다. 이런 모든 루트 서버를 제어하는 단일 주체는 없다.</p>
+<p>이 글을 쓰는 현재 이 13개의 IP 주소는 약 1700개의 서버 인스턴스에 걸쳐 있다. 즉, 각 IP 주소는 두 개 이상의 서버에서 서비스를 제공한다. 이 13개의 IP 주소가 authoritative root servers라는 것을 기억하고 있을 것이다. 이 중 하나에 요청을 보내 IP 주소를 조회할 수 있다.</p>
+<p>루트 서버 중 하나에서 DNS 조회를 수행하는 예를 살펴보자. dig 명령을 사용해 루트 서버에 blog.bytebytego.com을 확인하도록 요청할 수 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231208193330244.png" alt=""></p>
+<p>IP주소 202.12.27.33은 루트 서버인 m.root-servers.net이다. “ANSWER: 0” 은 대상 도메인의 IP 주소가 없다는 말이다. 하지만 알고있는 13개의 “.com” 네임 서버인 “AUTHORITY: 13” 를 제공했다.</p>
+<p>루트 서버는 타겟 도메인의 실제 IP 주소를 보유하고 있지 않다. 이에 대한 답변을 제공하는 대신 다음과 같은 13개의 .com TLD 네임 서버를 제공한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231208193500308.png" alt=""></p>
+<p> “Additional Section”을 통해 IP주소까지 제공한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231208193547299.png" alt=""></p>
+<p>루트 서버는 답을 알 수 없지만 .com 서버 중 하나에 질의하라고 한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231208193621333.png" alt=""></p>
+<p>최종 결과는 받지 못했지만 거의 근접했다. 이 질의는 bytebytego.com에 대한 2개의 authoritative name servers와 해당 IP 주소를 반환했다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231208193841198.png" alt=""></p>
+<p>이제 이 서버중 하나에 질의를 보내보자.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231208193858168.png" alt=""></p>
+<p>이제 canonical name을 가리키는 CNAME 레코드를 얻었다. 최종 IP 주소를 얻기 위해 계속 쿼리할 수 있다.</p>
+<h3 id="How-DNS-Resolvers-Simplify-the-Process"><a href="#How-DNS-Resolvers-Simplify-the-Process" class="headerlink" title="How DNS Resolvers Simplify the Process"></a>How DNS Resolvers Simplify the Process</h3><p>컴퓨터가 “blog.bytebytego.com”의 IP 주소를 요청하면 조회 작업을 DNS resolver로 오프로드 한다.</p>
+<p>서버를 지정하지 않고 dig를 실행하면 일반적으로 ISP에서 유지 관리하는 my configured resolver를 사용한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231208194145103.png" alt=""></p>
+<p>리졸버가 전체 재귀 쿼리를 처리하므로 루트에서 시작해 직접 작업할 필요 없이 한 단계로 결과를 얻을 수 있다. 그 뒤에서 리졸버는 앞서 설명한 반복 쿼리를 수행하게 된다. 클라이언트는 최종 IP 주소를 반환 받기 위해 한 번만 요청하면 된다. 이렇게 하면 클라이언트의 관점에서 모든 계층적 단계를 추상화해 DNS 확인을 간소화할 수 있다.</p>
+<h2 id="How-Packets-Traverse-the-Global-Internet"><a href="#How-Packets-Traverse-the-Global-Internet" class="headerlink" title="How Packets Traverse the Global Internet"></a>How Packets Traverse the Global Internet</h2><ul>
+<li>컴퓨터가 이 DNS 서버의 IP 주소 중 하나에 어떻게 도달했을까?</li>
+<li>하나의 IP 주소 뒤에 많은 서버 인스턴스가 있을 수 있으며, 이런 인스턴스는 전 세계에 존재한다. 이런 서버 중 어떤 서버에 요청이 도달할지 어떻게 그리고 무엇이 결정될까?</li>
+</ul>
+<p>이 것이 주제의 핵심이다. 인터넷은 어떻게 구성되었을까? 애초에 우리의 요청이 어떻게 DNS 서버에 실제로 도달할까?</p>
+<h3 id="BGP-Primer"><a href="#BGP-Primer" class="headerlink" title="BGP Primer"></a>BGP Primer</h3><p>인터넷은 네트워크와 네트워크가 연결되는 네트워크 위에 구축된다.  인터넷은 단일 컴퓨터 네트워크가 아니라 컴퓨터 네트워크의 네트워크로 구성된다. 이런 네트워크를 Autonomous Systems(ASes)라 한다.</p>
+<p>AS(Autonomous System)은 단일 기업 또는 관리자의 통제 하에 있는 네트워크 또는 IP 네트워크 그룹이다. AS에는 명확한 경계와 라우팅 정책이 있다. 인터넷에는 수많은 자율 시스템이 존재한다. 이러한 네트워크는 기업, ISP, 클라우드 제공업체, 대학, 정부 등이 운영하는 네트워크다.</p>
+<p>각 AS에는 지역 인터넷 레지스트리에서 할당된 고유한 AS 번호(ASN)가 있다. AS는 BGP(border gateway protocol)을 사용해 인접한 AS와 라우팅 및 도달 가능성에 대한 정보를 교환한다. 두 AS간의 방향 연결을 BGP 피어링 관계라고 한다.</p>
+<p>BGP는 인터넷을 하나로 묶는 핵심 라우팅 프로토콜로, 이런 AS가 패킷을 출발지에서 목적지로 전송하는 방법을 알아내어 그 과정에서 여러 중간 AS를 경유할 수 있다. BGP 라우팅은 경로 벡터를 기반으로 작동해 AS는 자신이 도달할 수 있는 경로를 이웃에게 알리고 이 정보는 인터넷을 통해 전파된다. 예제를 살펴보자.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231208194800245.png" alt=""></p>
+<p>여기에는 AS1, AS2, AS3, AS4의 네 가지 AS가 있다. 각 AS의 내부 라우팅은 AS자체의 책임이다. BGP는 AS간의 라우팅을 처리한다.</p>
+<p>AS1은 AS2와 AS3과 직접 피어링된다. 즉, AS1은 AS2 및 AS3의 목적지로 직접 트래픽을 보낼 수 있으며, 그 반대의 경우도 마찬가지다. AS2의 트래픽이 AS3에 도달하려면 먼저 AS1을 통과하거나 AS4를 통해 전송되어야 한다.</p>
+<p>이런 AS의 엣지에 있는 라우터 간에 BGP 이웃 관계가 구성된다. 이러한 BGP 라우터는 도달 가능성 정보를 교환한다. 즉, “나는 이 대상 네트워크에 도달할 수 있다.” 라고 말한다. 따라서 BGP에는 두 가지 중요한 기능이 있다.</p>
+<ul>
+<li>AS가 직접 또는 간접적으로 연결할 수 있는 대상을 파악하게 한다. 이 도달 가능성 정보는 네트워크를 통해 전파된다.</li>
+<li>각 AS가 라우터의 다른 AS의 목적지로 트래픽을 전송할 때 사용할 최적의 경로를 결정하는데 도움이 된다. 예를 들어, AS2의 라우터는 AS3로 향하는 패킷을 AS1을 통해 보낼지, 아니면 AS4를 통해 보낼지를 결정해야 한다.</li>
+</ul>
+<p>라우터의 BGP 결정 프로세스는 성능, 비용 등과 같은 설정 정책을 기반으로 이를 결정한다. 이것이 BGP가 글로벌 인터넷에서 데이터 패킷을 출발지에서 목적지로 안내하는 방식이다.</p>
+<h3 id="BGP-Reachability-Information"><a href="#BGP-Reachability-Information" class="headerlink" title="BGP Reachability Information"></a>BGP Reachability Information</h3><p>BGP의 핵심 기능은 서로 다른 AS에 있는 라우터가 도달 가능성 정보를 교환해 직접 연결된 이웃 라우터에 “대상 네트워크에 도달할 수 있다”는 정보를 알리는 것이다. BGP 프로세스는 아래와 같이 동작한다.</p>
+<p>AS1 내부의 BGP 라우터는 AS2 및 AS3 내부의 BGP 라우터와 BGP 이웃 관계 및 세션을 설정한다.</p>
+<p>AS1 라우터는 AS2 및 AS3 라우터에 “AS1 네트워크에 연결 가능하며 AS2와 AS3에 직접 연결할 수 있음”과 같은 업데이트 메세지를 보낸다.</p>
+<p>AS2 라우터가 이 BGP 업데이트를 받으면 자체 BGP 라우팅 테이블을 업데이트해 표시한다.</p>
+<ul>
+<li>AS2의 네트워크에 직접 연결 (self)</li>
+<li>기존 이웃 관계에서 AS1 및 AS4에 직접 연결됨</li>
+<li>AS1 이웃을 통해 AS3의 네트워크에 대한 새로 학습된 도달 가능성(2 hops)</li>
+</ul>
+<p>그런 다음 AS2 라우터는 이 업데이트된 라우팅 정보를 가져와 AS4의 라우터를 포함한 이웃 라우터에 자체 BGP 경로 업데이트를 보낸다. 이 업데이트를 통해 AS4 라우터는 이제 AS2를 통해 AS1에 도달할 수 있다는 것을 알게 된다.</p>
+<p>이러한 BGP 라우팅 정보의 전파를 통해 각 라우터는 이웃 라우터를 통해 인터넷 전반의 네트워크 경로를 재귀적으로 학습할 수 있다. 라우터는 BGP 라우팅 테이블을 구축해 최적의 경로를 사용해 트래픽 흐름을 지시한다.</p>
+<p>DNS의 예로 돌아가서, 내 컴퓨터가 DNS 조회를 요청하면 BGP는 요청이 DNS 서버의 홈 AS에 도달할 때까지 상호 연결된 여러 AS를 통해 요청을 라우팅할 수 있도록 한다. 응답은 일부 BGP 라우팅을 역방향으로(반드시 동일한 경로일 필요는 없음) 따라 나에게 돌아온다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231208205516999.png" alt=""></p>
+<h2 id="Facebook-Global-Outage"><a href="#Facebook-Global-Outage" class="headerlink" title="Facebook Global Outage"></a>Facebook Global Outage</h2><p>지금 까지 배운 내용을 적용해 2021년 10월에 발생한 Facebook 글로벌 서비스 중단 사태를 살펴보자. 아래는 Facebook 에서 밝힌 <a target="_blank" rel="noopener" href="https://engineering.fb.com/2021/10/05/networking-traffic/outage-details/">내용</a>이다.</p>
+<blockquote>
+<p>One of the jobs performed by our smaller facilities is to respond to DNS queries. DNS is the address book of the internet, enabling the simple web names we type into browsers to be translated into specific server IP addresses. Those translation queries are answered by our authoritative name servers that occupy well known IP addresses themselves, which in turn are advertised to the rest of the internet via another protocol called the border gateway protocol (BGP). </p>
+<p>To ensure reliable operation, <strong>our DNS servers disable those BGP advertisements if they themselves can not speak to our data centers</strong>, since this is an indication of an unhealthy network connection. <strong>In the recent outage the entire backbone was removed from operation, making these locations declare themselves unhealthy and withdraw those BGP advertisements</strong>. The end result was that our DNS servers became unreachable even though they were still operational. This made it impossible for the rest of the internet to find our servers. </p>
+</blockquote>
+<p>간단히 말해, Facebook의 모든 신뢰할 수 있는 네임 서버에 연결할 수 없었고, 그 때문에 아무도 Facebook 서비스의 IP 주소를 얻을 수 없었다.</p>
+<p>다시 “dig”를 실행해 얼마나 많은 authoritative servers가 있는지 확인해보자. 이를 위해 .com의 TLD 네임 서버에 질의를 한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231208205819116.png" alt=""></p>
+<p>Facebook에는 4개의 authoritative servers가 있다. 그 날 어떤 일이 벌어졌는지 시뮬레이션을 해보자.</p>
+<h3 id="Forensics"><a href="#Forensics" class="headerlink" title="Forensics"></a>Forensics</h3><p>ISP는 autonomous system으로 운영된다. 이런 자율 시스템 중 하나의 라우팅 테이블을 들여다볼 수 있다면 수십만 개의 경로를 볼 수 있을 것이다. 각 경로는 대상 네트워크의 주소 접두사를 나타내며, 잠재적으로 큰 IP 주소 블럭을 포함할 수 있다. 총체적으로 이런 경로를 직접 피어링 연결 또는 여러 홉을 통해 전체 인터넷을 커버하는 것을 목표로 한다.</p>
+<p>모든 자율 시스템은 라우터 전반에 걸쳐 비슷한 라우팅 테이블 설정을 갖는다. Facebook 역시 자체적으로 AS를 운영한다. Facebook의 복잡한 네트워크 구조는 공개되지 않았지만, 설명의 목적으로 대략적인 작동 방식을 보여주는 가상의 라우터를 만들 수 있다.</p>
+<p>이제 ISP가 facebook.com 질의 요청을 받았을 때 어떤 일이 일어났는지 추적해 보자. 이 ISP의 라우터는 라우팅 테이블을 참조해 129.134.30.12가 Facebook의 AS인 AS32934에 속해있음을 확인한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231208210153157.png" alt=""></p>
+<p>이 ISP라우터를 ISP-R1이라 부른자. 이 라우터는 Facebook의 ASN 32934로 직접 연결되는 링크를 발견하고 그에 따라 패킷을 전달했다. 그런 다음 패킷은 Facebook의 엣지 라우터 중 하나인 FB-R1에 도달했다. FB-R1은 이 패킷이 Facebook의 authoritative nameserver인 129.134.30.12로 향하는 것을 인식했다.</p>
+<p>따라서 일반적으로 FB-R1은 이 패킷을 내부적으로 129.134.30.12에 도달하도록 라우팅한다. 그러면 네임서버는 facebook.com의 IP 주소로 응답한다. 이 응답은 Facebook의 AS32934에서 ISP와의 직간접적인 피어 연결을 통해 다시 내 컴퓨터로 흘러들어간다. 이것이 정상적으로 DNS 조회가 작동하는 방식이다.</p>
+<p>하지만 그 날, Facebook의 내부 네트워크에서 커넥션을 방해하는 문제가 발생했다. Facebook은 백본이 완전히 작동을 멈췄다고 했다. 이는 Facebook의 라우터 중 어느 것도 내부적으로 서로 통신할 수 없다는 것을 의미했다. 따라서 FB-R1은 외부에서 들어오는 패킷을 수신할 수는 있지만, Facebook 네트워크 내에서 라우팅할 수 있는 방법이 없었다.</p>
+<p>Facebook은 DNS 서버가 데이터 센터와 통신할 수 없는 경우 해당 BGP avdertisements를 비활성화하도록 설정되어 있다고 밝혔다. 해당 경로가 철회되면 FB-R1을 포함한 Facebook의 모든 BGP 라우터가 BGP 업데이트를 전송해 모든 ISP 피어에게 경로가 다운되어 연결할 수 없다고 알렸다.</p>
+<p>이 메세지를 받으면 ISP 라우터는 라우팅 테이블을 업데이트해 중요한 Facebook 경로의 prefix를 제거한다. 그 순간 ISP-R1의 라우팅 테이블을 검사하면 이전에 존재했던 Facebook 경로와 큰 차이가 생긴다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231208210748093.png" alt=""></p>
+<p>Facebook으로 라우팅하는 방법을 모르는 상태에서 다시 DNS 요청이 들어왔을 때, ISP-R1이 끊겼다. Facebook DNS 서버가 더 이상 인터넷에 존재하지 않게 되는 순간이다. 라우팅 시스템이 Facebook 네트워크의 중요한 부분에 연결할 수 없다고 판단한 것이 DNS resolver 실패의 원인이다. 네임서버는 여전히 작동 중이었지만 인터넷에서 패킷을 전송할 수 있는 경로가 없어졌다.</p>
+<p>이는 BGP의 강력한 성능과 취약성을 잘 보여준다. AS가 경로를 철회하면 몇 분 안에 인터넷에서 사라진다.</p>
+<h3 id="Recovery"><a href="#Recovery" class="headerlink" title="Recovery"></a>Recovery</h3><p>백엔드 문제가 해결된 후 Facebook은 제거된 prefix를 BGP 피어에게 꾸준히 알리기 시작했다. Facebook은 전 세계 ISP와 피어링되는 수많은 엣지 라우터를 운영하고 있다. 몇 시간 만에 대부분의 주요 지역에서 다시 접속할 수 있는 충분한 경로가 복구되었다. 하지만 BGP의 분산된 특성으로 인해 전 세계 모든 제공업체가 복구된 경로르 파악하는데 시간이 걸렸다. 결국 전 세계 모든 네트워크에서 Facebook AS32934의 모든 경로에 다시 연결할 수 있게 될 떄까지 몇 시간 동안 접속 불안정이 간헐적으로 이루어졌다.</p>
+<p>이 사례는 짧은 장애도 핵심 BGP 라우팅에 큰 영향을 미칠 수 있음을 보여준다. 또한 DNS에 대한 인터넷의 의존도를 강조한다. 라우팅 시스템이 DNS 서버가 존재하지 않는다고 판단하면 앱이 작동을 멈추게 된다.</p>
+<h2 id="Key-Takeaways"><a href="#Key-Takeaways" class="headerlink" title="Key Takeaways"></a>Key Takeaways</h2><ul>
+<li>인터넷은 BGP를 사용해 라우팅 정보를 교환하는 분산형 네트워크의 웹이다.</li>
+<li>BGP를 통해 각 AS는 전체 인터넷을 포괄하는 라우팅 테이블을 구축할 수 있다.</li>
+<li>AS가 BGP 경로를 철회하면 해당 네트워크는 글로벌 연결에서 사라진다.</li>
+<li>DNS 서버는 BGP에 읜존하여 인터넷을 통해 자신을 알린다.</li>
+<li>DNS 서버에 연결할 수 없게 되면 종속 앱과 사이트가 실패한다.</li>
+</ul>
+<p>이는 악명 높은 Facebook 서비스 중단에 대한 인사이트를 제공한다. 우려스럽기는 하지만 핵심 인터넷 인프라의 광범위한 이중화 덕분에 이런 중단은 드물게 발생한다.</p>
+<p>하지만 100% 신뢰할 수 있는 시스템은 없다. 인터넷은 복잡하기 때문에 주요 라우팅 또는 DNS 구성 요소에 장애가 발생하면 아무리 규모가 큰 사이트라도 여전히 취약할 수 있다.</p>
+<!-- flag of hidden posts --></div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined">Song Hayoung</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="https://songhayoung.github.io/2023/12/08/System%20Design/ByteByteGo/private/why-the-internet-is-both-robust-and-fragile/">https://songhayoung.github.io/2023/12/08/System%20Design/ByteByteGo/private/why-the-internet-is-both-robust-and-fragile/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/System-Design/">System Design</a></div><nav id="pagination"></nav><div id="gitalk-container"></div><script>var gitalk = new Gitalk({
+  clientID: '3604b61642355579f55e',
+  clientSecret: 'f552120f18ac5aee3f6297e05e97d94c0a25cd4b',
+  repo: 'SongHayoung.github.io',
+  owner: 'SongHayoung',
+  admin: 'SongHayoung',
+  id: md5(decodeURI(location.pathname)),
+  language: 'en'
+})
+gitalk.render('gitalk-container')</script></div></div><footer class="footer-bg" style="background-image: url(https://xxxx.jpg)"><div class="layout" id="footer"><div class="copyright">&copy;2020 - 2023 By Song Hayoung</div><div class="framework-info"><span>Driven - </span><a target="_blank" rel="noopener" href="http://hexo.io"><span>Hexo</span></a><span class="footer-separator">|</span><span>Theme - </span><a target="_blank" rel="noopener" href="https://github.com/Molunerfinn/hexo-theme-melody"><span>Melody</span></a></div><div class="footer_custom_text">Learning how to walk slowly to not miss important things</div><div class="busuanzi"><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><span id="busuanzi_container_page_pv"><i class="fa fa-file"></i><span id="busuanzi_value_page_pv"></span><span></span></span></div></div></footer><i class="fa fa-arrow-up" id="go-up" aria-hidden="true"></i><script src="https://cdn.jsdelivr.net/npm/animejs@latest/anime.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@latest/velocity.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-ui-pack@latest/velocity.ui.min.js"></script><script src="/js/utils.js?version=1.7.0"></script><script src="/js/fancybox.js?version=1.7.0"></script><script src="/js/sidebar.js?version=1.7.0"></script><script src="/js/copy.js?version=1.7.0"></script><script src="/js/fireworks.js?version=1.7.0"></script><script src="/js/transition.js?version=1.7.0"></script><script src="/js/scroll.js?version=1.7.0"></script><script src="/js/head.js?version=1.7.0"></script><script src="/js/search/algolia.js"></script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+    processEscapes: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  },
+  CommonHTML: {
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "HTML-CSS": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "SVG": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  }
+});
+</script><script type="text/x-mathjax-config">MathJax.Hub.Queue(function() {
+  var all = MathJax.Hub.getAllJax(), i;
+  for (i=0; i < all.length; i += 1) {
+    all[i].SourceElement().parentNode.className += ' has-jax';
+  }
+});
+</script><script src="https://cdn.jsdelivr.net/npm/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><script>if(/Android|webOS|iPhone|iPod|iPad|BlackBerry/i.test(navigator.userAgent)) {
+  $('#nav').addClass('is-mobile')
+  $('footer').addClass('is-mobile')
+  $('#top-container').addClass('is-mobile')
+}</script><div class="search-dialog" id="algolia-search"><div class="search-dialog__title" id="algolia-search-title">Algolia</div><div id="algolia-input-panel"><div id="algolia-search-input"></div></div><hr><div id="algolia-search-results"><div id="algolia-hits"></div><div id="algolia-pagination"></div><div id="algolia-stats"></div></div><span class="search-close-button"><i class="fa fa-times"></i></span></div><div class="search-mask"></div></body></html>
