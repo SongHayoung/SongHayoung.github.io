@@ -1,0 +1,389 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="description" content="[System Design] Distributed Email Service"><meta name="keywords" content="System Design"><meta name="author" content="Song Hayoung"><meta name="copyright" content="Song Hayoung"><title>[System Design] Distributed Email Service | SUMFIのBlog</title><meta name="robots" content="noindex"><link rel="shortcut icon" href="/songcon.ico"><link rel="stylesheet" href="/css/index.css?version=1.7.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@latest/css/font-awesome.min.css?version=1.7.0"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css?version=1.7.0"><meta name="format-detection" content="telephone=no"><meta http-equiv="x-dns-prefetch-control" content="on"><link rel="dns-prefetch" href="https://cdn.jsdelivr.net"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.css"><script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.js" defer></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@latest/dist/gitalk.min.js"></script><script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.10.0/js/md5.min.js"></script><link rel="dns-prefetch" href="https://www.google-analytics.com"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-169368422-1', 'auto');
+ga('send', 'pageview');</script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: {"appId":"7LZ6OJ4D6C","apiKey":"9a84e13f74ea78c3fd54512c10139c56","indexName":"git blog","hits":{"per_page":10},"languages":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}.","hits_stats":"${hits} results found in ${time} ms"}},
+  localSearch: undefined,
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  }
+} </script><meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/rss2.xml" title="SUMFIのBlog" type="application/rss+xml">
+</head><body><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar" data-display="true"><div class="toggle-sidebar-info text-center"><span data-toggle="Toggle article">Toggle site</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">Catalog</div><div class="sidebar-toc__progress"><span class="progress-notice">You've read</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Distributed-Email-Service"><span class="toc-number">1.</span> <span class="toc-text">Distributed Email Service</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Step-1-Understand-the-Problem-and-Establish-Design-Scope"><span class="toc-number">2.</span> <span class="toc-text">Step 1 - Understand the Problem and Establish Design Scope</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Non-functional-requirements"><span class="toc-number">2.1.</span> <span class="toc-text">Non-functional requirements</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Back-of-the-envelope-estimation"><span class="toc-number">2.2.</span> <span class="toc-text">Back-of-the-envelope estimation</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Step-2-Propose-High-Level-Design-and-Get-Buy-In"><span class="toc-number">3.</span> <span class="toc-text">Step 2 - Propose High-Level Design and Get Buy-In</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Email-knowledge-101"><span class="toc-number">3.1.</span> <span class="toc-text">Email knowledge 101</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Email-protocols"><span class="toc-number">3.1.1.</span> <span class="toc-text">Email protocols</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Domain-name-service-DNS"><span class="toc-number">3.1.2.</span> <span class="toc-text">Domain name service (DNS)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Attachment"><span class="toc-number">3.1.3.</span> <span class="toc-text">Attachment</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Traditional-mail-servers"><span class="toc-number">3.2.</span> <span class="toc-text">Traditional mail servers</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Traditional-mail-server-architecture"><span class="toc-number">3.2.1.</span> <span class="toc-text">Traditional mail server architecture</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Storage"><span class="toc-number">3.2.2.</span> <span class="toc-text">Storage</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Distributed-mail-servers"><span class="toc-number">3.3.</span> <span class="toc-text">Distributed mail servers</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Email-APIs"><span class="toc-number">3.3.1.</span> <span class="toc-text">Email APIs</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Distributed-mail-server-architecture"><span class="toc-number">3.3.2.</span> <span class="toc-text">Distributed mail server architecture</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Email-sending-flow"><span class="toc-number">3.3.3.</span> <span class="toc-text">Email sending flow</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Email-receiving-flow"><span class="toc-number">3.3.4.</span> <span class="toc-text">Email receiving flow</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Step-3-Design-Deep-Dive"><span class="toc-number">4.</span> <span class="toc-text">Step 3 - Design Deep Dive</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Metadata-database"><span class="toc-number">4.1.</span> <span class="toc-text">Metadata database</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Characteristics-of-email-metadata"><span class="toc-number">4.1.1.</span> <span class="toc-text">Characteristics of email metadata</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Choosing-the-right-database"><span class="toc-number">4.1.2.</span> <span class="toc-text">Choosing the right database</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Data-model"><span class="toc-number">4.1.3.</span> <span class="toc-text">Data model</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Consistency-trade-off"><span class="toc-number">4.1.4.</span> <span class="toc-text">Consistency trade-off</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Email-deliverability"><span class="toc-number">4.2.</span> <span class="toc-text">Email deliverability</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Search"><span class="toc-number">4.3.</span> <span class="toc-text">Search</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Scalability-and-availability"><span class="toc-number">4.4.</span> <span class="toc-text">Scalability and availability</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Step-4-Wrap-Up"><span class="toc-number">5.</span> <span class="toc-text">Step 4 - Wrap Up</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Chapter-summary"><span class="toc-number">6.</span> <span class="toc-text">Chapter summary</span></a></li></ol></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="https://avatars3.githubusercontent.com/u/37806785?s=460&amp;u=8c68d685faf7c5280cfbd736a6b1730b55fb4203&amp;v=4"></div><div class="author-info__name text-center">Song Hayoung</div><div class="author-info__description text-center"></div><div class="follow-button"><a target="_blank" rel="noopener" href="https://www.linkedin.com/in/hayoung-song-9523b61bb/">Follow Me</a></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="/archives"><span class="pull-left">Articles</span><span class="pull-right">9867</span></a><a class="author-info-articles__tags article-meta" href="/tags"><span class="pull-left">Tags</span><span class="pull-right">192</span></a><a class="author-info-articles__categories article-meta" href="/categories"><span class="pull-left">Categories</span><span class="pull-right">60</span></a></div><hr><div class="author-info-links"><div class="author-info-links__title text-center">VISITED</div><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Seoul Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Jeju Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">British Columbia Canada</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Boracay Philippines</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">三重　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">大阪　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">名古屋　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">静岡　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">札幌　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">京都　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Bangkok Thailand</a></div></div></div><div id="content-outer"><div id="top-container" style="background-image: url(https://xxxx.jpg)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="/">SUMFIのBlog</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus">   <a class="site-page" href="/">Home</a><a class="site-page" href="/archives">Archives</a><a class="site-page" href="/tags">Tags</a><a class="site-page" href="/categories">Categories</a><a class="site-page" href="/about">About</a></span><span class="pull-right"><a class="site-page social-icon search"><i class="fa fa-search"></i><span> Search</span></a></span></div><div id="post-info"><div id="post-title">[System Design] Distributed Email Service</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2023-12-11</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/">System Design</a><i class="fa fa-angle-right" aria-hidden="true"></i><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/System-Design-Interview/">System Design Interview</a><div class="post-meta-wordcount"><span>Word count: </span><span class="word-count">4.5k</span><span class="post-meta__separator">|</span><span>Reading time: 27 min</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div class="article-container" id="post-content"><h2 id="Distributed-Email-Service"><a href="#Distributed-Email-Service" class="headerlink" title="Distributed Email Service"></a>Distributed Email Service</h2><span id="more"></span>
+<p>이번 포스트에서는 Gmail, Outlook, 야후 메일과 같은 대규모 이메일 서비스를 설계한다. 인터넷의 발전으로 이메일의 양이 폭발적으로 증가했다. 2020년 Gmail active user는 1.8 Billion이 넘었으며 Outlook의 사용자는 400M이 넘는다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231211211109314.png" alt=""></p>
+<h2 id="Step-1-Understand-the-Problem-and-Establish-Design-Scope"><a href="#Step-1-Understand-the-Problem-and-Establish-Design-Scope" class="headerlink" title="Step 1 - Understand the Problem and Establish Design Scope"></a>Step 1 - Understand the Problem and Establish Design Scope</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">Over the years, email services have changed significantly in complexity and scale. A modern email service is a complex system with many features. There is no way we can design a real-world system in 45 minutes. So before jumping into the design, we definitely want to ask clarifying questions to narrow down the scope.</span><br><span class="line"></span><br><span class="line">Candidate: How many people use the product?</span><br><span class="line">Interviewer: One billion users.</span><br><span class="line"></span><br><span class="line">Candidate: I think the following features are important:</span><br><span class="line"></span><br><span class="line">Authentication.</span><br><span class="line"></span><br><span class="line">Send and receive emails.</span><br><span class="line"></span><br><span class="line">Fetch all emails.</span><br><span class="line"></span><br><span class="line">Filter emails by read and unread status.</span><br><span class="line"></span><br><span class="line">Search emails by subject, sender, and body.</span><br><span class="line"></span><br><span class="line">Anti-spam and anti-virus.</span><br><span class="line"></span><br><span class="line">Interviewer: That’s a good list. We don’t need to worry about authentication. Let’s focus on the other features you mentioned.</span><br><span class="line"></span><br><span class="line">Candidate: How do users connect with mail servers?</span><br><span class="line">Interviewer: Traditionally, users connect with mail servers through native clients that use SMTP, POP, IMAP, and vendor-specific protocols. Those protocols are legacy to some extent, yet still very popular. For this interview, let’s assume HTTP is used for client and server communication.</span><br><span class="line"></span><br><span class="line">Candidate: Can emails have attachments?</span><br><span class="line">Interviewer: Yes.</span><br></pre></td></tr></table></figure>
+<h3 id="Non-functional-requirements"><a href="#Non-functional-requirements" class="headerlink" title="Non-functional requirements"></a>Non-functional requirements</h3><ul>
+<li>Reliability. 이메일 데이터가 손실되지 않아야 한다.</li>
+<li>Availability. 이메일 및 사용자 데이터는 가용성을 보장하기 위해 여러 노드에 자동으로 복제되어야 한다. 또한 부분적인 시스템 장애에도 불구하고 시스템이 계속 작동해야 한다.</li>
+<li>Scalability. 사용자 수가 증가함에 따라 시스템은 증가하는 사용자 및 이메일 수를 처리할 수 있어야 한다. 사용자나 이메일이 증가해도 시스템 성능이 저하되지 않아야 한다.</li>
+<li>Felxibility and extensibility. 유연성 / 확장성이 뛰어난 시스템은 새로운 기능을 추가하거나 새로운 구성 요소를 추가해 성능을 쉽게 개선할 수 있다. POP 및 IMAP와 같은 기존 이메일 프로토콜은 기능이 매우 제한적이다. 따라서 유연성과 확장성 요건을 충족하기 위해 맞춤형 프로토콜이 필요할 수 있다.</li>
+</ul>
+<h3 id="Back-of-the-envelope-estimation"><a href="#Back-of-the-envelope-estimation" class="headerlink" title="Back-of-the-envelope estimation"></a>Back-of-the-envelope estimation</h3><ul>
+<li>1 billion users</li>
+<li>한 사람이 하루에 보내는 평균 이메일 수는 10건이라고 가정.<ul>
+<li>이메일 전송에 대한 QPS = 10^9 * 10 / 10^5 = 100,000</li>
+</ul>
+</li>
+<li>한 사람이 하루에 받는 평균 이메일 수가 40개이고 이메일 메타데이터의 평균 크기가 50KB라고 가정.<ul>
+<li>메타데이터는 첨부 파일을 제외한 이메일과 관련된 모든 것을 의미함</li>
+<li>메타데이터가 데이터베이스에 저장되어 있다고 가정.</li>
+<li>1년간 메타데이터를 유지하기 위한 스토리지 요구 사항 : 10 billion user <em> 40 email per day </em> 365 days * 50KB = 730PB</li>
+</ul>
+</li>
+<li>이메일의 20%에 첨부 파일이 포함되어 있고 평균 첨부 파일 크기가 500KB라고 가정.<ul>
+<li>1년간 첨푸 파일 저장 공간 : 10 billion user <em> 40 email per day </em> 365 days <em> 20% </em> 500KB = 1460PB</li>
+</ul>
+</li>
+</ul>
+<p>이 가정을 통해 우리는 처리하는 데이터의 양이 많다는 것을 알 수 있고, 따라서 분산 데이터베이스 솔루션이 필요할 가능성이 높다.</p>
+<h2 id="Step-2-Propose-High-Level-Design-and-Get-Buy-In"><a href="#Step-2-Propose-High-Level-Design-and-Get-Buy-In" class="headerlink" title="Step 2 - Propose High-Level Design and Get Buy-In"></a>Step 2 - Propose High-Level Design and Get Buy-In</h2><h3 id="Email-knowledge-101"><a href="#Email-knowledge-101" class="headerlink" title="Email knowledge 101"></a>Email knowledge 101</h3><p>이메일을 주고받는 데 사용되는 다양한 이메일 프로토콜이 있다. 역사적으로 대부분의 메일 서버는 POP, IMAP, SMTP와 같은 프로토콜을 사용한다.</p>
+<h4 id="Email-protocols"><a href="#Email-protocols" class="headerlink" title="Email protocols"></a>Email protocols</h4><p><strong>SMTP</strong> : Simple Mail Transfer Protocol은 한 메일 서버에서 다른 메일 서버로 이메일을 보내기 위한 표준 프로토콜이다.</p>
+<p>이메일을 검색하는데 가장 많이 사용되는 프로토콜은 POP(Post Office Protocol)과 IMAP(Internet Mail Access Protocol)로 알려져 있다.</p>
+<p><strong>POP</strong>는 원격 메일 서버에서 로컬 이메일 클라이언트로 이메일을 수신하고 다운로드하기 위한 표준 메일 프로토콜이다. 이메일이 컴퓨터나 휴대폰으로 다운로드되면 이메일 서버에서 삭제되므로 한 대의 컴퓨터나 휴대폰에서만 이메일에 액세스할 수 있다. POP를 사용하려면 메일 클라이언트가 전체 이메일을 다운로드 해야한다. 이메일에 대용량 첨부 파일이 포함되어 있는 경우 시간이 오래걸릴 수 있다. 자세한 내용은 RFC 1939를 참조한다.</p>
+<p><strong>IMAP</strong> 또한 로컬 이메일 클라이언트의 이메일 수신을 위한 표준 메일 프로토콜이다. 이메일을 읽으면 외부 메일 서버에 연결되고 데이터가 로컬 장치로 전송된다. IMAP는 사용자가 메세지를 클릭할 때만 다운로드하고 메일 서버에서 이메일이 삭제되지 않으므로 여러 장치에서 이메일에 액세스할 수 있다. IMAP는 개별 이메일 계정에 가장 널리 사용되는 프로토콜이다. 이메일을 열때까지 이메일 헤더 정보만 다운로드하기 때문에 연결 속도가 느릴 때 적합하다.</p>
+<p><strong>HTTPS</strong>는 엄밀히 말해 메일 프로토콜은 아니지만 특히 웹 기반 이메일의 경우 mailbox에 액세스하는 데 사용할 수 있다. 예를 들어, Outlook은 <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/ActiveSync">ActiveSync</a> 라는 사용자 지정 프로토콜을 통해 HTTPS로 모바일 장치와 통신하는 것이 일반적이다.</p>
+<h4 id="Domain-name-service-DNS"><a href="#Domain-name-service-DNS" class="headerlink" title="Domain name service (DNS)"></a>Domain name service (DNS)</h4><p>DNS 서버는 수신자 도메인의 MX 레코드를 조회하는데 사용된다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231211223509617.png" alt=""></p>
+<p>우선순위 번호는 기본 설정을 나타내며, 우선순위 번호가 낮은 메일 서버가 더 선호된다. 위 경우에선 gmail-smtp-in.l.google.com이 먼저 사용된다. 보내는 메일 서버는 이 메일 서버에 먼저 연결하여 메세지를 보내려고 시도한다. 연결에 실패하면 보내는 메일 서버는 다음으로 우선 순위가 낮은 메일 서버인 alt1.gmail-smtp-in.l.google.com에 연결을 시도한다.</p>
+<h4 id="Attachment"><a href="#Attachment" class="headerlink" title="Attachment"></a>Attachment</h4><p>이메일 첨부 파일은 일반적으로 Base64 인코딩을 사용해 이메일 메세지와 함께 전송된다. 일반적으로 이메일 첨부 파일에는 크기 제한이 있다. 이 크기 제한은 설정 가능하며 기업 / 개인에 따라 다르다. MIME(Multipurpose Internet Mail Extension)은 첨부파일을 인터넷을 통해 전송할 수 있도록 하는 사양이다.</p>
+<h3 id="Traditional-mail-servers"><a href="#Traditional-mail-servers" class="headerlink" title="Traditional mail servers"></a>Traditional mail servers</h3><p>분산 메일 서버에 대해 자세히 알아보기 전에, 이메일 서버 시스템을 확장하는 방법에 대한 좋은 교훈을 얻을 수 있는 전통적인 메일 서버의 역사를 조금 살펴보고 그 작동 방식을 살펴본다. 기존 메일 서버는 일반적으로 단일 서버에서 이메일 사용자가 제한되어 있을 때 작동하는 시스템으로 간주할 수 있다.</p>
+<h4 id="Traditional-mail-server-architecture"><a href="#Traditional-mail-server-architecture" class="headerlink" title="Traditional mail server architecture"></a>Traditional mail server architecture</h4><p>아래는 기존 이메일 서버를 사용해 Alice가 Bob에게 이메일을 보낼 때 어떤 일이 발생하는지 설명한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231211223852161.png" alt=""></p>
+<ol>
+<li>Alice는 Outlook 클라이언트에 로그인해 이메일을 작성하고 전송한다. 이메일이 Outlook 메일 서버로 전송된다. Outlook 클라이언트와 메일 서버 간의 통신 프로토콜은 SMTP다.</li>
+<li>Outlook 메일 서버는 DNS를 쿼리해 수신자의 SMTP 서버 주소를 찾는다. 이 경우 Gmail의 SMTP 서버다. 그런 다음 이메일을 Gmail 서버로 전송한다. 메일 서버간의 통신 프로토콜은 SMTP다.</li>
+<li>Gmail 서버는 이메일을 저장하고 수신자인 Bob이 사용할 수 있도록 한다.</li>
+<li>Bob이 Gmail에 로그인하면 Gmail 클라이언트가 IMAP / POP 서버를 통해 새 이메일을 가져온다.</li>
+</ol>
+<h4 id="Storage"><a href="#Storage" class="headerlink" title="Storage"></a>Storage</h4><p>기존 메일 서버에서는 이메일이 로컬 파일 디렉터리에 저장되고 각 이메일은 고유한 이름을 가진 별도의 파일에 저장된다. 각 사용자는 설정 데이터와 메일 박스를 저장하기 위해 사용자 디렉터리를 관리했다. Maildir은 메일 서버에 이메일 메세지를 저장하는 데 널리 사용되는 방법이였다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231211224205998.png" alt=""></p>
+<p>파일 디렉토리는 사용자 수가 적을 때는 잘 작동했지만 수십억 개의 이메일을 검색하고 백업하는데는 어려움이 있었다. 이메일 양이 증가하고 파일 구조가 복잡해지면서 디스크 I/O는 병목 현상이 발생했다. 또한 로컬 디렉토리는 고가용성 및 안정성 요구 사항을 충족하지 못했다. 디스크가 손상되고 서버가 다운될 수 있다. 보다 안정적인 분산 스토리지 계층이 필요하다.</p>
+<p>이메일 기능은 1960년대 발명된 이래로 텍스트 기반에서 멀티미디어, 스레딩, 검색, 레이블 등 다양한 기능으로 발전해 왔다. 하지만 이메일 프로토콜(POP, IMAP, SMTP)은 오래 전에 발명되어 이런 새로운 기능을 지원하도록 설계되지 않았고, 수십억 명의 사용자를 지원할 수 있도록 확장되지도 않았다.</p>
+<h3 id="Distributed-mail-servers"><a href="#Distributed-mail-servers" class="headerlink" title="Distributed mail servers"></a>Distributed mail servers</h3><p>분산 메일 서버는 최신 사용 사례를 지원하고 확장성 및 복원력 문제를 해결하도록 설계되었다. 이 섹션에서는 이메일 API, 분산 이메일 서버 아키텍처, 이메일 전송 및 이메일 수신 흐름에 대해 다룬다.</p>
+<h4 id="Email-APIs"><a href="#Email-APIs" class="headerlink" title="Email APIs"></a>Email APIs</h4><p>이메일 API는 메일 클라이언트마다 또는 이메일 수명 주기의 여러 단계에서 매우 다른 의미를 가질 수 있다.</p>
+<ul>
+<li>기본 모바일 클라이언트를 위한 SMTP / POP / IMAP API</li>
+<li>발신자와 수신자 메일 서버 간의 SMTP 통신</li>
+<li>모든 기능을 갖춘 대화형 웹 기반 이메일 애플리케이션을 위한 HTTP를 통한 RESTful API</li>
+</ul>
+<p>모든 내용을 다루기는 어렵기에 웹 메일에 가장 중요한 몇 가지 API만 살펴보자. 웹 메일이 통신하는 일반적인 방법은 HTTP 프로토콜을 사용하는 것이다.</p>
+<ul>
+<li>Endpoint<strong>: </strong>POST /v1/messages</li>
+</ul>
+<p>받는 사람, 참조 및 숨은 참조 헤더에 있는 수신자에게 메세지를 보낸다.</p>
+<ul>
+<li>Endpoint<strong>: </strong>GET /v1/folders</li>
+</ul>
+<p>이메일 계정의 모든 폴더를 반환한다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">Response:</span><br><span class="line"></span><br><span class="line">[&#123;id: string        Unique folder identifier.</span><br><span class="line">  name: string      Name of the folder.</span><br><span class="line">                    According to RFC6154 [9], the default folders can be one of</span><br><span class="line">                    the following: All, Archive, Drafts, Flagged, Junk, Sent,</span><br><span class="line">                    and Trash.</span><br><span class="line">  user_id: string   Reference to the account owner</span><br><span class="line">&#125;]</span><br></pre></td></tr></table></figure>
+<ul>
+<li>Endpoint<strong>: </strong>GET /v1/folders/{:folder_id}/messages</li>
+</ul>
+<p>폴더 하위의 모든 메세지를 반환한다. 이것은 매우 단순화된 형식이며 실제로는 페이지네이션을 해야한다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Response:</span><br><span class="line"></span><br><span class="line">List of message objects.</span><br></pre></td></tr></table></figure>
+<ul>
+<li>Endpoint<strong>: </strong>GET /v1/messages/{:message_id}</li>
+</ul>
+<p>특정 메세지에 대한 모든 정보를 가져온다. 메세지는 발신자, 수신자, 메세지 제목, 본문, 첨부 파일 등에 대한 정보를 포함하는 이메일 애플리케이션의 핵심 구성 요소다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">Response:</span><br><span class="line"></span><br><span class="line">A message’s object.</span><br><span class="line"></span><br><span class="line">&#123;</span><br><span class="line">  user_id: string                      // Reference to the account owner.</span><br><span class="line">  from: &#123;name: string, email: string&#125;  // &lt;name, email&gt; pair of the sender.</span><br><span class="line">  to: [&#123;name: string, email: string&#125;]  // A list of &lt;name, email&gt; paris</span><br><span class="line">  subject: string                      // Subject of an email</span><br><span class="line">  body: string                         //  Message body</span><br><span class="line">  is_read: boolean                     //  Indicate if a message is read or not.</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="Distributed-mail-server-architecture"><a href="#Distributed-mail-server-architecture" class="headerlink" title="Distributed mail server architecture"></a>Distributed mail server architecture</h4><p>소수의 사용자를 처리하는 이메일 서버를 설정하는 것은 쉽지만, 서버 한 대 이상으로 확장하는 것은 어렵다. 이는 기존 이메일 서버가 단일 서버에서만 작동하도록 설계되었기 때문이다. 서버 간에 데이터를 동기화하는 것은 어려울 수 있으며, 수신자의 메일 서버에서 이메일이 스팸으로 잘못 분류 되지 않도록 하는 것은 매우 까다로운 작업이다. 이 섹션에서는 클라우드 기술을 활용해 이를 보다 쉽게 처리하는 방법을 살펴본다. 고수준 디자인은 아래와 같다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231211225107576.png" alt=""></p>
+<ul>
+<li>Webmail. 사용자는 웹 브라우저를 사용해 이메일을 주고받는다.</li>
+<li>Web servers. 웹 서버는 로그인, 가입, 사용자 프로필 등과 같은 기능을 관리하는 데 사용되는 공개용 요청 / 응답 서비스다. 우리의 설계에서는 이메일 전송, 메일 폴더 로드, 폴더의 모든 메일 로드 등 모든 이메일 API 요청이 웹 서버를 거친다.</li>
+<li>Real-time servers. 실시간 서버는 클라이언트에 새 이메일 업데이트를 실시간으로 푸시하는 역할을 한다. 실시간 서버는 지속적인 연결을 유지해야 하므로 스테이트풀 서버다. 실시간 통신을 지원하기 위해 롱 폴링 및 WebSocket과 같은 몇 가지 옵션이 있다. 웹소켓은 보다 우아한 솔루션이지만 브라우저 호환성이라는 한 가지 단점이 있다. 가능한 한 가지 해결책은 가능할 때마다 WebSocket 연결을 설정하고 롱 폴링을 fallback으로 사용하는 것이다.</li>
+<li>Metadata database. 이 데이터메이스는 메일 제목, 본문, 보낸 사람, 받는 사람 등의 메일 메타데이터를 저장한다.</li>
+<li>Attachment store. 첨부 파일 저장소로 Amazon Simple Storage Service(S3)와 같은 오브젝트 스토어를 선택한다. S3는 이미지, 동영상, 파일 등과 같은 대용량 파일을 저장하는데 적합한 확장 가능한 스토리지 인프라다. 첨부 파일의 크기는 최대 25MB 까지 가능하다. Cassandra와 같은 NoSQL 컬럼 계열 데이터베이스는 다음 이유로 적합하지 않을 수 있다.<ul>
+<li>카산드라는 blob 데이터 유형을 지원하며 blob의 이론적 최대 크기는 2GB지만 실제 제한은 1MB 미만이다.</li>
+<li>카산드라에 첨부 파일을 넣을 때의 또 다른 문제는 첨부 파일이 너무 많은 메모리 공간을 차지하기 때문에 row cache를 사용할 수 없다는 것이다.</li>
+</ul>
+</li>
+<li>Distributed cache. 클라이언트는 가장 최근의 이메일을 반복적으로 로드하기 때문에 최근 이메일을 메모리에 캐시하면 로드 시간이 크게 개선된다. 여기에 Redis를 사용할 수 있는 이뉴는 list와 같은 풍부한 기능을 제공하고 확장이 쉽기 때문이다.</li>
+<li>Search store. 검색 저장소는 분산 문서 저장소다. 매우 빠른 전체 텍스트 검색을 지원하는 inverted index라는 데이터 구조를 사용한다. </li>
+</ul>
+<p>분산 메일 서버를 구축하는데 가장 중요한 몇 가지 구성 요소에 대해 설명했으니 이제 두 가지 주요 워크플로우를 함께 살펴보자.</p>
+<h4 id="Email-sending-flow"><a href="#Email-sending-flow" class="headerlink" title="Email sending flow"></a>Email sending flow</h4><p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231211225827428.png" alt=""></p>
+<ol>
+<li>사용자가 웹 메일에서 이메일을 작성하고 보내기 버튼을 누른다. 요청이 로드 밸런서로 전송된다.</li>
+<li>로드 밸런서는 raate limit을 초과하지 않는지 확인하고 트래픽을 웹 서버로 라우팅한다.</li>
+<li>웹 서버는 아래와 같은 일들을 한다.<ol>
+<li>기본 이메일 유효성 검사. 수신되는 각 이메일을 이메일 크기 제한과 같은 사전 정의된 규칙에 따라 확인한다.</li>
+<li>수신자 이메일 주소의 도메인이 발신자와 동일한지 확인한다. 도메인이 동일하면 웹 서버는 이메일 데이터에 스팸 및 바이러스가 없는지 확인한다. 그렇다면 이메일 데이터가 발신자의 “보낸 편지함” 폴더와 수신자의 “받은 편지함” 폴더에 삽입된다. 수신자는 RESTful API를 통해 이메일을 직접 가져올 수 있다. 이 경우 4단계로 이동하지 않는다.</li>
+</ol>
+</li>
+<li>메세지 대기열<ol>
+<li>기본 이메일 유효성 검사가 성공하면 이메일 데이터가 발신 대기열로 전달된다. 첨부 파일이 너무 커서 대기열에 들어갈 수 없는 경우 첨부 파일을 오브젝트 스토어에 저장하고 대기열에 있는 메세지에 개체 참조를 저장할 수 있다.</li>
+<li>기본 이메일 유효성 검사에 실패하면 이메일이 오류 대기열에 배치된다.</li>
+</ol>
+</li>
+<li>SMTP 발신 작업자는 발신 대기열에서 메세지를 가져와 이메일에 스팸 및 바이러스가 없는지 확인한다.</li>
+<li>발신 이메일은 스토리지 계층의 “보낸 폴더”에 저장된다.</li>
+<li>SMTP 발신 작업자는 이메일을 수신자 메일 서버로 보낸다.</li>
+</ol>
+<p>발신 대기열의 각 메세지에는 이메일을 작성하는데 필요한 모든 메타데이터가 포함되어 있다. 분산 메세지 큐는 비동기 메일 처리를 가능하게 하는 중요한 구성 요소다. SMTP 발신 워커를 웹 서버에서 분리함으로써 SMTP 발신 워커를 독립적으로 확장할 수 있다.</p>
+<p>우리는 발신 대기열의 크기를 매우 면밀히 모니터링한다. 대기열에 갇힌 이메일이 많으면 문제의 원인을 분석해야 한다. 몇 가지 가능성이 있다.</p>
+<ul>
+<li>받는 사람의 메일 서버를 사용할 수 없는 경우. 이 경우 나중에 이메일 전송을 시도해야 한다. Exponential backoff는 좋은 재시도 전략이 될 수 있다.</li>
+<li>이메일을 보낼 소비자가 충분하지 않은 경우. 이 경우 처리 시간을 줄이기 위해 더 많은 소비자가 필요할 수 있다.</li>
+</ul>
+<h4 id="Email-receiving-flow"><a href="#Email-receiving-flow" class="headerlink" title="Email receiving flow"></a>Email receiving flow</h4><p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231211230429240.png" alt=""></p>
+<ol>
+<li>수신 이메일이 SMTP 로드 밸런서에 도착한다.</li>
+<li>로드 밸런서는 SMTP 서버 간에 트래픽을 분산한다. 이메일 허용 정책은 SMTP 연결 수준에서 설정하고 적용할 수 있다. 예를 들어, 불필요한 이메일 처리를 방지하기 위해 유효하지 않은 이메일은 반송된다.</li>
+<li>이메일의 첨부 파일이 너무 커서 대기열에 넣을 수 없는 경우 오브젝트 스토어에 넣을 수 있다.</li>
+<li>이메일은 수신 이메일 대기열에 넣는다. 대기열은 메일 처리 작업자를 SMTP 서버에서 분리하여 독립적으로 확장할 수 있도록 한다. 또한 대기열은 이메일 볼륨이 급증할 경우 버퍼 역할을 한다.</li>
+<li>메일 처리 작업자는 스팸 메일 필터링, 바이러스 차단 등 많은 작업을 담당한다. 다음 단계에서는 이메일이 유효성 검사를 통과했다고 가정한다.</li>
+<li>이메일이 메일 저장소, 캐시 및 오브젝트 스토어에 저장된다.</li>
+<li>수신자가 현재 온라인 상태이면 이메일이 실시간 서버로 푸시된다.</li>
+<li>실시간 서버는 클라이언트가 새 이메일을 실시간으로 수신할 수 있는 웹소켓 서버다.</li>
+<li>오프라인 사용자의 경우 이메일은 스토리지 계층에 저장된다. 사용자가 다시 온라인 상태가 되면 웹메일 클라이언트는 RESTful API를 통해 웹 서버에 연결한다.</li>
+<li>웹 서버는 스토리지 계층에서 새 이메일을 가져와서 클라이언트에 반환한다.</li>
+</ol>
+<h2 id="Step-3-Design-Deep-Dive"><a href="#Step-3-Design-Deep-Dive" class="headerlink" title="Step 3 - Design Deep Dive"></a>Step 3 - Design Deep Dive</h2><p>이제 이메일 서버의 모든 부분에 대해 설명했으니 몇 가지 주요 구성 요소에 대해 자세히 살펴보고 시스템을 확장하는 방법을 살펴보자.</p>
+<ul>
+<li>Metadata database</li>
+<li>Search</li>
+<li>Deliverability</li>
+<li>Scalability</li>
+</ul>
+<h3 id="Metadata-database"><a href="#Metadata-database" class="headerlink" title="Metadata database"></a>Metadata database</h3><p>이 섹션에서는 이메일 메타데이터의 특성, 적합한 데이터베이스 선택, 데이터 모델 및 대화 스레드에 대해 설명한다.</p>
+<h4 id="Characteristics-of-email-metadata"><a href="#Characteristics-of-email-metadata" class="headerlink" title="Characteristics of email metadata"></a>Characteristics of email metadata</h4><ul>
+<li>이메일 헤더는 일반적으로 작고 자주 액세스한다.</li>
+<li>이메일 본문 크기는 작은 크기부터 큰 크기까지 다양하지만 액세스 빈도는 낮다. 일반적으로 이메일을 한 번만 읽는다.</li>
+<li>메일 가져오기, 메일 읽음 표시, 검색과 같은 대부분의 메일 작업은 개별 사용자에게 격리되어 있다. 즉, 한 사용자가 소유한 메일은 해당 사용자만 액세스할 수 있으며 모든 메일 작업은 동일한 사용자에 의해 수행된다.</li>
+<li>데이터 최신성은 데이터 사용량에 영향을 미친다. 사용자는 일반적으로 가장 최근의 이메일만 읽는다. 읽기 쿼리의 82%는 16일 미만의 데이터에 대한 쿼리다.</li>
+<li>데이터에는 높은 신뢰성이 요구된다. 데이터 손실은 용납되지 않는다.</li>
+</ul>
+<h4 id="Choosing-the-right-database"><a href="#Choosing-the-right-database" class="headerlink" title="Choosing the right database"></a>Choosing the right database</h4><p>Gmail이나 Outlook 규모에서 데이터베이스 시스템은 일반적으로 초당 입출력 작업 수(Input / Output Operations per Second, IOPS)를 줄이기 위해 맞춤 제작되는데, 이는 시스템에 큰 제약이 될 수 있다. 올바른 데이터베이스를 선택하는 것은 쉽지 않다. 가장 적합한 데이터베이스를 결정하기 전에 테이블에 있는 모든 옵션을 고려하는 것이 도움이 된다.</p>
+<ul>
+<li>Relational database. 관께형 데이터베이스를 선택하는 주된 동기는 이메일을 효율적으로 검색하기 위해서다. 이메일 헤더와 본문에 대한 색인을 만들 수 있다. 인덱스를 사용하면 간단한 검색 쿼리가 빠르다. 그러나 관계형 데이터베이스는 일반적으로 작은 데이터 항목에 최적화되어 있으며 대용량 데이터에는 적합하지 않다. 일반적인 이메일은 보통 몇 KB를 넘지 않으며 HTML이 포함될 경우 100KB를 쉽게 넘을 수 있따. BLOB 데이터 유형이 대용량 데이터 입력을 지원하도록 설계되었다고 말할 수도 있다. 그러나 구조화되지 않은 BLOB 데이터 유형에 대한 검색 쿼리는 효율적이지 않다. 따라서 MySQL이나 PostgreSQL과 같은 관계형 데이터베이스는 적합하지 않다.</li>
+<li>Distributed object store. 또 다른 잠재적 해결책은 Amazon S3와 같은 클라우드 스토리지에 원시 이메일을 저장하는 것인데, 이는 백업 스토리지로 좋은 옵션이 될 수 있지만, 이메일을 읽음으로 표시하거나 키워드를 기반으로 이메일을 검색하거나 이메일을 스레딩하는 등의 기능을 효율적으로 지원하기 어렵다.</li>
+<li>NoSQL database. 구글의 Bigtable은 Gmail에서 사용중이므로 확실히 가능성 있는 솔루션이다. 하지만 Bigtable은 오픈소스가 아니며 이메일 검색이 어떻게 구현되는지는 여전히 미궁이다. 카산드라도 좋은 옵션이 될 수 있지만 아직 대형 이메일 제공업체에서 사용하는 것을 보지 못했다.</li>
+</ul>
+<p>위의 분석에 따르면 기존의 솔루션 중 우리의 요구에 완벽하게 부합하는 솔루션은 거의 없는 것으로 보인다. 대형 이메일 서비스 제공업체는 자체적으로 고도로 맞춤화된 데이터베이스를 구축하는 경향이 있다. 그러나 인터뷰 환경에서는 새로운 분산 데이터베이스를 설계할 시간이 없으므로 데이터베이스가 가져야 할 다음과 같은 특성을 설명하는 것이 중요하다.</p>
+<ul>
+<li>Single column은 MB 단위가 될 수 있다.</li>
+<li>강력한 데이터 일관성</li>
+<li>디스크 I/O를 줄이도록 설계되었다.</li>
+<li>고가용성과 내결함성을 갖춰야 한다.</li>
+<li>증분 백업을 쉽게 할 수 있어야 한다.</li>
+</ul>
+<h4 id="Data-model"><a href="#Data-model" class="headerlink" title="Data model"></a>Data model</h4><p>데이터를 저장하는 한 가지 방법은 user_id를 파티션 키로 사용해 한 사용자에 대한 데이터가 단일 샤드에 저장되도록 하는 것이다. 이 데이터 모델의 한 가지 한계는 여러 사용자 간에 메시지가 공유되지 않는다는 것이다. 이 인터뷰에서는 이 것이 필수 요건은 아니므로 걱정은 없다.</p>
+<p>이제 테이블을 정의해 보자. 기본 키에는 파티션 키와 클러스터링 키라는 두 가지 구성 요소가 포함되어 있다.</p>
+<ul>
+<li>Partition key : 노드 간에 데이터를 배포하는 역할을 한다. 일반적으로 데이터를 고르게 분산해야 한다.</li>
+<li>Clustering key : 파티션 내의 데이터 정렬을 담당한다.</li>
+</ul>
+<p>고수준에서 이메일 서비스는 데이터 계층에서 아래와 같은 쿼리를 지원해야 한다.</p>
+<ul>
+<li>첫 번째 쿼리는 사용자에 대한 모든 폴더를 가져오는 것이다.</li>
+<li>두 번째 쿼리는 특정 폴더에 대한 모든 이메일을 표시하는 것이다.</li>
+<li>세 번째 쿼리는 특정 이메일을 생성 / 삭제 / 조회하는 것이다.</li>
+<li>네 번째 쿼리는 읽었거나 읽지 않은 모든 이메일을 가져오는 것이다.</li>
+<li>Bonus point : 대화 스레드를 가져온다.</li>
+</ul>
+<p><strong>Query 1: get all folders for a user.</strong></p>
+<p>아래 표시된 것처럼 user_id는 파티션 키이므로 동일한 사용자가 소유한 폴더는 하나의 파티션에 위치한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231212214940515.png" alt=""></p>
+<p><strong>Query 2: display all emails for a specific folder.</strong></p>
+<p>사용자가 받은 편지함을 로드하면 일반적으로 이메일이 타임스탬프별로 정렬되어 가장 최근의 이메일이 맨 위에 표시된다. 동일한 폴더의 모든 이메일을 하나의 파티션에 저장하기 위해 복합 파티션 키 <user_id, folder_id>가 사용된다. 주목해야할 또 다른 열은 email_id다. 이 열의 데이터 유형은 TIMEUUID 이며 이메일을 시간 순서대로 정렬하는 데 사용되는 클러스터링 키이다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231212215103856.png" alt=""></p>
+<p><strong>Query 3: create/delete/get an email</strong></p>
+<p>이메일에 대한 자세한 정보를 얻는 방법만 간략히 설명한다. 아래의 테이블은 이 쿼리를 지원하도록 설계되었다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SELECT * FROM emails_by_user WHERE email_id = 123;</span><br></pre></td></tr></table></figure>
+<p>이메일에는 여러 개의 첨부 파일이 있을 수 있으며 이런 첨부 파일은 email_id 및 파일명 필드의 조합으로 검색할 수 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231212215800756.png" alt=""></p>
+<p><strong>Query 4: fetch all read or unread emails</strong></p>
+<p>도메인 모델이 관계형 데이터베이스용이라면 읽은 모든 이메일을 가져오기 위한 쿼리는 다음과 같다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">SELECT * FROM emails_by_folder</span><br><span class="line">WHERE user_id = &lt;user_id&gt; and folder_id = &lt;folder_id&gt; and is_read = true</span><br><span class="line">ORDER BY email_id;</span><br></pre></td></tr></table></figure>
+<p>읽지 않은 모든 이메일을 가져오는 쿼리는 단지 <code>is_read = false</code>로 변경해주면 된다. 그러나 우리의 데이터 모델은 NoSQL 용으로 설계되었다. NoSQL 데이터베이스는 일반적으로 파티션 및 클러스터 키에 대한 쿼리만 지원한다. <em>emails_by_folder</em> 테이블의 is_read는 이 둘중 어느 것도 아니므로 대부분의 NoSQL 데이터베이스는 이 쿼리를 거부한다.</p>
+<p>이 제한을 해결하는 한 가지 방법은 사용자에 대한 전체 폴더를 가져와 애플리케이션에서 필터링을 수행하는 것이다. 소규모 이메일 서비스에서는 이 방법이 효과적일 수 있지만, 우리 설계 규모에서는 이 방법이 잘 작동하지 않는다.</p>
+<p>이 문제는 일반적으로 NoSQL의 비정규화를 통해 해결된다. 읽음 / 읽지 않음 쿼리를 지원하기 위해 아래 표시된 것 처럼 emails_by_folder 데이터를 두 개의 테이블로 비정규화 한다.</p>
+<ul>
+<li>read_emails : 읽기 상태인 모든 이메일을 저장</li>
+<li>unread_emails : 읽지 않은 상태의 모든 이메일을 저장</li>
+</ul>
+<p>읽지 않은 이메일을 읽음으로 표시하려면 해당 이메일을 읽지 않은 이메일에서 삭제한 다음 읽은 이메일에 삽입한다. 특정 폴더의 읽지 않은 모든 이메일을 가져오려면 아래와 같은 쿼리를 실행하면 된다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">SELECT * FROM unread_emails</span><br><span class="line">WHERE user_id = &lt;user_id&gt; and folder_id = &lt;folder_id&gt;</span><br><span class="line">ORDER BY email_id;</span><br></pre></td></tr></table></figure>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231212222003864.png" alt=""></p>
+<p>위와 같은 비정규화는 일반적인 관행이다. 이렇게 하면 애플리케이션 코드가 더 복잡해지고 유지 관리가 더 어려워지지만 이러한 쿼리의 읽기 성능은 대규모로 향상된다.</p>
+<p><strong>Bonus point: conversation threads</strong></p>
+<p>스레드는 많은 이메일 클라이언트에서 지원하는 기능이다. 이메일 답장을 원래 메세지와 함께 그룹화한다. 이를 통해 사용자는 하나의 대화와 관련된 모든 이메일을 검색할 수 있다. 전통적으로 스레드는 <a target="_blank" rel="noopener" href="https://www.jwz.org/doc/threading.html">JWZ 알고리즘</a>과 같은 알고리즘을 사용해 구현한다. 간략한 핵심 아이디어만 살펴보자. 이메일 헤더에는 일반적으로 다음 세 가지 필드가 포함된다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  &quot;headers&quot; &#123;</span><br><span class="line">     &quot;Message-Id&quot;: &quot;&lt;7BA04B2A-430C-4D12-8B57-862103C34501@gmail.com&gt;&quot;,</span><br><span class="line">     &quot;In-Reply-To&quot;: &quot;&lt;CAEWTXuPfN=LzECjDJtgY9Vu03kgFvJnJUSHTt6TW@gmail.com&gt;&quot;,</span><br><span class="line">     &quot;References&quot;: [&quot;&lt;7BA04B2A-430C-4D12-8B57-862103C34501@gmail.com&gt;&quot;]</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Message-Id</th>
+<th style="text-align:left">The value of a message ID. It is generated by a client while sending a message.</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">In-Reply-To</td>
+<td style="text-align:left">The parent Message-Id to which the message replies.</td>
+</tr>
+<tr>
+<td style="text-align:left">References</td>
+<td style="text-align:left">A list of message IDs related to a thread.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>이런 필드를 사용하면 회신 체인의 모든 메세지가 미리 로드되어 있는 경우 이메일 클라이언트가 메세지에서 메일 대화를 재구성할 수 있다.</p>
+<h4 id="Consistency-trade-off"><a href="#Consistency-trade-off" class="headerlink" title="Consistency trade-off"></a>Consistency trade-off</h4><p>고가용성을 위해 복제에 의존하는 분산 데이터베이스는 일관성과 가용성 사이에서 근본적인 절충을 해야 한다. 이메일 시스템에서는 정확성이 매우 중요하므로 설계상 특정 메일 박스에 대해 하나의 기본 메일 박스를 사용하는 것이 좋다. 장애가 발생하면 클라이언트가 메일박스에 액세스할 수 없으므로 장애 복구가 끝날 때까지 동기화 / 업데이트 작업이 일시 중지된다. 일관성을 위해 가용성을 희생하는 것이다.</p>
+<h3 id="Email-deliverability"><a href="#Email-deliverability" class="headerlink" title="Email deliverability"></a>Email deliverability</h3><p>메일 서버를 설정하고 이메일 전송을 시작하는 것은 쉽다. 어려운 부분은 이메일이 실제로 사용자의 받은 편지함으로 전달되도록 하는 것이다. 이메일이 스팸 폴더에 들어간다는 것은 수신자가 이메일을 읽지 않을 가능성이 매우 높다는 것을 의미한다. 이메일 스팸은 큰 문제다. Statista의 연구에 따르면 전송되는 모든 이메일의 50% 이상이 스팸이라고 한다. 새 메일 서버를 설정하면 새 이메일 서버는 reputation이 없기 때문에 이메일이 스팸 폴더에 들어갈 가능성이 높다. 이메일 전달성을 개선하기 위해 고려해야 할 몇 가지 요소가 있다.</p>
+<p><strong>Dedicated IPs</strong>. 이메일 전송을 위한 전용 IP 주소를 사용하는 것이 좋다. 이메일 제공 업체는 기록이 없는 새 IP 주소의 이메일을 수락할 가능성이 낮다.</p>
+<p><strong>Classify emails</strong>. 서로 다른 IP 주소에서 서로 다른 카테고리의 이메일을 보내라. 예를 들어, 동일한 서버에서 마케팅 이메일과 중요한 이메일을 보내면 ISP가 모든 이메일을 홍보용으로 표시할 수 있으므로 이를 피하는 것이 좋다.</p>
+<p><strong>Email sender reputation</strong>. 새 이메일 서버 IP 주소를 공을 들여 좋은 reputation을 쌓아두면 Office 365, Gmail, Yahoo Mail과 같은 대형 서비스 제공 업체가 이메일을 스팸 폴더에 넣을 가능성이 줄어든다. Amazon Simple Email Service에 따르면 새 IP 주소를 워밍업하는 데 약 2~6주가 걸린다고 한다.</p>
+<p><strong>Ban spammers quickly</strong>. 스패머가 서버의 reputation에 큰 영향을 미치기 전에 신속히 차단해야 한다.</p>
+<p><strong>Feedback processing</strong>. 불만 처리율을 낮추고 스팸 계정을 신속하게 차단할 수 있도록 ISP와 피드백 루프를 설정하는 것은 매우 중요하다. 이메일이 전달되지 않거나 사용자가 불만을 제기하면 다음 중 한 가지 결과가 발생한다.</p>
+<ul>
+<li>Hard bounce. 이는 수신자의 이메일 주소가 유효하지 않아 ISP에서 이메일을 거부하는 것을 의미한다.</li>
+<li>Soft bounce. 소프트 바운스는 ISP가 너무 바쁜 상태와 같은 일시적인 상태로 인해 이메일이 전달되지 못했음을 나타낸다.</li>
+<li>Complaint. 이는 수신자가 ‘스팸 신고’ 버튼을 클릭하는 것을 의미한다.</li>
+</ul>
+<p>아래는 반송 / 불만 사항을 수집하고 처리하는 프로세스를 보여준다. 소프트 바운드, 하드 바운드 및 불만 사항에 대해 별도의 대기열을 사용해 별도로 관리할 수 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231212223015108.png" alt=""></p>
+<p><strong>Email authentication</strong>. Verizon에서 제공한 2018년 데이터 유출 조사 보고서에 따르면 피싱과 사칭이 유출 사고의 93%를 차지한다고 한다. 피싱에 대응하기 위한 몇 가지 일반적인 기법은 다음과 같다.</p>
+<ul>
+<li>발신자 정책 프레임워크(Sender Policy Framework, SPF)</li>
+<li>도메인 키 식별 메일(DomainKeys Identified Mail, DKIM)</li>
+<li>도메인 기반 메세지 인증, 보고 및 준수(Domain-based Message Authentication, Reporting and Conformance, DMARC)</li>
+</ul>
+<p>아래는 Gmail 메세지의 헤더 예시를 보여준다. @info6.citi.com은 SPF, DKIM, DMARC에 의해 인증되었다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231212223237501.png" alt=""></p>
+<p>이런 용어를 모두 기억할 필요는 없다. 명심해야 하는 점은 이메일이 의도한 대로 작동하도록 하는 것은 어렵다는 것이다. 도메인 지식뿐만 아니라 ISP와의 좋은 관계도 필요하다.</p>
+<h3 id="Search"><a href="#Search" class="headerlink" title="Search"></a>Search</h3><p>기본 메일 검색은 제목이나 본문에 입력한 키워드가 포함된 이메일을 검색하는 것을 말한다. 고급 기능에는 “보낸 사람”, “제목”, “읽지 않음” 또는 기타 속성을 기준으로 필터링하는 기능이 포함된다. 한편으로는 이메일이 전송, 수신 또는 삭제될 때마다 재색인 작업을 수행해야 한다. 반면에 검색 쿼리는 사용자가 “검색” 버튼을 누를 때만 실행된다. 이는 이메일 시스템의 검색 기능이 읽기보다 쓰기가 훨씬 더 많다는 것을 의미한다. 구글 검색과 비교할 때 이메일 검색은 상당히 다른 특성을 가진다.</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th><strong> Scope</strong></th>
+<th><strong>Sorting</strong></th>
+<th><strong>Accuracy</strong></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Google search</td>
+<td>The whole internet</td>
+<td>Sort by relevance</td>
+<td>Indexing generally takes time, so some items may not show in the search result immediately.</td>
+</tr>
+<tr>
+<td>Email search</td>
+<td>User’s own email box</td>
+<td>Sort by attributes such as time, has attachment, date within, is unread, etc.</td>
+<td>Indexing should be near real-time, and the result has to be accurate.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>이런 검색 특성을 지원하기 위해 두 가지 접근 방식을 고려해봄직 하다. </p>
+<ul>
+<li>Data store에 내장된 기본 검색</li>
+<li>Elastic search</li>
+</ul>
+<p><strong>Option 1: Elasticsearch</strong></p>
+<p>아래는 Elasticsearch를 사용한 이메일 검색의 고수준 설계다. 쿼리 대부분은 사용자 자신의 이메일 서버에서 수행되기 때문에 user_id를 파티션 키로 사용해 기본 문서를 동일한 노드에 그룹화할 수 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231212231550232.png" alt=""></p>
+<p>사용자가 “검색” 버튼을 클릭하면 검색 응답이 수신될 때까지 기다린다. 검색 요청은 동기식이다. “이메일 보내기”, “이메일 받기” 또는 “이메일 삭제”와 같은 이벤트가 트리거될 때 검색과 관련된 어떤 것도 클라이언트에 반환할 필요가 없다. 재색인 작업이 필요하며 오프라인 작업으로 수행할 수 있다. 재색인을 트리거하는 서비스와 실제로 재색인을 수행하는 서비스를 분리하기 위해 설계에서 Kafka가 사용된다.</p>
+<p>검색 엔진 데이터베이스인 Elasticsearch는 이메일의 전문 검색을 매우 잘 지원한다. Elasticsearch를 추가할 때 한 가지 어려운 점은 기본 이메일 저장소를 동기화 상태로 유지하는 것이다. 중국에서 가장 큰 메일 제공 업체인 Tencent QQ는 Email에 Elasticsearch를 사용한다.</p>
+<p><strong>Option 2: Custom search solution</strong></p>
+<p>대규모 이메일 제공업체는 일반적으로 특정 요구사항을 충족하기 위해 자체 사용자 지정 검색 엔진을 개발한다. 이메일 검색 엔진을 설계하는 것은 매우 복잡한 작업이며 이 장의 범위를 벗어난다. 여기서는 사용자 지정 검색 엔진에서 직면하게 될 주요 과제인 Disk I/O 병목 현상에 대해서만 간략히 다룬다.</p>
+<p>Back-of-the-envelope calculation 에서 볼 수 있듯이, 매일 추가되는 메타데이터와 첨부 파일의 크기는 PB 수준이다. 한편, 이메일 계정에는 50만개가 넘는 이메일이 쉽게 들어올 수 있다. 인덱스 서버의 주요 병목 현상은 일반적으로 Disk I/O다.</p>
+<p>인덱스 구축 프로세스는 쓰기 작업이 많기 때문에, 디스크에서 인덱스 데이터를 구조화하기 위해 로그 구조 병합 트리(LSM)를 사용하는 것이 좋은 전략이 될 수 있다. 쓰기 경로는 순차적 쓰기만 수행함으로써 최적화된다. LSM 트리는 BigTable, Cassandra, RocksDB와 같은 데이터베이스의 핵심 데이터 구조다. 새 이메일이 도착하면 먼저 레벨 0 인메모리 캐시에 추가되고 메모리의 데이터 크기가 미리 정의된 임계값에 도달하면 데이터가 다음 레벨로 병합된다. LSM을 사용하는 또 다른 이유는 자주 변경되는 데이터와 그렇지 않은 데이터를 분리하기 위해서다. 예를 들어 이메일 데이터는 일반적으로 변경되지 않지만 폴더 정보는 다양한 필터 규칙으로 인해 더 자주 변경되는 경향이 있다. 이 경우 두 개의 다른 섹션으로 분리해 요청이 폴더 변경과 관련된 경우 폴더만 변경하고 이메일 데이터는 그대로 둘 수 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231212232159593.png" alt=""></p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:left"><strong>Feature</strong></th>
+<th style="text-align:left"><strong>Elasticsearch</strong></th>
+<th style="text-align:left"><strong>Custom search engine</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">Scalability</td>
+<td style="text-align:left">Scalable to some extent.</td>
+<td style="text-align:left">Easier to scale as we can optimize the system for the email use case.</td>
+</tr>
+<tr>
+<td style="text-align:left">System complexity</td>
+<td style="text-align:left">Need to maintain two different systems: datastore and Elasticsearch.</td>
+<td style="text-align:left">One system.</td>
+</tr>
+<tr>
+<td style="text-align:left">Data consistency</td>
+<td style="text-align:left">Two copies of data. One in the metadata datastore, and the other in Elasticsearch. Data consistency is hard to maintain.</td>
+<td style="text-align:left">A single copy of data in the metadata datastore.</td>
+</tr>
+<tr>
+<td style="text-align:left">Data loss possible</td>
+<td style="text-align:left">No. Can rebuild the Elasticsearch index from the primary storage, in case of failure.</td>
+<td style="text-align:left">No.</td>
+</tr>
+<tr>
+<td style="text-align:left">Development effort</td>
+<td style="text-align:left">Easy to integrate. To support large scale email search, a dedicated Elasticsearch team might be needed.</td>
+<td style="text-align:left">Significant engineering effort is needed to develop a custom email search engine.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>일반적으로 소규모 이메일 시스템의 경우, 통합이 쉽고 상당한 엔지니어링 노력이 필요하지 않기 때문에 Elasticsearch가 좋은 옵션이다. 규모다 더 큰 경우에는 Elasticsearch를 사용할 수 있지만 이메일 검색 인프라를 개발하고 유지 관리하기 위한 전담 팀이 필요할 수 있다. Gmail또는 Outlook 규모의 이메일 시스템을 지원하려면 별도의 색인 방식이 아닌 데이터베이스에 기본 검색을 내장하는 것이 좋다.</p>
+<h3 id="Scalability-and-availability"><a href="#Scalability-and-availability" class="headerlink" title="Scalability and availability"></a>Scalability and availability</h3><p>개별 사용자의 데이터 액세스 패턴은 서로 독립적이므로 시스템의 대부분의 구성 요소는 수평적 확장이 가능할 것으로 예상한다. 가용성 향상을 위해 데이터는 여러 데이터 센터에 걸쳐 복제된다. 사용자는 네트워크 토폴로지에서 물리적으로 더 가까운 메일 서버와 통신한다. 네트워크 파티션 중에 사용자는 다른 데이터 센터의 메세지에 액세스할 수 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231212232404924.png" alt=""></p>
+<h2 id="Step-4-Wrap-Up"><a href="#Step-4-Wrap-Up" class="headerlink" title="Step 4 - Wrap Up"></a>Step 4 - Wrap Up</h2><p>이 포스트에서는 대규모 이메일 서버를 구축하기 위한 설계를 살펴봤다. 먼저 요구 사항을 수집하고 대략적 추정을 통한 설계 규모를 파악했다. 고수준 설계에선 기존 이메일 서버의 설계 방식과 최신 사례를 충족하지 못하는 이유를 살펴봤다. 또한 이메일 API와 송수신 흐름을 위한 고수준 설계에 대해서도 논의했다. 마지막으로 메타데이터 데이터베이스 설계, 이메일 전달성, 검색 및 확장성에 대해 살펴봤다. 아래는 더 살펴보면 좋을 내용들이다.</p>
+<ul>
+<li>내결함성. 시스템의 많은 부분에서 장애가 발생할 수 있으며, 노드 장애, 네트워크 문제, 이벤트 지연 등을 처리하는 방법에 대해 이야기할 수 있다.</li>
+<li>규정 준수. 이메일 서비스는 전 세계에서 작동하며 준수해야 할 법적 규정이 있다. 예를 들어 유렵의 Personally Identifiable Information(PII)은 General Data Protection Regulation(GDPR)을 준수하는 방식으로 처리하고 저장해야 한다.</li>
+<li>보안. 이메일에는 민감한 정보가 포함되어 있기 때문에 이메일 보안은 중요하다. Gmail은 피싱 방지, 안전 브라우징, 사전 경고, 계정 안전, 기밀 모드, 이메일 암호화 등의 안전 기능을 제공한다.</li>
+<li>최적화. 동일한 이메일이 여러 수신자에게 전송되고 동일한 이메일 첨부파일이 그룹 이메일의 오브젝트 스토어에 여러 번 저장되는 경우가 있다. 우리가 할 수 있는 한 가지 최적화는 비용이 많이 드는 저장 작업을 수행하기 전에 저장소에 첨부 파일이 있는지 확인하는 것이다.</li>
+</ul>
+<h2 id="Chapter-summary"><a href="#Chapter-summary" class="headerlink" title="Chapter summary"></a>Chapter summary</h2><p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20231212232807518.png" alt=""></p>
+<!-- flag of hidden posts --></div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined">Song Hayoung</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="https://songhayoung.github.io/2023/12/11/System%20Design/ByteByteGo/book/distributed-email-service/">https://songhayoung.github.io/2023/12/11/System%20Design/ByteByteGo/book/distributed-email-service/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/System-Design/">System Design</a></div><nav id="pagination"></nav><div id="gitalk-container"></div><script>var gitalk = new Gitalk({
+  clientID: '3604b61642355579f55e',
+  clientSecret: 'f552120f18ac5aee3f6297e05e97d94c0a25cd4b',
+  repo: 'SongHayoung.github.io',
+  owner: 'SongHayoung',
+  admin: 'SongHayoung',
+  id: md5(decodeURI(location.pathname)),
+  language: 'en'
+})
+gitalk.render('gitalk-container')</script></div></div><footer class="footer-bg" style="background-image: url(https://xxxx.jpg)"><div class="layout" id="footer"><div class="copyright">&copy;2020 - 2023 By Song Hayoung</div><div class="framework-info"><span>Driven - </span><a target="_blank" rel="noopener" href="http://hexo.io"><span>Hexo</span></a><span class="footer-separator">|</span><span>Theme - </span><a target="_blank" rel="noopener" href="https://github.com/Molunerfinn/hexo-theme-melody"><span>Melody</span></a></div><div class="footer_custom_text">Learning how to walk slowly to not miss important things</div><div class="busuanzi"><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><span id="busuanzi_container_page_pv"><i class="fa fa-file"></i><span id="busuanzi_value_page_pv"></span><span></span></span></div></div></footer><i class="fa fa-arrow-up" id="go-up" aria-hidden="true"></i><script src="https://cdn.jsdelivr.net/npm/animejs@latest/anime.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@latest/velocity.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-ui-pack@latest/velocity.ui.min.js"></script><script src="/js/utils.js?version=1.7.0"></script><script src="/js/fancybox.js?version=1.7.0"></script><script src="/js/sidebar.js?version=1.7.0"></script><script src="/js/copy.js?version=1.7.0"></script><script src="/js/fireworks.js?version=1.7.0"></script><script src="/js/transition.js?version=1.7.0"></script><script src="/js/scroll.js?version=1.7.0"></script><script src="/js/head.js?version=1.7.0"></script><script src="/js/search/algolia.js"></script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+    processEscapes: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  },
+  CommonHTML: {
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "HTML-CSS": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "SVG": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  }
+});
+</script><script type="text/x-mathjax-config">MathJax.Hub.Queue(function() {
+  var all = MathJax.Hub.getAllJax(), i;
+  for (i=0; i < all.length; i += 1) {
+    all[i].SourceElement().parentNode.className += ' has-jax';
+  }
+});
+</script><script src="https://cdn.jsdelivr.net/npm/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><script>if(/Android|webOS|iPhone|iPod|iPad|BlackBerry/i.test(navigator.userAgent)) {
+  $('#nav').addClass('is-mobile')
+  $('footer').addClass('is-mobile')
+  $('#top-container').addClass('is-mobile')
+}</script><div class="search-dialog" id="algolia-search"><div class="search-dialog__title" id="algolia-search-title">Algolia</div><div id="algolia-input-panel"><div id="algolia-search-input"></div></div><hr><div id="algolia-search-results"><div id="algolia-hits"></div><div id="algolia-pagination"></div><div id="algolia-stats"></div></div><span class="search-close-button"><i class="fa fa-times"></i></span></div><div class="search-mask"></div></body></html>
