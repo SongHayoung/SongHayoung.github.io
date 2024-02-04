@@ -1,0 +1,196 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="description" content="[CockroachDB] Transaction Layer"><meta name="keywords" content="DB"><meta name="author" content="Song Hayoung"><meta name="copyright" content="Song Hayoung"><title>[CockroachDB] Transaction Layer | SUMFIのBlog</title><link rel="shortcut icon" href="/songcon.ico"><link rel="stylesheet" href="/css/index.css?version=1.7.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@latest/css/font-awesome.min.css?version=1.7.0"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css?version=1.7.0"><meta name="format-detection" content="telephone=no"><meta http-equiv="x-dns-prefetch-control" content="on"><link rel="dns-prefetch" href="https://cdn.jsdelivr.net"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.css"><script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.js" defer></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@latest/dist/gitalk.min.js"></script><script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.10.0/js/md5.min.js"></script><link rel="dns-prefetch" href="https://www.google-analytics.com"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-169368422-1', 'auto');
+ga('send', 'pageview');</script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: {"appId":"7LZ6OJ4D6C","apiKey":"9a84e13f74ea78c3fd54512c10139c56","indexName":"git blog","hits":{"per_page":10},"languages":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}.","hits_stats":"${hits} results found in ${time} ms"}},
+  localSearch: undefined,
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  }
+} </script><meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/rss2.xml" title="SUMFIのBlog" type="application/rss+xml">
+</head><body><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar" data-display="true"><div class="toggle-sidebar-info text-center"><span data-toggle="Toggle article">Toggle site</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">Catalog</div><div class="sidebar-toc__progress"><span class="progress-notice">You've read</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Transaction-Layer"><span class="toc-number">1.</span> <span class="toc-text">Transaction Layer</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Writes-and-reads-phase-1"><span class="toc-number">1.1.</span> <span class="toc-text">Writes and reads (phase 1)</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Reading"><span class="toc-number">1.1.1.</span> <span class="toc-text">Reading</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Reading-1"><span class="toc-number">1.1.2.</span> <span class="toc-text">Reading</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Commits-phase-2"><span class="toc-number">1.2.</span> <span class="toc-text">Commits (phase 2)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Cleanup-asynchronous-phase-3"><span class="toc-number">1.3.</span> <span class="toc-text">Cleanup (asynchronous phase 3)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Interactions-with-other-layers"><span class="toc-number">1.4.</span> <span class="toc-text">Interactions with other layers</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Technical-details-and-components"><span class="toc-number">2.</span> <span class="toc-text">Technical details and components</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Time-and-hybrid-logical-clocks"><span class="toc-number">2.1.</span> <span class="toc-text">Time and hybrid logical clocks</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Max-clock-offset-enforcement"><span class="toc-number">2.1.1.</span> <span class="toc-text">Max clock offset enforcement</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Timestamp-cache"><span class="toc-number">2.2.</span> <span class="toc-text">Timestamp cache</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Read-snapshots"><span class="toc-number">2.2.1.</span> <span class="toc-text">Read snapshots</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Closed-timestamps"><span class="toc-number">2.3.</span> <span class="toc-text">Closed timestamps</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#client-Txn-and-TxnCoordSender"><span class="toc-number">2.4.</span> <span class="toc-text">client.Txn and TxnCoordSender</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Transaction-records"><span class="toc-number">2.5.</span> <span class="toc-text">Transaction records</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Write-intents"><span class="toc-number">2.6.</span> <span class="toc-text">Write intents</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Resolving-write-intents"><span class="toc-number">2.6.1.</span> <span class="toc-text">Resolving write intents</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Concurrency-control"><span class="toc-number">2.7.</span> <span class="toc-text">Concurrency control</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Concurrency-manager"><span class="toc-number">2.7.1.</span> <span class="toc-text">Concurrency manager</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Lock-table"><span class="toc-number">2.7.2.</span> <span class="toc-text">Lock table</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Latch-manager"><span class="toc-number">2.7.3.</span> <span class="toc-text">Latch manager</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Isolation-levels"><span class="toc-number">2.8.</span> <span class="toc-text">Isolation levels</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Transaction-conflicts"><span class="toc-number">2.9.</span> <span class="toc-text">Transaction conflicts</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Read-refreshing"><span class="toc-number">2.10.</span> <span class="toc-text">Read refreshing</span></a></li></ol></li></ol></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="https://avatars3.githubusercontent.com/u/37806785?s=460&amp;u=8c68d685faf7c5280cfbd736a6b1730b55fb4203&amp;v=4"></div><div class="author-info__name text-center">Song Hayoung</div><div class="author-info__description text-center"></div><div class="follow-button"><a target="_blank" rel="noopener" href="https://www.linkedin.com/in/hayoung-song-9523b61bb/">Follow Me</a></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="/archives"><span class="pull-left">Articles</span><span class="pull-right">10235</span></a><a class="author-info-articles__tags article-meta" href="/tags"><span class="pull-left">Tags</span><span class="pull-right">194</span></a><a class="author-info-articles__categories article-meta" href="/categories"><span class="pull-left">Categories</span><span class="pull-right">60</span></a></div><hr><div class="author-info-links"><div class="author-info-links__title text-center">VISITED</div><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Seoul Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Jeju Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">British Columbia Canada</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Boracay Philippines</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">三重　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">大阪　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">名古屋　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">静岡　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">札幌　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">京都　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Bangkok Thailand</a></div></div></div><div id="content-outer"><div id="top-container" style="background-image: url(https://xxxx.jpg)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="/">SUMFIのBlog</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus">   <a class="site-page" href="/">Home</a><a class="site-page" href="/archives">Archives</a><a class="site-page" href="/tags">Tags</a><a class="site-page" href="/categories">Categories</a><a class="site-page" href="/about">About</a></span><span class="pull-right"><a class="site-page social-icon search"><i class="fa fa-search"></i><span> Search</span></a></span></div><div id="post-info"><div id="post-title">[CockroachDB] Transaction Layer</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2024-01-22</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/Cockroach-DB/">Cockroach DB</a><div class="post-meta-wordcount"><span>Word count: </span><span class="word-count">2.9k</span><span class="post-meta__separator">|</span><span>Reading time: 18 min</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div class="article-container" id="post-content"><h2 id="Transaction-Layer"><a href="#Transaction-Layer" class="headerlink" title="Transaction Layer"></a>Transaction Layer</h2><span id="more"></span>
+<p>일관성을 제공하기 위해 CockroachDB는 트랜잭션 레이어에서 ACID 트랜잭션 시멘틱을 완벽히 지원한다. CockroachDB에서는 단일 statement를 포함하는 모든 statement들이 트랜잭션으로 처리된다는 것을 인지해야 한다. 전체 클러스터(cross-range, cross-table)간에 트랜잭션이 가능하기 때문에 병렬 커밋이라는 분산된 원자적 커밋 프로토콜을 사용해 정확성을 달성할 수 있다.</p>
+<h3 id="Writes-and-reads-phase-1"><a href="#Writes-and-reads-phase-1" class="headerlink" title="Writes and reads (phase 1)"></a>Writes and reads (phase 1)</h3><h4 id="Reading"><a href="#Reading" class="headerlink" title="Reading"></a>Reading</h4><p>트랜잭션 계층이 쓰기 작업을 실행할 때는 디스크에 직접 값을 쓰지 않고 분산 트랜잭션을 중개하는데 필요한 여러가지를 생성한다.</p>
+<ul>
+<li>Write intents는 Raft를 통해 복제되며 임시 값과 exclusive lock의 조합으로 작동한다. 이는 기본적으로 표준 MVCC 값과 동일하지만 클러스터에 저장된 트랜잭션 레코드에 대한 포인터도 포함한다.</li>
+<li>트랜잭션 쓰기에 대해 unreplicated locks로 커밋되지 않은 임시 상태를 나타낸다. 이런 잠금은 동시성 제어 기계에 의해 노드별 인메모리 잠금 테이블에 저장된다.</li>
+<li>트랜잭션 레코드는 첫 번째 쓰기가 발생한 범위에 저장되며, 여기에는 트랜잭션의 현재 상태(<code>PENDING</code>, <code>STAGING</code>, <code>COMMITTED</code>, <code>ABORTED</code>)가 포함된다.</li>
+</ul>
+<p>Write intent가 생성되면 CockroachDB는 더 최근에 커밋된 값이 있는지 확인한다. 최신 커밋 값이 있으면 트랜잭션이 다시 시작될 수 있다. 동일한 키에 기존 write intent나 잠금이 존재하면 트랜잭션 충돌로 해결한다. SQL 제약 조건을 통과하지 못하는 등 다른 이유로 트랜잭션이 실패하면 트랜잭션이 중단된다.</p>
+<h4 id="Reading-1"><a href="#Reading-1" class="headerlink" title="Reading"></a>Reading</h4><p>트랜잭션이 중단되지 않았다면 트랜잭션 계층에서 읽기 작업을 실행하기 시작한다. 읽기 전용이 표준 MVCC 값을 만나면 모든 것이 정상이다. 그러나 잠금 읽기가 기존 잠금을 만나면 트랜잭션 충돌로 해결해야 한다. Cockroach DB는 아래의 읽기 유형들을 제공한다.</p>
+<ul>
+<li>Strongly-consistent(not stale) reads : 기본적인 읽기 유형이다. 이런 읽기는 leaseholder를 통과해 읽기 트랜잭션(SERIALIZABLE isolation) 또는 statement(under READ COMMITTED isolation)이 시작되기 전에 커밋한 작성자가 수행한 모든 쓰기를 확인한다. 항상 정확하고 최신의 데이터를 반환한다.</li>
+<li>Stale reads : 더 빠른 읽기를 위해 약간 오래된 데이터를 읽을 여유가 있는 경우에 유용하다. AS OF SYSTEM TIME clause를 사용하는 읽기 전용 트랜잭션에서만 사용할 수 있다. 닫힌 타임스탬프보다 높지 않은 타임스탬프의 로컬 복제본에서 읽음으로써 일관성을 보장하므로 leaseholder를 거치지 않아도 된다.</li>
+</ul>
+<p>읽기는 선택적으로 다음과 같은 잠금을 획득할 수 있다.</p>
+<ul>
+<li>Exclusive lock은 동시 쓰기를 차단하고 연속된 읽기를 잠근다. 한 번에 하나의 트랜잭션만 행에 대한 exclusive lock을 보유할 수 있으며, exclusive lock을 보유한 트랜잭션만 row에 쓸 수 잇다. 기본적으로 READ COMMITTED 격리에서 exclusive lock는 Raft를 통해 복제된다.</li>
+<li>Shared locks는 한 row에 대한 동시 쓰기와 exclusive lock을 차단한다. 여러 트랜잭션이 동시에 한 행에 대한 shared locks를 보유할 수 있다. 여러 트랜잭션이 한 row에 대해 shared locks를 보유하면 어느 트랜잭션도 해당 row에 쓸 수 없다. Shared locks는 트랜잭션에 row에 대한 상호 읽기 전용 액세스 권한을 부여하고 row의 최신 값을 읽도록 보장한다. 기본적으로 READ COMMITTED 격리 상태에서는 Raft를 통해 exclusive lock이 복제된다.</li>
+</ul>
+<h3 id="Commits-phase-2"><a href="#Commits-phase-2" class="headerlink" title="Commits (phase 2)"></a>Commits (phase 2)</h3><p>실행중인 트랜잭션의 레코드를 확인해 중단되었는지 확인하고 중단된 경우 클라이언트에 재시도 가능한 오류를 던진다. 그렇지 않으면 CockroachDB는 트랜잭션 레코드의 상태를 STAGING으로 설정하고 트랜잭션의 보류 중인 write intents를 확인해 클러스터 전체에 성공적으로 복제되었는지 확인한다.</p>
+<p>트랜잭션이 이런 검사를 통과하면 CockroachDB는 클라이언트에 트랜잭션의 성공 여부를 응답하고 cleanup 단계로 이동한다. 이 시점에서 트랜잭션이 커밋되고 클라이언트는 클러스터에 더 많은 SQL문을 자유롭게 전송할 수 있다.</p>
+<h3 id="Cleanup-asynchronous-phase-3"><a href="#Cleanup-asynchronous-phase-3" class="headerlink" title="Cleanup (asynchronous phase 3)"></a>Cleanup (asynchronous phase 3)</h3><p>트랜잭션이 커밋된 후에는 트랜잭션이 커밋된 것으로 표시되어야 하며 모든 write intents가 해결되어야 한다. 이를 위해 모든 쓰기 키를 추적하던 코디네이터가 아래와 같이 동작한다.</p>
+<ul>
+<li>트랜잭션 레코드의 상태를 STAGING에서 COMMITTED로 이동한다.</li>
+<li>트랜잭션 레코드를 가리키는 요소를 제거해 트랜잭션의 write intents를 MVCC 값으로 변경한다.</li>
+<li>Write intents를 제거한다.</li>
+</ul>
+<h3 id="Interactions-with-other-layers"><a href="#Interactions-with-other-layers" class="headerlink" title="Interactions with other layers"></a>Interactions with other layers</h3><ul>
+<li>SQL 레이어로부터 KV 오퍼레이션을 수신한다.</li>
+<li>Distribution 레이어로 전송되는 KV 오퍼레이션의 흐름을 제어한다.</li>
+</ul>
+<h2 id="Technical-details-and-components"><a href="#Technical-details-and-components" class="headerlink" title="Technical details and components"></a>Technical details and components</h2><h3 id="Time-and-hybrid-logical-clocks"><a href="#Time-and-hybrid-logical-clocks" class="headerlink" title="Time and hybrid logical clocks"></a>Time and hybrid logical clocks</h3><p>분산 시스템에서 순서와 인과관계는 해결하기 어려운 문제다. serializability를 유지하기 위해 물리적 컴포넌트(local wall time과 가까운)와 논리적 컴포넌트(동일한 물리적 컴포넌트를 구분하기 위해 사용)으로 구성된 HLC(hybrid-logical clocks) 를 구현한다. HCL 시간은 항상 wall time 보다 크거나 같다. </p>
+<p>트랜잭션의 경우 게이트웨이 노드는 HLC 시간을 사용해 트랜잭션의 타임스탬프를 선택한다. 트랜잭션의 타임스탬프가 언급될 때마다 이 타임스탬프는 HLC 값이다. 이 타임스탬프는 MVCC를 통해 값의 버전을 추적할 뿐만 아니라 트랜잭션 격리 보장을 제공하는 데 사용된다.</p>
+<p>노드가 다른 노드에 요청을 보낼 때는 로컬 HLC에서 생성한 타임스탬프를 포함한다. 노드가 요청을 받으면 발신자가 이벤트와 함께 제공한 타임스탬프를 로컬 HLC에 알린다. 이는 노드에서 읽거나 쓰는 모든 데이터가 다음 HLC 시간보다 짧은 타임스탬프에 있다는 것을 보장하는데 유용하다.</p>
+<p>그러면 해당 range를 담당하는 노드(leaseholder)는 데이터를 읽는 트랜잭션이 읽고 있는 MVCC 값보다 큰 HLC 시간에 데이터를 읽도록 함으로써(읽기는 항상 쓰기 이후에 발생하도록 함으로써) 저장된 데이터에 대한 읽기 서비스를 제공할 수 있다.</p>
+<h4 id="Max-clock-offset-enforcement"><a href="#Max-clock-offset-enforcement" class="headerlink" title="Max clock offset enforcement"></a>Max clock offset enforcement</h4><p>데이터 일관성을 유지하기 위해 적당한 수준의 시계 동기화가 필요하다. 따라서 노드가 클러스터의 다른 노드 중 절반 이상과 시계가 허용된 최대 오프셋의 80%만큼 동기화되지 않은 것을 감지하면 즉시 충돌이 발생한다.</p>
+<p>직렬화 가능한 일관성을 clock skew에 관계없이 유지되지만, 구성된 clock 오프셋 범위를 벗어나는 스큐는 인과적으로 종속된 트랜잭션 간의 단일 키 선형성을 위반할 수 있다. 따라서 각 노드에서 NTP 또는 기타 시계 동기화 소프트웨어를 실행해 시계가 너무 많이 드리프트 되는 것을 방지하는 것이 중요하다.</p>
+<h3 id="Timestamp-cache"><a href="#Timestamp-cache" class="headerlink" title="Timestamp cache"></a>Timestamp cache</h3><p>작업에서 값을 읽을 때마다 작업의 타임스탬프를 타임스탬프 캐시에 저장하며 여기에는 읽은 값의 최고 수준의 워터마크가 표시된다. 타임스탬프 캐시는 임차인이 수행한 읽기에 대한 정보를 저장하는데 사용되는 데이터 구조다. 어떤 트랜잭션 t1이 한 행을 읽으면 뒤이어 해당 행에 쓰기를 시도하는 다른 트랜잭션 t2가 t1의 순서를 따르도록 해 트랜잭션의 직렬 순서를 보장하는데 사용된다.</p>
+<p>쓰기가 발생할 때마다 타임스탬프 캐시와 비교해 타임스탬프를 확인한다. 타임스탬프가 타임스탬프 캐시의 최신 값보다 이전인 경우 해당 트랜잭션의 타임 스탬프를 이후 시점으로 푸시하려고 시도한다. 타임스탬프를 푸시하면 트랜잭션의 커밋 시간 동안 트랜잭션이 다시 시작될 수 있다.</p>
+<h4 id="Read-snapshots"><a href="#Read-snapshots" class="headerlink" title="Read snapshots"></a>Read snapshots</h4><p>모든 트랜잭션은 읽기 스냅샷에서 작동하며, 이 스냅샷은 어떤 커밋된 데이터를 관찰할지 정의한다. <code>SERIALIZABLE</code> 및 <code>READ COMMITTED</code> 격리 수준 모두에서 트랜잭션은 전역적으로 일관된 읽기 스냅샷을 사용한다. <code>SERIALIZABLE</code> 트랜잭션은 read refreshing을 통해 트랜잭션별 읽기 스냅샷을 유지하는 반면, <code>READ COMMITTED</code> 트랜잭션은 트랜잭션의 각 statement와 함께 진행되는 statement별 읽기 스냅샷을 사용한다.</p>
+<p><code>READ COMMITTED</code>된 트랜잭션의 각 statement 가 시작되면 HLC에서 새 MVCC 타임스탬프를 선택해 이전에 트랜잭션에 의해 커밋된 쓰기를 캡처해 새 읽기 스냅샷을 설정한다.  <code>READ COMMITTED</code>는 여러 읽기 스냅샷에서 작동할 수 있으며 <code>READ COMMITTED</code>된 트랜잭션의 각 statement가 시작될 때 검색하는 각 행의 최신 값만 읽도록 보장한다. 이후의 각 statement는 새 읽기 스냅샷을 사용하기 때문에 <code>READ COMMITTED</code>트랜잭션의 읽기는 서로 다른 결과를 반환할 수 있다.</p>
+<h3 id="Closed-timestamps"><a href="#Closed-timestamps" class="headerlink" title="Closed timestamps"></a>Closed timestamps</h3><p>각 range들은 closed timestamps라는 속성을 추적하는데 이는 해당 타임스탬프 이하로 새 쓰기가 들어올 수 없음을 의미한다. Closed timestamp는 leaseholder에서 지속적으로 추적되며, 현재 시간보다 목표 간격만큼 지연된다. Closed timestamp가 증가하면 각 팔로워에게 알림이 전송된다. Range가 closed timestamp보다 작거나 같은 타임스탬프에 쓰기를 받으면 쓰기가 강제로 타임스탬프를 변경해 트랜잭션 재시도 오류가 발생할 수 있다. Closed timestamp는 range의 leaseholder가 팔로워 복제본에 해당 타임스탬프 미만의 쓰기를 수락하지 않겠다는 약속을 하는 것이다. 일반적으로 leaseholder는 과거 몇 초 동안의 타임스탬프를 지속적으로 닫는다.</p>
+<p>Closed timestamp 하위 시스템은 복제 스트림이 타임스탬프 닫기와 동기화되도록 closed timestamp를 Raft 명령에 piggyback해 leaseholder로부터 팔로워에게 정보를 전파하는 방식으로 작동한다. 즉, 팔로워 복제본은 leaseholder가 진정한 Raft log의 위치까지 모든 Raft 명령을 적용하자마자 closed timestamp 또는 그 이하의 타임스탬프로 읽기 서비스를 시작할 수 있다.</p>
+<p>팔로워 복제본이 Raft 커맨드를 적용하면 closed timestamp보다 작거나 같은 타임스탬프를 가진 읽기를 제공하는데 필요한 모든 데이터를 보유하게 된다.</p>
+<p>Closed timestamp는 leaseholder가 변경되더라도 lease 전송 전반에 걸쳐 보존되기 때문에 유효하다. lease가 이전되면 새 leaseholder는 이전 leaseholder가 약속한 closed timestamp 규약을 어길 수 없다.</p>
+<p>Closed timestamp는 팔로워 읽기로도 알려진 지연 시간이 짧은 기록 읽기를 지원하는데 사용되는 보증을 제공한다. 팔로워 읽기는 multi-region 배포에서 더욱 유용하다.</p>
+<p>모든 트랜잭션, 특히 장기 실행 트랜잭션의 타임스탬프가 푸시될 수 있다. 예를 들어 트랜잭션이 더 높은 타임스탬프에 기록된 키를 발견하는 경우다. 트랜잭션간의 이런 경합이 발생하면 closed timestamp가 어느정도 완화할 수 있다. Closed timestamp간격을 늘리면 장기 실행 트랜잭션의 타임스탬프가 밀려서 다시 시도해야 할 가능성을 줄일 수 있다. </p>
+<ul>
+<li>Follower reads : 읽기는 leaseholder에 의해서만 제공되므로 지연 시간 또는 처리량이 증가할 수 있다.</li>
+<li>CDC : 변경 피드 메세지의 지연 시간이 늘어날 수 있다.</li>
+<li>Statistics collection : 수집 중에 leaseholder에 가해지는 부하가 증가할 수 있다.</li>
+</ul>
+<p>Closed timestamp를 늘리면 재시도 가능한 오류가 줄어들겠지만 잠금 대기 시간도 늘어날 수 있다. </p>
+<ol>
+<li>long running transaction <code>txn1</code>이 t=1 시점에 키에 대한 쓰기 잠금을 보유한다.</li>
+<li>long running transaction <code>txn2</code> 는 t=1 시점에 동일한 키를 읽기 위해 대기중이다.</li>
+</ol>
+<p>Closed timestamp가 증가했는지 여부에 따라 다음 시나리오가 발생할 수 있다.</p>
+<ul>
+<li><p><code>txn1</code>의 타임스탬프가 closed timestamp에 의해 앞당겨지면 쓰기가 t=2로 이동하고 t=2에서 변경 내용을 쓰기 전에 t=1에서 키 읽기를 다시 시도할 수 있다. 재시도 오류의 가능성이 높아지는 순간이다.</p>
+</li>
+<li><p>Closed timestamp간격이 증가하면 <code>txn2</code>가 진행하기 전에 <code>txn1</code>이 완료되거나 미래로 밀려날 때까지 기다려야할 수 있다. 잠금 경합 가능성이 증가했다.</p>
+</li>
+</ul>
+<h3 id="client-Txn-and-TxnCoordSender"><a href="#client-Txn-and-TxnCoordSender" class="headerlink" title="client.Txn and TxnCoordSender"></a>client.Txn and TxnCoordSender</h3><p>SQL layer에서 생성된 모든 KV 연산은 KV layer의 client.Txn를 이용하지만, client.Txn 또한 TxnCoordSender의 wrapper에 불과하다.</p>
+<ul>
+<li>트랜잭션의 상태를 처리한다. 트랜잭션이 시작되면 해당 트랜잭션의 트랜잭션 레코드에 하트비트 메세지를 비동기적으로 전송하기 시작하며, 이는 트랜잭션이 계속 유지되어야 한다는 신호를 보낸다. TxnCoordSender의 하트비트 전송이 중지되면 트랜잭션 레코드는 중단됨 상태로 이동한다.</li>
+<li>트랜잭션이 진행되는 동안 기록된 각 키 또는 키 범위를 추적한다.</li>
+<li>트랜잭션이 커밋되거나 중단되면 해당 트랜잭션에 대해 누적된 write intent를 지운다. 트랜잭션의 모든 작업은 모든 쓰기 의도를 고려하고 정리 프로세스를 최적화하기 위해 동일한 TxnCoordSender를 거친다.</li>
+</ul>
+<h3 id="Transaction-records"><a href="#Transaction-records" class="headerlink" title="Transaction records"></a>Transaction records</h3><p>트랜잭션의 실행 상태를 추적하기 위해 트랜잭션 레코드라는 값을 KV Store에 저장한다. 트랜잭션의 모든 write intent는 이 레코드를 가리키며, 모든 트랜잭션은 이 레코드를 통해 마주치는 모든 write intent의 상태를 확인할 수 있다. 이런 종류의 표준 레코드는 분산 환경에서 동시성을 지원하는데 매우 중요하다.</p>
+<p>트랜잭션 레코드는 항상 트랜잭션의 첫 번째 키와 동일한 범위에 기록되며, 이 키는 TxnCoordSender에 의해 알려져 있다. 그러나 트랜잭션 레코드 자체는 다음 조건 중 하나가 발생할 때까지 생성되지 않는다.</p>
+<ul>
+<li>쓰기 커밋</li>
+<li>TxnCoordSender가 트랜잭션을 하트비트 함</li>
+<li>오퍼레이션으로 인해 트랜잭션이 중단되는 경우</li>
+</ul>
+<p>이 메커니즘에 따라 트랜잭션 레코드는 다음과 같은 상태를 사용한다.</p>
+<ul>
+<li>PENDING : write intent의 트랜잭션이 아직 진행 중임을 나타낸다.</li>
+<li>COMMITTED : 트랜잭션이 완료되면 이 상태는 write intent가 커밋된 값으로 처리될 수 있음을 나타냄</li>
+<li>STAGING : 병렬 커밋 기능을 활성화 하는데 사용됨. 이 레코드가 참조하는 write intent의 상태에 따라 트랜잭션이 커밋된 상태일 수도 있고 아닐 수도 있음</li>
+<li>ABORTED : 트랜잭션이 중단되었으며 해당 값을 삭제해야 함을 나타냄</li>
+<li>Record does not exist : 트랜잭션이 트랜잭션 레코드가 존재하지 않는 write intent를 만나면 write intent의 타임스탬프를 사용해 진행 방법을 결정한다. Write intent의 타임스탬프가 트랜잭션 활성 임계값 내에 있으면 write intent의 트랜잭션이 보류 중인 것처럼 처리되고, 그렇지 않으면 트랜잭션이 중단된 것처럼 처리된다.</li>
+</ul>
+<p>커밋된 트랜잭션의 트랜잭션 기록은 모든 write intent가 MVCC 값으로 변환될 때 까지 유지된다.</p>
+<h3 id="Write-intents"><a href="#Write-intents" class="headerlink" title="Write intents"></a>Write intents</h3><p>값은 스토리지 계층에 직접 기록되지 않고 write intent라고 하는 임시 상태로 기록된다. 이는 본질적으로 값이 속한 트랜잭션 레코드를 식별하는 추가 값이 추가된 MVCC 레코드다. 이는 복제된 잠금과 복제된 임시 값의 조합으로 생각할 수 있다.</p>
+<p>오퍼레이션이 MVCC 값 대신 write intent를 발견할 때마다 트랜잭션 레코드의 상태를 조회해 write intent 값을 어떻게 처리해야 하는지 파악한다. 트랜잭션 레코드가 누락된 경우 작업은 write intent의 타임스탬프를 확인하고 만료된 것으로 간주되는지 여부를 평가한다.</p>
+<p>CockroachDB는 노드별 인메모리 잠금 테이블을 사용해 동시성 제어를 관리한다. 이 테이블에는 진행 중인 트랜잭션에서 획득한 잠금 모음이 보관되며, 평가 중에 발견되는 write intent에 대한 정보를 통합한다.</p>
+<h4 id="Resolving-write-intents"><a href="#Resolving-write-intents" class="headerlink" title="Resolving write intents"></a>Resolving write intents</h4><p>연산이 키에 대한 write intent를 발견할 때마다 해결을 시도하며, 그 결과는 write intent의 트랜잭션 레코드에 따라 달라진다.</p>
+<ul>
+<li>COMMITTED : 작업이 write intent를 읽고 트랜잭션 레코드에 대한 write intent의 포인터를 제거해 MVCC 값으로 변환한다.</li>
+<li>ABORTED : write intent가 무시되고 삭제된다.</li>
+<li>PENDING : 트랜잭션 충돌이 발생해 해결해야 한다.</li>
+<li>STAGING : 트랜잭션 코디네이터가 여전히 스테이징 트랜잭션의 레코드를 하트비트하고 있는지 확인해 스테이징 트랜잭션이 여전히 진행중인지 확인해야 하는 상태다. 코디네이터가 여전히 레코드를 하트비트 중이면 작업은 대기해야 한다.</li>
+<li>Record does not exists : write intent가 트랜잭션 활성 임계값 내에서 생성된 경우 보류 중과 동일하며, 그렇지 않은 경우 중단된 것으로 처리한다.</li>
+</ul>
+<h3 id="Concurrency-control"><a href="#Concurrency-control" class="headerlink" title="Concurrency control"></a>Concurrency control</h3><p>동시성 매니저는 들어오는 요청의 순서를 정하고 충돌하는 작업을 수행하려는 요청을 발행한 트랜잭션 간에 격리를 제공한다. 이 활동을 동시성 제어라고도 한다. 동시성 매니저는 래치 매니저와 잠금 테이블의 작업을 결합해 이 작업을 수행한다.</p>
+<ul>
+<li>래치 매니저는 들어오는 요청의 순서를 정하고 해당 요청 간에 격리를 제공한다.</li>
+<li>잠금 테이블은 요청의 잠금과 시퀀싱을 모두 제공한다. 잠금 테이블은 진행 중인 트랜잭션에서 획득한 잠금 모음을 보관하는 노드별 인메모리 데이터 구조다. 기존 write intent 시스템과의 호환성을 보장하기 위해 요청을 평가하는 과정에서 외부 잠금이 발견되면 필요에 따라 이런 외부 잠금에 대한 정보를 가져온다.</li>
+</ul>
+<p>동시성 매니저는 <code>SELECT FOR UPDATE</code> 와 <code>SELECT FOR SHARE</code> 문을 사용해 SQL의 pessimistic lock을 지원할 수 있다.</p>
+<h4 id="Concurrency-manager"><a href="#Concurrency-manager" class="headerlink" title="Concurrency manager"></a>Concurrency manager</h4><p>동시성 매니저는 들어오는 요청의 순서를 정하고 충돌하는 작업을 수행하려는 요청을 발신한 트랜잭션 간에 격리를 제공하는 구조다. 시퀀싱하는 동안 충돌이 발견되고 발견된 충돌은 수동 큐잉과 능동 푸싱의 조합을 통해 해결된다. 요청이 시퀀싱된 후에는 관리자가 제공하는 격리 기능으로 인해 다른 기내 요청과 충돌할 염려 없이 자유롭게 평가할 수 있다. 이 격리는 요청의 수명 동안 보장되지만 요청이 완료되면 종료된다.</p>
+<p>트랜잭션의 각 요청은 요청의 수명 기간 동안 요청이 완료된 후(잠금을 획득한 경우) 주변 트랜잭션의 수명 기간 내에 다른 요청으로 부터 격리되어야 한다.</p>
+<p>매니저는 트랜잭션 요청이 요청 자체보다 더 오래 지속되는 잠금을 획득할 수 있도록 허용하여 이런 문제를 해결한다. 잠금은 특정 키를 통해 제공되는 격리 기간을 잠금 보유자 트랜잭션 자체의 수명까지 연장한다. 일반적으로 트랜잭션이 커밋되거나 중단될 때만 잠금이 해제된다. 시퀀싱 중에 이런 잠금을 발견한 다른 요청은 대기열에서 잠금이 해제될 때까지 기다렸다가 진행한다. 시퀀싱 중에 잠금이 확인되므로 평가 중에 잠금을 다시 확인할 필요가 없다.</p>
+<p>그러나 모든 잠금이 매니저의 통제 하에 직접 저장되는 것은 아니므로 시퀀싱 중에 모든 잠금을 발견할 수 있는 것은 아니다. 특히 write intent는 MVCC 키 공간에 인라인으로 저장되므로 요청 평가 시간까지 감지할 수 없다. 이런 형태의 잠금 저장을 수용하기 위해 매니저는 외부 잠금에 대한 정보를 동시성 매니저 구조와 통합한다.</p>
+<p>요청 간에 공정성이 보장된다. 일반적으로 두 요청이 충돌하는 경우 먼저 도착한 요청이 먼저 처리된다. 따라서 시퀀싱은 FIFO 의미를 보장한다. 이에 대한 주요 예외는 이미 잠금을 획득한 트랜잭션의 일부인 요청은 시퀀싱 중에 해당 잠금을 기다릴 필요가 없으므로 잠금에 형성된 큐를 무시할 수 있다는 것이다.</p>
+<h4 id="Lock-table"><a href="#Lock-table" class="headerlink" title="Lock table"></a>Lock table</h4><p>잠금 테이블은 진행 중인 트랜잭션에서 획득한 잠금 모음을 보관하는 노드별 인메모리 데이터 구조다. 테이블의 각 잠금에는 비어 있을 가능성이 있는 잠금 대기열이 연결되어 있으며, 충돌하는 트랜잭션이 잠금 해제를 기다리는 동안 대기열에 대기할 수 있다. 로컬에 저장된 잠금 대기열의 항목은 필요에 따라 트랜잭션 레코드가 포함된 범위의 Raft 그룹 리더에 저장된 기존 TxnWaitQueue로 전파된다.</p>
+<p>데이터베이스는 요청을 사용해 읽고 쓴다. 트랜잭션은 하나 이상의 요청으로 구성된다. 요청 간에 격리가 필요하다. 또한 트랜잭션은 요청의 그룹을 나타내므로 이런 그룹 간에 격리가 필요하다. 이런 격리의 일부는 여러 버전을 유지함으로써 달성되고 일부는 요청이 잠금을 획득하도록 허용함으로써 달성된다. 여러 버전을 기반으로 격리하는 경우에도 읽기와 충돌하는 잠금 획득이 동시에 일어나지 않도록 하기 위해 어떤 형태의 상호 배제가 필요하다. 잠금 테이블은 요청의 잠금과 시퀀싱을 모두 제공한다.</p>
+<p>잠금은 요청 자체의 수명보다 길기 때문에 특정 키를 통해 제공되는 격리 기간을 잠금 보유자 트랜잭션 자체의 수명까지 연장할 수 있다. 잠금은 트랜잭션이 커밋되거나 중단될 때 만 해제된다. 시퀀싱 중에 이런 잠금을 발견한 다른 요청은 대기열에서 잠금이 해제될 때까지 기다렸다가 진행한다. 시퀀싱 중에 잠금이 확인되므로 요청은 시퀀싱이 완료된 후 선언된 모든 키에 대한 액세스가 보장된다. </p>
+<p>잠금 테이블은 또한 요청 간의 공정성을 제공한다. 두 요청이 충돌하는 경우 일반적으로 먼저 도착한 요청의 순서가 먼저 정해진다.</p>
+<ul>
+<li>이미 잠금을 획득한 트랜잭션의 일부인 요청은 시퀀싱 중에 해당 잠금을 기다릴 필요가 없으므로 잠금에 형성된 큐를 무시할 수 있다.</li>
+<li>서로 다른 수준의 경합이 발생하는 경합 요청은 FIFO가 아닌 순서로 시퀀싱될 수 있다. 이는 동시성을 높이기 위한 것이다. 예를 들어 요청 R1과 R2가 키 K2에서 경합 중인데 R1도 키 K1에서 대기중인 경우, R2가 R1을 지나쳐서 평가할 수 있다.</li>
+</ul>
+<h4 id="Latch-manager"><a href="#Latch-manager" class="headerlink" title="Latch manager"></a>Latch manager</h4><p>래치 매니저는 동시성 매니저의 감독 하에 들어오는 요청의 순서를 정하고 해당 요청 간에 격리를 제공한다.</p>
+<ul>
+<li>범위에 대한 쓰기 요청이 발생하면 범위의 리스 홀더가 요청을 직렬화한다. 즉, 일관된 순서로 요청을 배치한다.</li>
+<li>이 직렬화를 강제하기 위해 리스 홀더는 쓰기 값의 키에 대한 래치를 생성해 키에 대한 경합 없는 액세스를 제공한다. 동일한 키 세트에 대한 다른 요청이 리스 홀더에 들어올 경우, 다른 요청은 래치가 해제될 때까지 기다려야 계속 진행할 수 있다.</li>
+</ul>
+<p>읽기 요청도 래치를 생성한다. 동일한 키에 대한 여러 개의 읽기 래치는 동시에 유지될 수 있지만, 동일한 키에 대한 읽기 래치와 쓰기 래치는 동시에 유지될 수 없다. 래치는 하나의 낮은 수준의 요청이 지속되는 동안에만 필요한 뮤텍스와 같다고 생각할 수 있다. 더 오래 실행되는 상위 수준 요청을 조정하기 위해 내구성 있는 write intent 시스템을 사용한다.</p>
+<h3 id="Isolation-levels"><a href="#Isolation-levels" class="headerlink" title="Isolation levels"></a>Isolation levels</h3><p>Cockroach는 두 가지 격리 방식을 제공한다. <code>SERIALIZABLE</code>, <code>READ COMMITTED</code>. 기존적으로 모든 트랜잭션을 가장 강력한 ANSI transaction isolation level인 <code>SERIALIZABLE</code>로 실행한다. 모든 트랜잭션을 직렬화 가능한 순서로 배치하려면 <code>SERIALIZABLE</code> 격리를 위해 트랜잭션을 다시 시작해야 할 수 있다.</p>
+<h3 id="Transaction-conflicts"><a href="#Transaction-conflicts" class="headerlink" title="Transaction conflicts"></a>Transaction conflicts</h3><p>Write intent와 충돌하는 아래와 같은 유형의 충돌을 허용한다.</p>
+<ul>
+<li>Write-write : 두 트랜잭션이 write intent를 생성하거나 동일한 키에 대한 잠금을 획득하는 경우</li>
+<li>Write-read : 읽기가 자신의 타임스탬프보다 짧은 기존 write intent를 만나는 경우</li>
+</ul>
+<p>첫 번째 트랜잭션을 <code>TxnA</code>, write intent를 발견한 두 번째 트랜잭션을 <code>TxnB</code>라고 가정하자.</p>
+<ol>
+<li>트랜잭션에 명시적인 우선순위가 설정되어 있는 경우, 우선순위가 낮은 트랜잭션은 직렬화 오류로 중단(write-read)되거나 타임스탬프가 푸시(write-write)된다.</li>
+<li>발생한 트랜잭션이 만료되면 중단되고 충돌 해결에 성공한다. 다음과 같은 경우 write intent가 만료된 것으로 간주한다.<ol>
+<li>트랜잭션 레코드가 없고 타임스탬프가 트랜잭션 활성 임계값을 벗어난 경우</li>
+<li>트랜잭션 레코드가 트랜잭션 활성 임계값 내에서 하트비트 되지 않은 경우</li>
+</ol>
+</li>
+<li>TxnB는 TxnA가 완료될 때까지 대기하기 위해 TxnWaitQueue로 들어간다.</li>
+</ol>
+<p>또한 인텐트 충돌과 관련이 없는 다음과 같은 유형의 충돌이 발생할 수 있다.</p>
+<ul>
+<li>Write after read : 타임스탬프가 낮은 쓰기가 나중에 읽기를 만나는 경우. 이 문제는 타임스탬프 캐시를 통해 처리됨</li>
+<li>Read with uncertainty window : 읽기에서 더 높은 타임스탬프의 값을 발견했지만 시계 왜곡 가능성으로 인해 해당 값을 트랜잭션의 미래로 간주해야 할지 과거로 간주해야 할지 모호한 경우. 이 문제는 트랜잭션의 타임스탬프를 불확실한 값 이상으로 푸시하는 방식으로 처리된다.</li>
+</ul>
+<h3 id="Read-refreshing"><a href="#Read-refreshing" class="headerlink" title="Read refreshing"></a>Read refreshing</h3><p><code>SERIALIZABLE</code> 트랜잭션의 타임스탬프가 푸시될 때마다 푸시된 타임스탬프에서 커밋을 허용하기 전에 추가 검사를 진행한다. 트랜잭션이 이전에 읽었던 모든 값을 검사해 원래 트랜잭션 타임스탬프와 푸시된 트랜잭션 타임스탬프 사이에 쓰기가 발생하지 않았는지 확인한다. 이 검사는 <code>SERIALIZABLE</code> 위반을 방지한다. 이 검사는 전용 <code>RefreshRequest</code>를 사용해 모든 읽기를 추적하는 방식으로 수행된다. 이 검사가 성공하면 트랜잭션은 커밋이 허용된다. Refresh Request가 실패하면 푸시된 타임스탬프에서 트랜잭션을 재시도 해야한다.</p>
+</div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined">Song Hayoung</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="https://songhayoung.github.io/2024/01/22/Cockroach/transaction-layer/">https://songhayoung.github.io/2024/01/22/Cockroach/transaction-layer/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/DB/">DB</a></div><nav id="pagination"><div class="prev-post pull-left"><a href="/2024/01/23/PS/Codeforces/div2-703-d/"><i class="fa fa-chevron-left">  </i><span>[Codeforces] Round 703 (Div. 2) D. Max Median</span></a></div><div class="next-post pull-right"><a href="/2024/01/22/PS/HackerEarth/jiraiya-and-rasengan-attacks/"><span>[Hacker Earth] Jiraiya and Rasengan Attacks</span><i class="fa fa-chevron-right"></i></a></div></nav><div id="gitalk-container"></div><script>var gitalk = new Gitalk({
+  clientID: '3604b61642355579f55e',
+  clientSecret: 'f552120f18ac5aee3f6297e05e97d94c0a25cd4b',
+  repo: 'SongHayoung.github.io',
+  owner: 'SongHayoung',
+  admin: 'SongHayoung',
+  id: md5(decodeURI(location.pathname)),
+  language: 'en'
+})
+gitalk.render('gitalk-container')</script></div></div><footer class="footer-bg" style="background-image: url(https://xxxx.jpg)"><div class="layout" id="footer"><div class="copyright">&copy;2020 - 2024 By Song Hayoung</div><div class="framework-info"><span>Driven - </span><a target="_blank" rel="noopener" href="http://hexo.io"><span>Hexo</span></a><span class="footer-separator">|</span><span>Theme - </span><a target="_blank" rel="noopener" href="https://github.com/Molunerfinn/hexo-theme-melody"><span>Melody</span></a></div><div class="footer_custom_text">Learning how to walk slowly to not miss important things</div><div class="busuanzi"><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><span id="busuanzi_container_page_pv"><i class="fa fa-file"></i><span id="busuanzi_value_page_pv"></span><span></span></span></div></div></footer><i class="fa fa-arrow-up" id="go-up" aria-hidden="true"></i><script src="https://cdn.jsdelivr.net/npm/animejs@latest/anime.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@latest/velocity.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-ui-pack@latest/velocity.ui.min.js"></script><script src="/js/utils.js?version=1.7.0"></script><script src="/js/fancybox.js?version=1.7.0"></script><script src="/js/sidebar.js?version=1.7.0"></script><script src="/js/copy.js?version=1.7.0"></script><script src="/js/fireworks.js?version=1.7.0"></script><script src="/js/transition.js?version=1.7.0"></script><script src="/js/scroll.js?version=1.7.0"></script><script src="/js/head.js?version=1.7.0"></script><script src="/js/search/algolia.js"></script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+    processEscapes: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  },
+  CommonHTML: {
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "HTML-CSS": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "SVG": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  }
+});
+</script><script type="text/x-mathjax-config">MathJax.Hub.Queue(function() {
+  var all = MathJax.Hub.getAllJax(), i;
+  for (i=0; i < all.length; i += 1) {
+    all[i].SourceElement().parentNode.className += ' has-jax';
+  }
+});
+</script><script src="https://cdn.jsdelivr.net/npm/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><script>if(/Android|webOS|iPhone|iPod|iPad|BlackBerry/i.test(navigator.userAgent)) {
+  $('#nav').addClass('is-mobile')
+  $('footer').addClass('is-mobile')
+  $('#top-container').addClass('is-mobile')
+}</script><div class="search-dialog" id="algolia-search"><div class="search-dialog__title" id="algolia-search-title">Algolia</div><div id="algolia-input-panel"><div id="algolia-search-input"></div></div><hr><div id="algolia-search-results"><div id="algolia-hits"></div><div id="algolia-pagination"></div><div id="algolia-stats"></div></div><span class="search-close-button"><i class="fa fa-times"></i></span></div><div class="search-mask"></div></body></html>
