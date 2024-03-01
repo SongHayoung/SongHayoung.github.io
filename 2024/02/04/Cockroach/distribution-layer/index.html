@@ -1,0 +1,92 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="description" content="[CockroachDB] Distribution Layer"><meta name="keywords" content="DB"><meta name="author" content="Song Hayoung"><meta name="copyright" content="Song Hayoung"><title>[CockroachDB] Distribution Layer | SUMFIのBlog</title><link rel="shortcut icon" href="/songcon.ico"><link rel="stylesheet" href="/css/index.css?version=1.7.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@latest/css/font-awesome.min.css?version=1.7.0"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css?version=1.7.0"><meta name="format-detection" content="telephone=no"><meta http-equiv="x-dns-prefetch-control" content="on"><link rel="dns-prefetch" href="https://cdn.jsdelivr.net"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.css"><script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.js" defer></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@latest/dist/gitalk.min.js"></script><script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.10.0/js/md5.min.js"></script><link rel="dns-prefetch" href="https://www.google-analytics.com"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-169368422-1', 'auto');
+ga('send', 'pageview');</script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: {"appId":"7LZ6OJ4D6C","apiKey":"9a84e13f74ea78c3fd54512c10139c56","indexName":"git blog","hits":{"per_page":10},"languages":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}.","hits_stats":"${hits} results found in ${time} ms"}},
+  localSearch: undefined,
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  }
+} </script><meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/rss2.xml" title="SUMFIのBlog" type="application/rss+xml">
+</head><body><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar" data-display="true"><div class="toggle-sidebar-info text-center"><span data-toggle="Toggle article">Toggle site</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">Catalog</div><div class="sidebar-toc__progress"><span class="progress-notice">You've read</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Distribution-Layer"><span class="toc-number">1.</span> <span class="toc-text">Distribution Layer</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Overview"><span class="toc-number">2.</span> <span class="toc-text">Overview</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Monolithic-sorted-map-structure"><span class="toc-number">2.1.</span> <span class="toc-text">Monolithic sorted map structure</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Meta-ranges"><span class="toc-number">2.1.1.</span> <span class="toc-text">Meta ranges</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Table-data"><span class="toc-number">2.1.2.</span> <span class="toc-text">Table data</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Using-the-monolithic-sorted-map"><span class="toc-number">2.2.</span> <span class="toc-text">Using the monolithic sorted map</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Interactions-with-other-layers"><span class="toc-number">2.3.</span> <span class="toc-text">Interactions with other layers</span></a></li></ol></li></ol></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="https://avatars3.githubusercontent.com/u/37806785?s=460&amp;u=8c68d685faf7c5280cfbd736a6b1730b55fb4203&amp;v=4"></div><div class="author-info__name text-center">Song Hayoung</div><div class="author-info__description text-center"></div><div class="follow-button"><a target="_blank" rel="noopener" href="https://www.linkedin.com/in/hayoung-song-9523b61bb/">Follow Me</a></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="/archives"><span class="pull-left">Articles</span><span class="pull-right">10410</span></a><a class="author-info-articles__tags article-meta" href="/tags"><span class="pull-left">Tags</span><span class="pull-right">197</span></a><a class="author-info-articles__categories article-meta" href="/categories"><span class="pull-left">Categories</span><span class="pull-right">60</span></a></div><hr><div class="author-info-links"><div class="author-info-links__title text-center">VISITED</div><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Seoul Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Jeju Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">British Columbia Canada</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Boracay Philippines</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">三重　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">大阪　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">名古屋　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">静岡　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">札幌　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">京都　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Bangkok Thailand</a></div></div></div><div id="content-outer"><div id="top-container" style="background-image: url(https://xxxx.jpg)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="/">SUMFIのBlog</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus">   <a class="site-page" href="/">Home</a><a class="site-page" href="/archives">Archives</a><a class="site-page" href="/tags">Tags</a><a class="site-page" href="/categories">Categories</a><a class="site-page" href="/about">About</a></span><span class="pull-right"><a class="site-page social-icon search"><i class="fa fa-search"></i><span> Search</span></a></span></div><div id="post-info"><div id="post-title">[CockroachDB] Distribution Layer</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2024-02-04</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/Cockroach-DB/">Cockroach DB</a><div class="post-meta-wordcount"><span>Word count: </span><span class="word-count">664</span><span class="post-meta__separator">|</span><span>Reading time: 4 min</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div class="article-container" id="post-content"><h2 id="Distribution-Layer"><a href="#Distribution-Layer" class="headerlink" title="Distribution Layer"></a>Distribution Layer</h2><span id="more"></span>
+<p>Distribution layer는 클러스터 데이터의 통합 뷰를 제공한다.</p>
+<h2 id="Overview"><a href="#Overview" class="headerlink" title="Overview"></a>Overview</h2><p>어느 노드에서나 클러스터의 모든 데이터에 액세스할 수 있도록 하기 위해 KV 쌍의 모놀리식 정렬된 맵에 데이터를 저장한다. 이 키 공간은 클러스터의 모든 데이터와 그 위치를 설명하며, 모든 키를 항상 단일 범위에서 찾을 수 있도록 키 공간의 연속적인 청크인 “range”로 분할한다.</p>
+<p>Cockroach DB는 sorted map을 구현해 이를 활성화한다.</p>
+<ul>
+<li>Simple lookups : 데이터의 특정 부분을 담당하는 노드를 식별하기 때문에 쿼리는 원하는 데이터를 찾을 수 있는 위치를 빠르게 찾을 수 있다.</li>
+<li>Efficient scans : 데이터의 순서를 정의하면 스캔 중에 특정 범위 내의 데이터를 쉽게 찾을 수 있다.</li>
+</ul>
+<h3 id="Monolithic-sorted-map-structure"><a href="#Monolithic-sorted-map-structure" class="headerlink" title="Monolithic sorted map structure"></a>Monolithic sorted map structure</h3><p>모놀리식 정렬된 맵은 두 가지 기본 요소로 구성된다.</p>
+<ul>
+<li>System data : 클러스터에 있는 데이터의 위치를 설명하는 메타 범위를 포함한다.</li>
+<li>User data : 클러스터의 테이블 데이터를 저장한다.</li>
+</ul>
+<h4 id="Meta-ranges"><a href="#Meta-ranges" class="headerlink" title="Meta ranges"></a>Meta ranges</h4><p>클러스터에 있는 모든 범위의 위치는 키 공간의 시작 부분에 있는 2단계 인덱스에 저장되며, 첫 번째 수준(meta1)은 두 번째 수준을, 두 번째 수준(meta2)는 클러스터의 데이터를 주소 지정하는 메타 범위로 알려져 있다.</p>
+<p>이 2레벨 인덱스와 사용자 데이터는 트리로 시각화할 수 있으며, 루트는 meta1, 두 번째 레벨은 Meta2 트리의 잎은 사용자 데이터를 보관하는 range로 구성할 수 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240204200931177.png" alt=""></p>
+<p>중요한 점은 모든 노드가 meta1 범위의 위치에 대한 정보를 가지고 있으며, range는 절대 분할되지 않다는 점이다.</p>
+<p>이 메타 범위 구조는 기존적으로 최대 4EiB의 사용자 데이터를 처리할 수 있다. 그러나 범위 크기가 더 크면 이 용량 또한 확장 가능하다. 메타 범위는 대부분 일반 범위처럼 취급되며 클러스터의 다른 KV 데이터 요소와 마찬가지로 액세스 및 복제된다.</p>
+<p>각 노드는 이전에 액세스한 meta2 범위의 값을 캐시해 향후 해당 데이터의 액세스를 최적화한다. 노드가 특정 키에 대해 meta2 캐시가 유효하지 않다는 것을 발견할 때마다 meta2 범위에 대한 정기적인 읽기를 수행해 캐시를 업데이트한다.</p>
+<h4 id="Table-data"><a href="#Table-data" class="headerlink" title="Table data"></a>Table data</h4><p>노드의 메타 범위 다음에는 클러스터가 저장하는 KV 데이터가 있다.</p>
+<p>각 테이블과 그 보조 인덱스는 처음에 단일 범위에 매핑되며, 범위의 각 KV 쌍은 테이블의 단일 행 또는 보조 인덱스의 단일 행을 나타낸다. 범위가 기본 범위 크기에 도달하면 범위는 두 개의 범위로 분할된다. 이 프로세스는 테이블과 인덱스가 계속 증가함에 따라 계속 진행된다. 테이블이 여러 범위로 분할되면 테이블과 보조 인덱스가 별도의 범위에 저장될 가능성이 높다. 그러나 범위는 여전히 테이블과 보조 인덱스 모두에 대한 데이터를 포함할 수 있다.</p>
+<p>기본 범위 크기는 노드 간에 빠르게 이동할 수 있을 만큼 작으면서도 키가 함께 액세스될 가능성이 높은 의미 있게 연속된 데이터 세트를 저장할 수 있을 만큼 큰 크기 사이의 최적점을 나타낸다. 그런 다음 이러한 범위는 생존 가능성을 보장하기 위해 클러스터에서 셔플된다.</p>
+<p>이러한 테이블 범위는 적절한 이름의 복제 계층에서 복제되며, 각 복제본의 주소는 meta2 범위에 저장된다.</p>
+<h3 id="Using-the-monolithic-sorted-map"><a href="#Using-the-monolithic-sorted-map" class="headerlink" title="Using the monolithic sorted map"></a>Using the monolithic sorted map</h3><p>메타 범위 섹션에서 설명한 대로 클러스터에 있는 모든 범위의 위치는 2단계 인덱스에 저장된다.</p>
+<ul>
+<li>첫 번째 수준(meta1)은 두 번째 수준을 가르킨다.</li>
+<li>두 번째 수준(meta2)는 사용자 데이터를 다룬다.</li>
+</ul>
+<p>노드가 요청을 받으면 이 트리의 잎부터 시작해 상향식 방향으로 요청에 포함된 키가 있는 범위의 위치를 찾는다. 이 프로세스는 다음과 같이 동작한다.</p>
+<ol>
+<li>각 키에 대해 노드는 두 번재 수준의 범위 메타데이터(meta2)에서 지정된 키가 포함된 범위의 위치를 조회한다. 해당 정보는 성능을 위해 캐시되며 범위의 위치가 캐시에서 발견되면 즉시 반환된다.</li>
+<li>범위의 위치가 캐시에서 발견되지 않으면 노드는 meta2의 실제 값이 있는 범위의 위치를 조회한다. 이 정보도 캐시되며, meta2 범위의 위치가 캐시에서 발견되면 노드는 meta2 범위로 RPC를 전송해 요청이 작동하려는 키의 위치를 가져온 다음 해당 정보를 반환한다.</li>
+<li>meta2 범위의 위치가 캐시에서 발견되지 않으면 노드는 범위 메타데이터의 첫 번째 수준(meta1)의 실제 값이 있는 범위의 위치를 조회한다. meta1의 위치는 가십 프로토콜을 사용해 클러스터의 모든 노드에 분산되어 있기 때문에 이 조회는 항상 성공한다. 그런 다음 노드는 meta1의 정보를 사용해 meta2의 위치를 조회하고 meta2에서 요청에 포함된 키가 포함된 범위의 위치를 조회한다.</li>
+</ol>
+<p>위에서 설명한 프로세스는 재귀적이며, 조회가 수행될 때마다 <code>1</code>의 캐시에서 위치를 가져오거나, <code>2</code> 트리의 다음 레벨 “위”에 있는 값에 대해 또 다른 조회를 수행한다는 점에 유의해라. 범위 메타데이터가 캐시되어 있기 때문에 일반적으로 다른 노드에 RPC를 보내지 않고도 조회를 수행할 수 있다.</p>
+<p>이제 노드가 요청의 키가 있는 범위의 위치를 알았으므로, 요청의 KV 연산을 BatchRequest의 범위로 보낸다.</p>
+<h3 id="Interactions-with-other-layers"><a href="#Interactions-with-other-layers" class="headerlink" title="Interactions with other layers"></a>Interactions with other layers</h3><ul>
+<li>같은 노드에 있는 트랜잭션 계층으로 부터 요청을 받음</li>
+<li>요청을 수신해야 하는 노드를 식별한 다음 적절한 노드의 복제 계층으로 요청을 보냄</li>
+</ul>
+</div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined">Song Hayoung</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="https://songhayoung.github.io/2024/02/04/Cockroach/distribution-layer/">https://songhayoung.github.io/2024/02/04/Cockroach/distribution-layer/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/DB/">DB</a></div><nav id="pagination"><div class="prev-post pull-left"><a href="/2024/02/05/PS/Codeforces/div2-643-e/"><i class="fa fa-chevron-left">  </i><span>[Codeforces] Round 643 (Div. 2) E. Restorer Distance</span></a></div><div class="next-post pull-right"><a href="/2024/02/04/PS/HackerEarth/shil-and-survival-game/"><span>[Hacker Earth] Shil and Survival Game</span><i class="fa fa-chevron-right"></i></a></div></nav><div id="gitalk-container"></div><script>var gitalk = new Gitalk({
+  clientID: '3604b61642355579f55e',
+  clientSecret: 'f552120f18ac5aee3f6297e05e97d94c0a25cd4b',
+  repo: 'SongHayoung.github.io',
+  owner: 'SongHayoung',
+  admin: 'SongHayoung',
+  id: md5(decodeURI(location.pathname)),
+  language: 'en'
+})
+gitalk.render('gitalk-container')</script></div></div><footer class="footer-bg" style="background-image: url(https://xxxx.jpg)"><div class="layout" id="footer"><div class="copyright">&copy;2020 - 2024 By Song Hayoung</div><div class="framework-info"><span>Driven - </span><a target="_blank" rel="noopener" href="http://hexo.io"><span>Hexo</span></a><span class="footer-separator">|</span><span>Theme - </span><a target="_blank" rel="noopener" href="https://github.com/Molunerfinn/hexo-theme-melody"><span>Melody</span></a></div><div class="footer_custom_text">Learning how to walk slowly to not miss important things</div><div class="busuanzi"><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><span id="busuanzi_container_page_pv"><i class="fa fa-file"></i><span id="busuanzi_value_page_pv"></span><span></span></span></div></div></footer><i class="fa fa-arrow-up" id="go-up" aria-hidden="true"></i><script src="https://cdn.jsdelivr.net/npm/animejs@latest/anime.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@latest/velocity.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-ui-pack@latest/velocity.ui.min.js"></script><script src="/js/utils.js?version=1.7.0"></script><script src="/js/fancybox.js?version=1.7.0"></script><script src="/js/sidebar.js?version=1.7.0"></script><script src="/js/copy.js?version=1.7.0"></script><script src="/js/fireworks.js?version=1.7.0"></script><script src="/js/transition.js?version=1.7.0"></script><script src="/js/scroll.js?version=1.7.0"></script><script src="/js/head.js?version=1.7.0"></script><script src="/js/search/algolia.js"></script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+    processEscapes: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  },
+  CommonHTML: {
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "HTML-CSS": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "SVG": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  }
+});
+</script><script type="text/x-mathjax-config">MathJax.Hub.Queue(function() {
+  var all = MathJax.Hub.getAllJax(), i;
+  for (i=0; i < all.length; i += 1) {
+    all[i].SourceElement().parentNode.className += ' has-jax';
+  }
+});
+</script><script src="https://cdn.jsdelivr.net/npm/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><script>if(/Android|webOS|iPhone|iPod|iPad|BlackBerry/i.test(navigator.userAgent)) {
+  $('#nav').addClass('is-mobile')
+  $('footer').addClass('is-mobile')
+  $('#top-container').addClass('is-mobile')
+}</script><div class="search-dialog" id="algolia-search"><div class="search-dialog__title" id="algolia-search-title">Algolia</div><div id="algolia-input-panel"><div id="algolia-search-input"></div></div><hr><div id="algolia-search-results"><div id="algolia-hits"></div><div id="algolia-pagination"></div><div id="algolia-stats"></div></div><span class="search-close-button"><i class="fa fa-times"></i></span></div><div class="search-mask"></div></body></html>

@@ -1,0 +1,213 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="description" content="[Uber] Build a Mean Load Shedder"><meta name="keywords" content="System Design"><meta name="author" content="Song Hayoung"><meta name="copyright" content="Song Hayoung"><title>[Uber] Build a Mean Load Shedder | SUMFIのBlog</title><meta name="robots" content="noindex"><link rel="shortcut icon" href="/songcon.ico"><link rel="stylesheet" href="/css/index.css?version=1.7.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@latest/css/font-awesome.min.css?version=1.7.0"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css?version=1.7.0"><meta name="format-detection" content="telephone=no"><meta http-equiv="x-dns-prefetch-control" content="on"><link rel="dns-prefetch" href="https://cdn.jsdelivr.net"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.css"><script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.js" defer></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@latest/dist/gitalk.min.js"></script><script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.10.0/js/md5.min.js"></script><link rel="dns-prefetch" href="https://www.google-analytics.com"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-169368422-1', 'auto');
+ga('send', 'pageview');</script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: {"appId":"7LZ6OJ4D6C","apiKey":"9a84e13f74ea78c3fd54512c10139c56","indexName":"git blog","hits":{"per_page":10},"languages":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}.","hits_stats":"${hits} results found in ${time} ms"}},
+  localSearch: undefined,
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  }
+} </script><meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/rss2.xml" title="SUMFIのBlog" type="application/rss+xml">
+</head><body><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar" data-display="true"><div class="toggle-sidebar-info text-center"><span data-toggle="Toggle article">Toggle site</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">Catalog</div><div class="sidebar-toc__progress"><span class="progress-notice">You've read</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Build-a-Mean-Load-Shedder"><span class="toc-number">1.</span> <span class="toc-text">Build a Mean Load Shedder</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Background"><span class="toc-number">1.1.</span> <span class="toc-text">Background</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Architecture"><span class="toc-number">1.2.</span> <span class="toc-text">Architecture</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Priorities"><span class="toc-number">1.3.</span> <span class="toc-text">Priorities</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Library-Architecture"><span class="toc-number">1.4.</span> <span class="toc-text">Library Architecture</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Rejector"><span class="toc-number">1.5.</span> <span class="toc-text">Rejector</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Scheduler"><span class="toc-number">1.6.</span> <span class="toc-text">Scheduler</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#PID-Controller-for-Cinnamon"><span class="toc-number">2.</span> <span class="toc-text">PID Controller for Cinnamon</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Introduction"><span class="toc-number">2.1.</span> <span class="toc-text">Introduction</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Architecture-1"><span class="toc-number">2.2.</span> <span class="toc-text">Architecture</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Context-PID-Controller"><span class="toc-number">2.3.</span> <span class="toc-text">Context: PID Controller</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Figuring-Out-The-Percentage"><span class="toc-number">2.4.</span> <span class="toc-text">Figuring Out The Percentage</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Ratio-To-Threshold"><span class="toc-number">2.5.</span> <span class="toc-text">Ratio To Threshold</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Auto-Tuner-Adaptive-Concurrency-in-the-Wild"><span class="toc-number">3.</span> <span class="toc-text">Auto-Tuner: Adaptive Concurrency in the Wild</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Introduction-1"><span class="toc-number">3.1.</span> <span class="toc-text">Introduction</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Architecture-2"><span class="toc-number">3.2.</span> <span class="toc-text">Architecture</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#TCP-Vegas"><span class="toc-number">3.3.</span> <span class="toc-text">TCP-Vegas</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Auto-Tuner"><span class="toc-number">3.4.</span> <span class="toc-text">Auto-Tuner</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Latency-Sample"><span class="toc-number">3.4.1.</span> <span class="toc-text">Latency Sample</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Periodic-Reset"><span class="toc-number">3.4.2.</span> <span class="toc-text">Periodic Reset</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Bounds-on-Inflight"><span class="toc-number">3.4.3.</span> <span class="toc-text">Bounds on Inflight</span></a></li></ol></li></ol></li></ol></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="https://avatars3.githubusercontent.com/u/37806785?s=460&amp;u=8c68d685faf7c5280cfbd736a6b1730b55fb4203&amp;v=4"></div><div class="author-info__name text-center">Song Hayoung</div><div class="author-info__description text-center"></div><div class="follow-button"><a target="_blank" rel="noopener" href="https://www.linkedin.com/in/hayoung-song-9523b61bb/">Follow Me</a></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="/archives"><span class="pull-left">Articles</span><span class="pull-right">10410</span></a><a class="author-info-articles__tags article-meta" href="/tags"><span class="pull-left">Tags</span><span class="pull-right">197</span></a><a class="author-info-articles__categories article-meta" href="/categories"><span class="pull-left">Categories</span><span class="pull-right">60</span></a></div><hr><div class="author-info-links"><div class="author-info-links__title text-center">VISITED</div><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Seoul Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Jeju Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">British Columbia Canada</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Boracay Philippines</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">三重　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">大阪　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">名古屋　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">静岡　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">札幌　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">京都　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Bangkok Thailand</a></div></div></div><div id="content-outer"><div id="top-container" style="background-image: url(https://xxxx.jpg)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="/">SUMFIのBlog</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus">   <a class="site-page" href="/">Home</a><a class="site-page" href="/archives">Archives</a><a class="site-page" href="/tags">Tags</a><a class="site-page" href="/categories">Categories</a><a class="site-page" href="/about">About</a></span><span class="pull-right"><a class="site-page social-icon search"><i class="fa fa-search"></i><span> Search</span></a></span></div><div id="post-info"><div id="post-title">[Uber] Build a Mean Load Shedder</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2024-02-06</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/">System Design</a><i class="fa fa-angle-right" aria-hidden="true"></i><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/Engineering/">Engineering</a><div class="post-meta-wordcount"><span>Word count: </span><span class="word-count">2.7k</span><span class="post-meta__separator">|</span><span>Reading time: 16 min</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div class="article-container" id="post-content"><h1 id="Build-a-Mean-Load-Shedder"><a href="#Build-a-Mean-Load-Shedder" class="headerlink" title="Build a Mean Load Shedder"></a>Build a Mean Load Shedder</h1><span id="more"></span>
+<p>Uber는 트래픽 스파이크나 속도 저하로 인한 서비스 과부하를 방지하기 위해 새로운 부하 차단기를 개발했다. 기존 CoDel 알고리즘 기반 QALM이 설정이 어렵고, 트래픽의 우선순위를 구분하기 어려웠기 때문이다. 새로 빌드된 시스템은 우선순위가 높은 요청을 먼저 처리하게 하고, 점진적 성능 저하를 위해 설정이 필요없는 자동적 솔루션을 채택했다. 주요 컴포넌트는 서비스 용량을 동적으로 지속적으로 조정하는 TCP-Vegas 알고리즘, 들어오는 요청에 따라 부하 분산 양을 동적으로 조절하는 PID Controller 메커니즘으로 구성된다.</p>
+<h2 id="Background"><a href="#Background" class="headerlink" title="Background"></a>Background</h2><p>기존 솔루션인 QALM은 CoDel 알고리즘을 채택해 과부하가 발생하면 우선순위가 낮은 요청을 제거하도록 처리했다. CoDel은 요청이 대기열에서 대기하는 시간을 모니터링하고 특정 수치만큼 지연되는 경우 우선순위가 낮은 요청을 제거하는 방식으로 동작한다. 이렇게 되면 QALM은 동시에 실행되는 요청의 수를 제한하고 이를 곧 용량으로 표현하게 된다. </p>
+<p>QALM을 도입하기 위해선 허들이 있었는데, 설정이 복잡하다는 것이였다. 예를 들어 테스트 컴포넌트에서 발생한 트래픽이 실제로는 우선순위가 낮은 요청이여야 한다는 점을 포착하기 어려웠다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240206204755528.png" alt=""></p>
+<p>그렇기 때문에 신규 시스템에서는 아래와 같은 목표를 설정했다.</p>
+<ul>
+<li>더 나은 우선순위 전파</li>
+<li>간편한 설정</li>
+<li>뛰어난 성능</li>
+</ul>
+<h2 id="Architecture"><a href="#Architecture" class="headerlink" title="Architecture"></a>Architecture</h2><p>Cinnamon은 Go로 구축된 RPC 미들웨어다. 또한 각 요청에는 엣지를 통해 지정되는 우선순위 태그로 요청이 얼마나 중요한지 각 서비스가 알 수 있도록 전파하게 했다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240206205003685.png" alt=""></p>
+<h2 id="Priorities"><a href="#Priorities" class="headerlink" title="Priorities"></a>Priorities</h2><p>Cinnamon은 요청에 첨부된 우선순위를 사용하지만, 우선순위가 없는 경우 호출 서비스에 따라 기본 값을 사용한다. 우선순위는 tier level과 cohort 두 가지를 사용한다. 티어는 0 ~ 5 총 6단계로 세분화된다. 코호트는 티어 내에서 요청을 세분화해 동일한 요청의 하위 집합에 대한 로드 셰어를 수행할 수 있도록 돕는다. 예를 들어 1티어 요청의 5%를 제거해야하는 경우 하위 코호트 5% 사용자 집합군이 셰딩된다. 또한 특정 사용자군이 계속 셰딩되는 문제를 방지하기 위해 타이밍 정보가 포함된 간단한 샤딩으로 사용자군을 계속 이동시켜 문제를 해결한다.</p>
+<h2 id="Library-Architecture"><a href="#Library-Architecture" class="headerlink" title="Library Architecture"></a>Library Architecture</h2><p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240206210508376.png" alt=""></p>
+<p>요청이 Cinnamon 라이브러리를 통과하는 동안의 수명 주기이다.</p>
+<ol>
+<li>Priority : 먼저 요청에 우선순위가 지정되어 있는지 확인하고, 지정되어 있지 않은 경우 요청 발신자를 기준으로 기본 우선순위를 설정한다.</li>
+<li>Rejector : 요청을 거부할지 여부를 판단하는 거부자</li>
+<li>Priority Queue : 요청이 수락되면 우선 순위가 가장 높은 요청이 먼저 예약되도록 우선순위 큐에 넣는다.</li>
+<li>Scheduler : Cinnamon은 정해진 수의 요청만 병렬로 처리할 수 있으므로 스케쥴러의 역할은 현재 제한이 허용하는 만큼의 요청을 동시에 처리하되 그 이상은 처리하지 않도록 하는 것이다.</li>
+<li>Timeout : 너무 많은 요청이 큐에 대기중인 경우 큐에서 시간이 초과되어 rate limiting 오류가 반환한다. Queue time limit은 일반적으로 일반 요청 시간 제한의 33%다.</li>
+</ol>
+<p>Cinnamon에는 최대 허용 동시 요청에 따라 거부 임계값을 지속적으로 조정하는 PID Controller와 Auto-tuner가 존재한다.</p>
+<ul>
+<li>서비스 과부하에 진입하면 대기열에 요청이 쌓이는 문제는 동시 요청의 최대 수를 제어하는 것으로 충분하지 않음</li>
+<li>거부 임계값을 설정하는 것만으로는 너무 많은 요청을 동시에 처리하는 문제로 서비스 과부하를 막을 수 없음</li>
+</ul>
+<p>PID Controller는 대기 중인 요청의 수를 최소화하는 것이고, Auto-tuner는 응답 대기 시간을 너무 많이 희생하지 않으면서 서비스의 처리량을 최대화하는 것이다.</p>
+<h2 id="Rejector"><a href="#Rejector" class="headerlink" title="Rejector"></a>Rejector</h2><p>Rejector는 두 가지 역할을 수행한다. </p>
+<ol>
+<li>endpoint가 과부하 상태인지 파악</li>
+<li>과부하 상태인 경우 요청의 일정 비율을 삭제해 요청 대기열이 가능한한 작아지도록 함</li>
+</ol>
+<p>엔드포인트 과부하 여부를 판단하기 위해 요청 대기열이 마지막으로 비워진 시간을 추적하고, 마지막으로 10초 동안 비워지지 않은 경우 엔드 포인트에 과부하가 걸린 것으로 판단한다. 이는 <a target="_blank" rel="noopener" href="https://queue.acm.org/detail.cfm?id=2839461&amp;uclick_id=e2052e5e-bebe-40d1-a412-cd18d49ee5c8">Facebook</a>이 실험한 CoDel 알고리즘의 변형에서 영감을 받았다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">onNewRequest(req, queue):</span><br><span class="line"></span><br><span class="line">  if (queue.lastEmptyTime() &lt; (now - N seconds)) &#123;</span><br><span class="line">     timeout = M ms</span><br><span class="line">  &#125; else &#123;</span><br><span class="line">     timeout = N seconds;</span><br><span class="line">  &#125;</span><br><span class="line">  queue.enqueue(req, timeout)</span><br></pre></td></tr></table></figure>
+<p>엔드포인트가 과부하되면 백그라운드 고루틴이 우선순위 대기열로 유입되는 요청의 유입과 유출을 모니터링하기 시작한다. 이 수치를 기반으로 PID 컨트롤러를 사용해 처리할 요청의 비율을 결정한다. PID 컨트롤러는 정확한 수준을 찾는 데 매우 빠르고 요청 대기열이 비워지면 PID는 임계값을 천천히 낮추는 방식으로 지연 시간을 악화시키는 변동 속도를 제한한다.</p>
+<h2 id="Scheduler"><a href="#Scheduler" class="headerlink" title="Scheduler"></a>Scheduler</h2><p>요청이 처리 수락되면(거부되지 않으면) 우선순위 대기열로 이동해 스케쥴러가 우선순위가 가장 높은 요청을 먼저 표시하고 요청을 처리하는 서비스 내부의 비즈니스 로직으로 전달한다. 스케쥴러는 대기 시간을 보다 효과적으로 제어하기 위해 특정 수의 동시 요청만 동시에 처리할 수 있도록 한다. 이를 inflight limit이라 한다.</p>
+<p>Auto-tuner 백그라운드 고루틴은 엔드포인트의 지연 시간을 모니터링하고 크게 Vegas-TCP/IP 제어 알고리즘을 사용해 inflight limit을 조정한다. 본질적으로 지연 시간이 증가하면 서비스에 과부하가 걸렸다는 의미이므로 inflight limit이 줄어든다. 반대로 지연 시간이 안정적이거나 감소하면 한도를 늘려 더 많은 처리량을 허용한다.</p>
+<h1 id="PID-Controller-for-Cinnamon"><a href="#PID-Controller-for-Cinnamon" class="headerlink" title="PID Controller for Cinnamon"></a>PID Controller for Cinnamon</h1><p>PID Controller는 피드백이 주어지면 목표 함수라고 하는 계산된 오류 값을 0으로 만들기 위해 지속적으로 시도하는 제어 루프 메커니즘이다. 이 메커니즘을 통해 로드 셰더의 안정적인 거부율을 신속히 계산해낸다.</p>
+<h2 id="Introduction"><a href="#Introduction" class="headerlink" title="Introduction"></a>Introduction</h2><p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240206213049048.png" alt=""></p>
+<p>Rejector의 목표는 엔드포인트에 과부하가 걸렸을 때 얼마나 많은 요청을 거부할지 결정하는 것이다. 이 비율이 상당히 안정적이어야 하는데, 그렇지 않으면 지연 시간이 변동하기 쉽기 때문이다. 따라서 임계값을 설정하려면 서비스 패턴에 맞게 조정해야 한다. 마지막으로, Cinnamon 로직은 모든 요청에 관여하기 때문에 지연 시간 추가 및 리소스 소비 측면에서 오버헤드가 최소화 되어야 한다.</p>
+<h2 id="Architecture-1"><a href="#Architecture-1" class="headerlink" title="Architecture"></a>Architecture</h2><p>리젝터는 두 가지 부분을 사용한다.</p>
+<ol>
+<li>우선순위에 따라 각 요청을 단순히 거부하거나 수락하는 온라인 처리</li>
+<li>매번(500ms interval) 실행해 임계값을 재보정하는 오프라인 처리</li>
+</ol>
+<p>온라인 처리는 요청의 우선순위를 읽고 임계값이 포함된 원자 정수와 비교하기만 하면 되므로 매우 효율적이다. 우선순위가 임계값보다 높으면 요청을 수락하고 그렇지 않으면 요청을 거부한다.</p>
+<p>오프라인 처리는 엔드포인트에 과부하가 걸렸는지 파악하고, 과부하가 걸렸다면 몇 퍼센트의 요청을 부하 분산 시켜야 하는지 계산하는 무거운 작업을 수행한다. 계산된 백분율은 이후 엔드포인트가 마지막으로 본 1000개의 요청을 검사해 우선순위 임계값으로 변환된다. 확인된 요청의 우선순위를 동적으로 기록함으로써 Cinnamon은 백분율이 동일하더라도 변화하는 트래픽 패턴에 따라 임계값을 자동 조정한다.</p>
+<p>로드 셰드에 대한 요청 대비 백분율을 찾기 위해 다음 두 가지 값을 PID Controller에서 사용한다.</p>
+<ul>
+<li>우선 순위 큐로 들어오는 요청 수</li>
+<li>대기열에서 처리할 서비스로 나가는 요청의 수</li>
+</ul>
+<h2 id="Context-PID-Controller"><a href="#Context-PID-Controller" class="headerlink" title="Context: PID Controller"></a>Context: PID Controller</h2><p>PID 컨트롤러는 세 가지 부분(비례, 적분, 미분)으로 구성된다.</p>
+<ul>
+<li>비례는 목표 값과 현재 값의 차이다. 따라서 현재 값이 목표 값에서 멀어질 수록 P 값이 커진다.</li>
+<li>적분은 과거 P 값의 합이다. 목표 값이 도달하면 P는 0이 되지만 I는 0이 아니므로 여전히 조정을 통해 P값을 유지하도록 한다.</li>
+<li>미분은 P의 변화율로 P가 많이 변하면 D가 그 효과를 약간 완화하는데 도움이 된다.</li>
+</ul>
+<p>특정 시점의 PID 값은 위의 세 항의 가중치 함계가 되며 각 항의 가중치는 일반적으로 Kp, Ki, Kd라고 한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240206214018308.png" alt=""></p>
+<p>서비스에 과부하가 걸리면 요청 처리량을 사용해 P(t)를 계산한 다음 이를 통해 PID 항을 계산해 Cinnamon에 입력되어 요청 처리량에 영향을 미치고, 따라서 PID에 다시 피드백 된다.</p>
+<h2 id="Figuring-Out-The-Percentage"><a href="#Figuring-Out-The-Percentage" class="headerlink" title="Figuring Out The Percentage"></a>Figuring Out The Percentage</h2><p>PID 컨트롤러의 목표는 거부율을 제거하는 것이다.</p>
+<ol>
+<li>미결 대기열을 최소로 유지해 대기 시간을 최소화한다.</li>
+<li>동시에 실행되는 요청의 수를 제한해 서비스를 최대한 활용한다.</li>
+</ol>
+<p>목표가 적으면 대기시간은 없지만 서비스 처리량이 제한된다. 낮은 처리량으로 인해 PID가 오버슈팅되어 너무 많은 요청을 거부할 경우 억압이 발생한다. 너무 많은 요청을 공급하는 경우에도 PID 컨트롤러에 억압을 발생시킨다.</p>
+<p>아래는 요청 대기열과 inflight limit간의 관계를 보여준다. 이 경우 inflight limit은 5이며 3개의 요청만 처리되고 있다. 또한 미결 요청이 3개 있다. 따라서 이 사례는 inflight limit을 완전히 활용하지 못하고 미결 요청이 있다는 점에서 두 가지 사항을 모두 위반한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240206231210368.png" alt=""></p>
+<p>위의 내용을 염두해두고 Cinnamon에서는 P값을 계산한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240206231343405.png" alt=""></p>
+<ul>
+<li>t는 기간을 나타냄(e.g. 500ms)</li>
+<li>in(t)는 기간 동안 거부자를 통과해 요청 대기열로 들어간 총 요청 수를 나타냄</li>
+<li>out(t)는 기간 동안 큐를 빠져 나간 요청 수</li>
+<li>freeInflight(t)는 현재 inflight limit과 inflight request 간의 차이 (노란 영역)</li>
+<li>out`(t)는 out(t)와 동일하지만 out(t)가 0인 경우 out`(t)는 inflight limit과 같음</li>
+</ul>
+<p>이상적으로는 주어진 시간 동안 큐로 들어가는 요청의 수와 큐에서 꺼내져 서비스로 전달되는 요청의 수가 같기를 원한다. 따라서 초기 방정식을 구할 수 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240206231759089.png" alt=""></p>
+<p>이 버전은 P1(t)가 양수(in &gt; out)이면 큐가 증가하고 있으므로 로드 셰드가 더 필요하다는 의미고, 음수 (in &lt; out) 이면 서비스가 큐를 비우고 있다는 뜻이지만 로드 쉐딩이 너무 많이 이루어 지고 있다는 의미다. 그러나 이 버전은 서비스 사용률을 고려하지 않는다. 따라서 이 공식을 확장해 미사용 inflght spot을 고려해야 한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240206232003695.png" alt=""></p>
+<p>이 케이스에서는 in(t)와 out(t)가 같은 값이고 freeInflight(t)가 0이면 서비스가 포화 상태인 이상적인 경우다. freeInflight(t)가 0이 아니고 in(t)와 out(t)가 같으면 P값이 음수가 되어 로드 셰딩이 줄어든다.</p>
+<p>위의 마지막 단계는 다양한 서비스에서 다양한 스펙트럼의 RPS를 처리하는 점을 고려하는 것이다. 예를 들어 1000RPS를 처리하는 서비스 인스턴스의 in(t) - out(t) = 1이라고 가정하면 서비스 인스턴스가 1RPS를 처리하는 경우와 비교해 너무 많은 부하를 줄여선 안된다. 따라서 P값을 해당 기간의 요청 수로 정규화하면 out(t)와 같다. 한 가지 주의할 점은 요청이 처리되지 않은 기간이 있을 수 있기 때문에 out(t)가 0이면 정규화 추정치로 inflightLimit을 사용한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240206232319125.png" alt=""></p>
+<ul>
+<li>이 방정식에서 time out에 대한 미처리 요청의 횟수를 처리하지 않는 점인데 이는 in(t)와 out(t) 간에서 암시적으로 처리되기 때문</li>
+<li>in이 out보다 크고 freeInflight가 0이 아닌 경우 P 값이 0이 될 수도 있음 (따라서 매우 적절함)</li>
+</ul>
+<p>구현 관점에서 이는 매우 효율적인데, 요청이 대기열에 들어가고 대기열을 빠져 나가 서비스 코드 자체로 전달될 때 증가되는 핫 경로에 두 개의 원자 카운터만 있으면 되기 때문이다. 이렇게 하면 백그라운드 재보정이 이 두 카운터의 마지막으로 본 값을 저장하고 마지막 재보정 기간 이후의 숫자를 계산할 수 있다.</p>
+<p>P 함수는 재보정이 실행될 때마다 계산되며 이를 기록에 추가하는 것을 포함해 PID 컨트롤러에 연결한다. 표준 PID 컨트롤러와 비교해 적분을 수정해 bounded 히스토리를 구현한다. 부하 경감의 경우 각 부하 경감 사례가 다를 수 있으므로 bounded 히스토리를 사용하면 변화하는 요청 패턴에 더 잘 적응할 수 있기 때문이다.</p>
+<p>PID 방정식의 Kp와 Ki 상수를 점진적으로 테스트한 결과 Kp = 0.1, Ki = 1.4가 잘 작동했다.</p>
+<h2 id="Ratio-To-Threshold"><a href="#Ratio-To-Threshold" class="headerlink" title="Ratio To Threshold"></a>Ratio To Threshold</h2><p>PID 컨트롤러의 비율에서 거부자는 삭제해야 하는 우선 순위 임계값을 계산해야 한다. 이를 위해 마지막 1000개의 요청과 그 우선순위를 추적한다. PID 레귤레이터가 임계값을 10%로 설정했다고 가정하면, 아래 다이어그램과 같이 마지막 1000건의 요청 누적 우선순위를 사용해 임계값을 추론한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240206233032736.png" alt=""></p>
+<h1 id="Auto-Tuner-Adaptive-Concurrency-in-the-Wild"><a href="#Auto-Tuner-Adaptive-Concurrency-in-the-Wild" class="headerlink" title="Auto-Tuner: Adaptive Concurrency in the Wild"></a>Auto-Tuner: Adaptive Concurrency in the Wild</h1><h2 id="Introduction-1"><a href="#Introduction-1" class="headerlink" title="Introduction"></a>Introduction</h2><p>로드 셰더의 가장 큰 과제는 서비스 용량 추정이다. 너무 작은 용량은 비효율로 번지고, 너무 큰 용량은 지연 시간이 길어지고 서비스가 중단될 수 있다. 용량의 공통 분모는 서비스가 처리할 수 있는 최대 동시 요청 수이며, 아래와 같이 서비스 처리량의 최대 지점을 찾는게 좋다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240206233324023.png" alt=""></p>
+<p>여러 변수로 인해 용량은 하드코딩이 불가능하다.</p>
+<ul>
+<li>서비스간 : 요청 처리량이 서비스마다 다름</li>
+<li>서비스 내 : 엔드포인트 마다 데이터 반환량이 다름</li>
+<li>서비스 노드 간 : 하드웨어 차이 / 실행중 호스트의 다양한 부하 원인</li>
+<li>all day : 워크로드 모양이 쉽게 변하거나 서비스 새 버전이 배포될 때</li>
+</ul>
+<p>따라서 최적 값을 자동으로 추정할 수 있는 방법이 필요하고, 자동화된 방법은 수천 개의 마이크로 서비스에 배포되어야 하기 때문에 서비스 오너의 튜닝이 필요하지 않아야 된다. 이를 위해 엔드포인트에 대해 관찰한 지연 시간을 기반으로 모든 엔드포인트에 대한 최대 동시 요청 수(inflight limit)를 지속적으로 추정한다.</p>
+<h2 id="Architecture-2"><a href="#Architecture-2" class="headerlink" title="Architecture"></a>Architecture</h2><p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240206234420754.png" alt=""></p>
+<p>Inflight의 지속적 추정을 담당하는 컴포넌트를 auto-tuner라 한다. Auto-tuner는 백그라운드 고루틴에서 제한을 업데이트하고 스케쥴러는 요청 우선순위 큐에서 요청을 팝하고 처리할 수 있는지 여부를 파악하는데 사용된다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240206234542352.png" alt=""></p>
+<p>자동 튜너는 고수준에서 관찰된 요청 처리 지연 시간을 일부 기준 지연 시간과 비교해 이를 기반으로 inflight limit을 조정한다. 이 로직은 TCP-Vegas 알고리즘을 기반으로 한다.</p>
+<h2 id="TCP-Vegas"><a href="#TCP-Vegas" class="headerlink" title="TCP-Vegas"></a>TCP-Vegas</h2><p>기본 아이디어는 특정 요청에 걸리는 시간을 추적하고 이를 기준 시간과 비교하는 것이다. 현재 요청이 기준 시간보다 훨씬 오래 걸리면 서비스가 너무 많이 로드된 것이므로 inflight limit을 줄일 수 있다. 반면 요청 시간이 기준 시간보다 훨씬 짧으면 서비스에서 더 많은 요청을 처리할 수 있으므로 inflight limit을 늘릴 수 있다. 마지막으로 타이밍이 크게 다르지 않으면 아무것도 하지 않는다. 가장 큰 문제는 개념을 어떻게 정의하느냐 이다.</p>
+<ol>
+<li>얼마나 길고 짧을까?</li>
+<li>inflight limit 값을 변경할 때 얼마만큼 변경하는가?</li>
+<li>기준 시간은 무엇이며 어떻게 설정해야 할까?</li>
+</ol>
+<p>아래는 TCP-Vegas의 vanilla 구현이다. </p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240206234931144.png" alt=""></p>
+<p>이 아이디어는 현재 inflight limit(alias current limit)과 함께 targetLatency와 샘플 사이의 비율을 취한 다음 대기열에 따라 제한을 늘리거나 줄이는 것이다. TCP Vegas는 로그 함수를 사용해 변경 사항을 부드럽게 처리한다. 아래는 inflight limit을 변경하거나 변경하지 않을 때 targetLatency의 관계와의 표다. 기본적으로 아무것도 변경하지 않는 영역의 범위는 inflight limit이 증가함에 따라 더욱 좁아진다. 즉, 제한이 작을수록 지연 시간이 더 많이 달라져야 한다는 의미다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240206235233493.png" alt=""></p>
+<p>TCP-Vegas의 중요한 점은 targetLatency 값을 설정하는 방법이다. 대부분의 구현은 관찰된 가장 작은 샘플 시간으로 설정한 뒤 다음 fixed window로 재설정하는 방법으로 이루어진다. 이렇게 하면 쿼리 패턴이 변경됨에 따라 targetLatency가 자동으로 업데이트된다.</p>
+<h2 id="Auto-Tuner"><a href="#Auto-Tuner" class="headerlink" title="Auto-Tuner"></a>Auto-Tuner</h2><p>바닐라 TCP-Vegas는 들어오는 요청 속도가 안정적이고 동일한 하드웨어를 실행하는 테스트 시나리오에서는 안정적이지만, 프로덕션 환경에서는 여러 문제를 해결해야 하기 때문에 바닐라 TCP-Vegas로는 충분하지 않다.</p>
+<ul>
+<li><strong>Loaded vs. not loaded:</strong> 서비스 성능은 로딩 정도에 따라 크게 달라지며, 서비스에 약간의 부하만 가해도 응답 시간이 늘어날 수 있다. 따라서 부하가 없는 상태에서 기준 시간을 기록하면 부하가 걸린 경우에는 실제로 사용할 수 없다.</li>
+<li><strong>Query pattern:</strong> 일부 서비스는 다양한 쿼리 패턴을 지원한다. 이런 쿼리 패턴은 지연시간이 매우 다르며 시간이 지남에 따라 크게 달라진다.</li>
+<li><strong>Bulky workloads:</strong> 일부 서비스의 경우 들어오는 요청의 속도가 몇 초 만에 10배나 증가해도 정상적으로 작동할 수 있다. 예를 들어 대규모 배치 작업이 시작되어 대량의 데이터를 가져오는 경우같이. 서비스가 부하를 처리할 수 있을 때 너무 많은 요청을 거부하지 않으면서도 처리할 수 있는지 확인해야 한다.</li>
+<li><strong>Ever-increasing latencies:</strong> 과부하가 오래 지속되는 동안 기준 시간을 주기적으로 재설정하면 기준 시간이 더 높은 지연 시간으로 재설정되어 더 높은 지연 시간을 더 많이 받아들이게 되고 이로 인해 기준 시간이 더 높은 지연시간으로 재설정되는 주기에 빠지게 된다. 즉, 장시간 과부하 시에는 지연 시간이 보호되지 않는다.</li>
+<li><strong>Non-overload:</strong> 모든 서비스는 일반적으로 대부분의 시간 동안 과부하가 걸리지 않으며, 이런 경우 기준 시간과 샘플 시간이 크게 다르지 않기 때문에 기내 제한이 무한정 늘어날 수 있다. </li>
+</ul>
+<p>위 문제는 아래 방안으로 해결할 수 있음</p>
+<ol>
+<li>샘플을 단일 값이 아니라 실제로 분포를 나타내도록 조정하고</li>
+<li>targetLatency를 재설정하는 방법을 개선하고</li>
+<li>inflight limit에 한계를 설정한다</li>
+</ol>
+<h3 id="Latency-Sample"><a href="#Latency-Sample" class="headerlink" title="Latency Sample"></a>Latency Sample</h3><p>단일 지연 시간 샘플을 가져와 기준 시간과 비교하면 네트워크 라우팅 불균형, 일시적으로 로드된 CPU, 네트워크 시간 초과 등 다양한 원인으로 발생하는 급격한 요청에 매우 취약해져 짧은 시간동안 수치가 급변할 수 있다. 이 문제를 해결하기 위해 요청 지연 시간을 집계하고 집계된 값을 샘플 값으로 사용한다.</p>
+<ul>
+<li>요청 지연 시간 값의 백분위수 계산</li>
+<li>백분위수 평활화</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240207001632601.png" alt=""></p>
+<ul>
+<li>성공적인 요청만 기록</li>
+<li>비즈니스 로직 내부에서 소요된 시간만 포함</li>
+<li>각 간격은 최소 2 ~ 30초(configurable), 각 간격은 요청 수에 의해 분할되며, 최소 요청 수인 250을 만족시켜야 함</li>
+<li>집계시에는 P90을 백분위수 기본값으로 사용</li>
+<li>평활화를 위한 중앙값 필터와 exponential smoothing을 사용</li>
+</ul>
+<p>간격에 적합한 기간을 선택하는건 기본적으로 수신하는 신호의 양과 반응 속도 간의 균형을 맞추는 일임. 대부분의 서비스는 10 ~ 50ms 내로 응답하기 때문에 최소 2초를 설정하면 적절한 요청 수와 그에 대한 응답 시간을 빠르게 확보할 수 있음. 문제는 응답 시간이 1 ~ 10초인 서비스가 상대적으로 적은 점인데, 이는 응답 시간을 30초로 제한한 다음 지금까지 확인된 요청수와 관계 없이 사용하기로 함.</p>
+<p>좋은 백분위수를 선택하는 건 반응 시점과 상위 백분위 수의 노이즈를 줄이는 것 사이의 절충안임. 지금 까지는 P90이 적절했는데, 지금까지 발생한 P90 에서의 유일한 문제는 서비스가 캐시에 의해 지원되고 캐시 히트률이 최대 90%인 서비스임. 어떤 구간에서는 P90이 높고 어떤 구간에서는 P90이 낮은데, 이 경우를 피하기 위해 사분위수를 P95나 P80으로 변경해서 대응함.</p>
+<p>모든 성공적인 요청에 대한 응답 시간을 절약하기 위해 approximate 데이터 구조인 t-digest를 사용해 지속 시간을 사분위수로 집계함으로써 메모리 소비와 정밀도 간의 균형을 맞춤. 즉, 안정적 메모리 사용을 위해 정확도를 희생하는데 이는 엔드포인트가 많거나 많은 요청을 처리하는 서비스에 중요함.</p>
+<h3 id="Periodic-Reset"><a href="#Periodic-Reset" class="headerlink" title="Periodic Reset"></a>Periodic Reset</h3><p>targetLatency 값은 목표 응답 시간을 논리적으로 설명함. 로드와 요청 유형이 동일한 이상적인 경우, targetLatency는 상수여야 함. 하지만 프로덕션은 이와 거리가 먼데, 이 문제를 해결하기 위해 가장 낮은 기록된 샘플을 targetLatency로 사용한 다음 주기적으로 관찰된 최신 샘플로 재설정함.</p>
+<p>이 솔루션은 간단하지만 한 가지 큰 단점이 있는데 장시간 과부하가 걸리면 목표 지연 시간이 계속 증가해 inflight limit이 계속 증가하는 점임.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240207003123687.png" alt=""></p>
+<p>문제는 targetLatency가 주기적으로 재설정될 때 로드 중인 최신 샘플로 설정된다는 점임. 이 샘플은 더 높으며 서비스가 이미 로드되어 있기 때문에 더 낮은 값으로 표시되지 않을 가능성이 높음. targetLatency가 증가하면 지연 시간이 길어져도 inflight가 감소하는 것이 아니라 반대로 inflight limit이 늘어나 버림.</p>
+<p>본질적인 문제는 targetLatency를 더 높은 값으로 설정했을 때 서비스 처리량이 늘어나는지 여부를 알 수 없다는 점인데, 이 문제를 해결하기 위해 공분산이라는 통계학 개념을 사용함. 공분산은 두 개의 값 시리즈가 상관관계가 있는지, 즉 한 값이 높으면 다른 값이 높아지는지 쉽게 계산해서 알려줌. 아래 사례를 통해 최근 몇 개의 inflight 값이 실제 처리량 증가로 이어지는지 확인할 수 있음.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240207003707928.png" alt=""></p>
+<p>아이디어는 지연 시간 샘플과 같이 처리된 동시 요청 중 가장 많은 수를 예상 처리량으로 변환하는 running window(일반적으로 50개 간격)를 갖게 함. 이 50개 구간을 기준으로 공분산을 계산하는데, 공분산이 음수이면 auto-tuner는 targetLatency를 재설정할 때 항상 inflight limit을 줄임. 예를 들어 limit이 20개이나, 동시에 3개의 요청만 실행된 경우가 있을 수 있으므로 limit이 아닌 실제 관찰된 동시 요청 수를 사용해야 함.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240207004108529.png" alt=""></p>
+<h3 id="Bounds-on-Inflight"><a href="#Bounds-on-Inflight" class="headerlink" title="Bounds on Inflight"></a>Bounds on Inflight</h3><p>정상 모드에서 서비스가 정상적으로 작동하고 샘플링된 지연 시간이 목표 지연 시간에 가까워지면 바닐라 TCP-Vegas는 inflight limit을 무제한으로 늘릴 수 있음. 이는 샘플 지연 시간과 목표 지연 시간 사이의 비율이 1에 가까워지기 때문에 실제 동시 요청 수가 안정적일지라도 TCP-Vegas가 제한을 증가시키기 때문인데, 이런 현상은 서비스 과부하가 걸렸을 때 문제가 됨. Inflight limit이 매우 높기 때문에 limit을 낮추는데 시간이 엄청 걸림.</p>
+<p>따라서 과부하가 시작될 때 limit을 낮추는데 걸리는 시간을 제한하기 위해 limit에 limit을 거는게 중요함. 우버의 경우 기록된 동시 처리 요청 수에 10을 곱해 이를 한계로 사용함. </p>
+<!-- flag of hidden posts --></div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined">Song Hayoung</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="https://songhayoung.github.io/2024/02/06/System%20Design/engineering/build-a-mean-load-shedder/">https://songhayoung.github.io/2024/02/06/System%20Design/engineering/build-a-mean-load-shedder/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/System-Design/">System Design</a></div><nav id="pagination"></nav><div id="gitalk-container"></div><script>var gitalk = new Gitalk({
+  clientID: '3604b61642355579f55e',
+  clientSecret: 'f552120f18ac5aee3f6297e05e97d94c0a25cd4b',
+  repo: 'SongHayoung.github.io',
+  owner: 'SongHayoung',
+  admin: 'SongHayoung',
+  id: md5(decodeURI(location.pathname)),
+  language: 'en'
+})
+gitalk.render('gitalk-container')</script></div></div><footer class="footer-bg" style="background-image: url(https://xxxx.jpg)"><div class="layout" id="footer"><div class="copyright">&copy;2020 - 2024 By Song Hayoung</div><div class="framework-info"><span>Driven - </span><a target="_blank" rel="noopener" href="http://hexo.io"><span>Hexo</span></a><span class="footer-separator">|</span><span>Theme - </span><a target="_blank" rel="noopener" href="https://github.com/Molunerfinn/hexo-theme-melody"><span>Melody</span></a></div><div class="footer_custom_text">Learning how to walk slowly to not miss important things</div><div class="busuanzi"><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><span id="busuanzi_container_page_pv"><i class="fa fa-file"></i><span id="busuanzi_value_page_pv"></span><span></span></span></div></div></footer><i class="fa fa-arrow-up" id="go-up" aria-hidden="true"></i><script src="https://cdn.jsdelivr.net/npm/animejs@latest/anime.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@latest/velocity.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-ui-pack@latest/velocity.ui.min.js"></script><script src="/js/utils.js?version=1.7.0"></script><script src="/js/fancybox.js?version=1.7.0"></script><script src="/js/sidebar.js?version=1.7.0"></script><script src="/js/copy.js?version=1.7.0"></script><script src="/js/fireworks.js?version=1.7.0"></script><script src="/js/transition.js?version=1.7.0"></script><script src="/js/scroll.js?version=1.7.0"></script><script src="/js/head.js?version=1.7.0"></script><script src="/js/search/algolia.js"></script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+    processEscapes: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  },
+  CommonHTML: {
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "HTML-CSS": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "SVG": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  }
+});
+</script><script type="text/x-mathjax-config">MathJax.Hub.Queue(function() {
+  var all = MathJax.Hub.getAllJax(), i;
+  for (i=0; i < all.length; i += 1) {
+    all[i].SourceElement().parentNode.className += ' has-jax';
+  }
+});
+</script><script src="https://cdn.jsdelivr.net/npm/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><script>if(/Android|webOS|iPhone|iPod|iPad|BlackBerry/i.test(navigator.userAgent)) {
+  $('#nav').addClass('is-mobile')
+  $('footer').addClass('is-mobile')
+  $('#top-container').addClass('is-mobile')
+}</script><div class="search-dialog" id="algolia-search"><div class="search-dialog__title" id="algolia-search-title">Algolia</div><div id="algolia-input-panel"><div id="algolia-search-input"></div></div><hr><div id="algolia-search-results"><div id="algolia-hits"></div><div id="algolia-pagination"></div><div id="algolia-stats"></div></div><span class="search-close-button"><i class="fa fa-times"></i></span></div><div class="search-mask"></div></body></html>
