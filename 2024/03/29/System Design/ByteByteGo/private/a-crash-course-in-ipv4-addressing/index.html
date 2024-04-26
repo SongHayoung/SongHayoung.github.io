@@ -1,0 +1,191 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="description" content="[ByteByteGo] A Crash Course in IPv4 Addressing"><meta name="keywords" content="System Design"><meta name="author" content="Song Hayoung"><meta name="copyright" content="Song Hayoung"><title>[ByteByteGo] A Crash Course in IPv4 Addressing | SUMFIのBlog</title><meta name="robots" content="noindex"><link rel="shortcut icon" href="/songcon.ico"><link rel="stylesheet" href="/css/index.css?version=1.7.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@latest/css/font-awesome.min.css?version=1.7.0"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css?version=1.7.0"><meta name="format-detection" content="telephone=no"><meta http-equiv="x-dns-prefetch-control" content="on"><link rel="dns-prefetch" href="https://cdn.jsdelivr.net"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.css"><script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.js" defer></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@latest/dist/gitalk.min.js"></script><script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.10.0/js/md5.min.js"></script><link rel="dns-prefetch" href="https://www.google-analytics.com"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-169368422-1', 'auto');
+ga('send', 'pageview');</script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: {"appId":"7LZ6OJ4D6C","apiKey":"9a84e13f74ea78c3fd54512c10139c56","indexName":"git blog","hits":{"per_page":10},"languages":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}.","hits_stats":"${hits} results found in ${time} ms"}},
+  localSearch: undefined,
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  }
+} </script><meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/rss2.xml" title="SUMFIのBlog" type="application/rss+xml">
+</head><body><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar" data-display="true"><div class="toggle-sidebar-info text-center"><span data-toggle="Toggle article">Toggle site</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">Catalog</div><div class="sidebar-toc__progress"><span class="progress-notice">You've read</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#A-Crash-Course-in-IPv4-Addressing"><span class="toc-number">1.</span> <span class="toc-text">A Crash Course in IPv4 Addressing</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#IPv4-Address-Structure"><span class="toc-number">2.</span> <span class="toc-text">IPv4 Address Structure</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#IPv4-Address-and-Subnet-Mask"><span class="toc-number">3.</span> <span class="toc-text">IPv4 Address and Subnet Mask</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#How-to-Write-a-Subnet-Mask"><span class="toc-number">3.1.</span> <span class="toc-text">How to Write a Subnet Mask</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Dotted-Decimal-Notation"><span class="toc-number">3.1.1.</span> <span class="toc-text">Dotted Decimal Notation</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Slash-Notation-or-Prefix-Length"><span class="toc-number">3.1.2.</span> <span class="toc-text">Slash Notation or Prefix Length</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Finding-the-IPv4-Network-Address-Using-the-Subnet-Mask"><span class="toc-number">3.2.</span> <span class="toc-text">Finding the IPv4 Network Address Using the Subnet Mask</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Making-It-Simpler"><span class="toc-number">3.2.1.</span> <span class="toc-text">Making It Simpler</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Valid-or-Non-Valid-Subnet-Masks"><span class="toc-number">3.2.2.</span> <span class="toc-text">Valid or Non-Valid Subnet Masks</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#IPv4-Network-Broadcast-and-Host-Addresses"><span class="toc-number">3.3.</span> <span class="toc-text">IPv4 Network, Broadcast, and Host Addresses</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Network-Address"><span class="toc-number">3.3.1.</span> <span class="toc-text">Network Address</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Broadcast-Address"><span class="toc-number">3.3.2.</span> <span class="toc-text">Broadcast Address</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Host-Address"><span class="toc-number">3.3.3.</span> <span class="toc-text">Host Address</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Misperceptions"><span class="toc-number">3.3.4.</span> <span class="toc-text">Misperceptions</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Destination-IPv4-Addresses-Unicast-Multicast-and-Broadcast"><span class="toc-number">3.4.</span> <span class="toc-text">Destination IPv4 Addresses: Unicast, Multicast, and Broadcast</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Unicast-Addresses"><span class="toc-number">3.4.1.</span> <span class="toc-text">Unicast Addresses</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Multicast-Addresses"><span class="toc-number">3.4.2.</span> <span class="toc-text">Multicast Addresses</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Broadcast-Addresses"><span class="toc-number">3.4.3.</span> <span class="toc-text">Broadcast Addresses</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#IPv4-Subnet-Mask-and-Packet-Forwarding"><span class="toc-number">3.5.</span> <span class="toc-text">IPv4 Subnet Mask and Packet Forwarding</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Sending-Data-to-Devices-on-the-Same-Network"><span class="toc-number">3.5.1.</span> <span class="toc-text">Sending Data to Devices on the Same Network</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Sending-Data-to-Devices-on-a-Different-Network"><span class="toc-number">3.5.2.</span> <span class="toc-text">Sending Data to Devices on a Different Network</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Private-and-Public-IPv4-Addresses"><span class="toc-number">3.6.</span> <span class="toc-text">Private and Public IPv4 Addresses</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Private-IP-Addresses"><span class="toc-number">3.6.1.</span> <span class="toc-text">Private IP Addresses</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#NAT-for-IPv4"><span class="toc-number">3.6.2.</span> <span class="toc-text">NAT for IPv4</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Public-IP-Addresses"><span class="toc-number">3.6.3.</span> <span class="toc-text">Public IP Addresses</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#IP-Address-Allocation"><span class="toc-number">3.7.</span> <span class="toc-text">IP Address Allocation</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Legacy-Classful-IPv4-Addressing"><span class="toc-number">3.8.</span> <span class="toc-text">Legacy Classful IPv4 Addressing</span></a></li></ol></li></ol></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="https://avatars3.githubusercontent.com/u/37806785?s=460&amp;u=8c68d685faf7c5280cfbd736a6b1730b55fb4203&amp;v=4"></div><div class="author-info__name text-center">Song Hayoung</div><div class="author-info__description text-center"></div><div class="follow-button"><a target="_blank" rel="noopener" href="https://www.linkedin.com/in/hayoung-song-9523b61bb/">Follow Me</a></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="/archives"><span class="pull-left">Articles</span><span class="pull-right">10693</span></a><a class="author-info-articles__tags article-meta" href="/tags"><span class="pull-left">Tags</span><span class="pull-right">193</span></a><a class="author-info-articles__categories article-meta" href="/categories"><span class="pull-left">Categories</span><span class="pull-right">61</span></a></div><hr><div class="author-info-links"><div class="author-info-links__title text-center">VISITED</div><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Seoul Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Jeju Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">British Columbia Canada</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Boracay Philippines</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">三重　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">大阪　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">名古屋　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">静岡　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">札幌　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">京都　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Bangkok Thailand</a></div></div></div><div id="content-outer"><div id="top-container" style="background-image: url(https://xxxx.jpg)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="/">SUMFIのBlog</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus">   <a class="site-page" href="/">Home</a><a class="site-page" href="/archives">Archives</a><a class="site-page" href="/tags">Tags</a><a class="site-page" href="/categories">Categories</a><a class="site-page" href="/about">About</a></span><span class="pull-right"><a class="site-page social-icon search"><i class="fa fa-search"></i><span> Search</span></a></span></div><div id="post-info"><div id="post-title">[ByteByteGo] A Crash Course in IPv4 Addressing</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2024-03-29</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/">System Design</a><i class="fa fa-angle-right" aria-hidden="true"></i><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/Byte-Byte-Go/">Byte Byte Go</a><div class="post-meta-wordcount"><span>Word count: </span><span class="word-count">2k</span><span class="post-meta__separator">|</span><span>Reading time: 12 min</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div class="article-container" id="post-content"><h2 id="A-Crash-Course-in-IPv4-Addressing"><a href="#A-Crash-Course-in-IPv4-Addressing" class="headerlink" title="A Crash Course in IPv4 Addressing"></a>A Crash Course in IPv4 Addressing</h2><span id="more"></span>
+<h2 id="IPv4-Address-Structure"><a href="#IPv4-Address-Structure" class="headerlink" title="IPv4 Address Structure"></a><strong>IPv4 Address Structure</strong></h2><p>IPv4 주소는 점으로 구분된 십진수 표기법을 사용해 작성되지만 실제로는 32비트 주소다. 따라서 42억 9천만 개의 주소가 가능하다. 32비트 주소를 옥텟이라 하는 8비트로 구성된 4개 섹션으로 나눈다. 그 뒤, 각 옥텟을 십진수로 변환한다. 이를 점으로 구분된 십진수 표기법이라 하며, 이게 IPv4 주소를 작성하는 방법이다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240329114131257.png" alt=""></p>
+<p>IPv4 주소의 범위는 점으로 구분된 십진수 표기법에서 4개의 0(0.0.0.0)부터 4개의 255(255.255.255.255)까지 가능하다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240329114231006.png" alt=""></p>
+<h2 id="IPv4-Address-and-Subnet-Mask"><a href="#IPv4-Address-and-Subnet-Mask" class="headerlink" title="IPv4 Address and Subnet Mask"></a>IPv4 Address and Subnet Mask</h2><p>IPv4는 두 개의 파트로 분류한다.</p>
+<ul>
+<li>Network portion</li>
+<li>Host Portion</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240329114314012.png" alt=""></p>
+<p>서브넷 마스크는 IPv4 주소의 네트워크 부분과 호스트 부분을 구분한다. 서브넷 마스크의 길이는 32비트이며 1로된 그룹과 0으로된 그룹으로 구성된다. 1은 IP주소의 네트워크 부분을 나타내며 0은 호스트 부분을 나타낸다.</p>
+<h3 id="How-to-Write-a-Subnet-Mask"><a href="#How-to-Write-a-Subnet-Mask" class="headerlink" title="How to Write a Subnet Mask"></a><strong>How to Write a Subnet Mask</strong></h3><p>서브넷 마스크를 작성하는데는 두 가지 방법이 있다.</p>
+<h4 id="Dotted-Decimal-Notation"><a href="#Dotted-Decimal-Notation" class="headerlink" title="Dotted Decimal Notation"></a><strong>Dotted Decimal Notation</strong></h4><p>IPv4 주소와 마찬가지로 점으로 구분된 십진수 표기법을 사용할 수 있다.</p>
+<ul>
+<li>255.255.0.0</li>
+</ul>
+<h4 id="Slash-Notation-or-Prefix-Length"><a href="#Slash-Notation-or-Prefix-Length" class="headerlink" title="Slash Notation or Prefix Length"></a><strong>Slash Notation or Prefix Length</strong></h4><p>마스크에 1비트 수를 표시하는 슬래시 표기법을 사용할 수도 있다.</p>
+<ul>
+<li>/16 (indicating 16 one bits)</li>
+<li>172.18.0.0/16</li>
+</ul>
+<p>요즘에는 슬래시 표기법을 자주 사용한다.</p>
+<h3 id="Finding-the-IPv4-Network-Address-Using-the-Subnet-Mask"><a href="#Finding-the-IPv4-Network-Address-Using-the-Subnet-Mask" class="headerlink" title="Finding the IPv4 Network Address Using the Subnet Mask"></a><strong>Finding the IPv4 Network Address Using the Subnet Mask</strong></h3><p>호스트 IPv4 주소(192.168.1.100)와 서브넷 마스크(255.255.255.0)이 있다고 가정하자. 서브넷 마스크를 사용해 호스트 주소에서 네트워크 주소를 찾으려면 AND 연산을 하면 된다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240329114642115.png" alt=""></p>
+<h4 id="Making-It-Simpler"><a href="#Making-It-Simpler" class="headerlink" title="Making It Simpler"></a><strong>Making It Simpler</strong></h4><p>비트 AND 연산 말고도 서브넷 마스크를 찾는 방법은 서브넷 마스크의 1이 끝나는 지점까지의 비트를 IPv4 주소비트에서 복사하는 것이다. 끝에 0을 추가해 완전한 32비트 IPv4 네트워크 주소를 만들 수 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240329114758851.png" alt=""></p>
+<p>호스트가 속한 네트워크를 확인하려면 서브넷 마스크가 필요하다. 그렇기 때문에 모든 IPv4   디바이스에는 IPv4 주소와 서브넷 마크스가 있으며 서브넷 마스크는 디바이스의 네트워크를 알려준다.</p>
+<h4 id="Valid-or-Non-Valid-Subnet-Masks"><a href="#Valid-or-Non-Valid-Subnet-Masks" class="headerlink" title="Valid or Non-Valid Subnet Masks"></a><strong>Valid or Non-Valid Subnet Masks</strong></h4><p>서브넷 마스크가 /8 /16 또는 /24와 같이 옥텟 경계에서 끝나면 네트워크와 호스트 부분을 쉽게 찾을 수 있다. 하지만 서브넷 마스크가 항상 옥텟 경계에 있는 것은 아니다. 이를 이해하려면 서브넷 마스크가 유효하거나 유효하지 않은 이유를 알아야 한다.</p>
+<p>서브넷 마스크는 1그룹 뒤에 0 그룹이 반드시 있어야한다. </p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240329115004708.png" alt=""></p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240329115012842.png" alt=""></p>
+<p>따라서 서브넷 마스크는 옥텟 경계에서 끝나지 않기 대문에 어떤 네트워크에 속하는지 확인하기 위해 2진수로 변환해야 할 때가 있다. 요약하자면 IPv4 주소만으로는 디바이스가 어느 네트워크에 속해 있는지 알 수 없기 때문에 서브넷 마스크가 필요하다. 서브넷 마스크는 해당 정보를 제공한다.</p>
+<h3 id="IPv4-Network-Broadcast-and-Host-Addresses"><a href="#IPv4-Network-Broadcast-and-Host-Addresses" class="headerlink" title="IPv4 Network, Broadcast, and Host Addresses"></a><strong>IPv4 Network, Broadcast, and Host Addresses</strong></h3><h4 id="Network-Address"><a href="#Network-Address" class="headerlink" title="Network Address"></a><strong>Network Address</strong></h4><p>네트워크 주소는 항상 IP 주소의 호스트 부분에 0이 모두 포함된다. 네트워크에 있는 어떤 장치도 이 네트워크 주소를 사용할 수 없다. 그렇기 때문에 디바이스는 주소의 네트워크 및 호스트 부분을 알기 위해 서브넷 마스크가 필요하다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240329115200775.png" alt=""></p>
+<h4 id="Broadcast-Address"><a href="#Broadcast-Address" class="headerlink" title="Broadcast Address"></a><strong>Broadcast Address</strong></h4><p>브로드캐스트 주소는 네트워크의 모든 디바이스에 메세지를 보내는 데 사용되는 특수 IPv4 주소다. 호스트 부분에는 모두 1이 있다. 브로드 캐스트 주소의 예를 살펴보자.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240329115235280.png" alt=""></p>
+<p>네트워크 주소와 마찬가지로 어떤 디바이스에도 브로드 캐스트 주소를 할당할 수 없다.</p>
+<h4 id="Host-Address"><a href="#Host-Address" class="headerlink" title="Host Address"></a><strong>Host Address</strong></h4><p>유효한 호스트 주소는 네트워크 주소나 브로드캐스트 주소가 아닌 모든 IPv4 주소다. 호스트 부분에는 0비트와 1비트가 하나 이상 포함되어야 하며, 모두 0이거나 모두 1이 될 수 없다. 호스트 주소는 네트워크 주소와 해당 네트워크에 있는 디바이스 브로드캐스트 주소 사이에 사용할 수 있는 모든 주소다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240329115337352.png" alt=""></p>
+<p>192.168.1.0/24 예시로 돌아가서, 네트워크 주소는 192.168.1.0이고 브로드 캐스트 주소는 192.168.1.244다. 첫 번째 호스트 주소는 192.168.1.1(호스트 부분의 00000001)이고 마지막 호스트는 192.168.1.254(호스트 부분의 11111110)이다. 이 범위는 호스트에 할당할 수 있는 범위다.</p>
+<p>모든 호스트 주소는 네트워크 주소와 동일한 네트워크 부분을 갖는다. 각 주소마다 호스트 부분만 변경된다.</p>
+<ul>
+<li><strong>1st Host address</strong> : 첫 번째 호스트 주소(e.g. 192.168.1.1)가 해당 네트워크 라우터 인터페이스 또는 기본 게이트웨이 주소로 사용되는 것이 일반적이다.</li>
+</ul>
+<h4 id="Misperceptions"><a href="#Misperceptions" class="headerlink" title="Misperceptions"></a><strong>Misperceptions</strong></h4><p>네트워크 주소와 브로드캐스트 주소에 대한 몇 가지 일반적인 오해가 있다.</p>
+<ul>
+<li><p>네트워크 주소는 항상 .0으로 끝날 필요는 없다.</p>
+<ul>
+<li>예를 들어 /28 서브넷 마스크의 경우 네트워크 주소는 .64(192.168.1.64)로 끝난다. 네트워크 부분에는 마지막 옥텟에 일부 0과 일부 1이 있지만 호스트 부분은 여전히 모두 0이므로 유효한 네트워크 주소가 된다.</li>
+</ul>
+</li>
+<li><p>브로드캐스트 주소가 항상 .255로 끝날 필요는 없다.</p>
+<ul>
+<li>192.168.1.64/28 네트워크의 경우 브로드 캐스트 주소는 192.168.1.79다. 네트워크 부분에는 0과 1이 일부 포함되어 있으므로 항상 .255로 끝나지는 않는다.</li>
+</ul>
+</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240329120132801.png" alt=""></p>
+<p>십진수 표현만으로는 이런 주소 범위를 시각화하기 어려울 수 있다. 모든 주소를 바이너리로 변환하면 주어진 서브넷 마스크에 대한 네트워크, 브로드캐스트 및 호스트 주소 범위를 훨씬 더 명확히 이해할 수 있다.</p>
+<h3 id="Destination-IPv4-Addresses-Unicast-Multicast-and-Broadcast"><a href="#Destination-IPv4-Addresses-Unicast-Multicast-and-Broadcast" class="headerlink" title="Destination IPv4 Addresses: Unicast, Multicast, and Broadcast"></a><strong>Destination IPv4 Addresses: Unicast, Multicast, and Broadcast</strong></h3><p>유니캐스트, 멀티캐스트, 브로드캐스트 등 다양한 유형의 대상 IPv4 주소에 대해 알아보자.</p>
+<ul>
+<li><strong>Note</strong> : 여기서는 대상 주소에 초점을 맞추지만 소스 IP 주소는 항상 유니캐스트 주소라는 점을 알아야한다. 즉, 패킷의 소스는 하나의 특정 디바이스에서만 올 수 있다.</li>
+</ul>
+<h4 id="Unicast-Addresses"><a href="#Unicast-Addresses" class="headerlink" title="Unicast Addresses"></a><strong>Unicast Addresses</strong></h4><p>유니캐스트 주소는 단일 네트워크 인터페이스에 할당된 네트워크 주소다. 이는 네트워크의 고유한 엔트포인트를 나타낸다. 유니캐스트 주소로 데이터가 전송되면 해당 주소로 식별되는 특정 디바이스를 대상으로 한다. 유니캐스트 통신은 일대일 통신으로, 발신자 한 명이 수신자 한 명과 통신한다.</p>
+<h4 id="Multicast-Addresses"><a href="#Multicast-Addresses" class="headerlink" title="Multicast Addresses"></a><strong>Multicast Addresses</strong></h4><p>멀티캐스트 주소는 네트워크상의 디바이스 그룹을 나타낸다. 단일 장치를 나타내는 유니캐스트 주소와 달리 멀티캐스트 주소는 일대다 통신에 사용된다. 즉, 멀티캐스트 주소로 전송된 데이터는 특정 그룹에 속한 여러 장치에서 수신된다.</p>
+<p>멀티캐스트 트래픽을 수신하려는 디바이스는 특수 그룹 주소를 사용해 멀티캐스트 그룹에 가입할 수 있다. 멀티캐스트 주소로 데이터가 전송되면 해당 멀티캐스트 그룹에 가입한 모든 디바이스에 전달된다. 이를 통해 여러 수신자에게 동시에 정보를 효율적으로 배포할 수 있다.</p>
+<p>멀티캐스트 통신은 멀티미디어 스트리밍, 화상 회의, 협업 통신과 같이 여러 장치가 동시에 동일한 데이터를 수신해야 하는 애플리케이션에서 자주 사용된다. 멀티캐스트는 데이터를 전체 네트워크에 브로드캐스트하지 않고 멀티캐스트 그룹에 등록된 디바이스에만 전달해 네트워크 트래픽을 줄인다.</p>
+<p>멀티캐스트는 특정 분야에서 널리 배포되는 장점이 있지만, 광범위한 인터넷 배포에는 어려움이 있다. 멀티캐스트 라우팅을 위해 라우터가 유지해야 하는 상태 정보의 양이 많으면 많은 멀티캐스트 그룹을 사용하는 애플리케이션이 제대로 작동하지 않을 수 있다. 멀티캐스트는 통제된 환경과 특정 애플리케이션에서 일반적으로 사용되지만, 공용 인터넷에서의 배포는 제한되어 있다.</p>
+<h4 id="Broadcast-Addresses"><a href="#Broadcast-Addresses" class="headerlink" title="Broadcast Addresses"></a><strong>Broadcast Addresses</strong></h4><p>브로드캐스트 주소는 특정 네트워크의 모든 디바이스에 데이터를 전송하는데 사용되는 특수한 유형의 네트워크 주소다. 브로드캐스트 통신에서는 지정된 네트워크 내의 모든 디바이스를 대상으로 데이터를 전송하므로 일대일 통신이 가능하다.</p>
+<ul>
+<li><strong>Note</strong> : 유니캐스트 및 멀티캐스트와 같은 보다 효율적인 통신 방법을 사용하는 라우터는 기본적으로 대상 IPv4 주소를 전달하지 않는다. IPv6 에서는 브로드캐스트가 멀티 캐스트 및 애니 캐스트 통신으로 대체되었다.</li>
+</ul>
+<h3 id="IPv4-Subnet-Mask-and-Packet-Forwarding"><a href="#IPv4-Subnet-Mask-and-Packet-Forwarding" class="headerlink" title="IPv4 Subnet Mask and Packet Forwarding"></a><strong>IPv4 Subnet Mask and Packet Forwarding</strong></h3><p>IPv4 주소와 서브넷 마스크가 디바이스위 네트워크에서 통신하는데 어떻게 도움이 되는지 살펴보자. 모든 디바이스에는 IPv4 주소와 서브넷 마스크가 있다. 이 정보는 디바이스가 어떤 네트워크에 속해 있는지 알려준다. 네트워크의 각 장치에는 기본 게이트웨이 주소도 있다. 디바이스가 자체 네트워크 외부의 다른 디바이스로 데이터를 보내야 하는 경우, 디바이스는 먼저 기본 게이트웨이로 데이터를 보내야 한다는 것을 알고 있다.</p>
+<h4 id="Sending-Data-to-Devices-on-the-Same-Network"><a href="#Sending-Data-to-Devices-on-the-Same-Network" class="headerlink" title="Sending Data to Devices on the Same Network"></a><strong>Sending Data to Devices on the Same Network</strong></h4><p>IPv4 장치는 동일한 서브넷에 있는 다른 장치와만 직접 통신할 수 있다. 예를 들어 호스트 A가 주소 192.186.1.3의 호스트 B에게 데이터를 보내야 한다고 가정해보자. A는 B가 자신의 네트워크에 있는지 어떻게 알 수 있을까?</p>
+<ul>
+<li>호스트 A는 192.168.1.0/24 서브넷에 있다는 것을 알고 있다.</li>
+<li>호스트 A는 호스트B(192.168.1.3)도 동일한 서브넷에 있다는 것을 알고 있다.</li>
+</ul>
+<p>호스트 A와 B는 네트워크 주소가 동일하므로 동일한 네트워크에 있다. 이제 호스트 A는 호스트 B의 MAC주소로 데이터를 직접 전송할 수 있다. 호스트 A가 호스트 B의 MAC 주소를 모르는 경우 호스트 B로 부터 MAC주소를 얻기 위해 ARP 요청을 보내고, 호스트 A가 호스트 B의 MAC주소를 알게 되면 데이터를 전송할 수 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240329121432064.png" alt=""></p>
+<h4 id="Sending-Data-to-Devices-on-a-Different-Network"><a href="#Sending-Data-to-Devices-on-a-Different-Network" class="headerlink" title="Sending Data to Devices on a Different Network"></a><strong>Sending Data to Devices on a Different Network</strong></h4><p>이제 호스트 A가 다른 네트워크의 192.168.20.12에 있는 호스트 C로 데이터를 전송해야 하는 다른 예를 살펴보자. </p>
+<ul>
+<li>호스트 A는 192.168.1.0/24 서브넷에 있다는 것을 알고 있다.</li>
+<li>호스트 A는 호스트 C(192.168.20.12)가 다른 서브넷에 있다는 것을 알고 있다.</li>
+</ul>
+<p>호스트 C는 다른 네트워크에 있으므로 A는 호스트 C에 직접 데이터를 보낼 수 없다. 호스트 A는 대신 기본 게이트웨이로 데이터를 보내야 한다. 그러면 라우터가 데이터를 호스트 C의 네트워크로 전달한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240329121623895.png" alt=""></p>
+<h3 id="Private-and-Public-IPv4-Addresses"><a href="#Private-and-Public-IPv4-Addresses" class="headerlink" title="Private and Public IPv4 Addresses"></a><strong>Private and Public IPv4 Addresses</strong></h3><p>IPv4 주소가 고갈되고 있기 때문에 단기적 / 장기적 해결책이 필요했다. 단기적 해결책은 다음과 같다.</p>
+<ul>
+<li>NAT(network address translation)</li>
+<li>Private address space </li>
+<li>CIDR (classless inter-domain routing)</li>
+</ul>
+<p>IPv6는 장기적 해결책이며 현재 진행중이다.</p>
+<h4 id="Private-IP-Addresses"><a href="#Private-IP-Addresses" class="headerlink" title="Private IP Addresses"></a><strong>Private IP Addresses</strong></h4><p>비공개 주소와 NAT는 IPv4를 오래도록 유지해왔다. RFC1918은 비공개 IPv4 주소 공간을 정의한다. </p>
+<ul>
+<li>이런 주소는 인터넷이 아닌 사설 네트워크 전용이다.</li>
+<li>가정 또는 비즈니스 네트워크 내의 내부 통신에 사용된다.</li>
+<li>사설 IP 주소 범위는 다음과 같다.<ul>
+<li>10.0.0.0 to 10.255.255.255</li>
+<li>172.16.0.0 to 172.31.255.255</li>
+<li>192.168.0.0 to 192.168.255.255 </li>
+</ul>
+</li>
+<li>사설 네트워크 내의 디바이스는 충돌 없이 이 주소를 사용할 수 있다.</li>
+</ul>
+<h4 id="NAT-for-IPv4"><a href="#NAT-for-IPv4" class="headerlink" title="NAT for IPv4"></a><strong>NAT for IPv4</strong></h4><p>네트워크에 있는 모든 장치는 사설 IPv4 주소를 사용할 수 있다. 하지만 인터넷에서는 작동하지 않는다. 서비스 제공업체는 비공개 소스 또는 대상 주소가 있는 패킷을 삭제한다.</p>
+<p>그렇다면 네트워크 내부의 디바이스는 어떻게 인터넷에 접속할 수 있을까? NAT를 사용한다. NAT는 비공개 IPv4 주소를 라우팅 가능한 공용 IPv4 주소로 변환한다. NAT 소프트웨어는 일반적으로 라우터에 설치된다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240329133005397.png" alt=""></p>
+<p>NAT 변환에는 세 가지 방법이 있다.</p>
+<p><strong>Static NAT:</strong> 하나의 비공개 IP 주소가 하나의 공인 IP 주소에 매핑되는 경우다. 매핑은 동일하게 유지된다. 네트워크 외부에 있을 때 비공개 주소가 있는 내부 장치나 서버에 연결하려는 경우에 사용된다.</p>
+<p><strong>Dynamic NAT:</strong> 여러 개의 비공개 IP 주소를 하나의 공인 IP 주소 풀에 매핑할 수 있다. 매핑은 변경되며 일시적으로만 사용된다. 필요에 따라 공용 IP 주소는 풀에서 가져온다. 세션이 종료되면 공인 IP 주소는 풀로 돌아가 다시 사용된다.</p>
+<p>문제는 일대일 변환이라는 점이다. 따라서 5개의 공인 IPv4 주소가 있는 경우 최대 5개의 내부 디바이스만 NAT할 수 있다. 그래서 요즘에는 많이 사용하지 않는다.</p>
+<p><strong>PAT (Port Address Translation) or</strong> <strong>NAT Overload:</strong> Dynamic NAT의 변형이다. UDP 또는 TCP 포트 번호(16비트)를 사용해 여러 개의 개인 IP 주소를 하나의 공용 IP 주소에 매핑한다. 이론적으로는 내부 장치에 대해 65536개 이상의 변역이 있을 수 있다. 즉, 수백 개 또는 수천 개의 비공개 RFC 1918 IPv4 주소를 단 하나의 공용 IPv4 주소로 변환할 수 있다. 이것이 바로 수 년 동안 IPv4가 부족하지 않게된 이유다.</p>
+<h4 id="Public-IP-Addresses"><a href="#Public-IP-Addresses" class="headerlink" title="Public IP Addresses"></a><strong>Public IP Addresses</strong></h4><p>공인 IP 주소는 인터넷에서 작동하며 전 세계적으로 고유하다. 이런 공인 IP 주소의 할당을 담당하는 기관은 IANA (Internet Assigned Numbers Authority)다. 이 주소는 인터넷에서 장치 간의 통신에 사용된다.</p>
+<p>일반적인 네트워크 설정에서 라우터는 개인 라우터와 사설 라우터 사이에 위치한다. 사설 네트워크에 있는 디바이스가 인터넷에 액세스하려는 경우 라우터는 NAT를 사용해 여러 사설 IP 주소를 하나의 공용 IP 주소에 매핑한다. 이렇게 하면 공용 IP 주소를 절약하고 내부 네트워크의 모습을 숨겨 보안을 강화할 수 있다.</p>
+<h3 id="IP-Address-Allocation"><a href="#IP-Address-Allocation" class="headerlink" title="IP Address Allocation"></a><strong>IP Address Allocation</strong></h3><p>IANA는 <strong>Regional Internet Registries (RIRs)</strong> 라는 그룹에 IP 주소 공간을 할당하는 일을 담당한다. 전 세계 여러 지역에 5개의 RIR이 존재한다.</p>
+<ul>
+<li>AfriNIC (African Network Information Centre) - Africa Region</li>
+<li>APNIC (Asia Pacific Network Information Centre) - Asia/Pacific Region</li>
+<li>ARIN (American Registry for Internet Numbers) - North America Region</li>
+<li>LACNIC (Regional Latin-American and Caribbean IP Address Registry) - Latin America and some Caribbean Islands</li>
+<li>RIPE NCC (Reseaux IP Europeans) - Europe, Middle East, and Central Asia</li>
+</ul>
+<p>대기업과 대학은 RIR에서 직접 IP 주소 공간을 확보할 수 있다. 이를 공급자 독립 주소 공간이라고도 하는데, 이는 주소 공간을 얻기 위해 인터넷 서비스 제공업체(ISP)를 거치지 않기 때문이다. 대부분의 다른 조직은 주소 공간을 얻기 위해 ISP를 거친다.</p>
+<h3 id="Legacy-Classful-IPv4-Addressing"><a href="#Legacy-Classful-IPv4-Addressing" class="headerlink" title="Legacy Classful IPv4 Addressing"></a><strong>Legacy Classful IPv4 Addressing</strong></h3><p>과거에는 IPv4 주소가 클래스 풀 방식으로 할당되었다. 이는 유니캐스트 주소를 세 가지 크기로 그룹화한 RFC 791에 의해 지정된 구식 시스템이었다.</p>
+<ul>
+<li>Class A, B, and C addresses (for users): User or network addresses ranged from 0.0.0.0 to 223.255.255.255.</li>
+<li>Multicast addresses: Still used today, ranging from 224.0.0.0 to 239.255.255.255. </li>
+<li>Experimental addresses: Never used, ranging from 240.0.0.0 to 255.255.255.254.</li>
+</ul>
+<p>클래스 A,B,C는 각각 특정 서브넷 마스크를 가졌다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240329134154896.png" alt=""></p>
+<p>이러한 클래스별 주소 지정 방식은 매우 비효율적이었다. 사용 가능한 주소 공간이 제한되어 있고 할당도 유연하지 못했다. 클래스 A는 1600만개 주소를, B는 65000개의 호스트만 허용했으며 C는 254개의 호스트만 지원했다.</p>
+<p>이와는 대조적으로 오늘날에는 CIDR을 사용한다. 기존의 클래스 기반 시스템에 비해 CIDR은 IP 주소 할당에 보다 유연한 접근 방식을 제공한다. CIDR 표기법에서 IP 주소 뒤에는 슬래시와 숫자가 뒤따른다. 슬래시 뒤의 숫자는 주소의 네트워크 부분에 사용된 비트 수를 의미한다.</p>
+<ul>
+<li><strong>Note : </strong> CIDR은 IP 주소를 블록으로 집계하고 해당 블록을 단일 경로로 광고해 라우팅 테이블 관리를 간소화한다. 이 방법은 인터넷 백본 라우터에서 라우팅 테이블의 크기를 줄인다. 인터넷이 계속 성장하고 사용 가능한 주소 풀이 점점 더 제한됨에 따라 IP 주소 할당의 효율성이 향상된다.</li>
+</ul>
+<!-- flag of hidden posts --></div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined">Song Hayoung</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="https://songhayoung.github.io/2024/03/29/System%20Design/ByteByteGo/private/a-crash-course-in-ipv4-addressing/">https://songhayoung.github.io/2024/03/29/System%20Design/ByteByteGo/private/a-crash-course-in-ipv4-addressing/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/System-Design/">System Design</a></div><nav id="pagination"></nav><div id="gitalk-container"></div><script>var gitalk = new Gitalk({
+  clientID: '3604b61642355579f55e',
+  clientSecret: 'f552120f18ac5aee3f6297e05e97d94c0a25cd4b',
+  repo: 'SongHayoung.github.io',
+  owner: 'SongHayoung',
+  admin: 'SongHayoung',
+  id: md5(decodeURI(location.pathname)),
+  language: 'en'
+})
+gitalk.render('gitalk-container')</script></div></div><footer class="footer-bg" style="background-image: url(https://xxxx.jpg)"><div class="layout" id="footer"><div class="copyright">&copy;2020 - 2024 By Song Hayoung</div><div class="framework-info"><span>Driven - </span><a target="_blank" rel="noopener" href="http://hexo.io"><span>Hexo</span></a><span class="footer-separator">|</span><span>Theme - </span><a target="_blank" rel="noopener" href="https://github.com/Molunerfinn/hexo-theme-melody"><span>Melody</span></a></div><div class="footer_custom_text">Learning how to walk slowly to not miss important things</div><div class="busuanzi"><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><span id="busuanzi_container_page_pv"><i class="fa fa-file"></i><span id="busuanzi_value_page_pv"></span><span></span></span></div></div></footer><i class="fa fa-arrow-up" id="go-up" aria-hidden="true"></i><script src="https://cdn.jsdelivr.net/npm/animejs@latest/anime.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@latest/velocity.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-ui-pack@latest/velocity.ui.min.js"></script><script src="/js/utils.js?version=1.7.0"></script><script src="/js/fancybox.js?version=1.7.0"></script><script src="/js/sidebar.js?version=1.7.0"></script><script src="/js/copy.js?version=1.7.0"></script><script src="/js/fireworks.js?version=1.7.0"></script><script src="/js/transition.js?version=1.7.0"></script><script src="/js/scroll.js?version=1.7.0"></script><script src="/js/head.js?version=1.7.0"></script><script src="/js/search/algolia.js"></script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+    processEscapes: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  },
+  CommonHTML: {
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "HTML-CSS": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "SVG": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  }
+});
+</script><script type="text/x-mathjax-config">MathJax.Hub.Queue(function() {
+  var all = MathJax.Hub.getAllJax(), i;
+  for (i=0; i < all.length; i += 1) {
+    all[i].SourceElement().parentNode.className += ' has-jax';
+  }
+});
+</script><script src="https://cdn.jsdelivr.net/npm/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><script>if(/Android|webOS|iPhone|iPod|iPad|BlackBerry/i.test(navigator.userAgent)) {
+  $('#nav').addClass('is-mobile')
+  $('footer').addClass('is-mobile')
+  $('#top-container').addClass('is-mobile')
+}</script><div class="search-dialog" id="algolia-search"><div class="search-dialog__title" id="algolia-search-title">Algolia</div><div id="algolia-input-panel"><div id="algolia-search-input"></div></div><hr><div id="algolia-search-results"><div id="algolia-hits"></div><div id="algolia-pagination"></div><div id="algolia-stats"></div></div><span class="search-close-button"><i class="fa fa-times"></i></span></div><div class="search-mask"></div></body></html>
