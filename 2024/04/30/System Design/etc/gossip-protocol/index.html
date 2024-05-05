@@ -1,0 +1,213 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="description" content="[System Design] Gossip Protocol"><meta name="keywords" content="System Design"><meta name="author" content="Song Hayoung"><meta name="copyright" content="Song Hayoung"><title>[System Design] Gossip Protocol | SUMFIのBlog</title><link rel="shortcut icon" href="/songcon.ico"><link rel="stylesheet" href="/css/index.css?version=1.7.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@latest/css/font-awesome.min.css?version=1.7.0"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css?version=1.7.0"><meta name="format-detection" content="telephone=no"><meta http-equiv="x-dns-prefetch-control" content="on"><link rel="dns-prefetch" href="https://cdn.jsdelivr.net"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.css"><script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.js" defer></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@latest/dist/gitalk.min.js"></script><script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.10.0/js/md5.min.js"></script><link rel="dns-prefetch" href="https://www.google-analytics.com"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-169368422-1', 'auto');
+ga('send', 'pageview');</script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: {"appId":"7LZ6OJ4D6C","apiKey":"9a84e13f74ea78c3fd54512c10139c56","indexName":"git blog","hits":{"per_page":10},"languages":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}.","hits_stats":"${hits} results found in ${time} ms"}},
+  localSearch: undefined,
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  }
+} </script><meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/rss2.xml" title="SUMFIのBlog" type="application/rss+xml">
+</head><body><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar" data-display="true"><div class="toggle-sidebar-info text-center"><span data-toggle="Toggle article">Toggle site</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">Catalog</div><div class="sidebar-toc__progress"><span class="progress-notice">You've read</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Gossip-Protocol"><span class="toc-number">1.</span> <span class="toc-text">Gossip Protocol</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Centralized-State-Management-Service"><span class="toc-number">1.1.</span> <span class="toc-text">Centralized State Management Service</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Peer-To-Peer-State-Management-Service"><span class="toc-number">1.2.</span> <span class="toc-text">Peer-To-Peer State Management Service</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Terminology"><span class="toc-number">2.</span> <span class="toc-text">Terminology</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Requirements"><span class="toc-number">3.</span> <span class="toc-text">Requirements</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Functional-Requirements"><span class="toc-number">3.1.</span> <span class="toc-text">Functional Requirements</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Non-Functional-Requirements"><span class="toc-number">3.2.</span> <span class="toc-text">Non-Functional Requirements</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Gossip-Protocol-Explained"><span class="toc-number">4.</span> <span class="toc-text">Gossip Protocol Explained</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Point-To-Point-Broadcast"><span class="toc-number">4.1.</span> <span class="toc-text">Point-To-Point Broadcast</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Eager-Reliable-Broadcast"><span class="toc-number">4.2.</span> <span class="toc-text">Eager Reliable Broadcast</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Gossip-Protocol-1"><span class="toc-number">4.3.</span> <span class="toc-text">Gossip Protocol</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Types-of-Gossip-Protocol"><span class="toc-number">4.4.</span> <span class="toc-text">Types of Gossip Protocol</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Anti-Entropy-Gossip-Protocol"><span class="toc-number">4.4.1.</span> <span class="toc-text">Anti-Entropy Gossip Protocol</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Rumor-Mongering-Gossip-Protocol"><span class="toc-number">4.4.2.</span> <span class="toc-text">Rumor-Mongering Gossip Protocol</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Aggregation-Gossip-Protocol"><span class="toc-number">4.4.3.</span> <span class="toc-text">Aggregation Gossip Protocol</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Strategies-to-Spread-a-Message-through-Gossip-Protocol"><span class="toc-number">4.5.</span> <span class="toc-text">Strategies to Spread a Message through Gossip Protocol</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Push-Model"><span class="toc-number">4.5.1.</span> <span class="toc-text">Push Model</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Pull-Model"><span class="toc-number">4.5.2.</span> <span class="toc-text">Pull Model</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Push-Pull-Model"><span class="toc-number">4.5.3.</span> <span class="toc-text">Push-Pull Model</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Gossip-Protocol-Performance"><span class="toc-number">4.6.</span> <span class="toc-text">Gossip Protocol Performance</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Gossip-Protocol-Properties"><span class="toc-number">4.7.</span> <span class="toc-text">Gossip Protocol Properties</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Gossip-Algorithm"><span class="toc-number">5.</span> <span class="toc-text">Gossip Algorithm</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Gossip-Protocol-Use-Cases"><span class="toc-number">6.</span> <span class="toc-text">Gossip Protocol Use Cases</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Gossip-Protocol-Advantages"><span class="toc-number">7.</span> <span class="toc-text">Gossip Protocol Advantages</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Scalability"><span class="toc-number">7.1.</span> <span class="toc-text">Scalability</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Fault-Tolerance"><span class="toc-number">7.2.</span> <span class="toc-text">Fault Tolerance</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Robustness"><span class="toc-number">7.3.</span> <span class="toc-text">Robustness</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Convergent-Consistency"><span class="toc-number">7.4.</span> <span class="toc-text">Convergent Consistency</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Decentralization"><span class="toc-number">7.5.</span> <span class="toc-text">Decentralization</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Simplicity"><span class="toc-number">7.6.</span> <span class="toc-text">Simplicity</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Integration-and-Interoperability"><span class="toc-number">7.7.</span> <span class="toc-text">Integration and Interoperability</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Bounded-Load"><span class="toc-number">7.8.</span> <span class="toc-text">Bounded Load</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Gossip-Protocol-Disadvantages"><span class="toc-number">8.</span> <span class="toc-text">Gossip Protocol Disadvantages</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Eventually-Consistent"><span class="toc-number">8.1.</span> <span class="toc-text">Eventually Consistent</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Network-Partition-Unawareness"><span class="toc-number">8.2.</span> <span class="toc-text">Network Partition Unawareness</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Bandwidth"><span class="toc-number">8.3.</span> <span class="toc-text">Bandwidth</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Latency"><span class="toc-number">8.4.</span> <span class="toc-text">Latency</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Debugging-and-Testing"><span class="toc-number">8.5.</span> <span class="toc-text">Debugging and Testing</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Scalability-1"><span class="toc-number">8.6.</span> <span class="toc-text">Scalability</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Computational-Error"><span class="toc-number">8.7.</span> <span class="toc-text">Computational Error</span></a></li></ol></li></ol></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="https://avatars3.githubusercontent.com/u/37806785?s=460&amp;u=8c68d685faf7c5280cfbd736a6b1730b55fb4203&amp;v=4"></div><div class="author-info__name text-center">Song Hayoung</div><div class="author-info__description text-center"></div><div class="follow-button"><a target="_blank" rel="noopener" href="https://www.linkedin.com/in/hayoung-song-9523b61bb/">Follow Me</a></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="/archives"><span class="pull-left">Articles</span><span class="pull-right">10719</span></a><a class="author-info-articles__tags article-meta" href="/tags"><span class="pull-left">Tags</span><span class="pull-right">193</span></a><a class="author-info-articles__categories article-meta" href="/categories"><span class="pull-left">Categories</span><span class="pull-right">61</span></a></div><hr><div class="author-info-links"><div class="author-info-links__title text-center">VISITED</div><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Seoul Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Jeju Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">British Columbia Canada</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Boracay Philippines</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">三重　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">大阪　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">名古屋　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">静岡　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">札幌　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">京都　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Bangkok Thailand</a></div></div></div><div id="content-outer"><div id="top-container" style="background-image: url(https://xxxx.jpg)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="/">SUMFIのBlog</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus">   <a class="site-page" href="/">Home</a><a class="site-page" href="/archives">Archives</a><a class="site-page" href="/tags">Tags</a><a class="site-page" href="/categories">Categories</a><a class="site-page" href="/about">About</a></span><span class="pull-right"><a class="site-page social-icon search"><i class="fa fa-search"></i><span> Search</span></a></span></div><div id="post-info"><div id="post-title">[System Design] Gossip Protocol</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2024-04-30</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/">System Design</a><i class="fa fa-angle-right" aria-hidden="true"></i><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/Etc/">Etc</a><div class="post-meta-wordcount"><span>Word count: </span><span class="word-count">2k</span><span class="post-meta__separator">|</span><span>Reading time: 12 min</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div class="article-container" id="post-content"><h2 id="Gossip-Protocol"><a href="#Gossip-Protocol" class="headerlink" title="Gossip Protocol"></a>Gossip Protocol</h2><span id="more"></span>
+<p>분산 시스템의 일반적인 문제는 아래와 같다.</p>
+<ul>
+<li>시스템 상태 유지 (노드의 활성도)</li>
+<li>노드 간의 통신</li>
+</ul>
+<p>이런 문제에 대한 잠재적 해결책은 아래와 같다.</p>
+<ul>
+<li>중앙 집중식 상태 관리</li>
+<li>P2P 상태 관리</li>
+</ul>
+<h3 id="Centralized-State-Management-Service"><a href="#Centralized-State-Management-Service" class="headerlink" title="Centralized State Management Service"></a>Centralized State Management Service</h3><p>쥬키퍼와 같은 중앙 집중식 상태 관리 서비스를 서비스 디스커버리로 구성해 시스템 내 모든 노드의 상태를 추적할 수 있다. 이 접근 방식은 강력한 일관성을 보장하지만, 상태 관리 서비스가 SPOF가 되어 대규모 분산 시스템에서의 확장성에 문제가 발생한다는 단점이 있다.</p>
+<h3 id="Peer-To-Peer-State-Management-Service"><a href="#Peer-To-Peer-State-Management-Service" class="headerlink" title="Peer-To-Peer State Management Service"></a>Peer-To-Peer State Management Service</h3><p>P2P 상태 관리 접근 방식은 고가용성과 궁극적 일관성을 지향한다. 가십 프로토콜 알고리즘은 높은 확장성과 향상된 복원력을 갖춘 P2P 상태 관리 서비스를 구현하는 데 사용할 수 있다.</p>
+<h2 id="Terminology"><a href="#Terminology" class="headerlink" title="Terminology"></a>Terminology</h2><ul>
+<li>node : 다른 서비스에 기능을 제공하는 서버</li>
+<li>fanout : 특정 노드로부터 메세지를 수신하는 노드 수</li>
+<li>cycle : 특정 메세지를 전체 노드 클러스터에 퍼트리는데 필요한 가십 라운드 수</li>
+</ul>
+<h2 id="Requirements"><a href="#Requirements" class="headerlink" title="Requirements"></a>Requirements</h2><h3 id="Functional-Requirements"><a href="#Functional-Requirements" class="headerlink" title="Functional Requirements"></a>Functional Requirements</h3><ul>
+<li>노드 메타데이터 전송 지원</li>
+<li>애플리케이션 데이터 전송 지원</li>
+<li>구현 편이성</li>
+</ul>
+<h3 id="Non-Functional-Requirements"><a href="#Non-Functional-Requirements" class="headerlink" title="Non-Functional Requirements"></a>Non-Functional Requirements</h3><ul>
+<li>고가용성</li>
+<li>궁극적 일관성</li>
+<li>확장성</li>
+<li>신뢰성</li>
+<li>내결함성</li>
+<li>탈중앙화</li>
+</ul>
+<h2 id="Gossip-Protocol-Explained"><a href="#Gossip-Protocol-Explained" class="headerlink" title="Gossip Protocol Explained"></a>Gossip Protocol Explained</h2><p>분산 시스템에서 널리 사용되는 메세지 브로드캐스트 테크닉은 다음과 같다.</p>
+<ul>
+<li>point-to-point broadcast</li>
+<li>eager reliable broadcast</li>
+<li>gossip protocol</li>
+</ul>
+<h3 id="Point-To-Point-Broadcast"><a href="#Point-To-Point-Broadcast" class="headerlink" title="Point-To-Point Broadcast"></a>Point-To-Point Broadcast</h3><p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240430094100463.png" alt=""></p>
+<p>프로듀서는 P2P 브로드캐스트에서 컨슈머에게 직접 메세지를 보낸다. 프로듀서의 재시도 매커니즘과 컨슈머의 중복 제거 메커니즘이 P2P 브로드캐스트를 안정적으로 만든다. 프로듀서와 컨슈머가 동시에 실패하면 메세지가 유실된다.</p>
+<h3 id="Eager-Reliable-Broadcast"><a href="#Eager-Reliable-Broadcast" class="headerlink" title="Eager Reliable Broadcast"></a>Eager Reliable Broadcast</h3><p>모든 노드는 안정적인 네트워크 링크를 통해 다른 모든 노드에 메세지를 재전송한다. 이 접근 방식은 프로듀서와 컨슈머가 동시에 장애가 발생해도 메세지가 손실되지 않으므로 향상된 내결함성을 제공한다. 메세지는 나머지 노드에 브로드캐스트 된다. Eager reliable 방식의 주의사항은 다음과 같다.</p>
+<ul>
+<li>n개의 노드에 대해 O(n^2) 개의 메세지를 브로드캐스트 하기 때문에 네트워크 대역폭 사용량이 높다.</li>
+<li>O(n) 선형 브로드캐스트로 인해 전송 노드에 병목 현상이 발생할 수 있다.</li>
+<li>모든 노드가 시스템 내 모든 노드의 목록을 저장하여 스토리지 비용이 증가한다.</li>
+</ul>
+<h3 id="Gossip-Protocol-1"><a href="#Gossip-Protocol-1" class="headerlink" title="Gossip Protocol"></a>Gossip Protocol</h3><p>가십 프로토콜은 거대한 분산 시스템에서 메세지를 전송하는 분산형 P2P 통신 기술이다. 가십 프로토콜의 핵심 개념은 모든 노드가 주기적으로 다른 무작위 노드의 하위 집합에 메세지를 전송하는 것이다. 전체 시스템은 결국 높은 확률로 특정 메세지를 수신하게 된다.</p>
+<p><img src="https://systemdesign.one/gossip-protocol/gossip-protocol-visualization.webp" alt=""></p>
+<p>가십 프로토콜은 강력하고 확장 가능하며 궁극적으로 일관된 알고리즘을 기반으로 구축된다. 가십 프로토콜은 일반적으로 분산 시스템에서 노드 멤버십 목록을 유지하고, 합의를 달성하며, 오류를 감지하는데 사용된다.</p>
+<p>가십 프로토콜은 노드 장애가 발생해도 다른 노드가 메세지를 재전송하여 극복할 수 있기 때문에 안정적이다. 가십 프로토콜을 통해 FIFO 브로드캐스트, 인과관계 브로드캐스트, 전체 순서 브로드캐스트를 구현할 수 있다.</p>
+<p>가십 프로토콜의 확률적 보장을 개선하기 위해 cycle, fanout과 같은 가십 프로토콜 파라미터를 조정할 수 있다.</p>
+<p>가십 프로토콜은 아래와 같은 특성으로 인해 대규모 분산 시스템의 통신 프로토콜로 최적의 선택이 될 수 있다.</p>
+<ul>
+<li>각 노드가 전송하는 메세지 수를 제한</li>
+<li>애플리케이션 성능 저하 방지를 위해 대역폭 소비 제한</li>
+<li>네트워크 및 노드 장애 허용</li>
+</ul>
+<p>가십 프로토콜은 실행되는 연산이 정류적이고 직렬화가 필요하지 않은 경우에만  노드의 일관성을 유지하는데 사용할 수 있다. 툼스톤은 데이터를 실제로 삭제하지 않고 일치하는 키가 있는 데이터 항목을 무효화하기 위한 특수 항목이다. 가십 프로토콜은 데이터를 제거한다.</p>
+<h3 id="Types-of-Gossip-Protocol"><a href="#Types-of-Gossip-Protocol" class="headerlink" title="Types of Gossip Protocol"></a>Types of Gossip Protocol</h3><p>특정 사용 사례에 맞는 가십 프로토콜 유형을 선택할 때는 가십 프로토콜이 시스템 전체에 메세지를 전파하는데 필요한 시간과 메세지 전파 시 발생하는 네트워크 트래픽을 고려해야 한다.</p>
+<ul>
+<li>anti-entropy model</li>
+<li>rumor-mongering model</li>
+<li>aggregation model</li>
+</ul>
+<h4 id="Anti-Entropy-Gossip-Protocol"><a href="#Anti-Entropy-Gossip-Protocol" class="headerlink" title="Anti-Entropy Gossip Protocol"></a>Anti-Entropy Gossip Protocol</h4><p>반엔트로피 알고리즘은 데이터베이스와 같은 스테이트풀 서비스의 복제본 간의 엔트로피를 줄이기 위해 도입되었다. 복제된 데이터를 비교하고 복제본 간의 차이를 패치한다. 최신 메세지를 가진 노드는 모든 가십 라운드에서 다른 노드와 이를 공유한다.</p>
+<p>반엔트로피 모델은 일반적으로 전체 데이터 세트를 전송해 불필요한 대역폭을 사용한다. 체크섬, 최근 업데이트 목록, 머클 트리와 같은 기술을 사용해 노드 간의 차이를 식별하여 전체 데이터 세트의 전송을 피하고 네트워크 대역폭 사용량을 줄일 수 있다. 엔트로피 방지 가십 프로토콜은 종료 없이 무제한의 메세지를 전송한다.</p>
+<h4 id="Rumor-Mongering-Gossip-Protocol"><a href="#Rumor-Mongering-Gossip-Protocol" class="headerlink" title="Rumor-Mongering Gossip Protocol"></a>Rumor-Mongering Gossip Protocol</h4><p>루머 확산 프로토콜은 유포 프로토콜이라고도 한다. 루머 형성 주기는 반엔트로피 주기보다 상대적으로 더 자주 발생하며 최악의 경우 네트워크에 부하가 넘친다. 루머 확산 모델은 최신 업데이트만 노드 간에 전송되므로 네트워크 대역폭과 같은 리소스를 더 적게 사용한다.</p>
+<p>메세지 수를 제한하기 위해 몇 차례의 통신을 거친 후 메세지가 제거된 것으로 표시된다. 일반적으로 메세지가 모든 노드에 도달할 확률이 높다.</p>
+<h4 id="Aggregation-Gossip-Protocol"><a href="#Aggregation-Gossip-Protocol" class="headerlink" title="Aggregation Gossip Protocol"></a>Aggregation Gossip Protocol</h4><p>집계 가십 프로토콜은 모든 노드에서 정보를 샘플링하고 그 값을 결합해 시스템 전체 값을 생성함으로써 시스템 전체 집계를 계산한다.</p>
+<h3 id="Strategies-to-Spread-a-Message-through-Gossip-Protocol"><a href="#Strategies-to-Spread-a-Message-through-Gossip-Protocol" class="headerlink" title="Strategies to Spread a Message through Gossip Protocol"></a>Strategies to Spread a Message through Gossip Protocol</h3><p>가십 프로토콜은 고가용성 서비스를 구축하기 위한 최적의 프레임워크다. 가십 프로토콜을 통해 메세지를 퍼트리는 전략은 서비스 요구사항과 사용 가능한 네트워크 조건에 따라 선택해야 한다. 각 메세지 확산 전략에는 대역폭, 지연 시간 및 안정성 측면에서 장단점이 있다. 메세지 확산 전략은 반엔트로피 모델과 루머 확산 모델 모두에 적용된다. 가십 프로토콜을 사용해 메세지를 퍼트리는 전략은 다음과 같다.</p>
+<ul>
+<li>push model</li>
+<li>pull model</li>
+<li>push-pull model</li>
+</ul>
+<h4 id="Push-Model"><a href="#Push-Model" class="headerlink" title="Push Model"></a>Push Model</h4><p>푸시 모델은 트래픽 오버헤드 때문에 업데이트 메세지가 소수에 불과할 때 효율적이다. 최신 메세지를 받은 노드는 푸시 모델에서 다른 노드의 무작위 하위 집합에 메세지를 보낸다.</p>
+<h4 id="Pull-Model"><a href="#Pull-Model" class="headerlink" title="Pull Model"></a>Pull Model</h4><p>모든 노드는 풀 모델에서 임의의 노드 하위 집합을 대상으로 업데이트 메세지를 적극적으로 폴링한다. 이 방식은 최신 업데이트 메세지를 가진 노드를 찾을 가능성이 높기 때문에 업데이트 메세지가 많을 때 효율적이다.</p>
+<h4 id="Push-Pull-Model"><a href="#Push-Pull-Model" class="headerlink" title="Push-Pull Model"></a>Push-Pull Model</h4><p>푸시-풀 모델은 업데이트 메세지를 빠르고 안정적으로 배포하는데 최적이다. 노드는 새 업데이트 메세지를 푸시할 수 있고 노드는 새 업데이트 메세지를 풀링할 수도 있다. 푸시 방식은 업데이트 메세지를 가진 노드가 극 소수인 초기 단계에서 효율적이고, 풀 방식은 업데이트 메세지가 많은 노드가 대량으로 존재하는 최종 단계에서 효율적이다.</p>
+<h3 id="Gossip-Protocol-Performance"><a href="#Gossip-Protocol-Performance" class="headerlink" title="Gossip Protocol Performance"></a>Gossip Protocol Performance</h3><p>클러스터 전체에 메세지를 전파하는데 필요한 cycle은 fanout에 기반해 O(log n)의 시간이 소요된다.</p>
+<p>예를 들어, 26000개의 노드에 메세지를 전파하는데는 약 15번의 가십 라운드가 소요된다. 가십 간격을 10ms의 낮은 값으로 설정하면 약 3초 만에 거대한 데이터 센터 전체에 메세지를 전파할 수 있다. 가십 프로토콜의 메세지 전파는 불필요한 부하를 줄이기 위해 자동으로 aged 되어야 한다. 가십 프로토콜의 성능은 다음 메트릭으로 측정할 수 있다.</p>
+<ul>
+<li>residue : 메세지를 수신하지 않은 남은 노드의 수가 최소여야 한다.</li>
+<li>traffic : 노드 간에 전송되는 평균 메세지 수가 최소여야 한다.</li>
+<li>convergence : 모든 노드가 가능한 한 빨리 메세지를 수신해야 한다.</li>
+<li>time avg : 모든 노드에 메세지를 보내는 데 걸리는 평균 시간이 짧아야 한다.</li>
+<li>time last : 마지막 노드가 메세지를 수신하는데 걸리는 시간이 짧아야 한다.</li>
+</ul>
+<h3 id="Gossip-Protocol-Properties"><a href="#Gossip-Protocol-Properties" class="headerlink" title="Gossip Protocol Properties"></a>Gossip Protocol Properties</h3><p>가십 프로토콜을 공식적으로 정의할 수 있는 방법은 없지만 일반적으로 가십 프로토콜은 다음 속성을 만족해야 한다.</p>
+<ul>
+<li>fanout을 수행하기 위해 노드 선택은 무작위여야 한다.</li>
+<li>모든 노드에서 로컬 정보만 사용할 수 있으며 노드는 클러스터의 상태를 알지 못한다.</li>
+<li>노드 간 통신에는 주기적인 쌍 단위의 프로세스 간 상호 작용이 포함된다.</li>
+<li>가십 라운드당 제한된 크기의 전송 용량이 요구된다.</li>
+<li>모든 노드가 동일한 가십 프로토콜을 사용한다.</li>
+<li>노드 간의 신뢰할 수 없는 네트워크 경로가 가정된다.</li>
+<li>노드 상호 작용 빈도가 낮다.</li>
+<li>노드 상호작용은 상태 교환을 유발한다.</li>
+</ul>
+<h2 id="Gossip-Algorithm"><a href="#Gossip-Algorithm" class="headerlink" title="Gossip Algorithm"></a>Gossip Algorithm</h2><p>가십 알고리즘의 대략적 개요는 아래와 같다.</p>
+<ol>
+<li>모든 노드는 노드의 하위 집합 목록과 해당 메타데이터를 유지한다.</li>
+<li>무작위 라이브 피어 노드의 엔드포인트에 주기적으로 가십을 전송한다.</li>
+<li>모든 노드는 수신된 가십 메세지를 검사해 가장 높은 버전 번호를 로컬 데이터 세트에 반영한다.</li>
+</ol>
+<p>특정 노드가 가십 교환에 참여할 때마다 노드의 하트비트 카운터가 증가한다. 하트비트 카운터가 계속 증가하면 해당 노드는 건강한 노드로 분류된다. 반면 네트워크 파티션 또는 노드 장애로 인해 하트비트 카운터가 장기간 변경되지 않으면 해당 노드는 건강하지 않은 것으로 간주된다. 다음은 가십 프로토콜에서 피어 노드 선택에 대한 다양한 기준이다.</p>
+<ul>
+<li>java.util.random과 같은 프로그래밍 언어에서 제공하는 라이브러리 활용</li>
+<li>커넥션이 가장 적은 노드와 상호 작용</li>
+<li>네트워크 토폴로지를 인식하는 상호 작용</li>
+</ul>
+<h2 id="Gossip-Protocol-Use-Cases"><a href="#Gossip-Protocol-Use-Cases" class="headerlink" title="Gossip Protocol Use Cases"></a>Gossip Protocol Use Cases</h2><p>가십 프로토콜은 궁극적으로 일관성이 요구되는 다양한 어플리케이션에서 사용된다. 사용 사례는 다음과 같다.</p>
+<ul>
+<li>데이터베이스 복제</li>
+<li>정보 배포</li>
+<li>클러스터 멤버십 유지</li>
+<li>장애 감지</li>
+<li>집계 생성(평균, 최대, 합계 계산)</li>
+<li>오버레이 네트워크 생성</li>
+<li>리더 선출</li>
+</ul>
+<p>가십 프로토콜은 분산 시스템에서 노드의 장애를 높은 확률로 감지하는 데 사용할 수 있다. 노드의 장애 감지는 CPU, 대역폭, 대기열 공간과 같은 리소스를 절약할 수 있다. 분산 시스템에서는 네트워크 파티션이나 클라이언트 장애가 발생해 단일 클라이언트가 특정 노드와 상호작용할 수 없을 때 노드 장애를 주장하는 것만으로는 충분하지 않다. 여러 노드가 가십 프로토콜을 통해 특정 노드의 생존을 확인하면 특정 노드의 장애를 확실하게 단정할 수 있다.</p>
+<p>가십 프로토콜은 TCP 연결보다 데이터 교환과 명령 및 제어에 훨씬 더 안정적이다. 가십 프로토콜을 사용하면 애플리케이션 로직에서 노드 및 사위 시스템 속성에 대한 통신을 추상화할 수 있다. 평균 부하 및 여유 메모리와 같은 노드 통계는 팬아웃에 대한 로컬 의사 결정을 개선하기 위해 가십 메세지로 전송할 수 있다.</p>
+<p>대기열 길이와 같은 하위 시스템 정보, 구성 변경과 같은 주요 메타데이터, 심지어 요청-응답까지 가십 프로토콜을 통해 전송할 수 있다. 가십 프로토콜을 통해 노드 업데이트 메세지를 집계하면 여러 개의 작은 메세지가 아닌 단일 청크로 데이터를 전송해 통신 오버헤드를 줄일 수 있다.</p>
+<p>노드의 활성도를 파악해 메세지를 클러스터 전체에 최적으로 라우팅할 수 있다. 중앙화된 서비스 없이 로컬 노드 수준에서 의사결정을 내리는 것이 가십 프로토콜의 핵심이다. 노드에서 이전 메세지 버전을 무시하기 위해 벡터 클럭으로 메세지를 버전화할 수 있다.</p>
+<h2 id="Gossip-Protocol-Advantages"><a href="#Gossip-Protocol-Advantages" class="headerlink" title="Gossip Protocol Advantages"></a>Gossip Protocol Advantages</h2><ul>
+<li>scalable</li>
+<li>fault tolerant</li>
+<li>robust</li>
+<li>convergent consistency</li>
+<li>decentralized</li>
+<li>simplicity</li>
+<li>integration and interoperability</li>
+<li>bounded load</li>
+</ul>
+<h3 id="Scalability"><a href="#Scalability" class="headerlink" title="Scalability"></a>Scalability</h3><p>확장성은 성능 저하 없이 증가하는 부하를 처리할 수 있는 시스템의 능력이다. 가십 프로토콜 주기는 수렴을 달성하기 위해 대수적인 시간이 필요하다. 또한 모든 노드는 시스템의 노드 수에 관계없이 정해진 수의 노드와만 상호작용하고 정해진 수의 메세지만 전송한다. 노드는 지연 시간을 개선하기 위해 승인을 기다리지 않는다.</p>
+<h3 id="Fault-Tolerance"><a href="#Fault-Tolerance" class="headerlink" title="Fault Tolerance"></a>Fault Tolerance</h3><p>내결함성은 노드 충돌, 네트워크 파티션 또는 메세지 손실과 같은 장애 발생 시에도 시스템이 기능을 유지할 수 있는 능력이다. 가십 프로토콜을 사용하는 분산 시스템은 신뢰할 수 없는 네트워크에 대한 내성으로 인해 내결함성이 있다. 가십 프로토콜이 제공하는 중복성 병렬성 무작위성은 시스템의 내결함성을 향상시킨다.</p>
+<p>또한 노드의 대칭적이고 탈중앙화된 특성은 가십 프로토콜의 내결함성을 강화한다. 동일한 메세지는 일반적으로 여러 노드에 걸쳐 여러 번 전송된다. 다시 말해, 발신자와 수신자 사이의 메세지 흐름에는 많은 경로가 존재한다. 따라서 노드 장애는 다른 노드를 통한 메세지 전송을 통해 극복된다.</p>
+<h3 id="Robustness"><a href="#Robustness" class="headerlink" title="Robustness"></a>Robustness</h3><p>가십 프로토콜에 참여하는 노드의 대칭적 특성은 시스템의 견고성을 향상시킨다. 노드 장애가 발생해도 시스템 품질에 영향을 미치지 않는다. 가십 프로토콜은 일시적인 네트워크 파티션에 대해서도 견고하다. 그러나 가십 프로토콜은 데이터가 자체 검증되지 않는 한 오작동하는 노드나 악의적인 가십 메세지에 대해 견고하지 않다.</p>
+<p>노드에 대한 점수 기반 평가 시스템은 악의적인 노드에 의한 가십 시스템 손상을 방지하기 위해 사용될 수 있다. 가십 시스템의 프라이버시 및 보안을 강화하기 위해 암호화, 인증, 권한 부여와 같은 적절한 메커니즘과 정책을 구현해야 한다.</p>
+<h3 id="Convergent-Consistency"><a href="#Convergent-Consistency" class="headerlink" title="Convergent Consistency"></a>Convergent Consistency</h3><p>일관성은 시스템의 모든 노드에서 동일한 상태를 볼 수 있도록 보장하는 기술이다. Strong, eventual, causal, probabilistic 일관성과 같은 다양한 일관성 수준은 시스템의 성능, 가용성, 정확성에 서로 다른 영향을 미친다. 가십 프로토콜은 데이터의 기하급수적 확산을 통해 대수적 시간 복잡성에서 일관된 상태로 수렴한다.</p>
+<h3 id="Decentralization"><a href="#Decentralization" class="headerlink" title="Decentralization"></a>Decentralization</h3><p>가십 프로토콜은 P2P 통신을 통해 극도로 탈중앙화된 정보 검색 모델을 제공한다.</p>
+<h3 id="Simplicity"><a href="#Simplicity" class="headerlink" title="Simplicity"></a>Simplicity</h3><p>가십 프로토콜의 대부분의 변형은 매우 적은 코드와 낮은 복잡성으로 구현할 수 있다. 노드의 대칭적 특성으로 인해 가십 프로토콜을 실행하는 것은 매우 간단하다.</p>
+<h3 id="Integration-and-Interoperability"><a href="#Integration-and-Interoperability" class="headerlink" title="Integration and Interoperability"></a>Integration and Interoperability</h3><p>가십 프로토콜은 데이터베이스, 캐시, 큐와 같은 분산 시스템 구성 요소와 통합 및 상호 운용될 수 있다. 서로 다른 분산 시스템 구성 요소에서 가십 프로토콜을 구현하려면 공통 인터페이스, 데이터 형식, 프로토콜을 정의해야 한다.</p>
+<h3 id="Bounded-Load"><a href="#Bounded-Load" class="headerlink" title="Bounded Load"></a>Bounded Load</h3><p>기존의 분산 시스템 프로토콜은 일반적으로 개별 분산 시스템 구성 요소에 과부하가 걸릴 수 있는 높은 서지 부하를 생성한다. 가십 프로토콜은 서비스 품질 저하 방지를 위해 개별 분산 시스템 구성 요소에 대해 엄격하게 제안된 최악의 부하만 발생시킨다. 가십 프로토콜의 피어 노드 선택은 네트워크 링크의 부하를 줄이기 위해 조정할 수 있다. 실제로 가십 프로토콜에서 발생하는 부하는 제한적일 뿐만 아니라 사용 가능한 대역폭에 비해 무시할 수 있는 수준이다.</p>
+<h2 id="Gossip-Protocol-Disadvantages"><a href="#Gossip-Protocol-Disadvantages" class="headerlink" title="Gossip Protocol Disadvantages"></a>Gossip Protocol Disadvantages</h2><ul>
+<li>eventual consistency</li>
+<li>unawareness of network partitions</li>
+<li>relatively high bandwidth consumption</li>
+<li>increased latency</li>
+<li>difficulty in debugging and testing</li>
+<li>membership protocol is not scalable</li>
+<li>prone to computational errors</li>
+</ul>
+<h3 id="Eventually-Consistent"><a href="#Eventually-Consistent" class="headerlink" title="Eventually Consistent"></a>Eventually Consistent</h3><p>가십 프로토콜은 본질적으로 궁극적 일관성을 가지며 멀티캐스트에 비해 상대적으로 느리다. 또한 가십 메세지와 관련된 오버헤드가 있으며 가십 동작은 네트워크 토폴로지 및 노드 이질성에 따라 달라진다. 따라서 클러스터에서 새 노드 또는 노드 장애를 인식하는데 약간의 지연이 발생한다.</p>
+<h3 id="Network-Partition-Unawareness"><a href="#Network-Partition-Unawareness" class="headerlink" title="Network Partition Unawareness"></a>Network Partition Unawareness</h3><p>네트워크 파티션이 발생해도 하위 파티션의 노드는 여전히 서로 가십을 주고 받는다. 따라서 가십 프로토콜은 네트워크 파티션을 인식하지 못해 메세지 전파가 상당히 지연될 수 있다.</p>
+<h3 id="Bandwidth"><a href="#Bandwidth" class="headerlink" title="Bandwidth"></a>Bandwidth</h3><p>가십 프로토콜은 동일한 메세지가 동일한 노드에 여러 번 재전송되어 불필요한 대역폭을 소모할 수 있으므로 효율적이지 않다. 가십 프로토콜의 대역폭 사용량은 제한된 메세지 크기와 주기적인 메세지 교환으로 인해 제한되지만, 노드가 가십해야 하는 정보의 양이 제한된 메세지 크기를 초과하면 가십 교환에 의한 효과적인 팬아웃이 저하될 수 있다.</p>
+<p>가십 프로토콜의 포화점은 메세지 생성 속도, 메세지 크기, 팬아웃, 가십 프로토콜의 유형 등 다양한 조건에 의해 달라진다.</p>
+<h3 id="Latency"><a href="#Latency" class="headerlink" title="Latency"></a>Latency</h3><p>가십 프로토콜을 사용하면 노드가 메세지를 전송하기 위해 다음 가십 주기를 기다려야 하기 때문에 지연 시간이 증가한다. 메세지가 가십 교환을 트리거하는 것이 아니라 가십 프로토콜 주기 타이머가 트리거한다. 메세지를 시스템 전체에 전파하는데 필요한 시간 복잡도는 로그지수다.</p>
+<h3 id="Debugging-and-Testing"><a href="#Debugging-and-Testing" class="headerlink" title="Debugging and Testing"></a>Debugging and Testing</h3><p>디버깅은 가십 프로토콜이 예상된 동작에서 벗어나는 오류를 파악하고 수정하는 작업이다. 테스트는 가십 프로토콜이 성능, 안정성, 보안과 같은 기능적, 비기능적 요구사항을 충족하는지 여부를 검증하는 기능이다.</p>
+<p>가십 프로토콜의 고유한 비결정성과 분산 특성으로 인해 장애를 디버깅하고 재현하기 어렵다. 시뮬레이션, 에뮬레이션, 로깅, 추적, 모니터링, 시간화 등의 도구와 기법을 사용해 가십 시스템을 테스트하고 디버깅할 수 있다.</p>
+<h3 id="Scalability-1"><a href="#Scalability-1" class="headerlink" title="Scalability"></a>Scalability</h3><p>가십 프로토콜의 대부분의 변형은 확장 불가능한 멤버십 프로토콜에 의존한다.</p>
+<h3 id="Computational-Error"><a href="#Computational-Error" class="headerlink" title="Computational Error"></a>Computational Error</h3><p>가십 프로토콜은 악의적인 노드로 인해 계산 오류가 발생할 수 있다. 가십 프로토콜의 견고성은 특정 종류의 오류로 제한되기 때문에 노드는 자체 수정 메커니즘을 구현해야 한다. 그럼에도 불구하고 가십 프로토콜은 매우 안정적이며,  100%의 확률을 가진 결과가 일반적이다.</p>
+</div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined">Song Hayoung</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="https://songhayoung.github.io/2024/04/30/System%20Design/etc/gossip-protocol/">https://songhayoung.github.io/2024/04/30/System%20Design/etc/gossip-protocol/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/System-Design/">System Design</a></div><nav id="pagination"><div class="prev-post pull-left"><a href="/2024/05/01/PS/LeetCode/reverse-prefix-of-word/"><i class="fa fa-chevron-left">  </i><span>[LeetCode] Reverse Prefix of Word</span></a></div><div class="next-post pull-right"><a href="/2024/04/28/PS/LeetCode/find-the-median-of-the-uniqueness-array/"><span>[LeetCode] Find the Median of the Uniqueness Array</span><i class="fa fa-chevron-right"></i></a></div></nav><div id="gitalk-container"></div><script>var gitalk = new Gitalk({
+  clientID: '3604b61642355579f55e',
+  clientSecret: 'f552120f18ac5aee3f6297e05e97d94c0a25cd4b',
+  repo: 'SongHayoung.github.io',
+  owner: 'SongHayoung',
+  admin: 'SongHayoung',
+  id: md5(decodeURI(location.pathname)),
+  language: 'en'
+})
+gitalk.render('gitalk-container')</script></div></div><footer class="footer-bg" style="background-image: url(https://xxxx.jpg)"><div class="layout" id="footer"><div class="copyright">&copy;2020 - 2024 By Song Hayoung</div><div class="framework-info"><span>Driven - </span><a target="_blank" rel="noopener" href="http://hexo.io"><span>Hexo</span></a><span class="footer-separator">|</span><span>Theme - </span><a target="_blank" rel="noopener" href="https://github.com/Molunerfinn/hexo-theme-melody"><span>Melody</span></a></div><div class="footer_custom_text">Learning how to walk slowly to not miss important things</div><div class="busuanzi"><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><span id="busuanzi_container_page_pv"><i class="fa fa-file"></i><span id="busuanzi_value_page_pv"></span><span></span></span></div></div></footer><i class="fa fa-arrow-up" id="go-up" aria-hidden="true"></i><script src="https://cdn.jsdelivr.net/npm/animejs@latest/anime.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@latest/velocity.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-ui-pack@latest/velocity.ui.min.js"></script><script src="/js/utils.js?version=1.7.0"></script><script src="/js/fancybox.js?version=1.7.0"></script><script src="/js/sidebar.js?version=1.7.0"></script><script src="/js/copy.js?version=1.7.0"></script><script src="/js/fireworks.js?version=1.7.0"></script><script src="/js/transition.js?version=1.7.0"></script><script src="/js/scroll.js?version=1.7.0"></script><script src="/js/head.js?version=1.7.0"></script><script src="/js/search/algolia.js"></script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+    processEscapes: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  },
+  CommonHTML: {
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "HTML-CSS": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "SVG": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  }
+});
+</script><script type="text/x-mathjax-config">MathJax.Hub.Queue(function() {
+  var all = MathJax.Hub.getAllJax(), i;
+  for (i=0; i < all.length; i += 1) {
+    all[i].SourceElement().parentNode.className += ' has-jax';
+  }
+});
+</script><script src="https://cdn.jsdelivr.net/npm/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><script>if(/Android|webOS|iPhone|iPod|iPad|BlackBerry/i.test(navigator.userAgent)) {
+  $('#nav').addClass('is-mobile')
+  $('footer').addClass('is-mobile')
+  $('#top-container').addClass('is-mobile')
+}</script><div class="search-dialog" id="algolia-search"><div class="search-dialog__title" id="algolia-search-title">Algolia</div><div id="algolia-input-panel"><div id="algolia-search-input"></div></div><hr><div id="algolia-search-results"><div id="algolia-hits"></div><div id="algolia-pagination"></div><div id="algolia-stats"></div></div><span class="search-close-button"><i class="fa fa-times"></i></span></div><div class="search-mask"></div></body></html>

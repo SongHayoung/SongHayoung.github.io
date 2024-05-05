@@ -1,0 +1,146 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="description" content="[ByteByteGo] Unlocking the Power of SQL Queries for Improved Performance"><meta name="keywords" content="System Design"><meta name="author" content="Song Hayoung"><meta name="copyright" content="Song Hayoung"><title>[ByteByteGo] Unlocking the Power of SQL Queries for Improved Performance | SUMFIのBlog</title><meta name="robots" content="noindex"><link rel="shortcut icon" href="/songcon.ico"><link rel="stylesheet" href="/css/index.css?version=1.7.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@latest/css/font-awesome.min.css?version=1.7.0"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css?version=1.7.0"><meta name="format-detection" content="telephone=no"><meta http-equiv="x-dns-prefetch-control" content="on"><link rel="dns-prefetch" href="https://cdn.jsdelivr.net"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.css"><script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.js" defer></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@latest/dist/gitalk.min.js"></script><script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.10.0/js/md5.min.js"></script><link rel="dns-prefetch" href="https://www.google-analytics.com"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-169368422-1', 'auto');
+ga('send', 'pageview');</script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: {"appId":"7LZ6OJ4D6C","apiKey":"9a84e13f74ea78c3fd54512c10139c56","indexName":"git blog","hits":{"per_page":10},"languages":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}.","hits_stats":"${hits} results found in ${time} ms"}},
+  localSearch: undefined,
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  }
+} </script><meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/rss2.xml" title="SUMFIのBlog" type="application/rss+xml">
+</head><body><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar" data-display="true"><div class="toggle-sidebar-info text-center"><span data-toggle="Toggle article">Toggle site</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">Catalog</div><div class="sidebar-toc__progress"><span class="progress-notice">You've read</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Unlocking-the-Power-of-SQL-Queries-for-Improved-Performance"><span class="toc-number">1.</span> <span class="toc-text">Unlocking the Power of SQL Queries for Improved Performance</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Explain-Plan"><span class="toc-number">2.</span> <span class="toc-text">Explain Plan</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Adding-Proper-Indexes"><span class="toc-number">3.</span> <span class="toc-text">Adding Proper Indexes</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-Over-Indexing"><span class="toc-number">3.1.</span> <span class="toc-text">1. Over Indexing</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-Under-Indexing"><span class="toc-number">3.2.</span> <span class="toc-text">2. Under Indexing</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-Indexing-the-Wrong-Columns"><span class="toc-number">3.3.</span> <span class="toc-text">3. Indexing the Wrong Columns</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-Misordering-Columns-in-Composite-Indexes"><span class="toc-number">3.4.</span> <span class="toc-text">4. Misordering Columns in Composite Indexes</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-Neglecting-Cardinality"><span class="toc-number">3.5.</span> <span class="toc-text">5. Neglecting Cardinality</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-Ignoring-Write-Performance"><span class="toc-number">3.6.</span> <span class="toc-text">6. Ignoring Write Performance</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-Reorg-and-runstats"><span class="toc-number">3.7.</span> <span class="toc-text">7. Reorg and runstats</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#8-Ignoring-Index-Size-and-Storage"><span class="toc-number">3.8.</span> <span class="toc-text">8. Ignoring Index Size and Storage</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#COUNT"><span class="toc-number">4.</span> <span class="toc-text">COUNT(*)</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#ORDER-BY"><span class="toc-number">5.</span> <span class="toc-text">ORDER BY</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#IN-Clause"><span class="toc-number">6.</span> <span class="toc-text">IN Clause</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Other-Slow-SQLs"><span class="toc-number">7.</span> <span class="toc-text">Other Slow SQLs</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Implicit-Type-Conversion"><span class="toc-number">7.1.</span> <span class="toc-text">Implicit Type Conversion</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Locks"><span class="toc-number">7.2.</span> <span class="toc-text">Locks</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Summary"><span class="toc-number">8.</span> <span class="toc-text">Summary</span></a></li></ol></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="https://avatars3.githubusercontent.com/u/37806785?s=460&amp;u=8c68d685faf7c5280cfbd736a6b1730b55fb4203&amp;v=4"></div><div class="author-info__name text-center">Song Hayoung</div><div class="author-info__description text-center"></div><div class="follow-button"><a target="_blank" rel="noopener" href="https://www.linkedin.com/in/hayoung-song-9523b61bb/">Follow Me</a></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="/archives"><span class="pull-left">Articles</span><span class="pull-right">10719</span></a><a class="author-info-articles__tags article-meta" href="/tags"><span class="pull-left">Tags</span><span class="pull-right">193</span></a><a class="author-info-articles__categories article-meta" href="/categories"><span class="pull-left">Categories</span><span class="pull-right">61</span></a></div><hr><div class="author-info-links"><div class="author-info-links__title text-center">VISITED</div><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Seoul Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Jeju Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">British Columbia Canada</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Boracay Philippines</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">三重　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">大阪　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">名古屋　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">静岡　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">札幌　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">京都　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Bangkok Thailand</a></div></div></div><div id="content-outer"><div id="top-container" style="background-image: url(https://xxxx.jpg)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="/">SUMFIのBlog</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus">   <a class="site-page" href="/">Home</a><a class="site-page" href="/archives">Archives</a><a class="site-page" href="/tags">Tags</a><a class="site-page" href="/categories">Categories</a><a class="site-page" href="/about">About</a></span><span class="pull-right"><a class="site-page social-icon search"><i class="fa fa-search"></i><span> Search</span></a></span></div><div id="post-info"><div id="post-title">[ByteByteGo] Unlocking the Power of SQL Queries for Improved Performance</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2024-05-03</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/">System Design</a><i class="fa fa-angle-right" aria-hidden="true"></i><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/Byte-Byte-Go/">Byte Byte Go</a><div class="post-meta-wordcount"><span>Word count: </span><span class="word-count">1.7k</span><span class="post-meta__separator">|</span><span>Reading time: 10 min</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div class="article-container" id="post-content"><h2 id="Unlocking-the-Power-of-SQL-Queries-for-Improved-Performance"><a href="#Unlocking-the-Power-of-SQL-Queries-for-Improved-Performance" class="headerlink" title="Unlocking the Power of SQL Queries for Improved Performance"></a>Unlocking the Power of SQL Queries for Improved Performance</h2><span id="more"></span>
+<p>Structured Query Language, SQL은 최신 데이터 관리의 근간이다. 이를 통해 DBMS에서 데이터를 효율적으로 검색, 조작, 관리할 수 있다. 각 SQL 명령은 지난 포스트에서 다룬 커넥션 풀, 쿼리 캐시, 명령 파서, 최적화 도구 및 실행기와 같은 개념을 기반으로 데이터베이스 내의 복잡한 시퀀스를 활용한다.</p>
+<p>효과적인 쿼리를 작성하는 것은 필수적이다. 올바른 SQL은 데이터베이스 성능을 향상시킬 수 있지만, 잘못된 SQL은 비용 증가와 응답 속도 저하로 이어질 수 있다. 이번 포스트에서는 실행 계획 사용, 적절한 인덱스 추가, COUNT(*), ORDER BY와 같은 명령 최적화 등의 전략에 중점을 둔다. 또한 slow query 문제 해결에 대해서도 자세히 살펴본다.</p>
+<p>MySQL이 주요 예시이지만, 논의되는 기술과 전략은 다양한 데이터베이스 시스템에 적용할 수 있다.</p>
+<h2 id="Explain-Plan"><a href="#Explain-Plan" class="headerlink" title="Explain Plan"></a>Explain Plan</h2><p>MySQL에서 EXPLAIN 명령은 쿼리가 실행되는 방식을 분석하는데 유용하다. SELECT 문 앞에 EXPLAIN을 추가하면 MySQL이 SQL을 처리하는 방식에 대한 정보를 제공한다. 이 출력에는 관련된 테이블, 수행된 작업, 사용된 인덱스 등 기타 실행 세부 정보가 표시된다. 이 도구는 개발자가 쿼리 실행 계획을 확인하고 잠재적인 병목 현상을 파악하는데 도움이 되므로 SQL 쿼리를 최적화하는데 도움이 된다.</p>
+<p>MySQL에서 EXPLAIN 문을 실행하면 데이터베이스 엔진이 쿼리 실행을 시뮬레이션한다. 이 시뮬레이션은 실제 ㅜ커리를 실행하지 않고도 상세한 보고서를 생성한다. 이 보고서에는 몇 가지 중요한 열이 포함된다.</p>
+<ul>
+<li>id: 쿼리 실행의 각 단계에 대한 식별자</li>
+<li>select_type: SELECT 작업의 유형</li>
+<li>table: 쿼리의 특정 부분에 관련된 테이블</li>
+<li>type: 테이블을 조인하는 방법. 일반적으로는 ALL(full table scan), index, range, eq_ref(unique index scan), const/system(상수 값 최적화)이 있다.</li>
+<li>possible_keys: 사용 가능한 잠재적 인덱스</li>
+<li>key: MySQL에서 선택한 인덱스</li>
+<li>key_len: 선택한 키의 길이</li>
+<li>ref: 행을 선택하기 위해 키와 함께 사용되는 열 또는 상수</li>
+<li>rows: 쿼리를 실행할 때 MySQL이 검사할 것으로 예상되는 행 수</li>
+<li>Extra: 임시 테이블 또는 파일 정렬 사용과 같은 추가 세부 정보</li>
+</ul>
+<p>orders 라는 데이터베이스 테이블을 사용해 user_id가 100인 order를 선택한다고 가정하고 EXPLAIN 명령의 실제 적용 사례를 살펴보자.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SELECT * FROM orders WHERE user_id = 100;</span><br></pre></td></tr></table></figure>
+<p>이 쿼리를 분석하기 위해선 아래와 같이 사용한다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">EXPLAIN SELECT * FROM orders WHERE user_id = 100;</span><br></pre></td></tr></table></figure>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240503103632388.png" alt=""></p>
+<p>EXPLAIN의 결과를 분석하면 다음과 같다.</p>
+<ul>
+<li>id: 1, 쿼리가 단일로 실행됨을 의미</li>
+<li>select_type: SIMPLE, 서브 쿼리나 유니온이 없는 간단한 select</li>
+<li>table: orders, 쿼리가 액세스한 테이블</li>
+<li>type: ref, 쿼리가 인덱스 값을 사용하여 행을 찾음</li>
+<li>possible_keys: usr_idx,  <em>usr_idx</em> 인덱스가 사용될 수 있음</li>
+<li>key: usr_idx, MySQL이 <em>usr_idx</em> 를 사용하기로 함</li>
+<li>key_len: 4, 사용되는 키의 길이(byte)</li>
+<li>ref: const,  <em>user_id</em> 를 상수 취급함</li>
+<li>rows: 10, MySQL이 쿼리를 수행하기 위해 10개의 행을 검사해야할 것으로 추정함</li>
+<li>Extra: Using index,테이블 데이터에 액세스하지 않고 user_id의 인덱스 만으로도 쿼리를 수행하기에 충분함</li>
+</ul>
+<p>실제 쿼리를 실행하기 전에 EXPLAIN 명령을 사용하는 것은 매우 중요하다. 비효율적인 SQL 쿼리를 식별하고 쿼리를 인덱싱하고 재구성하여 성능을 최적화하는데 도움이 된다.</p>
+<h2 id="Adding-Proper-Indexes"><a href="#Adding-Proper-Indexes" class="headerlink" title="Adding Proper Indexes"></a>Adding Proper Indexes</h2><p>데이터베이스 테이블에 인덱스를 추가하는 것은 불필요한 오버헤드를 피하고 성능 향상을 극대화하기 위해 신중한 고려가 필요한 핵심 최적화 전략이다. 몇 가지 좋지 않은 사용 사례를 살펴보자.</p>
+<h3 id="1-Over-Indexing"><a href="#1-Over-Indexing" class="headerlink" title="1. Over Indexing"></a>1. Over Indexing</h3><p>인덱스를 너무 많이 추가하면 성능이 저하될 수 있으며, 특히 INSERT, UPDATE, DELETE와 같은 쓰기 작업이 많은 데이터베이스에서는 더욱 그렇다. 수정할 때마다 모든 인덱스에 대한 업데이트가 필요하므로 추가 I/O 및 CPU 리소스가 소모된다.</p>
+<h3 id="2-Under-Indexing"><a href="#2-Under-Indexing" class="headerlink" title="2. Under Indexing"></a>2. Under Indexing</h3><p>반대로 인덱싱이 불충분하다면 쿼리 성능이 저하되어 전체 테이블 스캔이 발생하는 경우가 많다. 이는 스캔 속도가 느리고 비효율적인 대규모 데이터 세트에서 특히 해롭다.</p>
+<h3 id="3-Indexing-the-Wrong-Columns"><a href="#3-Indexing-the-Wrong-Columns" class="headerlink" title="3. Indexing the Wrong Columns"></a>3. Indexing the Wrong Columns</h3><p>쿼리에서 거의 사용되지 않는 열을 인덱싱하면 성능이 향상되지 않고 디스크 공간과 리소스를 불필요하게 소모한다. 쿼리 패턴을 분석해 어떤 열을 인덱싱하는 것이 가장 유리한지 파악하는 것이 중요하다.</p>
+<h3 id="4-Misordering-Columns-in-Composite-Indexes"><a href="#4-Misordering-Columns-in-Composite-Indexes" class="headerlink" title="4. Misordering Columns in Composite Indexes"></a>4. Misordering Columns in Composite Indexes</h3><p>복합 인덱스에는 여러 개의 열이 포함된다. 이런 인덱스에서 열이 정렬되는 순서가 중요하다. 이상적인 순서는 쿼리에서 열의 빈도와 카디널리티에 따라 열의 우선 순위를 정하는 것이다. 광범위한 고유 값을 가진 카디널리티가 높은 열은 검색 결과의 범위를 효과적으로 좁히기 위해 인덱스의 선두에 위치하는 것이 이상적이다. 카디널리티가 높고 쿼리 빈도가 높은 열이 첫 번째에 있지 않으면 MySQL이 인덱스를 효율적으로 활용하지 못해 쿼리 성능이 느려질 수 있다.</p>
+<h3 id="5-Neglecting-Cardinality"><a href="#5-Neglecting-Cardinality" class="headerlink" title="5. Neglecting Cardinality"></a>5. Neglecting Cardinality</h3><p>카디널리티가 낮은 열(성별과 같이 고유 값이 거의 없는 열)을 인덱싱 하는 것은 효과적이지 않을 수 있다. 데이터베이스 최적화 도구는 이런 인덱스가 검사할 행 수를 충분히 줄이지 못하기 때문에 이를 우회할 수 있다.</p>
+<h3 id="6-Ignoring-Write-Performance"><a href="#6-Ignoring-Write-Performance" class="headerlink" title="6. Ignoring Write Performance"></a>6. Ignoring Write Performance</h3><p>인덱스는 읽기 성능을 크게 향상시킬 수 있지만 쓰기 성능을 저하시킬 수도 있다. 이 고려 사항은 트랜잭션 속도가 중요한 온라인 트랜잭션 처리(OLTP) 시스템에서 특히 중요하다. 읽기 및 쓰기 성능 요구 사항의 균형을 맞추는게 핵심이다.</p>
+<p>쓰기량이 많은 환경에서는 B-Tree 인덱스가 이상적이지 않을 수 있다. 대신 LSM 트리가 더 좋은 옵션이다. 새 레코드는 메모리의 활성 memtable에 빠르게 기록되고, 오래된 memtable은 SSTable로 변환되어 현재 쓰기가 중단되지 않도록 디스크로 이동된다. 시간이 지남에 따라 이런 SSTable은 압축되고 재구성되어 향후 쓰기 및 읽기 작업을 향상시킨다.</p>
+<p>Cassandra, RocksDB, Bigtable과 같은 데이터베이스가 이 구조를 사용하며 이런 구조는 지연 시간이 길어지고 때로는 읽기 작업이 더 복잡해지는 대신 쓰기 처리량이 증가한다.</p>
+<h3 id="7-Reorg-and-runstats"><a href="#7-Reorg-and-runstats" class="headerlink" title="7. Reorg and runstats"></a>7. Reorg and runstats</h3><p>시간이 지남에 따라 데이터가 증가하고 변경됨에 따라 인덱스가 조각화되어 성능이 저하될 수 있다. 최적의 인덱스 성능을 유지하려면 인덱스 재구축 및 통계 업데이트와 같은 정기적인 유지관리가 필요하다.</p>
+<h3 id="8-Ignoring-Index-Size-and-Storage"><a href="#8-Ignoring-Index-Size-and-Storage" class="headerlink" title="8. Ignoring Index Size and Storage"></a>8. Ignoring Index Size and Storage</h3><p>인덱스는 디스크 공간을 소비한다. 디스크 리소스가 제한된 시스템에서 공격적인 인덱싱은 스토리지 문제를 일으킬 수 있다. 또한 인덱스가 클수록 유지 관리에 시간이 오래 걸리고 백업 프로세스 속도가 느려질 수 있다.</p>
+<h2 id="COUNT"><a href="#COUNT" class="headerlink" title="COUNT(*)"></a>COUNT(*)</h2><p>테이블의 행 수를 계산할 때 SELECT COUNT(*)을 사용하는 것이 일반적인 관행이다. 그러나 행 수가 증가하면 성능이 저하될 수 있다.</p>
+<p><code>COUNT(*)</code>는 스토리지 엔진마다 다르게 구현된다. MyISAM은 테이블의 총 행 수를 디스크에 저장하므로 <code>COUNT(*)</code>는 그 수를 직접 반환한다. InnoDB는 데이터를 한 줄씩 읽은 다음 카운트를 누적하는 방식으로 <code>COUNT(*)</code>를 실행한다. </p>
+<p>InnoDB는 트랜잭션 설계 때문에 이 방식을 선택했다. Repetable reads는 MVCC로 구현되는 InnoDB의 기본 격리 수준이다. 각 행은 트랜잭션에 표시되는지 여부를 결정해야 하므로 <code>COUNT(*)</code>요청의 경우 InnoDB는 테이블의 총 행 수를 계산하는 데 사용하기 전에 데이터를 행별로 읽고 어떤 행이 표시되는지 결정해야 한다.</p>
+<p>자주 업데이트되는 카운트의 경우 매번 데이터베이스에 요청하는 대신 직접 카운트를 누적하는 것이 보다 현실적인 해결책이다. 예를 들어, Redis를 사용해 총 행 수를 유지할 수 있다. 테이블에 삽입이 있을 때마다 개수가 하나씩 증가하고, 삭제가 있을때 마다 하나씩 감소한다. 그러나 Redis는 데이터를 메모리에 저장하므로 캐시가 다시 시작될 때 <code>COUNT(*)</code> 요청을 실행해야 한다.</p>
+<p>시스템에 캐시를 추가하면 데이터 일관성 문제가 발생할 수 있다. 따라서 또 다른 접근 방식은 데이터베이스에 카운트를 유지하고 업데이트 트랜잭션이 커밋될 때 카운트를 업데이트하는 것이다.</p>
+<p><code>COUNT(*)</code>는 InnoDB 엔진이 전체 테이블을 탐색하지만 페이지에서 데이터를 검색하지 않는 <code>COUNT(1)</code>과 마찬가지로 행 데이터를 읽지 않는다는 점에 유의해야한다. 따라서 <code>COUNT(*)</code>과 <code>COUNT(1)</code>은 성능이 비슷하다.</p>
+<h2 id="ORDER-BY"><a href="#ORDER-BY" class="headerlink" title="ORDER BY"></a>ORDER BY</h2><p>결과를 정렬하기 위해 SQL 쿼리에서 ORDER BY 절을 자주 사용한다. 하지만 이 간단한 절이 얼마나 리소스 집약적인지 간과하는 경우가 많다. 아래 쿼리를 실행한다고 가정하고 정렬 프로세스가 어떻게 작동하는지 살펴보자.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">SELECT order_id, user_id, region, amount</span><br><span class="line">FROM orders</span><br><span class="line">WHERE region = &#x27;CA&#x27;</span><br><span class="line">ORDER BY user_id</span><br><span class="line">LIMIT 5000;</span><br></pre></td></tr></table></figure>
+<p>이를 최적화하기 위해 region 열에 인덱스를 추가해 전체 테이블 검색을 방지할 수 있다. 그러나 실행 계획에 “Using filesort”가 표시되어 정렬이 필요하다는 것을 알 수 있다. MySQL은 sort_buffer라는 정렬을 위한 메모리 블록을 각 스레드에 할당한다. 프로세스는 다음과 같이 동작한다.</p>
+<ol>
+<li><em>order_id</em>, <em>user_id</em>, <em>region,</em> <em>amount</em>에 대해 sort_buffer를 할당한다.</li>
+<li>region 열에 인덱스 스캔을 사용해 <code>region = &#39;CA&#39;</code>와 일치하는 primary key를 검색한다.</li>
+<li>페이지에서 일치하는 행을 검색하고 <em>order_id</em>, <em>user_id</em>, <em>region,</em> <em>amount</em>를 sort_buffer에 추가한다.</li>
+<li>user_id 열을 기준으로 sort_buffer의 데이터를 정렬한다.</li>
+<li>sort_buffer에서 처음 5000개의 행을 가져와 클라이언트에 결과 집합을 반환한다.</li>
+</ol>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240503105759390.png" alt=""></p>
+<p>sort_buffer의 크기에 따라 정렬 프로세스는 메모리 또는 디스크에서 수행될 수 있다. 데이터가 정렬 버퍼에 들어갈 수 있으면 메모리에서 정렬이 수행되고 그렇지 않으면 디스크의 임시 파일(external merge sort)를 사용해 정렬이 수행된다.</p>
+<p>ORDER BY는 비용이 많이 드는 연산이 될 수 있음을 알 수 있다. 결과 집합의 행이 이미 정렬되어 있는 경우 정렬 프로세스가 필요하지 않다. (region, user_id)에 복합인덱스를 추가하면 “region = ‘CA’”인 모든 행을 검색할 때 이미 user_id를 기준으로 행이 정렬된다. 이렇게 하면 정렬에 소요되는 리소스를 절약할 수 있다.</p>
+<h2 id="IN-Clause"><a href="#IN-Clause" class="headerlink" title="IN Clause"></a>IN Clause</h2><p>IN절은 일반적으로 사용자 입력에서 가져온 여러 값을 기준으로 레코드를 필터링하는 데 자주 사용된다. 값이 너무 많으면 IN 절이 상당히 커져 성능 문제가 발생할 수 있다. 예를 들어 아래 SQL 문은 많은 사용자에 대해 쿼리한다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">SELECT *</span><br><span class="line">FROM orders</span><br><span class="line">WHERE user_id IN (</span><br><span class="line">123, 345, 2523, 2334, 878, 3321, 332, ...)</span><br></pre></td></tr></table></figure>
+<p>IN절에 지나치게 큰 목록이 있으면 데이터베이스 성능에 부정적인 영향을 미치는 몇 가지 문제가 발생할 수 있다.</p>
+<ul>
+<li>큰 IN절을 사용하는 SQL 쿼리는 더 많은 메모리와 CPU 리소스를 소비한다. 이는 데이터베이스 엔진이 테이블의 각 행을 긴 값 목록과 비교해야 하므로 계산 비용이 많이 들기 때문이다. 데이터베이스는 IN 목록이 매우 클 때 인덱스를 효과적으로 사용하지 못하는 경우가 많다.</li>
+<li>데이터베이스의 쿼리 플래너는 쿼리를 실행하는 가장 좋은 방법을 평가해야 하며 IN 절이 크면 이 작업의 복잡성이 증가한다. 이로 인해 컴파일 시간이 길어진다.</li>
+<li>광범위한 IN 절은 읽고 이해하기 어려울 수 있다. 이런 복잡성은 유지 관리 중 또는 쿼리를 수정할 때 오류로 이어질 수 있다.</li>
+</ul>
+<p>큰 IN 절 대신 임시 테이블에 조인을 사용하는 것이 더 효율적일 수 있다. 이 방법을 사용하면 데이터베이스의 최적화 도구가 인덱스와 데이터 분할을 보다 유연하게 사용할 수 있다.</p>
+<h2 id="Other-Slow-SQLs"><a href="#Other-Slow-SQLs" class="headerlink" title="Other Slow SQLs"></a>Other Slow SQLs</h2><p>이 섹션에서는 잘못 작성된 SQL 문이 성능 저하로 이어질 수 있는 몇 가지 사례를 검토한다.</p>
+<h3 id="Implicit-Type-Conversion"><a href="#Implicit-Type-Conversion" class="headerlink" title="Implicit Type Conversion"></a>Implicit Type Conversion</h3><p>아래 SQL 문을 사용해 orders 테이블에서 행을 선택한다 해보자. order_id 열이 숫자인 경우 이 문은 정상적으로 작동한다.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">SELECT * </span><br><span class="line">FROM orders </span><br><span class="line">WHERE order_id = 1234;</span><br></pre></td></tr></table></figure>
+<p>그러나 order_id 열이 varchar(32)인 경우, 여기서 암시적 유형변환이 발생해 옵티마이저가 인덱싱된 열의 함수 연산에 대한 인덱스 검색을 포기하므로 테이블 스캔을 트리거한다.</p>
+<h3 id="Locks"><a href="#Locks" class="headerlink" title="Locks"></a>Locks</h3><p>간단한 SQL 문을 실행할 때 결과를 반환하지 않고 오랫동안 중단되는 경우가 있다. 이 경우 “show processlist” 명령을 실행해 SQL문이 어떤 상태인지 확인해야 한다.</p>
+<ul>
+<li>Waiting for table metadata lock : 이는 스레드가 테이블에 대한 MDL(Metadata Lock) 쓰기 잠금을 요청하거나 보유하고 있어 SQL 문을 차단하고 있음을 의미한다. MDL 잠금을 보유하고 있는 프로세스를 종료할 수 있다.</li>
+<li>Waiting for table flush : 테이블 플러시 명령이 다른 문에 의해 차단되어 SQL 문을 차단했다.</li>
+<li>Row lock : 아래 SQL을 사용해 특정 테이블의 잠금을 확인하고 필요한 경우 blocking_pid를 종료할 수 있다.</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">SELECT * </span><br><span class="line">FROM sys.innodb_lock_waits </span><br><span class="line">WHERE locked_table=&#x27;`myschema`.`orders`&#x27;</span><br></pre></td></tr></table></figure>
+<h2 id="Summary"><a href="#Summary" class="headerlink" title="Summary"></a>Summary</h2><p>적절한 인덱스 추가의 기본 원칙과 추가 데이터베이스 리소스를 필요로 하는 일반적인 SQL 문에 대해 알아보았다. SQL은 데이터 조작과 검색을 위한 강력한 도구이지만, 잘못 사용하거나 잘못된 관행으로 인해 심각한 성능 문제, 보안 취약성, 유지보수 문제가 발생할 수 있다.</p>
+<ul>
+<li>부적절한 인덱싱 : 테이블을 제대로 색인하지 못하면 쿼리 성능이 느려질 수 있다. 반대로 과도하게 인덱싱하면 쓰기 작업 속도가 느려질 수 있다.</li>
+<li>데이터베이스 동시성 무시 : 트랜잭션 관리 및 격리 수준을 무시하면 특히 동시성이 높은 환경에서 데이터 불일치가 발생할 수 있다.</li>
+<li>비효율적인 쿼리 : 지나치게 복잡한 쿼리, 과도한 서브 쿼리 사용, 큰 IN 절은 CPU와 메모리 사용량을 증가시키고 실행 시간을 연장해 성능을 심각하게 저하시킬 수 있다.</li>
+</ul>
+<p>개발자와 데이터베이스 관리자는 이런 함정을 해결함으로써 DBMS의 효율성과 보안을 모두 강화해 보다 강력하고 확장 가능하며 안정적인 애플리케이션을 구축할 수 있다.</p>
+<!-- flag of hidden posts --></div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined">Song Hayoung</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="https://songhayoung.github.io/2024/05/03/System%20Design/ByteByteGo/private/unlocking-the-power-of-sql-queries-for-improved-performance/">https://songhayoung.github.io/2024/05/03/System%20Design/ByteByteGo/private/unlocking-the-power-of-sql-queries-for-improved-performance/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/System-Design/">System Design</a></div><nav id="pagination"></nav><div id="gitalk-container"></div><script>var gitalk = new Gitalk({
+  clientID: '3604b61642355579f55e',
+  clientSecret: 'f552120f18ac5aee3f6297e05e97d94c0a25cd4b',
+  repo: 'SongHayoung.github.io',
+  owner: 'SongHayoung',
+  admin: 'SongHayoung',
+  id: md5(decodeURI(location.pathname)),
+  language: 'en'
+})
+gitalk.render('gitalk-container')</script></div></div><footer class="footer-bg" style="background-image: url(https://xxxx.jpg)"><div class="layout" id="footer"><div class="copyright">&copy;2020 - 2024 By Song Hayoung</div><div class="framework-info"><span>Driven - </span><a target="_blank" rel="noopener" href="http://hexo.io"><span>Hexo</span></a><span class="footer-separator">|</span><span>Theme - </span><a target="_blank" rel="noopener" href="https://github.com/Molunerfinn/hexo-theme-melody"><span>Melody</span></a></div><div class="footer_custom_text">Learning how to walk slowly to not miss important things</div><div class="busuanzi"><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><span id="busuanzi_container_page_pv"><i class="fa fa-file"></i><span id="busuanzi_value_page_pv"></span><span></span></span></div></div></footer><i class="fa fa-arrow-up" id="go-up" aria-hidden="true"></i><script src="https://cdn.jsdelivr.net/npm/animejs@latest/anime.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@latest/velocity.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-ui-pack@latest/velocity.ui.min.js"></script><script src="/js/utils.js?version=1.7.0"></script><script src="/js/fancybox.js?version=1.7.0"></script><script src="/js/sidebar.js?version=1.7.0"></script><script src="/js/copy.js?version=1.7.0"></script><script src="/js/fireworks.js?version=1.7.0"></script><script src="/js/transition.js?version=1.7.0"></script><script src="/js/scroll.js?version=1.7.0"></script><script src="/js/head.js?version=1.7.0"></script><script src="/js/search/algolia.js"></script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+    processEscapes: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  },
+  CommonHTML: {
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "HTML-CSS": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "SVG": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  }
+});
+</script><script type="text/x-mathjax-config">MathJax.Hub.Queue(function() {
+  var all = MathJax.Hub.getAllJax(), i;
+  for (i=0; i < all.length; i += 1) {
+    all[i].SourceElement().parentNode.className += ' has-jax';
+  }
+});
+</script><script src="https://cdn.jsdelivr.net/npm/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><script>if(/Android|webOS|iPhone|iPod|iPad|BlackBerry/i.test(navigator.userAgent)) {
+  $('#nav').addClass('is-mobile')
+  $('footer').addClass('is-mobile')
+  $('#top-container').addClass('is-mobile')
+}</script><div class="search-dialog" id="algolia-search"><div class="search-dialog__title" id="algolia-search-title">Algolia</div><div id="algolia-input-panel"><div id="algolia-search-input"></div></div><hr><div id="algolia-search-results"><div id="algolia-hits"></div><div id="algolia-pagination"></div><div id="algolia-stats"></div></div><span class="search-close-button"><i class="fa fa-times"></i></span></div><div class="search-mask"></div></body></html>
