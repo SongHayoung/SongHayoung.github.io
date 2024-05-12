@@ -1,0 +1,163 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="description" content="[ByteByteGo] HTTP1 vs HTTP2 vs HTTP3 - A Deep Dive"><meta name="keywords" content="System Design"><meta name="author" content="Song Hayoung"><meta name="copyright" content="Song Hayoung"><title>[ByteByteGo] HTTP1 vs HTTP2 vs HTTP3 - A Deep Dive | SUMFIのBlog</title><meta name="robots" content="noindex"><link rel="shortcut icon" href="/songcon.ico"><link rel="stylesheet" href="/css/index.css?version=1.7.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@latest/css/font-awesome.min.css?version=1.7.0"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css?version=1.7.0"><meta name="format-detection" content="telephone=no"><meta http-equiv="x-dns-prefetch-control" content="on"><link rel="dns-prefetch" href="https://cdn.jsdelivr.net"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.css"><script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.js" defer></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@latest/dist/gitalk.min.js"></script><script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.10.0/js/md5.min.js"></script><link rel="dns-prefetch" href="https://www.google-analytics.com"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-169368422-1', 'auto');
+ga('send', 'pageview');</script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: {"appId":"7LZ6OJ4D6C","apiKey":"9a84e13f74ea78c3fd54512c10139c56","indexName":"git blog","hits":{"per_page":10},"languages":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}.","hits_stats":"${hits} results found in ${time} ms"}},
+  localSearch: undefined,
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  }
+} </script><meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/rss2.xml" title="SUMFIのBlog" type="application/rss+xml">
+</head><body><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar" data-display="true"><div class="toggle-sidebar-info text-center"><span data-toggle="Toggle article">Toggle site</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">Catalog</div><div class="sidebar-toc__progress"><span class="progress-notice">You've read</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#HTTP1-vs-HTTP2-vs-HTTP3-A-Deep-Dive"><span class="toc-number">1.</span> <span class="toc-text">HTTP1 vs HTTP2 vs HTTP3 - A Deep Dive</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#HTTP1-The-Foundation"><span class="toc-number">2.</span> <span class="toc-text">HTTP1 - The Foundation</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-Persistent-Connections"><span class="toc-number">2.1.</span> <span class="toc-text">1 - Persistent Connections</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-Pipelining"><span class="toc-number">2.2.</span> <span class="toc-text">2 - Pipelining</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-Chunked-Transfer-Encoding"><span class="toc-number">2.3.</span> <span class="toc-text">3 - Chunked Transfer Encoding</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-Caching-and-Conditional-Requests"><span class="toc-number">2.4.</span> <span class="toc-text">4 - Caching and Conditional Requests</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#The-Problem-with-HTTP-1-1"><span class="toc-number">3.</span> <span class="toc-text">The Problem with HTTP&#x2F;1.1</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-Pipelining"><span class="toc-number">3.1.</span> <span class="toc-text">1 - Pipelining</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-Use-Multiple-HTTP-Connections"><span class="toc-number">3.2.</span> <span class="toc-text">2 - Use Multiple HTTP Connections</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-Make-Fewer-Requests"><span class="toc-number">3.3.</span> <span class="toc-text">3 - Make Fewer Requests</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#The-Rise-of-HTTP2"><span class="toc-number">4.</span> <span class="toc-text">The Rise of HTTP2</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-Binary-Framing-Layer"><span class="toc-number">4.1.</span> <span class="toc-text">1 - Binary Framing Layer</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-Multiplexing"><span class="toc-number">4.2.</span> <span class="toc-text">2 - Multiplexing</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-Stream-Prioritization"><span class="toc-number">4.3.</span> <span class="toc-text">3 - Stream Prioritization</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-Server-Push"><span class="toc-number">4.4.</span> <span class="toc-text">4 - Server Push</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-Compression"><span class="toc-number">4.5.</span> <span class="toc-text">5 - Compression</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#The-Need-for-HTTP3"><span class="toc-number">5.</span> <span class="toc-text">The Need for HTTP3</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#How-HTTP3-Works"><span class="toc-number">6.</span> <span class="toc-text">How HTTP3 Works?</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Comparison"><span class="toc-number">7.</span> <span class="toc-text">Comparison</span></a></li></ol></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="https://avatars3.githubusercontent.com/u/37806785?s=460&amp;u=8c68d685faf7c5280cfbd736a6b1730b55fb4203&amp;v=4"></div><div class="author-info__name text-center">Song Hayoung</div><div class="author-info__description text-center"></div><div class="follow-button"><a target="_blank" rel="noopener" href="https://www.linkedin.com/in/hayoung-song-9523b61bb/">Follow Me</a></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="/archives"><span class="pull-left">Articles</span><span class="pull-right">10748</span></a><a class="author-info-articles__tags article-meta" href="/tags"><span class="pull-left">Tags</span><span class="pull-right">193</span></a><a class="author-info-articles__categories article-meta" href="/categories"><span class="pull-left">Categories</span><span class="pull-right">61</span></a></div><hr><div class="author-info-links"><div class="author-info-links__title text-center">VISITED</div><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Seoul Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Jeju Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">British Columbia Canada</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Boracay Philippines</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">三重　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">大阪　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">名古屋　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">静岡　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">札幌　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">京都　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Bangkok Thailand</a></div></div></div><div id="content-outer"><div id="top-container" style="background-image: url(https://xxxx.jpg)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="/">SUMFIのBlog</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus">   <a class="site-page" href="/">Home</a><a class="site-page" href="/archives">Archives</a><a class="site-page" href="/tags">Tags</a><a class="site-page" href="/categories">Categories</a><a class="site-page" href="/about">About</a></span><span class="pull-right"><a class="site-page social-icon search"><i class="fa fa-search"></i><span> Search</span></a></span></div><div id="post-info"><div id="post-title">[ByteByteGo] HTTP1 vs HTTP2 vs HTTP3 - A Deep Dive</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2024-05-10</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/">System Design</a><i class="fa fa-angle-right" aria-hidden="true"></i><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/Byte-Byte-Go/">Byte Byte Go</a><div class="post-meta-wordcount"><span>Word count: </span><span class="word-count">2.2k</span><span class="post-meta__separator">|</span><span>Reading time: 13 min</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div class="article-container" id="post-content"><h2 id="HTTP1-vs-HTTP2-vs-HTTP3-A-Deep-Dive"><a href="#HTTP1-vs-HTTP2-vs-HTTP3-A-Deep-Dive" class="headerlink" title="HTTP1 vs HTTP2 vs HTTP3 - A Deep Dive"></a>HTTP1 vs HTTP2 vs HTTP3 - A Deep Dive</h2><span id="more"></span>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240510094218221.png" alt=""></p>
+<p>이번 포스트에서는 HTTP1부터 HTTP2와 HTTP3까지 이르는 HTTP의 발전 과정을 살펴본다. 각 버전이 이전 버전의 한계를 어떻게 개선해 성능, 보안, 사용자 경험을 개선했는지에 대해 알아본다.</p>
+<h2 id="HTTP1-The-Foundation"><a href="#HTTP1-The-Foundation" class="headerlink" title="HTTP1 - The Foundation"></a>HTTP1 - The Foundation</h2><p>HTTP/1은 1996년에 도입되었다. 그 이전에는 GET 메서드만 지원하고 헤더가 없는 단순한 프로토콜인 HTTP/0.9가 있었다. HTTP 응답에는 HTML 파일만 포함되었었다. HTTP헤더와 HTTP상태 코드도 없었다.</p>
+<p>HTTP/1.0은 헤더, 상태 코드, POST 및 HEAD와 같은 메서드를 추가했다. 하지만 HTTP/1에는 여전히 한계가 있었다. 예를 들어 각 요청-응답 쌍에는 새로운 TCP 연결을 요구했다.</p>
+<p>1997년, HTTP/1의 한계를 해결하기 위해 HTTP/1.1이 출시되었다. 일반적으로 HTTP/1.1은 HTTP1의 최종 버전이라 할 수 있다. 이 버전은 월드 와이드 웹의 성장을 이끌고 25년이 지났음에도 많이 사용되고 있다. 어떤 특징을 가지고 있는지 살펴보자.</p>
+<h3 id="1-Persistent-Connections"><a href="#1-Persistent-Connections" class="headerlink" title="1 - Persistent Connections"></a>1 - Persistent Connections</h3><p>앞서 언급했듯이 HTTP는 단일 요청-응답 프로토콜로 시작되었다. 클라이언트는 서버에 대한 연결을 열고 요청을 한 다음 응답을 받는다. 그런 다음 연결이 닫힌다. 두 번째 요청이 있으면 이 사이클이 반복된다. 이후 요청에 대해서도 동일한 주기가 반복된다.</p>
+<p>웨이터 한 명이 모든 주문을 처리하는 바쁜 레스토랑과 같다. 웨이터는 각 고객에 대해 주문을 받고 주방으로 가서 음식을 준비한 다음 고객의 테이블로 음식을 배달한다. 그리고 나서야 웨이터는 다음 고객에게 이동한다.</p>
+<p>웹이 미디어 중심이 되면서 모든 응답 후 연결을 계속 닫는 것은 낭비였다. 웹 페이지에 가져와야 하는 리소스가 여러 개 포함되어 있는 경우 연결을 여러 번 열었다 닫아야 했다.</p>
+<p>HTTP/1은 TCP를 기반으로 구축되었기 때문에 새로운 연결을 할 때마다 3way handshake 프로세스를 거쳐야 했다. HTTP/1.1은 persistent connections를 지원하며 이런 추가 오버헤드를 제거했다. TCP 연결은 직접 닫으라는 지시가 없는 한 열린 상태로 유지되어야 한다고 가정했다. 이는 아래와 같은 문제를 개선했다.</p>
+<ul>
+<li>모든 요청 후 연결이 닫히지 않음</li>
+<li>복수개의 TCP 핸드셰이크 없음</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240510094959415.png" alt=""></p>
+<h3 id="2-Pipelining"><a href="#2-Pipelining" class="headerlink" title="2 - Pipelining"></a>2 - Pipelining</h3><p>HTTP/1.1은 파이프라이닝이라는 개념도 도입했다. 이 개념은 클라이언트가 해당 응답을 기다리지 않고 단일 TCP 연결을 통해 여러 요청을 보낼 수 있도록 하는 것이였다. 예를 들어, 브라우저가 웹 페이지를 렌더링하기 위해 두 개의 이미지가 필요하다고 판단하면 이를 차례로 요청할 수 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240510095104315.png" alt=""></p>
+<p>파이프라이닝은 다음 요청을 보내기 전에 각 응답의 대기 시간을 줄여 성능을 향상시켰다. 그러나 파이프라이닝은 HOL과 관련된 몇 가지 제한사항이 발생했다.</p>
+<h3 id="3-Chunked-Transfer-Encoding"><a href="#3-Chunked-Transfer-Encoding" class="headerlink" title="3 - Chunked Transfer Encoding"></a>3 - Chunked Transfer Encoding</h3><p>HTTP/1.1은 청크 전송 인코딩을 도입해 서버가 전체 응답이 생성될 때까지 기다리지 않고 작은 청크로 응답을 전송할 수 있도록 했다. 이를 통해 초기 페이지 렌더링 속도가 빨라지고 특히 대용량 또는 동적으로 생성되는 콘텐츠의 사용자 경험이 개선되었다.</p>
+<h3 id="4-Caching-and-Conditional-Requests"><a href="#4-Caching-and-Conditional-Requests" class="headerlink" title="4 - Caching and Conditional Requests"></a>4 - Caching and Conditional Requests</h3><p>HTTP/1.1은 정교한 캐싱 메커니즘과 조건부 요청을 도입했다. 클라이언트와 서버가 캐시된 콘텐츠를 더 잘 관리하고 불필요한 데이터 전송을 줄일 수 있도록 Cache-Control 및 ETag와 같은 헤더를 추가했다. 조건부 요청은 If-Modified-Sience 및 If-None-Match와 같은 헤더를 사용해 클라이언트가 이전 요청 이후 수정된 경우에만 리소스를 요청할 수 있게 함으로써 대역폭을 절약하고 성능을 개선했다.</p>
+<h2 id="The-Problem-with-HTTP-1-1"><a href="#The-Problem-with-HTTP-1-1" class="headerlink" title="The Problem with HTTP/1.1"></a>The Problem with HTTP/1.1</h2><p>HTTP/1.1이 출시된 이후에도 웹은 많은 발전을 해왔기에 문제가 생겼다. 웹사이트의 규모가 커지고 다운로드할 리소스와 네트워크를 통해 전송할 데이터의 양이 늘어났다. HTTP 아카이브에 따르면 요즘 웹사이트는 평균적으로 약 80~90개의 리소스를 요청하고 약 2MB의 데이터를 다운로드한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240510095537109.png" alt=""></p>
+<p>이런 성장으로 인해 HTTP/1.1의 근본적인 성능에 문제가 드러났다. 아래 다이어그램은 이 문제를 시각적으로 설명한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240510095608893.png" alt=""></p>
+<p>위 다이어그램의 플로우는 다음과 같다.</p>
+<ul>
+<li>클라이언트가 서버에 이미지 두 개가 포함된 HTML 페이지를 요청한다. 왕복에 100ms가 걸린다고 가정한다.</li>
+<li>HTML 페이지를 받은 후 브라우저는 첫 번째 이미지를 요청한다. 이렇게 하면 전체 요청에 100ms가 더 추가된다.</li>
+<li>다음으로 브라우저는 두 번째 이미지를 요청해 100ms가 더 추가된다.</li>
+<li>두 이미지를 모두 가져온 후 브라우저는 페이지 렌더링을 완료한다.</li>
+</ul>
+<p>위 내용에서 알 수 있듯이 웹 페이지의 asset 수가 증가함에 따라 HTTP/1.1에서는 지연 시간이 큰 문제가 될 수 있다. 이 문제를 해결하기 위해 다음과 같은 몇 가지 방법이 존재한다.</p>
+<h3 id="1-Pipelining"><a href="#1-Pipelining" class="headerlink" title="1 - Pipelining"></a>1 - Pipelining</h3><p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240510095819932.png" alt=""></p>
+<p>파이프라이닝을 사용하면 클라이언트가 응답을 기다릴 필요 없이 두 이미지를 차례로 요청할 수 있으므로 100ms를 절약할 수 있다. 안타깝게도 파이프라이닝은 구현상의 어려움으로 인해 웹 브라우저에서 잘 지원되지 않았고, 그 결과 거의 사용되지 않았다. 또한 파이프라이닝은 대기열의 맨 앞에 있는 요청이 차단되면 그 뒤에 있는 모든 요청이 차단되는 HOL blocking 문제가 발생하기 쉬웠다.</p>
+<h3 id="2-Use-Multiple-HTTP-Connections"><a href="#2-Use-Multiple-HTTP-Connections" class="headerlink" title="2 - Use Multiple HTTP Connections"></a>2 - Use Multiple HTTP Connections</h3><p>HOL blocking은 도메인당 다중 HTTP 연결을 지원함으로써 어느 정도 해결되었다. 대부분의 인기 브라우저는 도메인당 최대 6개의 연결을 지원한다. 하지만 최신 사이트의 경우 이것만으로는 충분하지 않다. 해결 방법으로 많은 웹사이트가 하위 도메인에서 이미지, CSS, JavaScript와 같은 정적 자산을 제공한다. 새로운 하위 도메인이 생길 때마다 요청을 처리할 수 있는 6개의 연결이 추가된다.</p>
+<p>이 기술을 도메인 샤딩이라 한다. 참고로 스택오버플로우와 같은 웹사이트는 아래와 같이 여러 도메인에서 다양한 자산을 로드한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240510100059958.png" alt=""></p>
+<p>도메인 샤딩은 HTTP1의 문제에 대한 완벽한 해결책처럼 들리지만, 단점도 있다.</p>
+<p>TCP 연결을 시작하는데 시간이 걸리고 연결을 유지하려면 추가 메모리와 프로세싱이 필요하다. 여러 HTTP 연결이 사용되는 경우 클라이언트와 서버 모두 이 대가를 지불해야 한다. 또한 TCP는 혼잡제어를 위해 슬로우 스타트 알고리즘을 사용한다. </p>
+<ul>
+<li>발시나는 소수의 패킷을 전송하는 것으로 시작한다.</li>
+<li>수싡자가 패킷을 성공적으로 수신할 때마다 발신자는 다음 라운드에서 패킷 수를 늘린다. 이 증가는 기하급수적으로 증가한다.</li>
+<li>발신자는 혼잡 윈도우라는 특정 한계에 도달할 때까지 전송되는 패킷 수를 계속 늘린다.</li>
+<li>패킷 손실 없이 혼잡 윈도우에 도달하면 발신자는 네트워크가 현재 데이터 양을 처리할 수 있다는 것을 알 수 있다.</li>
+<li>패킷이 손실되거나 승인이 지연되면 발신자는 네트워크가 혼잡하다고 가정하고 네트워크 과부하를 피하기 위해 전송되는 패킷 수를 줄인다.</li>
+</ul>
+<p>슬로우 스타트 알고리즘은 데이터 흐름을 천천히 시작해 점차적으로 증가시킴으로써 네트워크 정체를 방지하는데 도움이 된다. 하지만 모든 패킷을 승인해야 하므로 전체 HTTP 요청 및 응답 메시지가 연결에 전송되기까지 여러 번의 TCP 승인이 필요할 수 있다.</p>
+<h3 id="3-Make-Fewer-Requests"><a href="#3-Make-Fewer-Requests" class="headerlink" title="3 - Make Fewer Requests"></a>3 - Make Fewer Requests</h3><p>또 다른 해결 방법은 요청 횟수를 줄이는 것이다. 이는 크게 두 방법으로 이루어진다.</p>
+<ul>
+<li>브라우저는 비용이 많이 드는 네트워크 호출을 줄이기 위해 항상 자산을 캐시한다.</li>
+<li>자산은 결합된 파일 번들로 제공된다.</li>
+</ul>
+<p>예를 들어 이미지는 스프라이팅이라는 기술을 사용해 번들로 묶는다. 스프라이팅은 각 아이콘마다 하나의 파일을 사용하는 대신 하나의 큰 이미지 파일로 묶고 CSS를 사용해 이미지의 섹션을 추출한 뒤 개별 이미지를 다시 생성하는데 도움이 된다.</p>
+<p>CSS와 자바스크립트의 경우 여러 파일이 더 적은 수의 파일로 연결된다. 또한 공백, 주석 및 기타 요소를 제거해 파일을 최소화한다.</p>
+<p>그러나 이미지 스프라이트를 만드는 데는 비용이 많이 들고 이미지를 올바르게 로드하기 위해 CSS를 다시 작성해야 하는 개발 노력이 필요하며 모든 웹사이트에서 빌드 단계를 사용해 JS와 CSS파일을 연결하는 것은 아니다.</p>
+<h2 id="The-Rise-of-HTTP2"><a href="#The-Rise-of-HTTP2" class="headerlink" title="The Rise of HTTP2"></a>The Rise of HTTP2</h2><p>2015년에 HTTP1의 특정 성능 문제를 해결하기 위해 HTTP2가 출시되었다.</p>
+<h3 id="1-Binary-Framing-Layer"><a href="#1-Binary-Framing-Layer" class="headerlink" title="1 - Binary Framing Layer"></a>1 - Binary Framing Layer</h3><p>HTTP1은 일반 텍스트 형식으로 메세지를 전송하는데 이는 사람이 읽을 수는 있지만 컴퓨터가 구문을 분석하고 이해하는데 더 많은 처리 시간이 필요하다. 이와 대조적으로 HTTP/2는 메세지를 바이너리 형식으로 인코딩한다. 이를 통해 메세지를 프레임이라는 작은 단위로 나눌 수 있으며 프레임은 TCP 연결을 통해 전송된다.</p>
+<p>프레임은 본질적으로 TCP 패킷과 유사한 데이터 패킷이다. 각 프레임은 하나의 요청-응답 쌍을 나타내는 특정 스트림에 속한다. HTTP2는 HTTP 요청의 데이터와 헤더 섹션을 서로 다른 프레임으로 분리한다. 데이터 프레임에는 실제 페이로드 또는 메세지 콘텐츠가 포함된다.</p>
+<p>헤더 프레임에는 콘텐츠 유형, 인코딩, 캐시 지시어 등 요청 또는 응답에 대한 메타데이터가 포함된다. 이 인코딩은 바이너리 프레이밍 레이어라 하는 프로토콜의 특수 구성 요소에 의해 수행된다. 바이너리 프레이밍 레이어는 HTTP2 프로토콜의 기본 구성 요소다. 이 계층은 HTTP 메세지를 바이너리 형식으로 인코딩하고 프레임을 생성하며 네트워크를 통한 프레임 전송을 관리한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240510101406560.png" alt=""></p>
+<p>HTTP2는 메세지를 프레임으로 분할함으로써 요청과 응답을 보다 효율적으로 처리하고 멀티플렉싱할 수 있다. 서로 다른 스트림의 여러 프레임을 동일한 TCP 연결을 통해 전송할 수 있으므로 동시 데이터 전송이 가능하다. 좋은 소식은 변환에도 불구하고 HTTP2는 HTTP1과 동일한 HTTP 시멘틱을 유지한다는 점이다. 동일한 HTTP 메서드와 헤더를 사용할 수 있으므로 HTTP2 이전에 만들어진 애플리케이션은 새 프로토콜을 사용하면서도 정상적으로 작동할 수 있다. 바이너리 형식으로 인한 몇 가지 중요한 이점은 다음과 같다.</p>
+<ul>
+<li>효율성 향상</li>
+<li>간결함</li>
+<li>공백, 대문자, 줄 끝 등을 처리하기 위해 많은 ‘helper’에 의존했던 HTTP1에 비해 오류 발생 가능성 감소</li>
+</ul>
+<h3 id="2-Multiplexing"><a href="#2-Multiplexing" class="headerlink" title="2 - Multiplexing"></a>2 - Multiplexing</h3><p>바이너리 프레이밍 계층은 완전한 요청 및 응답 멀티플렉싱을 허용한다. 즉, 클라이언트와 서버는 이제 HTTP 메세지를 독립적인 프레임으로 분리해 전송 중에 인터리빙하고 다른 쪽에서 재조립할 수 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240510101708606.png" alt=""></p>
+<p>HTTP1이 세 개의 TCP 연결을 사용해 세 개의 요청을 병렬로 주고 받는 방법을 보여준다.</p>
+<ul>
+<li>요청 1은 style.css를 가져온다.</li>
+<li>요청 2는 script.js를 다운로드 한다.</li>
+<li>마지막으로 요청 3은 image.png 파일을 가져온다.</li>
+</ul>
+<p>반면 HTTP2에서는 단일 TCP 연결에서 여러 요청을 동시에 진행할 수 있다. 유일한 차이점은 각 HTTP 요청 또는 응답이 서로 다른 스트림을 사용한다는 것이다. 참고로 스트림은 프레임으로 구성되며 각 프레임에는 어떤 메세지에 속하는지를 나타내는 레이블이 지정되어 있다. 다이어그램에서 볼 수 있듯이 세 개의 요청이 차례로 전송되고 응답이 동시에 전송된다. 이렇게 하면 요청을 보낸 후 응답을 받을 때까지 연결이 차단되지 않는다.</p>
+<h3 id="3-Stream-Prioritization"><a href="#3-Stream-Prioritization" class="headerlink" title="3 - Stream Prioritization"></a>3 - Stream Prioritization</h3><p>HTTP2는 스트림 우선순위 지정도 지원한다. 웹사이트가 특정 자산(HTML, CSS, JS, image)을 로드할 때 순서가 중요하다. 예를 들어 서버가 기본 스타일시트보다 먼저 큰 이미지를 전송하면 페이지가 잠시 동안 스타일이 지정되지 않은 상태로 표시되어 체감 로드 시간이 느려질 수 있다.</p>
+<p>HTTP1은 단일 요청-응답 프로토콜을 따르기 때문에 프로토콜에 의한 우선순위 지정은 클라이언트의 책임이므로 필요 없었다. 그러나 HTTP2에서는 웹 페이지를 로드할 때 서버가 효율적이지 않을 수 있음에도 불구하고 이런 자산을 순서와 상관없이 브라우저에 다시 보낼 수 있다. 스트림 우선순위 지정은 개발자가 요청 및 스트림의 상태적 가중치를 사용자 정의해 성능을 최적화하는데 도움이 된다. 브라우저는 각 자산 또는 파일의 우선순위를 지정할 수 있으며 서버는 우선순위가 높은 요청에 대해 더 많은 프레임을 전송한다.</p>
+<h3 id="4-Server-Push"><a href="#4-Server-Push" class="headerlink" title="4 - Server Push"></a>4 - Server Push</h3><p>HTTP2는 서버 푸시도 지원한다. HTTP2는 클라이언트의 요청에 대해 여러 개의 동시 응답을 허용하므로 서버는 요청된 HTML 페이지와 함께 추가 리소스를 클라이언트에 보낼 수 있다. 이는 클라이언트가 명시적으로 요청하기 전에도 클라이언트에 리소스를 제공하는 것과 같다. 이게 바로 name server push다. 클라이언트 입장에서는 리소스를 캐시하거나 리소스를 거부할 수도 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240510102216343.png" alt=""></p>
+<h3 id="5-Compression"><a href="#5-Compression" class="headerlink" title="5 - Compression"></a>5 - Compression</h3><p>HTTP/1.1에서는 네트워크를 통해 전송되는 데이터를 압축할 때 gzip과 같은 프로그램을 사용하는 것이 일반적이다. 하지만 HTTP1에서는 주요 데이터만 압축되고 헤더는 일반 텍스트로 전송된다. 그 이유는 헤더의 크기가 매우 작기 때문에 웹사이트의 성능에 큰 영향을 미치지 않기 때문이다.</p>
+<p>그러나 최신 API를 많이 사용하는 애플리케이션이 증가함에 따라 웹사이트는 여러 API를 요출해 많은 요청을 주고 받아야 한다. 각 요청이 있을 때마다 헤더의 전체 무게는 점점 더 무거워진다.</p>
+<p>HTTP2는 헤더를 더 작게 만들기 위해 HPACK이라는 특수 압축 프로그램을 사용해 이 문제를 해결한다.</p>
+<ul>
+<li>헤더를 살펴보고 헤더를 더 작게 만드는 방법을 찾는다.</li>
+<li>또한 이전에 전송된 헤더를 기억하고 그 정보를 사용해 다음에 전송할 때 헤더를 더욱 압축한다.</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240510102419659.png" alt=""></p>
+<p>보다시피 요청1와 요청2의 다양한 필드는 거의 동일한 값을 갖는다. 경로 필드만 다른 값을 사용한다. 즉, HTTP2는 HPACK을 활용해 이런 공통 필드를 재구성하는데 필요한 인덱싱된 값만 전송하고 요청2의 경로 필드만 인코딩한다.</p>
+<h2 id="The-Need-for-HTTP3"><a href="#The-Need-for-HTTP3" class="headerlink" title="The Need for HTTP3"></a>The Need for HTTP3</h2><p>웹이 더욱 발전하고 웹 애플리케이션이 더욱 복잡해지며 HTTP2에서 TCP의 한계는 점점 분명해졌다. HTTP2는 멀티플렉싱과 헤더 압축이라는 형태로 상당한 개선 사항을 도입했지만 TCP에 대한 의존도는 성능과 지연 시간 측면에서 문제를 야기했다. TCP의 연결 지향적 특성, 패킷 손실 처리, HOL blocking으로 인해 특히 지연시간이 길거나 손실이 많은 네트워크 환경에서 페이지 로딩 시간이 느려진다.</p>
+<p>이런 한계를 해결하기 위해 개발자 커뮤니티는 대체 전송 프로토콜을 모색하기 시작했다. 그 결과 Google에서 개발한 새로운 프로토콜인 QUIC이 등장했다. QUIC의 장점은 다음과 같다.</p>
+<ul>
+<li>지연시간 단축 : QUIC의 zero-round-trip 연결 설정으로 초기 페이지 로딩 속도가 빨라지고 응답성이 향상된다.</li>
+<li>멀티플렉싱 : HTTP2와 마찬가지로 QUIC를 사용하면 단일 연결을 통해 여러 요청을 동시에 전송할 수 있으므로 HOL blocking이 발생하지 않는다.</li>
+<li>향상된 보안 : QUIC는 기본적으로 암호화를 지원해 클라이언트와 서버 간에 교환되는 모든 데이터의 보안을 보장한다.</li>
+</ul>
+<p>QUIC의 등장은 HTTP3의 발전 토대를 마련했다. HTTP3는 TCP 대신 QUIC를 기본 전송 프로토콜로 활용함으로써 TCP의 한계를 해결하는 것을 목표로 한다.</p>
+<h2 id="How-HTTP3-Works"><a href="#How-HTTP3-Works" class="headerlink" title="How HTTP3 Works?"></a>How HTTP3 Works?</h2><p>HTTP3는 UDP위에 구축된 QUIC를 사용한다. UDP는 연결이 필요 없는 프로토콜로 데이터를 전송하기 전에 공식적인 연결을 설정할 필요가 없다. 따라서 QUIC는 TCP보다 더 빠르게 연결을 설정할 수 있다.</p>
+<ul>
+<li>연결 설정 : 클라이언트가 HTTP3를 사용해 서버에 연결하고자 할 때 클라이언트는 QUIC 핸드셰이크를 시작한다. 이 프로세스는 클라이언트와 서버 간의 연결을 설정한다.</li>
+<li>QUIC와 TLS 통합 : QUIC는 암호화 및 보안을 위해 TLS 1.3과 통합된다. TLS 핸드셰이크는 QUIC 연결 설정 프로세스 내에서 수행되므로 전체 지연 시간이 줄어든다.</li>
+<li>요청 전송 : 연결이 설정되면 클라이언트는 서버에 HTTP 요청을 보낸다. 이런 요청은 작은 데이터 패킷으로 QUIC 프로토콜을 사용해 전송되며 이 프로토콜은 다시 UDP를 사용한다.</li>
+<li>응답 수신 : 서버가 클라이언트의 요청을 수신하고 처리하면 응답을 다시 보낸다. 응답은 더 작은 데이터 패킷으로 나뉘어 QUIC를 사용해 클라이언트로 전송된다.</li>
+<li>더 빠른 연결 설정 : 클라이언트와 서버가 이전에 통신한 적이 있는 경우 QUIC는 단 한번의 왕복 또는 zero-round-trip(0-RTT)으로도 연결을 보호할 수 있다. 0-RTT의 경우 클라이언트가 서버에 요청을 보내면 서버는 전체 핸드셰이크 없이 즉시 요청을 처리한다. 따라서 연결을 설정하는데 걸리는 시간이 단축된다.</li>
+<li>패킷 손실 처리 : 전송 중 패킷이 손실되는 경우 QUIC는 TCP와 달리 타임아웃을 기다릴 필요 없이 빠르게 이를 감지할 수 있다. 즉, 일시적인 네트워크 문제로 인해 연결 속도가 크게 느려지지 않는다.</li>
+<li>병렬 데이터 스트림 : HTTP3는 동일한 연결을 통해 여러 데이터 스트림을 동시에 전송할 수 있다. 예를 들어 이미지와 스크립트가 있는 웹사이트를 로드할 때 브라우저가 한 번에 모두 로드하여 웹사이트를 더 빠르게 로드할 수 있다.</li>
+<li>연결 상태 : QUIC는 프로세스 전반에 걸쳐 연결 상태를 추적한다. 이 상태는 클라이언트와 서버 간의 진행 중인 대화에 대한 기록과 같다. 여기에는 연결 상태, 혼잡 제어, 암호화 키 및 보안에 대한 정보가 포함된다. QUIC는 이 상태를 유지함으로써 대화가 반복되지 않고 연결이 안전하게 유지되도록 보장한다.</li>
+<li>연결 종료 : 클라이언트와 서버가 요청과 응답 교환을 마치면 둘 중 하나가 연결을 닫을 수 있으며 이 역시 QUIC 프로토콜에 의해 처리된다.</li>
+</ul>
+<p>아래 다이어그램은 HTTPS over TCP &amp; TLS와 HTTPS over QUIC의 차이점을 보여준다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240510103606829.png" alt=""></p>
+<h2 id="Comparison"><a href="#Comparison" class="headerlink" title="Comparison"></a>Comparison</h2><p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240510103630990.png" alt=""></p>
+<!-- flag of hidden posts --></div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined">Song Hayoung</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="https://songhayoung.github.io/2024/05/10/System%20Design/ByteByteGo/private/http1-vs-http2-vs-http3-a-deep-dive/">https://songhayoung.github.io/2024/05/10/System%20Design/ByteByteGo/private/http1-vs-http2-vs-http3-a-deep-dive/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/System-Design/">System Design</a></div><nav id="pagination"></nav><div id="gitalk-container"></div><script>var gitalk = new Gitalk({
+  clientID: '3604b61642355579f55e',
+  clientSecret: 'f552120f18ac5aee3f6297e05e97d94c0a25cd4b',
+  repo: 'SongHayoung.github.io',
+  owner: 'SongHayoung',
+  admin: 'SongHayoung',
+  id: md5(decodeURI(location.pathname)),
+  language: 'en'
+})
+gitalk.render('gitalk-container')</script></div></div><footer class="footer-bg" style="background-image: url(https://xxxx.jpg)"><div class="layout" id="footer"><div class="copyright">&copy;2020 - 2024 By Song Hayoung</div><div class="framework-info"><span>Driven - </span><a target="_blank" rel="noopener" href="http://hexo.io"><span>Hexo</span></a><span class="footer-separator">|</span><span>Theme - </span><a target="_blank" rel="noopener" href="https://github.com/Molunerfinn/hexo-theme-melody"><span>Melody</span></a></div><div class="footer_custom_text">Learning how to walk slowly to not miss important things</div><div class="busuanzi"><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><span id="busuanzi_container_page_pv"><i class="fa fa-file"></i><span id="busuanzi_value_page_pv"></span><span></span></span></div></div></footer><i class="fa fa-arrow-up" id="go-up" aria-hidden="true"></i><script src="https://cdn.jsdelivr.net/npm/animejs@latest/anime.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@latest/velocity.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-ui-pack@latest/velocity.ui.min.js"></script><script src="/js/utils.js?version=1.7.0"></script><script src="/js/fancybox.js?version=1.7.0"></script><script src="/js/sidebar.js?version=1.7.0"></script><script src="/js/copy.js?version=1.7.0"></script><script src="/js/fireworks.js?version=1.7.0"></script><script src="/js/transition.js?version=1.7.0"></script><script src="/js/scroll.js?version=1.7.0"></script><script src="/js/head.js?version=1.7.0"></script><script src="/js/search/algolia.js"></script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+    processEscapes: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  },
+  CommonHTML: {
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "HTML-CSS": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "SVG": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  }
+});
+</script><script type="text/x-mathjax-config">MathJax.Hub.Queue(function() {
+  var all = MathJax.Hub.getAllJax(), i;
+  for (i=0; i < all.length; i += 1) {
+    all[i].SourceElement().parentNode.className += ' has-jax';
+  }
+});
+</script><script src="https://cdn.jsdelivr.net/npm/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><script>if(/Android|webOS|iPhone|iPod|iPad|BlackBerry/i.test(navigator.userAgent)) {
+  $('#nav').addClass('is-mobile')
+  $('footer').addClass('is-mobile')
+  $('#top-container').addClass('is-mobile')
+}</script><div class="search-dialog" id="algolia-search"><div class="search-dialog__title" id="algolia-search-title">Algolia</div><div id="algolia-input-panel"><div id="algolia-search-input"></div></div><hr><div id="algolia-search-results"><div id="algolia-hits"></div><div id="algolia-pagination"></div><div id="algolia-stats"></div></div><span class="search-close-button"><i class="fa fa-times"></i></span></div><div class="search-mask"></div></body></html>
