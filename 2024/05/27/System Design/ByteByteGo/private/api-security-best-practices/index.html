@@ -1,0 +1,117 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="description" content="[ByteByteGo] API Security Best Practices"><meta name="keywords" content="System Design"><meta name="author" content="Song Hayoung"><meta name="copyright" content="Song Hayoung"><title>[ByteByteGo] API Security Best Practices | SUMFIのBlog</title><meta name="robots" content="noindex"><link rel="shortcut icon" href="/songcon.ico"><link rel="stylesheet" href="/css/index.css?version=1.7.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@latest/css/font-awesome.min.css?version=1.7.0"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css?version=1.7.0"><meta name="format-detection" content="telephone=no"><meta http-equiv="x-dns-prefetch-control" content="on"><link rel="dns-prefetch" href="https://cdn.jsdelivr.net"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.css"><script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.js" defer></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@latest/dist/gitalk.min.js"></script><script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.10.0/js/md5.min.js"></script><link rel="dns-prefetch" href="https://www.google-analytics.com"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-169368422-1', 'auto');
+ga('send', 'pageview');</script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: {"appId":"7LZ6OJ4D6C","apiKey":"9a84e13f74ea78c3fd54512c10139c56","indexName":"git blog","hits":{"per_page":10},"languages":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}.","hits_stats":"${hits} results found in ${time} ms"}},
+  localSearch: undefined,
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  }
+} </script><meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/rss2.xml" title="SUMFIのBlog" type="application/rss+xml">
+</head><body><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar" data-display="true"><div class="toggle-sidebar-info text-center"><span data-toggle="Toggle article">Toggle site</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">Catalog</div><div class="sidebar-toc__progress"><span class="progress-notice">You've read</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#API-Security-Best-Practices"><span class="toc-number">1.</span> <span class="toc-text">API Security Best Practices</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Authentication"><span class="toc-number">2.</span> <span class="toc-text">Authentication</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#OAuth2"><span class="toc-number">2.1.</span> <span class="toc-text">OAuth2</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#WebAuthn"><span class="toc-number">2.2.</span> <span class="toc-text">WebAuthn</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Leveled-API-Keys"><span class="toc-number">2.3.</span> <span class="toc-text">Leveled API Keys</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Authorization"><span class="toc-number">3.</span> <span class="toc-text">Authorization</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Secure-Communication"><span class="toc-number">4.</span> <span class="toc-text">Secure Communication</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Rate-Limiting"><span class="toc-number">5.</span> <span class="toc-text">Rate Limiting</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#API-Versioning"><span class="toc-number">6.</span> <span class="toc-text">API Versioning</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Allow-Listing"><span class="toc-number">7.</span> <span class="toc-text">Allow Listing</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#OWASP-API-Security-Risks"><span class="toc-number">8.</span> <span class="toc-text">OWASP API Security Risks</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#API-Gateway"><span class="toc-number">9.</span> <span class="toc-text">API Gateway</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Error-Handling"><span class="toc-number">10.</span> <span class="toc-text">Error Handling</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Input-Validation"><span class="toc-number">11.</span> <span class="toc-text">Input Validation</span></a></li></ol></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="https://avatars3.githubusercontent.com/u/37806785?s=460&amp;u=8c68d685faf7c5280cfbd736a6b1730b55fb4203&amp;v=4"></div><div class="author-info__name text-center">Song Hayoung</div><div class="author-info__description text-center"></div><div class="follow-button"><a target="_blank" rel="noopener" href="https://www.linkedin.com/in/hayoung-song-9523b61bb/">Follow Me</a></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="/archives"><span class="pull-left">Articles</span><span class="pull-right">10798</span></a><a class="author-info-articles__tags article-meta" href="/tags"><span class="pull-left">Tags</span><span class="pull-right">193</span></a><a class="author-info-articles__categories article-meta" href="/categories"><span class="pull-left">Categories</span><span class="pull-right">61</span></a></div><hr><div class="author-info-links"><div class="author-info-links__title text-center">VISITED</div><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Seoul Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Jeju Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">British Columbia Canada</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Boracay Philippines</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">三重　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">大阪　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">名古屋　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">静岡　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">札幌　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">京都　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Bangkok Thailand</a></div></div></div><div id="content-outer"><div id="top-container" style="background-image: url(https://xxxx.jpg)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="/">SUMFIのBlog</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus">   <a class="site-page" href="/">Home</a><a class="site-page" href="/archives">Archives</a><a class="site-page" href="/tags">Tags</a><a class="site-page" href="/categories">Categories</a><a class="site-page" href="/about">About</a></span><span class="pull-right"><a class="site-page social-icon search"><i class="fa fa-search"></i><span> Search</span></a></span></div><div id="post-info"><div id="post-title">[ByteByteGo] API Security Best Practices</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2024-05-27</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/">System Design</a><i class="fa fa-angle-right" aria-hidden="true"></i><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/Byte-Byte-Go/">Byte Byte Go</a><div class="post-meta-wordcount"><span>Word count: </span><span class="word-count">1.4k</span><span class="post-meta__separator">|</span><span>Reading time: 8 min</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div class="article-container" id="post-content"><h2 id="API-Security-Best-Practices"><a href="#API-Security-Best-Practices" class="headerlink" title="API Security Best Practices"></a>API Security Best Practices</h2><span id="more"></span>
+<p>APi는 최신 애플리케이션의 근간이다. 공격에 노출되는 표면적이 매우 넓기 때문에 보안 취약점의 위협이 커진다. 일반적인 위협으로는 SQL 인젝션, 크로스 사이트 스트립팅, DDoS 등이 있다. 그렇기 때문에 API와 API가 처리하는 민감한 데이터를 보호하기 위한 강력한 보안 조치가 요구된다. 많은 기업이 포괄적인 API 보안을 구현하는데 어려움을 겪고 있다. 동적 애플리케이션 보안 스캐닝이나 외부 펜 테스트에만 의존하는 경우가 많다. 이런 방법은 유용하지만 API 계층과 증가하는 공격 표면을 완전히 커버하지 못할 수 있다.</p>
+<p>이 포스트에서는 API 보안 모범 사례를 살펴본다. 인증 및 권한 부여부터 보안 통신 및 속도 제한에 이르기까지 안전한 API를 설계하기 위한 필수 전략을 다룬다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240527095213136.png" alt=""></p>
+<h2 id="Authentication"><a href="#Authentication" class="headerlink" title="Authentication"></a>Authentication</h2><p>인증은 권한이 부여된 사용자 또는 애플리케이션만 보호된 리소스나 API 엔드포인트에 액세스할 수 있도록 한다. 인증을 구현하기 전에 사용 사례, 보안 요구사항, 클라이언트 애플리케이션과의 호환성에 따라 적절한 인증 매커니즘을 사용하는 것이 중요하다.</p>
+<h3 id="OAuth2"><a href="#OAuth2" class="headerlink" title="OAuth2"></a>OAuth2</h3><p>OAuth2는 사용자가 자격 증명을 직접 공유하지 않고도 타사 애플리케이션에 리소스에 대한 제한된 액세스 권한을 부여할 수 있는 업계 표준 인증 프로토콜이다. 예시를 통해 OAuth2의 흐름을 살펴보자.</p>
+<p>Facebook 이나 Google에서 사용자의 프로필 정보에 액세스해야 하는 모바일 앱을 상상해보자. 앱이 사용자를 Facebook 또는 Google 인증 서버로 리디렉션한다. 사용자는 선택한 서비스로 인증하고 앱의 프로필 정보에 액세스할 수 있는 권한을 부여한다. 그러면 인증 서버가 앱에 액세스 토큰을 발급한다. 앱은 이 액세스 토큰을 사용해 사용자의 프로필 데이터에 액세스하기 위한 API 호출을 수행한다. API는 토큰의 유효성을 검사하고 요청된 데이터 또는 작업으로 응답한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240527095616473.png" alt=""></p>
+<p>이렇게 하면 자격 증명이 공유되지 않고 임시 액세스 토큰만 사용된다. 따라서 사용자 비밀번호를 저장할 필요가 없고 타사 서비스와의 안전한 통합이 가능해져 보안이 강화된다. 구체적인 예를 더 살펴보자.</p>
+<p>예약 가능 여부를 확인하기 위해 사용자의 Google 캘린더에 액세스해야 하는 여행 앱을 만든다고 가정해보자. 앱은 인증 및 권한을 위해 사용자를 Google로 리디렉션한다. 그런 다음 Google은 앱이 사용자 이름이나 비밀번호를 저장하지 않고도 사용자의 캘린더 이벤트를 읽는 데 사용할 수 있는 액세스 토큰을 제공한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240527095742949.png" alt=""></p>
+<h3 id="WebAuthn"><a href="#WebAuthn" class="headerlink" title="WebAuthn"></a>WebAuthn</h3><p>WebAuthn 또는 웹 인증은 보다 안전하고 사용자 친화적인 사용자 인증 방법을 제공하는 새로운 표준이다. 기존의 비밀번호 기반 인증을 공개 키 암호화와 지문 또는 얼굴 인식과 같은 생체 인식 요소로 대체한다. 따라서 공격자가 피싱이나 크리덴셜 스터핑과 같은 기술을 통해 사용자 계정을 탈취하기가 더욱 어려워진다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240527095906329.png" alt=""></p>
+<h3 id="Leveled-API-Keys"><a href="#Leveled-API-Keys" class="headerlink" title="Leveled API Keys"></a>Leveled API Keys</h3><p>API 키는 백엔드 서비스가 타사 API 또는 내부 API에 액세스해야할 때와 같이 서비스간 통신을 인증하고 권한을 부여하는 일반적인 방법이다. 하지만 모든 서비스와 운영에 단일 API 키를 사용하는 것은 위험할 수 있다.</p>
+<p>대신 각 키에 특정 권한과 범위가 정의된 수준별 API 키를 구현하는 방법도 있다. 예를 들어 공개 데이터 액세스를 위한 읽기 전용 키, 내부 데이터 저장소 수정을 위한 쓰기 키, 업데이트 배포와 같은 권한이 있는 작업을 위한 관리자 키를 사용할 수 있다.</p>
+<p>이렇게 하면 하나의 API 키가 손상되더라도 공격자의 액세스는 해당 키의 수준에서 허용되는 작업으로 제한된다. 이렇게 하면 단일 마스터 키를 사용할 때보다 공격 반경이 최소화된다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240527100059584.png" alt=""></p>
+<h2 id="Authorization"><a href="#Authorization" class="headerlink" title="Authorization"></a>Authorization</h2><p>권한 부여는 클라이언트가 액세스하거나 수행할 수 있는 리소스 및 작업을 결정하는 프로세스다. 클라이언트가 인증을 받더라도 권한이 부여된 데이터에만 액세스하고 수정할 수 있어야 한다. 일반적인 패턴은 클라이언트에 특정 권한이 있는 역할이 할당되는 역할 기반 액세스 제어(RBAC, Role-Based Access Control)를 사용하는 것이다. 예를 들어, “viewer”라는 역할을 데이터를 읽을 수 있고 “editor”라는 역할을 데이터를 수정할 수 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240527100245699.png" alt=""></p>
+<p>또 다른 권한 부여 메커니즘으로는 사용자, 리소스 및 환경 속성과 같은 속성을 기반으로 액세스 제어 정책을 정의하는 ABAC(Attribute-Based Access Control)가 있다. ABAC는 상황별 속성을 기반으로 액세스 제어 규칙을 정의할 수 있어 기존 RBAC보다 유연성이 좋다.</p>
+<h2 id="Secure-Communication"><a href="#Secure-Communication" class="headerlink" title="Secure Communication"></a>Secure Communication</h2><p>통신 보안은 클라이언트와 API 서버 간에 교환되는 데이터의 기밀성, 무결성, 신뢰성을 보호하는데 매우 중요하다. API 통신을 위해 HTTPS(HTTP over TLS)를 구현한다. HTTPS는 HTTP의 보안 버전으로 클라이언트와 서버 간에 전송되는 데이터를 암호화한다. TLS는 도청, 중간자 공격 및 기타 보안 위협을 방지하기 위해 암호화를 제공한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240527100453520.png" alt=""></p>
+<p>HTTPS를 사용하면 API 키, 세션 토큰, 사용자 데이터와 같은 민감한 정보가 외부의 시선으로부터 보호된다.</p>
+<h2 id="Rate-Limiting"><a href="#Rate-Limiting" class="headerlink" title="Rate Limiting"></a>Rate Limiting</h2><p>속도 제한은 클라이언트가 주어진 시간 내에 요청할 수 있는 횟수를 제어하는 중요한 보안 조치다. 이를 통해 악의적인 행위자나 과도한 요청을 하는 버그를 일으키는 클라이언트로 인해 API가 과부하되지 않도록 보호할 수 있다. </p>
+<p>속도 제한 규칙은 IP 주소, 사용자 ID 또는 API 키와 같은 다양한 요소를 기반으로 설정할 수 있다. 요청 또는 리소스 유형에 따라 서로 다른 속도 제한을 설정할 수 있다. 예를 들어 초당 쓰기 요청보다 읽기 요청을 더 많이 허용할 수 있다. </p>
+<p>다음은 몇 가지 일반적인 속도 제한 알고리즘이다.</p>
+<ul>
+<li><p>토큰 버킷: 토큰은 고정된 비율로 버킷에 추가되며, 요청은 버킷에서 토큰을 사용할 수 있는 경우에만 허용된다. 이 알고리즘은 버스트 허용 범위와 부드러운 속도 제한을 제공한다.</p>
+</li>
+<li><p>누수 버킷: 요청은 일정한 속도로 처리되며, 초과 요청은 새는 양동이의 물처럼 넘치게 된다. 이 알고리즘은 일정한 평균 요청 처리 속도를 제공한다.</p>
+</li>
+<li><p>고정 창: 요청은 고정된 시간 창(예: 초당, 분당) 내에서 계산되며, 제한에 도달하면 다음 창이 시작될 때까지 추가 요청이 거부된다.</p>
+</li>
+</ul>
+<p>속도 제한은 보안을 향상시키고 API의 성능과 가용성을 유지하는 데 도움이 됩니다.</p>
+<h2 id="API-Versioning"><a href="#API-Versioning" class="headerlink" title="API Versioning"></a>API Versioning</h2><p>API 버전 관리를 구현하는 것은 이전 버전과의 호환성을 유지하면서 시간이 지남에 따라 API를 발전시킬 수 있는 모범 사례다. 버전 관리를 통해 기존 클라이언트를 중단시키지 않고도 획기적인 변경 사항이나 새로운 기능을 도입할 수 있다. </p>
+<p>다음은 몇 가지 일반적인 버전 관리 방식이다</p>
+<ul>
+<li>URI 버전 관리: 이 방법에서는 버전 체계가 URI의 일부로 추가된다. 버전 체계는 위젯의 리소스 바로 앞에 위치한다. 경우에 따라 리소스 뒤에 넣을 수도 있지만 특정 리소스나 API 메서드에 적용하려는 경우에만 가능하다. 전체 API 메소드 모음에 버전 체계를 사용하려면 리소스 앞에 배치하는 것이 가장 좋다. </li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240527100820047.png" alt=""></p>
+<ul>
+<li>쿼리 매개변수 버전 관리: 이 방법에서는 API 요청에 쿼리 매개변수로 버전 번호를 지정한다. 쿼리 매개변수 버전 관리는 URI를 더 깔끔하게 유지하지만 URI 버전 관리만큼 명시적이지 않을 수 있다.</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240527100930438.png" alt=""></p>
+<ul>
+<li>헤더 버전 관리: 사용자 정의 헤더를 만들거나 “accept” 콘텐츠 유형 헤더를 사용하여 HTTP 헤더를 사용하여 버전을 지정할 수 있다. 아래 예시와 같이 URI에 버전 체계를 넣는 대신 헤더를 사용한다. 이 접근 방식의 한 가지 장점은 URI를 깔끔하게 유지하고 혼란을 줄인다는 점이다. 하지만 버전이 잘 보이지 않기 때문에 디버깅이 더 어려워진다. 또한 클라이언트가 다른 버전에 대한 요청을 동일한 요청으로 잘못 처리하는 경우 클라이언트 캐싱에 문제가 발생할 수 있다.</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240527101023221.png" alt=""></p>
+<h2 id="Allow-Listing"><a href="#Allow-Listing" class="headerlink" title="Allow Listing"></a>Allow Listing</h2><p>허용 목록은 IP 주소, 사용자 ID 또는 API 키 등 미리 정의된 신뢰할 수 있는 엔터티 집합에 대해서만 명시적으로 액세스를 허용하는 보안 기술이다. 그 외의 모든 것은 기본적으로 거부된다. 이 접근 방식은 ‘모두 거부, 일부 허용’의 원칙을 따르며, 알려진 일부 악의적 행위자에 대한 접근을 거부하고 나머지는 모두 허용하는 거부 목록 접근 방식보다 더 안전하다. </p>
+<p>API의 맥락에서 다양한 기준에 따라 허용 목록 규칙을 구현할 수 있다. 예를 들어 특정 IP 범위만 특정 엔드포인트에 액세스하도록 허용하거나 사용자 역할 또는 권한에 따라 특정 리소스에 대한 액세스를 제한할 수 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240527101150924.png" alt=""></p>
+<h2 id="OWASP-API-Security-Risks"><a href="#OWASP-API-Security-Risks" class="headerlink" title="OWASP API Security Risks"></a>OWASP API Security Risks</h2><p>오픈 웹 애플리케이션 보안 프로젝트(OWASP)는 API 보안을 포함한 웹 애플리케이션 보안에 대한 유용한 리소스와 가이드라인을 제공한다.  OWASP는 손상된 객체 수준 권한 부여, 보안 구성 오류 등 API의 가장 중요한 보안 위험 10가지를 식별하고 문서화했다.</p>
+<p>안전한 기반을 보장하기 위해서는 API의 설계 및 개발 단계에서 이러한 위험을 검토하고 해결하는 것이 필수적이다. 아래 표에 표시된 API 보안 상위 10가지 목록과 같은 OWASP의 리소스를 활용하여 API의 취약성을 평가하고 적절한 대응책을 구현할 수 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240527101242301.png" alt=""></p>
+<h2 id="API-Gateway"><a href="#API-Gateway" class="headerlink" title="API Gateway"></a>API Gateway</h2><p>API 게이트웨이는 고객이 Facebook의 백엔드 서비스 및 API에 액세스할 수 있는 단일 진입점 역할을 한다. 보안 정책, 속도 제한, 인증 및 기타 여러 가지 문제를 해결하기 위한 중앙 집중식 계층을 제공한다. API 게이트웨이를 사용하면 개별 서비스 또는 API에서 이러한 보안 기능의 관리를 간소화할 수 있다. </p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240527101325583.png" alt=""></p>
+<h2 id="Error-Handling"><a href="#Error-Handling" class="headerlink" title="Error Handling"></a>Error Handling</h2><p>적절한 오류 처리는 API 보안과 사용자 경험에 매우 중요하다. 오류 발생 시 고객에게 설명적이면서도 안전한 오류 메시지를 제공하고자 한다.</p>
+<p>예를 들어, 모호한 “내부 서버 오류” 대신 다음과 같은 오류 메시지를 표시하는 것이 좋다: “사용자 데이터를 검색하지 못했습니다. 인증되었는지, 충분한 권한이 있는지 확인하세요.”와 같은 메시지를 표시할 수 있다. 이렇게 하면 클라이언트는 민감한 세부 정보를 노출하지 않고도 문제를 해결할 수 있는 충분한 정보를 얻을 수 있다.</p>
+<p>마찬가지로 백엔드에 대한 세부 정보를 노출하는 대신(예: “DROP TABLE 명령이 포함된 잘못된 입력으로 인해 SQL 쿼리가 실패했습니다.”) 일반적인 “잘못된 입력이 제공되었습니다. 검토한 후 다시 시도하세요.”라는 문구가 더 나은 접근 방식이 될 수 있다.</p>
+<p>일반적으로 오류를 유효성 검사 실패와 같은 클라이언트 오류 또는 서버 오류로 분류하고 아래와 같이 400 잘못된 요청 또는 500 내부 서버 오류와 같은 적절한 상태 코드를 반환하는 것이 좋다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240527101443931.png" alt=""></p>
+<h2 id="Input-Validation"><a href="#Input-Validation" class="headerlink" title="Input Validation"></a>Input Validation</h2><p>클라이언트로부터 받은 모든 데이터에 대해 강력한 입력 유효성 검사를 구현해야 한다. 여기에는 요청 매개변수, 헤더, 페이로드 및 기타 사용자 제공 입력의 유효성 검사가 포함된다. 입력 유효성 검사에 실패하면 SQL 인젝션, 크로스 사이트 스크립팅 및 기타 인젝션 공격과 같은 다양한 취약점이 발생할 수 있다. </p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240527101529185.png" alt=""></p>
+<p>클라이언트 측 유효성 검사만으로는 충분하지 않으므로 입력 유효성 검사는 클라이언트 측과 서버 측 모두에서 수행해야 한다. 서버 측에서는 전용 입력 유효성 검사 라이브러리 또는 프레임워크를 사용하여 엄격한 유효성 검사 규칙을 적용하고 사용자 입력을 검증 처리해야 한다. </p>
+<!-- flag of hidden posts --></div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined">Song Hayoung</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="https://songhayoung.github.io/2024/05/27/System%20Design/ByteByteGo/private/api-security-best-practices/">https://songhayoung.github.io/2024/05/27/System%20Design/ByteByteGo/private/api-security-best-practices/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/System-Design/">System Design</a></div><nav id="pagination"></nav><div id="gitalk-container"></div><script>var gitalk = new Gitalk({
+  clientID: '3604b61642355579f55e',
+  clientSecret: 'f552120f18ac5aee3f6297e05e97d94c0a25cd4b',
+  repo: 'SongHayoung.github.io',
+  owner: 'SongHayoung',
+  admin: 'SongHayoung',
+  id: md5(decodeURI(location.pathname)),
+  language: 'en'
+})
+gitalk.render('gitalk-container')</script></div></div><footer class="footer-bg" style="background-image: url(https://xxxx.jpg)"><div class="layout" id="footer"><div class="copyright">&copy;2020 - 2024 By Song Hayoung</div><div class="framework-info"><span>Driven - </span><a target="_blank" rel="noopener" href="http://hexo.io"><span>Hexo</span></a><span class="footer-separator">|</span><span>Theme - </span><a target="_blank" rel="noopener" href="https://github.com/Molunerfinn/hexo-theme-melody"><span>Melody</span></a></div><div class="footer_custom_text">Learning how to walk slowly to not miss important things</div><div class="busuanzi"><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><span id="busuanzi_container_page_pv"><i class="fa fa-file"></i><span id="busuanzi_value_page_pv"></span><span></span></span></div></div></footer><i class="fa fa-arrow-up" id="go-up" aria-hidden="true"></i><script src="https://cdn.jsdelivr.net/npm/animejs@latest/anime.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@latest/velocity.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-ui-pack@latest/velocity.ui.min.js"></script><script src="/js/utils.js?version=1.7.0"></script><script src="/js/fancybox.js?version=1.7.0"></script><script src="/js/sidebar.js?version=1.7.0"></script><script src="/js/copy.js?version=1.7.0"></script><script src="/js/fireworks.js?version=1.7.0"></script><script src="/js/transition.js?version=1.7.0"></script><script src="/js/scroll.js?version=1.7.0"></script><script src="/js/head.js?version=1.7.0"></script><script src="/js/search/algolia.js"></script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+    processEscapes: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  },
+  CommonHTML: {
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "HTML-CSS": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "SVG": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  }
+});
+</script><script type="text/x-mathjax-config">MathJax.Hub.Queue(function() {
+  var all = MathJax.Hub.getAllJax(), i;
+  for (i=0; i < all.length; i += 1) {
+    all[i].SourceElement().parentNode.className += ' has-jax';
+  }
+});
+</script><script src="https://cdn.jsdelivr.net/npm/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><script>if(/Android|webOS|iPhone|iPod|iPad|BlackBerry/i.test(navigator.userAgent)) {
+  $('#nav').addClass('is-mobile')
+  $('footer').addClass('is-mobile')
+  $('#top-container').addClass('is-mobile')
+}</script><div class="search-dialog" id="algolia-search"><div class="search-dialog__title" id="algolia-search-title">Algolia</div><div id="algolia-input-panel"><div id="algolia-search-input"></div></div><hr><div id="algolia-search-results"><div id="algolia-hits"></div><div id="algolia-pagination"></div><div id="algolia-stats"></div></div><span class="search-close-button"><i class="fa fa-times"></i></span></div><div class="search-mask"></div></body></html>

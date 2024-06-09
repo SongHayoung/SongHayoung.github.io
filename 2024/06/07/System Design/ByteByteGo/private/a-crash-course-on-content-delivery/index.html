@@ -1,0 +1,189 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="description" content="[ByteByteGo] A Crash Course on Content-Delivery Networks (CDN)"><meta name="keywords" content="System Design"><meta name="author" content="Song Hayoung"><meta name="copyright" content="Song Hayoung"><title>[ByteByteGo] A Crash Course on Content-Delivery Networks (CDN) | SUMFIのBlog</title><meta name="robots" content="noindex"><link rel="shortcut icon" href="/songcon.ico"><link rel="stylesheet" href="/css/index.css?version=1.7.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@latest/css/font-awesome.min.css?version=1.7.0"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css?version=1.7.0"><meta name="format-detection" content="telephone=no"><meta http-equiv="x-dns-prefetch-control" content="on"><link rel="dns-prefetch" href="https://cdn.jsdelivr.net"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.css"><script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.js" defer></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@latest/dist/gitalk.min.js"></script><script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.10.0/js/md5.min.js"></script><link rel="dns-prefetch" href="https://www.google-analytics.com"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-169368422-1', 'auto');
+ga('send', 'pageview');</script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: {"appId":"7LZ6OJ4D6C","apiKey":"9a84e13f74ea78c3fd54512c10139c56","indexName":"git blog","hits":{"per_page":10},"languages":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}.","hits_stats":"${hits} results found in ${time} ms"}},
+  localSearch: undefined,
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  }
+} </script><meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/rss2.xml" title="SUMFIのBlog" type="application/rss+xml">
+</head><body><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar" data-display="true"><div class="toggle-sidebar-info text-center"><span data-toggle="Toggle article">Toggle site</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">Catalog</div><div class="sidebar-toc__progress"><span class="progress-notice">You've read</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#A-Crash-Course-on-Content-Delivery-Networks-CDN"><span class="toc-number">1.</span> <span class="toc-text">A Crash Course on Content-Delivery Networks (CDN)</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Why-the-Need-for-a-CDN"><span class="toc-number">2.</span> <span class="toc-text">Why the Need for a CDN?</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#How-Does-a-CDN-Work"><span class="toc-number">3.</span> <span class="toc-text">How Does a CDN Work?</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#CDN-Architecture-and-Components"><span class="toc-number">4.</span> <span class="toc-text">CDN Architecture and Components</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Origin-Server"><span class="toc-number">4.1.</span> <span class="toc-text">Origin Server</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#CDN-Edge-Servers"><span class="toc-number">4.2.</span> <span class="toc-text">CDN Edge Servers</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#DNS"><span class="toc-number">4.3.</span> <span class="toc-text">DNS</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#CDN-Control-Plane"><span class="toc-number">4.4.</span> <span class="toc-text">CDN Control Plane</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Monitoring-and-Analytics"><span class="toc-number">4.5.</span> <span class="toc-text">Monitoring and Analytics</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#CDN-Request-Routing"><span class="toc-number">5.</span> <span class="toc-text">CDN Request Routing</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Global-Server-Load-Balancing"><span class="toc-number">5.1.</span> <span class="toc-text">Global Server Load Balancing</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Anycast-DNS"><span class="toc-number">5.2.</span> <span class="toc-text">Anycast DNS</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#The-Role-of-Internet-Exchange-Points"><span class="toc-number">5.3.</span> <span class="toc-text">The Role of Internet Exchange Points</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Best-Practices-to-Optimize-CDN-Performance"><span class="toc-number">6.</span> <span class="toc-text">Best Practices to Optimize CDN Performance</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-Caching-Optimization"><span class="toc-number">6.1.</span> <span class="toc-text">1 - Caching Optimization</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-Content-Optimization"><span class="toc-number">6.2.</span> <span class="toc-text">2 - Content Optimization</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-Network-Optimization"><span class="toc-number">6.3.</span> <span class="toc-text">3 - Network Optimization</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-Security-Optimization"><span class="toc-number">6.4.</span> <span class="toc-text">4 - Security Optimization</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Can-a-CDN-Deliver-Dynamic-Content"><span class="toc-number">7.</span> <span class="toc-text">Can a CDN Deliver Dynamic Content?</span></a></li></ol></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="https://avatars3.githubusercontent.com/u/37806785?s=460&amp;u=8c68d685faf7c5280cfbd736a6b1730b55fb4203&amp;v=4"></div><div class="author-info__name text-center">Song Hayoung</div><div class="author-info__description text-center"></div><div class="follow-button"><a target="_blank" rel="noopener" href="https://www.linkedin.com/in/hayoung-song-9523b61bb/">Follow Me</a></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="/archives"><span class="pull-left">Articles</span><span class="pull-right">10798</span></a><a class="author-info-articles__tags article-meta" href="/tags"><span class="pull-left">Tags</span><span class="pull-right">193</span></a><a class="author-info-articles__categories article-meta" href="/categories"><span class="pull-left">Categories</span><span class="pull-right">61</span></a></div><hr><div class="author-info-links"><div class="author-info-links__title text-center">VISITED</div><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Seoul Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Jeju Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">British Columbia Canada</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Boracay Philippines</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">三重　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">大阪　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">名古屋　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">静岡　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">札幌　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">京都　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Bangkok Thailand</a></div></div></div><div id="content-outer"><div id="top-container" style="background-image: url(https://xxxx.jpg)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="/">SUMFIのBlog</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus">   <a class="site-page" href="/">Home</a><a class="site-page" href="/archives">Archives</a><a class="site-page" href="/tags">Tags</a><a class="site-page" href="/categories">Categories</a><a class="site-page" href="/about">About</a></span><span class="pull-right"><a class="site-page social-icon search"><i class="fa fa-search"></i><span> Search</span></a></span></div><div id="post-info"><div id="post-title">[ByteByteGo] A Crash Course on Content-Delivery Networks (CDN)</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2024-06-07</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/">System Design</a><i class="fa fa-angle-right" aria-hidden="true"></i><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/Byte-Byte-Go/">Byte Byte Go</a><div class="post-meta-wordcount"><span>Word count: </span><span class="word-count">1.6k</span><span class="post-meta__separator">|</span><span>Reading time: 10 min</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div class="article-container" id="post-content"><h2 id="A-Crash-Course-on-Content-Delivery-Networks-CDN"><a href="#A-Crash-Course-on-Content-Delivery-Networks-CDN" class="headerlink" title="A Crash Course on Content-Delivery Networks (CDN)"></a>A Crash Course on Content-Delivery Networks (CDN)</h2><span id="more"></span>
+<p>최신 웹 시대에 지연 시간은 수익에 직접적인 영향을 미칠 수 있다. 다음은 Portent의 연구 결과 중 일부 통계다.</p>
+<ul>
+<li>1초만에 로딩되는 페이지는 5초가 걸리는 페이지보다 전환율이 3배 더 높다</li>
+<li>이커머스 전환율은 로딩 시간이 1초 등가할 때마다 0.3% 감소한다</li>
+<li>매출을 극대화하기 위한 최적의 로딩 시간은 2초 미만이다</li>
+</ul>
+<p>지연 시간을 줄이는 가장 효과적인 전략 중 하나는 콘텐츠 전송 네트워크 또는 CDN을 사용하는 것이다. CDN은 지리적으로 분산된 서버 네트워크로 전 세계에 걸쳐 빠르고 안정적인 콘텐츠 전송을 위해 함께 작동한다.</p>
+<p>사용자가 CDN을 사용하는 웹사이트나 애플리케이션에서 콘텐츠를 요청하면 요청은 가장 가까운 CDN 서버로 리디렉션되어 사용자에게 콘텐츠를 제공한다. 이렇게 하면 데이터가 이동하는 거리가 줄어들고 전반적인 성능이 향상된다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240607103628979.png" alt=""></p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240607103651309.png" alt=""></p>
+<h2 id="Why-the-Need-for-a-CDN"><a href="#Why-the-Need-for-a-CDN" class="headerlink" title="Why the Need for a CDN?"></a>Why the Need for a CDN?</h2><ul>
+<li>성능 향상 : CDN은 사용자와 더 가까운 서버에서 콘텐츠를 제공함으로써 지연 시간을 크게 줄이고 페이지 로딩 시간을 개선한다.</li>
+<li>가용성 향상 : CDN은 여러 서버에 부하를 분산해 일부 서버에 장애가 발생하더라도 콘텐츠에 액세스할 수 있도록 한다.</li>
+<li>대역폭 비용 절감 : CDN은 엣지 서버에 콘텐츠를 캐싱함으로써 원본 서버에서 전송해야 하는 데이터의 양을 줄인다. 따라서 콘텐츠 제공업체의 대역폭 비용이 절감된다.</li>
+<li>보안 강화 : 많은 CDN은 보안 위협으로부터 웹사이트와 애플리케이션을 보호하기 위해 DDoS 보호, SSL/TLS 암호화, WAF(Web Application Firewall) 등의 기능을 제공한다.</li>
+<li>확장성 : CDN은 갑작스러운 트래픽 급증을 처리할 수 있어 웹사이트와 애플리케이션을 필요에 따라 쉽게 확장할 수 있다.</li>
+</ul>
+<h2 id="How-Does-a-CDN-Work"><a href="#How-Does-a-CDN-Work" class="headerlink" title="How Does a CDN Work?"></a>How Does a CDN Work?</h2><p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240607103927882.png" alt=""></p>
+<p>각 단계에서 일어나는 일은 다음과 같다.</p>
+<ul>
+<li>DNS 확인 : 사용자가 CDN이 제공하는 웹사이트나 애플리케이션에서 콘텐츠를 요청하면 디바이스는 도메인 이름을 IP 주소로 확인하기 위해 DNS 쿼리를 보낸다. CDN의 DNS 시스템이 쿼리를 처리한다. 이 시스템은 지리적 근접성 및 서버 부하 등의 요소를 기반으로 콘텐츠를 제공할 최적의 엣지 서버를 결정한다.</li>
+<li>요청 라우팅 : DNS 확인 후 사용자 디바이스는 콘텐츠 요청을 엣지 서버의 IP 주소로 전송한다.</li>
+<li>캐시 조회 : 엣지 서버는 요청을 수신하고 로컬 캐시에서 요청된 콘텐츠가 있는지 확인한다. 콘텐츠가 캐시에서 발견되고 여전히 유효한 경우 엣지 서버는 캐시에서 사용자에게 직접 콘텐츠를 제공한다.</li>
+<li>원본 가져오기 : 요청된 콘텐츠가 캐시에 없거나 캐시된 콘텐츠가 만료된 경우 엣지 서버는 요청을 오리진 서버로 전달한다. 오리진 서버는 요청을 처리하고 요청된 콘텐츠를 다시 엣지 서버로 전송한다.</li>
+<li>캐싱 및 전송 : 엣지 서버는 원본 서버로부터 콘텐츠를 수신하고 로컬 캐시에 사본을 저장한 후 사용자에게 콘텐츠를 전송한다. 또한 콘텐츠에 TTL 값을 할당한다. 이제 캐시된 콘텐츠는 동일하거나 다른 사용자가 나중에 요청할 때 사용할 수 있다.</li>
+<li>최적화 및 보안 : 콘텐츠 전송 프로세스 전반에 걸쳐 CDN은 콘텐츠를 보호하기 위해 다양한 최적화 및 보안 조치를 적용할 수 있다. 여기에는 압축, 축소, SSL/TLS 암호화, DDoS 완화 등의 기술이 포함된다.</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240607104331418.png" alt=""></p>
+<h2 id="CDN-Architecture-and-Components"><a href="#CDN-Architecture-and-Components" class="headerlink" title="CDN Architecture and Components"></a>CDN Architecture and Components</h2><ul>
+<li>Origin Server</li>
+<li>CDN Edge Servers</li>
+<li>Domain Name System (DNS)</li>
+<li>CDN Control Plane</li>
+<li>Monitoring and Analytics</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240607104356476.png" alt=""></p>
+<h3 id="Origin-Server"><a href="#Origin-Server" class="headerlink" title="Origin Server"></a>Origin Server</h3><p>오리진 서버는 CDN이 배포하는 콘텐츠의 기본 소스다. 이 서버는 콘텐츠의 authoritative 버전을 호스팅하며 CDN이 최신 버전에 액세스할 수 있도록 돕는다. 오리진 서버는 물리적 서버, 서버 클러스터 또는 클라우드 기반 서비스일 수 있다. 사용자가 CDN 엣지 서버에서 사용할 수 없는 콘텐츠를 요청하면 CDN은 원본 서버에서 콘텐츠를 가져와 캐싱한 다음 사용자에게 제공한다.</p>
+<h3 id="CDN-Edge-Servers"><a href="#CDN-Edge-Servers" class="headerlink" title="CDN Edge Servers"></a>CDN Edge Servers</h3><p>CDN 엣지 서버는 PoP(Points of Presence)라고도 하며, CDN 인프라의 백본이다. 이런 서버는 전 세계 데이터 센터에 전략적으로 배치되어 다양한 지역의 사용자에게 콘텐츠를 빠르고 효율적으로 전송한다. CDN 엣지 서버의 주요 역할은 콘텐츠를 캐시하고 사용자에게 제공하는 것이다. 사용자가 콘텐츠를 요청하면 가장 가까운 엣지 서버로 요청이 라우팅되고 엣지 서버는 캐시에서 콘텐츠를 제공한다. 엣지 서버는 다음과 같은 역할을 수행한다.</p>
+<ul>
+<li>로드 밸런싱 : 들어오는 요청을 여러 서버에 분산하여 최적의 성능과 가용성을 보장</li>
+<li>콘텐츠 최적화 : 콘텐츠 압축, 축소, 최적화를 통해 파일 크기를 줄이고 로드 시간 개선</li>
+<li>보안 : 콘텐츠와 사용자를 보호하기 위해 DDoS 보호, SSL/TLS 암호화, WAF와 같은 보안 조치 구현</li>
+</ul>
+<h3 id="DNS"><a href="#DNS" class="headerlink" title="DNS"></a>DNS</h3><p>DNS는 사용자 요청을 적절한 CDN 엣지 서버로 보내는 데 중요한 역할을 한다. 사용자가 CDN을 사용하는 웹사이트나 애플리케이션에서 콘텐츠를 요청하면 DNS는 도메인 이름을 가장 가까운 엣지 서버의 IP 주소로 확인한다. CDN 제공 업체는 일반적을 GSLB 또는 anycast DNS와 같은 특수 DNS 서비스를 사용한다.</p>
+<h3 id="CDN-Control-Plane"><a href="#CDN-Control-Plane" class="headerlink" title="CDN Control Plane"></a>CDN Control Plane</h3><p>CDN 컨틀ㄹ 플레인은 CDN의 운영을 감독하는 중앙 관리 시스템이다. 엣지 서버를 구성 및 간리하고 성능을 모니터링하며, CDN이 효율적을 작동하는지 하는 역할을 담당한다. 컨트롤 플레인에서는 일반적으로 다음가 같은 도구와 인터페이스가 포함된다.</p>
+<ul>
+<li>엣지 서버 프로비저닝 및 구성</li>
+<li>콘텐츠 뱊 및 캐싱 정책 관리</li>
+<li>실시간 성능 및 트래픽 지표 모니터링</li>
+<li>트러블 슈팅 및 문제 해결</li>
+<li>보고 및 분석</li>
+</ul>
+<h3 id="Monitoring-and-Analytics"><a href="#Monitoring-and-Analytics" class="headerlink" title="Monitoring and Analytics"></a>Monitoring and Analytics</h3><p>CDN 제공업체는 정교한 모니터링 및 분석 도구를 사용해 CDN의 성능을 추적한다. 이런 도구는 다음과 같은 다양한 지표에 대한 데이터를 수집한다.</p>
+<ul>
+<li>캐시 적중률</li>
+<li>응답 시간</li>
+<li>오류율</li>
+<li>대역폭 사용량</li>
+<li>트래픽의 지리적 분포</li>
+</ul>
+<p>이 데이터는 성능 병목 현상을 파악하고 콘텐츠 전송을 최적화하며 CDN이 콘텐츠 제공업체와 사용자의 요구를 충족하는지 확인하는데 사용된다.</p>
+<h2 id="CDN-Request-Routing"><a href="#CDN-Request-Routing" class="headerlink" title="CDN Request Routing"></a>CDN Request Routing</h2><h3 id="Global-Server-Load-Balancing"><a href="#Global-Server-Load-Balancing" class="headerlink" title="Global Server Load Balancing"></a>Global Server Load Balancing</h3><p>GSLB는 CDN 제공업체가 지리적으로 분산된 여러 서버 또는 데이터 센터로 들어오는 트래픽을 분산하는데 사용하는 기술이다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240607105220718.png" alt=""></p>
+<p>GSLB의 주요 목표는 사용자 요청이 최상의 성능과 가용성을 제공할 수 있는 서버로 라우팅되도록 하는 것이다. 일반적으로 다음 요소를 고려한다.</p>
+<ul>
+<li>지리적 근접성</li>
+<li>서버 부하</li>
+<li>네트워크 조건</li>
+</ul>
+<p>CDN의 경우 GSLB 시스템은 일반적으로 CDN의 전체 DNS 인프라에 통합되며 다음과 같은 표준 DNS 계층 구조와 함께 작동한다.</p>
+<ul>
+<li>Root DNS 서버</li>
+<li>Top-Level Domain 서버</li>
+<li>Authoritative DNS 서버</li>
+</ul>
+<p>CDN 설정에서 GSLB는 authoritative DNS 레벨에서 작동한다. 작동 방식은 다음과 같다.</p>
+<ul>
+<li>사용자의 디바이스가 도메인 이름을 IP 주소로 확인하기 위해 DNS 쿼리를 보낸다.</li>
+<li>쿼리는 일반적으로 인터넷 서비스 공급업체(ISP)에서 제공하는 사용자의 로컬 DNS 확인자로 전송된다.</li>
+<li>로컬 DNS 확인업체에 IP 주소가 캐시되어 있지 않으면 루트 DNS 서버를 쿼리해 재귀적 DNS 확인 프로세스를 시작한다.</li>
+<li>루트 DNS 서버는 관련 TLD DNS 서버의 IP 주소로 응답한다.</li>
+<li>TLD DNS 서버는 도메인에 대한 authoritative DNS 서버의 IP 주소로 응답한다.</li>
+<li>CDN 설정에서 authoritative DNS는 CDN 공급업체가 관리하며 GSLB 시스템을 통합한다.</li>
+<li>GSLB는 DNS 쿼리를 수신하고 사용자의 지리적 위치, 서버 부하 및 네트워크 상태와 같은 요소를 기반으로 이를 분석한다. 분석 결과에 따라 요청을 처리할 최적의 CDN 엣지 서버를 선택하고 해당 IP 주소를 로컬 DNS 리졸버에게 반환한다.</li>
+<li>DNS 리졸버는 IP 주소를 사용자 디바이스로 반환하고 이 디바이스는 콘텐츠 요청을 선택한 CDN 엣지 서버로 전송한다.</li>
+</ul>
+<h3 id="Anycast-DNS"><a href="#Anycast-DNS" class="headerlink" title="Anycast DNS"></a>Anycast DNS</h3><p>애니캐스트 DNS는 여러 버서가 동일한 IP 주소를 공유할 수 있도록 하는 네트워킹 기술이다. CDN에서 애니캐스트 DNS는 일반적으로 들어오는 트래픽 요청을 효율적으로 처리할 수 있는 용량을 갖춘 가장 가까운 데이터센터로 라우팅한다. 애니캐스트 네트워크에서는 하나의 서버가 모든 트래픽의 부하를 처리하는 대신 사용 가능한 다른 데이터 센터로 부하가 분산된다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240607110102612.png" alt=""></p>
+<ul>
+<li>CDN 공급업체는 서로 다른 지역에 위치한 여러 엣지 서버에 동일한 IP 주소를 할당한다.</li>
+<li>사용자의 디바이스에서 도메인 이름을 IP 주소로 확인하기 위해 DNS 쿼리를 보내면 표준 DNS 라우팅 프로토콜을 사용해 쿼리가 DNS 서버로 라우팅된다.</li>
+<li>DNS 서버는 CDN 엣지 서버의 공유 IP 주소로 응답한다.</li>
+<li>사용자의 디바이스는 콘텐츠 요청을 공유 IP 주소로 전송한다.</li>
+<li>요청은 네트워크 토폴로지 및 라우팅 프로토콜에 따라 가장 가까운 엣지 서버로 자동 라우팅된다.</li>
+</ul>
+<p>애니캐스트를 사용하는 CDN은 수신 네트워크의 표면적을 늘리기 때문에 DDoS 공격을 방지하는 데도 효과적이다. 분산된 봇넷의 필터링되지 않은 서비스 거부 트래픽은 각 CDN 데이터 센터에서 흡수된다. 네트워크 규모가 클수록 CDN에 대한 효과적인 DDoS를 실행하기가 더 어려워진다.</p>
+<h3 id="The-Role-of-Internet-Exchange-Points"><a href="#The-Role-of-Internet-Exchange-Points" class="headerlink" title="The Role of Internet Exchange Points"></a>The Role of Internet Exchange Points</h3><p>Internet Exchange Points (IXPs)는 여러 네트워크가 연결하여 데이터 트래픽을 교환할 수 있는 물리적 인프라 시설이다. 인터넷 서비스 제공업체, 콘텐츠 제공업체, 기타 네트워크 사업자가 각자의 네트워크 간에 직접 트래픽을 교환할 수 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240607110551755.png" alt=""></p>
+<p>IXP가 없으면 한 네트워크에서 다른 네트워크로 이동하는 트래픽이 중개 네트워크에 의존할 수 있으며, 한 도시에서 다른 도시로 향하는 트래픽이 같은 도시의 다른 ISP로 이동하는 tromboning 현상이 발생할 수 있다. 그렇다면 CDN은 IXP를 어떻게 사용할까? CDN 제공업체는 연결성과 도달 범위를 개선하기 위해 주요 IXP에 입지를 구축한다. IXP를 통해 CDN은 ISP 및 기타 네트워크와 직접 트래픽을 교환할 수 있으므로 데이터가 CDN과 최종 사용자 간에 이동하는데 필요한 거리와 시간을 최소화할 수 있다. IXP가 있는 CDN은 네트워크 내에서 데이터가 이동하는 경로를 최적화한다.</p>
+<h2 id="Best-Practices-to-Optimize-CDN-Performance"><a href="#Best-Practices-to-Optimize-CDN-Performance" class="headerlink" title="Best Practices to Optimize CDN Performance"></a>Best Practices to Optimize CDN Performance</h2><p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240607110843693.png" alt=""></p>
+<h3 id="1-Caching-Optimization"><a href="#1-Caching-Optimization" class="headerlink" title="1 - Caching Optimization"></a>1 - Caching Optimization</h3><ul>
+<li>효과적인 캐싱 정책을 구현해 캐시 적중률을 극대화하고 원본 서버에서 콘텐츠를 가져올 필요성을 최소화해라</li>
+<li>업데이트 빈도와 중요도에 따라 캐시된 콘텐츠에 적절한 TTL 값을 설정해라</li>
+<li>cache-control 헤더를 사용해 캐시 만료 및 유효성 검사와 같은 캐싱 동작을 지정해라</li>
+<li>캐시 purging 또는 무효화 메커니즘을 구현해 필요한 경우 캐시에서 오래되거나 만료된 콘텐츠를 제거해라</li>
+</ul>
+<h3 id="2-Content-Optimization"><a href="#2-Content-Optimization" class="headerlink" title="2 - Content Optimization"></a>2 - Content Optimization</h3><ul>
+<li>HTML, CSS, JavaScript 파일과 같은 텍스트 기반 자산을 축소 및 압축해 크기를 줄이고 로딩 시간을 개선해라</li>
+<li>이미지를 압축하고 적절한 형식(JPEG, PNG, WebP)을 사용하고 디바이스 기능에 따라 반응형 이미지를 제공함으로써 이미지를 최적화해라</li>
+<li>지연 로딩 기술을 구현해 중요하지 않은 리소스는 필요할 때만 로드해 초기 페이지 로드 시간을 개선해라</li>
+<li>콘텐츠 미리 가져오기 또는 사전 렌더링을 사용해 사용자가 요청할 가능성이 높은 콘텐츠를 선제적으로 로드하고 캐시해라</li>
+</ul>
+<h3 id="3-Network-Optimization"><a href="#3-Network-Optimization" class="headerlink" title="3 - Network Optimization"></a>3 - Network Optimization</h3><ul>
+<li>애니캐스트 라우팅을 구현해 사용자 요청이 사용 가능한 가장 가까운 CDN 서버로 자동 라우팅되도록 하여 지연 시간을 줄여라</li>
+<li>DNS 부하 분산 기술을 사용해 여러 CDN 서버에 트래픽을 분산하고 최적의 서버를 선택해라</li>
+<li>TCP Fast Open을 활성화하고 TCP 혼잡 제어 알고리즘을 최적화하는 등 네트워크 성능을 개선하기 위해 TCP/IP 설정을 최적화해라</li>
+<li>멀티 플랙싱, 헤더 압축, 서버 푸시 등의 기능을 활성화해 지연 시간을 줄이고 성능을 개선하는 HTTP/2 또는 HTTP/3 프로토콜을 구현해라</li>
+</ul>
+<h3 id="4-Security-Optimization"><a href="#4-Security-Optimization" class="headerlink" title="4 - Security Optimization"></a>4 - Security Optimization</h3><ul>
+<li>SSL/TLS 암호화를 구현해 사용자와 CDN 간의 통신을 보호해 민감한 데이터를 보호하고 개인 정보를 보장해라</li>
+<li>DDoS 보호 메커니즘을 활성화해 분산 서비스 거부 공격이 CDN 성능에 미치는 영향을 완화해라</li>
+<li>일반적인 웹 취약성 및 위협으로부터 보호하기 위해 웹 애플리케이션 방화벽(WAF) 규칙을 구현해라</li>
+<li>CDN 서버와 소프트웨어를 정기적으로 업데이트 및 패치해 보안 취약점을 해결하고 안전한 인프라를 유지해라</li>
+</ul>
+<h2 id="Can-a-CDN-Deliver-Dynamic-Content"><a href="#Can-a-CDN-Deliver-Dynamic-Content" class="headerlink" title="Can a CDN Deliver Dynamic Content?"></a>Can a CDN Deliver Dynamic Content?</h2><p>동적 콘텐츠는 사용자 상호 작용, 데이터베이스 쿼리 또는 기타 동적 요인에 따라 실시간으로 생성되거나 개인화된 콘텐츠를 말한다. 동적 콘텐츠의 몇 가지 예는 다음과 같다.</p>
+<ul>
+<li>전자상거래 웹사이트의 개인화된 제품 추천</li>
+<li>사용자의 소셜 미디어 피드에 표시되는 콘텐츠</li>
+<li>개인화된 뉴스 애그리게이터</li>
+</ul>
+<p>동적 콘텐츠는 실시간 처리가 필요하고 정적 콘텐츠처럼 쉽게 캐싱할 수 없기 때문에 CDN을 통해 전송하는 것은 까다로운 작업이다. CDN은 다양한 기술을 사용해 동적 콘텐츠 전송을 최적화할 수 있다.</p>
+<ul>
+<li><strong>Caching Dynamic Content:</strong> CDN은 ‘Cache-Control’ 또는 ‘Expires’ 등의 특정 헤더를 사용해 엣지 서버에서 동적 콘텐츠 캐싱을 지원한다.</li>
+<li><strong>Edge-Side Includes (ESI):</strong> ESI는 캐싱된 정적 조각을 실시간 동적 요소와 결합해 CDN 엣지 서버에서 동적 콘텐츠를 조합할 수 있도록 한다.</li>
+<li><strong>Serverless Computing:</strong> 일부 CDN은 서버리스 컴퓨팅 기능을 제공하여 동적 콘텐츠 생성 및 처리를 사용자와 더 가까운 엣지에서 실행할 수 있다. 예를 들어 Cloudflare Workers는 엣지에서 사용자 지정 JavaScript 코드를 실행하는 서버리스 실행환경이다.</li>
+</ul>
+<!-- flag of hidden posts --></div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined">Song Hayoung</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="https://songhayoung.github.io/2024/06/07/System%20Design/ByteByteGo/private/a-crash-course-on-content-delivery/">https://songhayoung.github.io/2024/06/07/System%20Design/ByteByteGo/private/a-crash-course-on-content-delivery/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/System-Design/">System Design</a></div><nav id="pagination"></nav><div id="gitalk-container"></div><script>var gitalk = new Gitalk({
+  clientID: '3604b61642355579f55e',
+  clientSecret: 'f552120f18ac5aee3f6297e05e97d94c0a25cd4b',
+  repo: 'SongHayoung.github.io',
+  owner: 'SongHayoung',
+  admin: 'SongHayoung',
+  id: md5(decodeURI(location.pathname)),
+  language: 'en'
+})
+gitalk.render('gitalk-container')</script></div></div><footer class="footer-bg" style="background-image: url(https://xxxx.jpg)"><div class="layout" id="footer"><div class="copyright">&copy;2020 - 2024 By Song Hayoung</div><div class="framework-info"><span>Driven - </span><a target="_blank" rel="noopener" href="http://hexo.io"><span>Hexo</span></a><span class="footer-separator">|</span><span>Theme - </span><a target="_blank" rel="noopener" href="https://github.com/Molunerfinn/hexo-theme-melody"><span>Melody</span></a></div><div class="footer_custom_text">Learning how to walk slowly to not miss important things</div><div class="busuanzi"><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><span id="busuanzi_container_page_pv"><i class="fa fa-file"></i><span id="busuanzi_value_page_pv"></span><span></span></span></div></div></footer><i class="fa fa-arrow-up" id="go-up" aria-hidden="true"></i><script src="https://cdn.jsdelivr.net/npm/animejs@latest/anime.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@latest/velocity.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-ui-pack@latest/velocity.ui.min.js"></script><script src="/js/utils.js?version=1.7.0"></script><script src="/js/fancybox.js?version=1.7.0"></script><script src="/js/sidebar.js?version=1.7.0"></script><script src="/js/copy.js?version=1.7.0"></script><script src="/js/fireworks.js?version=1.7.0"></script><script src="/js/transition.js?version=1.7.0"></script><script src="/js/scroll.js?version=1.7.0"></script><script src="/js/head.js?version=1.7.0"></script><script src="/js/search/algolia.js"></script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+    processEscapes: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  },
+  CommonHTML: {
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "HTML-CSS": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "SVG": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  }
+});
+</script><script type="text/x-mathjax-config">MathJax.Hub.Queue(function() {
+  var all = MathJax.Hub.getAllJax(), i;
+  for (i=0; i < all.length; i += 1) {
+    all[i].SourceElement().parentNode.className += ' has-jax';
+  }
+});
+</script><script src="https://cdn.jsdelivr.net/npm/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><script>if(/Android|webOS|iPhone|iPod|iPad|BlackBerry/i.test(navigator.userAgent)) {
+  $('#nav').addClass('is-mobile')
+  $('footer').addClass('is-mobile')
+  $('#top-container').addClass('is-mobile')
+}</script><div class="search-dialog" id="algolia-search"><div class="search-dialog__title" id="algolia-search-title">Algolia</div><div id="algolia-input-panel"><div id="algolia-search-input"></div></div><hr><div id="algolia-search-results"><div id="algolia-hits"></div><div id="algolia-pagination"></div><div id="algolia-stats"></div></div><span class="search-close-button"><i class="fa fa-times"></i></span></div><div class="search-mask"></div></body></html>

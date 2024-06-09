@@ -1,0 +1,116 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="description" content="[ByteByteGo] GraphQL Architectural Patterns"><meta name="keywords" content="System Design"><meta name="author" content="Song Hayoung"><meta name="copyright" content="Song Hayoung"><title>[ByteByteGo] GraphQL Architectural Patterns | SUMFIのBlog</title><meta name="robots" content="noindex"><link rel="shortcut icon" href="/songcon.ico"><link rel="stylesheet" href="/css/index.css?version=1.7.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@latest/css/font-awesome.min.css?version=1.7.0"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css?version=1.7.0"><meta name="format-detection" content="telephone=no"><meta http-equiv="x-dns-prefetch-control" content="on"><link rel="dns-prefetch" href="https://cdn.jsdelivr.net"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.css"><script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.js" defer></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@latest/dist/gitalk.min.js"></script><script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.10.0/js/md5.min.js"></script><link rel="dns-prefetch" href="https://www.google-analytics.com"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-169368422-1', 'auto');
+ga('send', 'pageview');</script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: {"appId":"7LZ6OJ4D6C","apiKey":"9a84e13f74ea78c3fd54512c10139c56","indexName":"git blog","hits":{"per_page":10},"languages":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}.","hits_stats":"${hits} results found in ${time} ms"}},
+  localSearch: undefined,
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  }
+} </script><meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/rss2.xml" title="SUMFIのBlog" type="application/rss+xml">
+</head><body><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar" data-display="true"><div class="toggle-sidebar-info text-center"><span data-toggle="Toggle article">Toggle site</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">Catalog</div><div class="sidebar-toc__progress"><span class="progress-notice">You've read</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#GraphQL-Architectural-Patterns"><span class="toc-number">1.</span> <span class="toc-text">GraphQL Architectural Patterns</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#GraphQL-Server-with-a-Database"><span class="toc-number">1.1.</span> <span class="toc-text">GraphQL Server with a Database</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#GraphQL-Server-with-Existing-Systems"><span class="toc-number">1.2.</span> <span class="toc-text">GraphQL Server with Existing Systems</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#GraphQL-vs-REST"><span class="toc-number">2.</span> <span class="toc-text">GraphQL vs REST</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Overfetching-Data"><span class="toc-number">2.1.</span> <span class="toc-text">Overfetching Data</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Underfetching"><span class="toc-number">2.2.</span> <span class="toc-text">Underfetching</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#GraphQL-vs-BFF"><span class="toc-number">3.</span> <span class="toc-text">GraphQL vs BFF</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#GraphQL-Federation"><span class="toc-number">4.</span> <span class="toc-text">GraphQL Federation</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#GraphQL-Adoption-Approach"><span class="toc-number">5.</span> <span class="toc-text">GraphQL Adoption Approach</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Client-based-GraphQL"><span class="toc-number">5.1.</span> <span class="toc-text">Client-based GraphQL</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#GraphQL-with-BFFs"><span class="toc-number">5.2.</span> <span class="toc-text">GraphQL with BFFs</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#The-Monolithic-GraphQL"><span class="toc-number">5.3.</span> <span class="toc-text">The Monolithic GraphQL</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Supergraph-Approach"><span class="toc-number">5.4.</span> <span class="toc-text">Supergraph Approach</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Best-Practices-for-GraphQL-Development"><span class="toc-number">6.</span> <span class="toc-text">Best Practices for GraphQL Development</span></a></li></ol></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="https://avatars3.githubusercontent.com/u/37806785?s=460&amp;u=8c68d685faf7c5280cfbd736a6b1730b55fb4203&amp;v=4"></div><div class="author-info__name text-center">Song Hayoung</div><div class="author-info__description text-center"></div><div class="follow-button"><a target="_blank" rel="noopener" href="https://www.linkedin.com/in/hayoung-song-9523b61bb/">Follow Me</a></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="/archives"><span class="pull-left">Articles</span><span class="pull-right">10798</span></a><a class="author-info-articles__tags article-meta" href="/tags"><span class="pull-left">Tags</span><span class="pull-right">193</span></a><a class="author-info-articles__categories article-meta" href="/categories"><span class="pull-left">Categories</span><span class="pull-right">61</span></a></div><hr><div class="author-info-links"><div class="author-info-links__title text-center">VISITED</div><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Seoul Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Jeju Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">British Columbia Canada</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Boracay Philippines</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">三重　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">大阪　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">名古屋　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">静岡　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">札幌　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">京都　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Bangkok Thailand</a></div></div></div><div id="content-outer"><div id="top-container" style="background-image: url(https://xxxx.jpg)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="/">SUMFIのBlog</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus">   <a class="site-page" href="/">Home</a><a class="site-page" href="/archives">Archives</a><a class="site-page" href="/tags">Tags</a><a class="site-page" href="/categories">Categories</a><a class="site-page" href="/about">About</a></span><span class="pull-right"><a class="site-page social-icon search"><i class="fa fa-search"></i><span> Search</span></a></span></div><div id="post-info"><div id="post-title">[ByteByteGo] GraphQL Architectural Patterns</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2024-05-27</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/">System Design</a><i class="fa fa-angle-right" aria-hidden="true"></i><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/Byte-Byte-Go/">Byte Byte Go</a><div class="post-meta-wordcount"><span>Word count: </span><span class="word-count">1.1k</span><span class="post-meta__separator">|</span><span>Reading time: 7 min</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div class="article-container" id="post-content"><h2 id="GraphQL-Architectural-Patterns"><a href="#GraphQL-Architectural-Patterns" class="headerlink" title="GraphQL Architectural Patterns"></a>GraphQL Architectural Patterns</h2><span id="more"></span>
+<h3 id="GraphQL-Server-with-a-Database"><a href="#GraphQL-Server-with-a-Database" class="headerlink" title="GraphQL Server with a Database"></a>GraphQL Server with a Database</h3><p>이 방식은 가장 일반적인 접근 방식이며 GraphQL 스펙을 구현하는 단일 웹 서버로 시작된다. 쿼리가 GraphQL 서버에 도착하면 이 서버가 쿼리를 처리한다. 여기에는 쿼리의 페이로드를 읽고 데이터베이스에서 필요한 정보를 가져오고, 클라이언트에 대한 응답을 구성하는 작업이 포함된다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240527110437061.png" alt=""></p>
+<h3 id="GraphQL-Server-with-Existing-Systems"><a href="#GraphQL-Server-with-Existing-Systems" class="headerlink" title="GraphQL Server with Existing Systems"></a>GraphQL Server with Existing Systems</h3><p> GraphQL의 주요 사용 사례는 기존의 여러 시스템을 하나의 통합된 GraphQL API 뒤에 통합하는 것이다. </p>
+<p>이 접근 방식을 사용하면 GraphQL 서버와 통신하는 클라이언트 애플리케이션을 개발할 수 있다. 서버는 기존 시스템에서 데이터를 가져오고 필요한 응답을 구성하는 역할을 담당한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240527134222799.png" alt=""></p>
+<h2 id="GraphQL-vs-REST"><a href="#GraphQL-vs-REST" class="headerlink" title="GraphQL vs REST"></a>GraphQL vs REST</h2><p>GraphQL과 REST는 각각 장단점이 있는 API 구축의 두 가지 접근 방식이다. REST는 각 엔드포인트가 고정된 데이터 구조를 제공하는 여러 엔드포인트에 의존하여 수년 동안 지배적인 API 아키텍처 패턴으로 사용되어 왔다. 그러나 REST API는 유연하지 않으며 변화하는 클라이언트 요구 사항에 잘 적응하지 못한다.</p>
+<h3 id="Overfetching-Data"><a href="#Overfetching-Data" class="headerlink" title="Overfetching Data"></a>Overfetching Data</h3><p>REST API를 사용하면 데이터를 오버페치하는 것이 일반적이다. 이는 각 엔드포인트에 REST의 특정 스키마가 있기 때문에 발생한다. 클라이언트에 하나의 필드만 필요한 경우에도 API는 모든 필드를 반환한다.</p>
+<h3 id="Underfetching"><a href="#Underfetching" class="headerlink" title="Underfetching"></a>Underfetching</h3><p>REST의 더 큰 문제는 데이터 언더페칭이다. 단일 REST API 엔드포인트는 클라이언트가 필요로 하는 완전한 데이터를 제공하지 않는다. API를 호출하여 일부 응답을 얻은 다음 해당 응답을 사용하여 나머지 정보를 얻기 위해 또 다른 API 호출을 수행한다. 설계에 따라 필요한 데이터를 축적하기 위해 여러 번의 호출이 있을 수 있으며, 이로 인해 n + 1 문제가 발생할 수 있다. 아래 다이어그램은 책과 저자의 세부 정보를 가져오기 위해 두 번의 별도 호출을 수행하는 REST 접근 방식의 예를 보여준다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240527134406145.png" alt=""></p>
+<p>GraphQL은 단일 엔드포인트를 사용하므로 클라이언트는 정확한 데이터 요구 사항을 지정하는 유연한 쿼리를 보낼 수 있다. 이 접근 방식은 서버로 여러 번 왕복할 필요가 없으므로 데이터 사용량을 줄이고 개발 속도를 높인다.</p>
+<h2 id="GraphQL-vs-BFF"><a href="#GraphQL-vs-BFF" class="headerlink" title="GraphQL vs BFF"></a>GraphQL vs BFF</h2><p>Backend-For-Frontend(BFF) 패턴은 각 프론트엔드 클라이언트 또는 애플리케이션의 특정 요구 사항에 맞는 전용 백엔드 서비스를 만드는 것을 포함한다. 이를 통해 프론트엔드 팀은 API 계층을 사용자 정의할 수 있는 더 많은 자율성과 유연성을 확보할 수 있다. 아래 다이어그램은 BFF 패턴을 보여줍니다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240527134506743.png" alt=""></p>
+<p>넷플릭스나 에어비앤비 같은 조직은 다양한 클라이언트 디바이스의 다양한 요구 사항을 지원하기 위해 BFF를 채택했다. 그러나 BFF 패턴에는 “BFF sprawl”로 이어질 수 있는 몇 가지 단점이 있다.</p>
+<ul>
+<li>각 BFF는 독립적인 개발 및 유지 관리가 필요하므로 간접비가 추가된다.</li>
+<li>BFF는 데이터를 가져오기 위해 여러 번 요청해야 하는 데이터 오버페칭과 언더페칭으로 인해 여전히 문제가 발생할 수 있다.</li>
+<li>고객 수가 증가함에 따라 많은 BFF를 관리하는 것은 복잡해지고 중복되기 쉽다. 이는 자판기 예제에서 수많은 특수 버튼을 만드는 것과 같다.</li>
+</ul>
+<p>앞서 살펴본 것처럼 GraphQL은 클라이언트가 단일 통합 엔드포인트에서 필요한 것을 쿼리할 수 있도록 함으로써 BFF의 필요성을 대체할 수 있다.</p>
+<h2 id="GraphQL-Federation"><a href="#GraphQL-Federation" class="headerlink" title="GraphQL Federation"></a>GraphQL Federation</h2><p>단일 GraphQL 서버를 사용하는 표준 GraphQL 설정에서는 다음과 같은 몇 가지 문제가 발생할 수 있다</p>
+<ul>
+<li>스키마 복잡성 및 구성: GraphQL 스키마의 크기와 복잡성이 증가함에 따라 단일 모놀리식 스키마로 관리하기가 어려워질 수 있다.</li>
+<li>팀 확장성: 모놀리식 GraphQL 서버가 있는 경우, 한 팀이 모든 새로운 기능을 구현해야 하므로 개발 병목 현상이 발생할 수 있다.</li>
+<li>도메인 권한 부족: 통합된 스키마를 관리하기가 어려워진다. 여러 팀이 스키마를 변경하고 싶지만 스키마가 처리하는 모든 기능에 대한 도메인 지식이 충분하지 않을 수 있다. 이로 인해 영향 반경이 커져 서비스 지향 아키텍처의 이점이 무력화될 수 있다.</li>
+</ul>
+<p>이러한 문제를 해결하기 위해 대규모 조직에서는 GraphQL Federation을 채택하는 경우가 많다. GraphQL Federation은 모놀리식 스키마를 독립적으로 개발 및 배포할 수 있는 더 작고 집중적인 하위 그래프로 분해할 수 있는 아키텍처 패턴이다. 각 하위 그래프는 전체 애플리케이션 내에서 특정 도메인 또는 서비스 경계를 처리한다. 아래 다이어그램은 GraphQL Federated Gateway의 고수준의 아키텍처다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240527134745436.png" alt=""></p>
+<p>예를 들어 제품, 리뷰 및 사용자에 대한 서비스가 있는 전자상거래 애플리케이션을 생각해 보자. 페더레이션을 사용하면 세 개의 하위 그래프를 가질 수 있다.</p>
+<ul>
+<li>제품, 카테고리, 재고 등의 유형을 정의하는 제품 하위 그래프</li>
+<li>리뷰, 평점 등과 같은 유형을 정의하는 리뷰 하위 그래프</li>
+<li>사용자, 계정, 기본 설정 등과 같은 유형을 정의하는 사용자 하위 그래프</li>
+</ul>
+<p>각 하위 그래프에는 해당 도메인과 관련된 유형 및 필드를 포함하는 집중 스키마가 있다. 스키마 레지스트리는 모든 개별 스키마의 중앙 저장소 역할을 하여 팀별 소유권을 허용한다. 예를 들어, 제품 팀은 다른 유형에 대한 변경을 걱정할 필요 없이 제품 유형을 완전히 소유할 수 있다.</p>
+<p>페더레이션 게이트웨이는 이러한 하위 그래프를 통합 스키마(수퍼그래프라고도 함)로 연결하고 쿼리를 실행하는 역할을 담당한다. 클라이언트에게는 여전히 하나의 일관된 스키마처럼 보이지만 구현은 뒤에서 분리되어 있다.</p>
+<h2 id="GraphQL-Adoption-Approach"><a href="#GraphQL-Adoption-Approach" class="headerlink" title="GraphQL Adoption Approach"></a>GraphQL Adoption Approach</h2><p>개발자들이 GraphQL에 대해 배우면서 흔히 하는 질문 중 하나는 GraphQL을 어떻게 도입할 수 있는지이다.</p>
+<p>일반적으로 팀은 클라이언트 애플리케이션이 단일 GraphQL 서버에 쿼리하는 기본 아키텍처로 GraphQL 여정을 시작한다. 서버는 이러한 요청을 백업 데이터 소스에 배포하고 데이터를 반환한다. </p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240527134922481.png" alt=""></p>
+<p>그러나 기본 아키텍처의 맥락에서 여러 하위 패턴을 사용할 수 있다.</p>
+<h3 id="Client-based-GraphQL"><a href="#Client-based-GraphQL" class="headerlink" title="Client-based GraphQL"></a>Client-based GraphQL</h3><p>고객 팀은 데이터 가져오기와 관련된 GraphQL의 기능을 활용하고자 하는 경우가 많다. 따라서 단일 GraphQL 엔드포인트 뒤에 기존 API를 래핑하기 위해 GraphQL API를 구현한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240527135011314.png" alt=""></p>
+<p>이 접근 방식은 개발자 경험을 개선한다. 하지만 클라이언트는 다양한 API에서 데이터를 수집하기 위해 여러 서비스에 여러 번 요청하기 때문에 성능 비용은 여전히 부담해야 한다.</p>
+<h3 id="GraphQL-with-BFFs"><a href="#GraphQL-with-BFFs" class="headerlink" title="GraphQL with BFFs"></a>GraphQL with BFFs</h3><p>앞서 살펴본 것처럼 BFF는 웹, 모바일 등 다양한 클라이언트가 모놀리식 범용 API와 상호 작용해야 하는 문제를 해결하려고 시도한다. BFF는 각 클라이언트가 클라이언트의 요청을 수신하는 전용 BFF 서비스를 갖는 새로운 계층을 추가한다. 이러한 경우 GraphQL은 클라이언트 중심의 중개 계층을 구축하는 데 자연스럽게 적합할 수 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240527135106325.png" alt=""></p>
+<p>이 접근 방식은 개발자 경험을 개선하고 클라이언트의 성능 문제를 극복한다. 하지만 BFF를 구축하고 유지하는 데는 단점이 있다. 또한 팀 간에 노력이 중복될 가능성이 있다.</p>
+<h3 id="The-Monolithic-GraphQL"><a href="#The-Monolithic-GraphQL" class="headerlink" title="The Monolithic GraphQL"></a>The Monolithic GraphQL</h3><p>이는 GraphQL 애플리케이션을 구축하는 일반적인 접근 방식이기도 하다. 여기서는 여러 팀이 여러 클라이언트에서 사용하는 GraphQL 서버에 대해 하나의 코드베이스를 공유한다. 또는 한 팀이 여러 클라이언트 팀에서 액세스하는 GraphQL API를 소유하는 방식도 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240527135202735.png" alt=""></p>
+<p>이 접근 방식은 스키마의 여러 부분에 대한 소유권을 둘러싼 문제를 야기한다. 그래프의 일부는 특정 클라이언트의 요구에 적합할 수 있지만, 다른 일부는 해결 방법을 찾아야 할 수도 있다.</p>
+<h3 id="Supergraph-Approach"><a href="#Supergraph-Approach" class="headerlink" title="Supergraph Approach"></a>Supergraph Approach</h3><p>여러 그래프를 슈퍼그래프로 통합하는 것은 다른 패턴의 문제를 처리하는 좋은 방법이다. 기본적으로 슈퍼그래프는 조직이 여러 팀에서 생성하고 관리하는 여러 그래프 대신 하나의 통합된 그래프를 갖도록 요구한다. 그러나 도메인 소유권을 유지하기 위해 공통 그래프의 구현은 여러 팀에 걸쳐 연합되어야 한다. 페더레이션 중심의 슈퍼그래프 아키텍처는 두 부분으로 구성된다.</p>
+<ul>
+<li>각각 고유한 GraphQL 스키마를 정의하는 하위 그래프 서비스 모음. 각 하위 그래프는 그래프의 일부만 구현한다.</li>
+<li>별개의 스키마를 슈퍼그래프로 구성하고 그래프의 서비스 전체에서 쿼리를 실행하는 라우터</li>
+</ul>
+<p>아래 다이어그램은 슈퍼그래프 접근 방식이 어떤 모습인지 보여줍니다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240527135403597.png" alt=""></p>
+<p>이 접근 방식은 기본 GraphQL 서버와 유사하게 클라이언트를 위한 단일 진입점을 제공한다. 하지만 여러 하위 그래프에서 데이터를 가져와서 쿼리를 수행한다. </p>
+<h2 id="Best-Practices-for-GraphQL-Development"><a href="#Best-Practices-for-GraphQL-Development" class="headerlink" title="Best Practices for GraphQL Development"></a>Best Practices for GraphQL Development</h2><ul>
+<li>스키마 디자인: 스키마를 간단하고 직관적이며 클라이언트와 개발자가 이해하기 쉽도록 유지해라. 유형과 필드에 깔끔하고 간결한 명명 규칙을 사용해라. 또한 스키마에 불필요한 중첩과 순환 종속성을 피해라.</li>
+<li>쿼리 최적화: 쿼리에서 요청되는 필드를 신중하게 고려하여 데이터 오버페칭을 방지해라. 서버 측 일괄 처리 및 캐싱을 구현하여 백엔드 서비스에 대한 반복 요청을 최소화해라.</li>
+<li>버전 관리: 가능하면 버전 관리를 피하고 대신 지속적인 평가가 가능하도록 스키마를 설계해라. 사용 중단, 무효화 및 기본값을 사용하여 중단되지 않는 변경을 수행해라.</li>
+<li>보안: REST API와 마찬가지로 권한 부여, 인증, 속도 제한 등과 같은 보안 모범 사례를 준수해라.</li>
+<li>도구: 스키마 개발, 테스트 및 문서화를 위해 GraphiQL과 같은 GraphQL IDE를 활용해라. 또한 잘 구축된 서버 라이브러리를 사용하여 구현을 간소화해라.</li>
+</ul>
+<!-- flag of hidden posts --></div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined">Song Hayoung</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="https://songhayoung.github.io/2024/05/27/System%20Design/ByteByteGo/private/graphql-architecture-pattern/">https://songhayoung.github.io/2024/05/27/System%20Design/ByteByteGo/private/graphql-architecture-pattern/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/System-Design/">System Design</a></div><nav id="pagination"></nav><div id="gitalk-container"></div><script>var gitalk = new Gitalk({
+  clientID: '3604b61642355579f55e',
+  clientSecret: 'f552120f18ac5aee3f6297e05e97d94c0a25cd4b',
+  repo: 'SongHayoung.github.io',
+  owner: 'SongHayoung',
+  admin: 'SongHayoung',
+  id: md5(decodeURI(location.pathname)),
+  language: 'en'
+})
+gitalk.render('gitalk-container')</script></div></div><footer class="footer-bg" style="background-image: url(https://xxxx.jpg)"><div class="layout" id="footer"><div class="copyright">&copy;2020 - 2024 By Song Hayoung</div><div class="framework-info"><span>Driven - </span><a target="_blank" rel="noopener" href="http://hexo.io"><span>Hexo</span></a><span class="footer-separator">|</span><span>Theme - </span><a target="_blank" rel="noopener" href="https://github.com/Molunerfinn/hexo-theme-melody"><span>Melody</span></a></div><div class="footer_custom_text">Learning how to walk slowly to not miss important things</div><div class="busuanzi"><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><span id="busuanzi_container_page_pv"><i class="fa fa-file"></i><span id="busuanzi_value_page_pv"></span><span></span></span></div></div></footer><i class="fa fa-arrow-up" id="go-up" aria-hidden="true"></i><script src="https://cdn.jsdelivr.net/npm/animejs@latest/anime.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@latest/velocity.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-ui-pack@latest/velocity.ui.min.js"></script><script src="/js/utils.js?version=1.7.0"></script><script src="/js/fancybox.js?version=1.7.0"></script><script src="/js/sidebar.js?version=1.7.0"></script><script src="/js/copy.js?version=1.7.0"></script><script src="/js/fireworks.js?version=1.7.0"></script><script src="/js/transition.js?version=1.7.0"></script><script src="/js/scroll.js?version=1.7.0"></script><script src="/js/head.js?version=1.7.0"></script><script src="/js/search/algolia.js"></script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+    processEscapes: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  },
+  CommonHTML: {
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "HTML-CSS": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "SVG": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  }
+});
+</script><script type="text/x-mathjax-config">MathJax.Hub.Queue(function() {
+  var all = MathJax.Hub.getAllJax(), i;
+  for (i=0; i < all.length; i += 1) {
+    all[i].SourceElement().parentNode.className += ' has-jax';
+  }
+});
+</script><script src="https://cdn.jsdelivr.net/npm/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><script>if(/Android|webOS|iPhone|iPod|iPad|BlackBerry/i.test(navigator.userAgent)) {
+  $('#nav').addClass('is-mobile')
+  $('footer').addClass('is-mobile')
+  $('#top-container').addClass('is-mobile')
+}</script><div class="search-dialog" id="algolia-search"><div class="search-dialog__title" id="algolia-search-title">Algolia</div><div id="algolia-input-panel"><div id="algolia-search-input"></div></div><hr><div id="algolia-search-results"><div id="algolia-hits"></div><div id="algolia-pagination"></div><div id="algolia-stats"></div></div><span class="search-close-button"><i class="fa fa-times"></i></span></div><div class="search-mask"></div></body></html>
