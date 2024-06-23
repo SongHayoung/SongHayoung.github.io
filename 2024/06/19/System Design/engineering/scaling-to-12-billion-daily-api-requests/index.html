@@ -1,0 +1,169 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="description" content="[RevenueCat] Scaling to 1.2 Billion Daily API Requests with Caching at RevenueCat"><meta name="keywords" content="System Design"><meta name="author" content="Song Hayoung"><meta name="copyright" content="Song Hayoung"><title>[RevenueCat] Scaling to 1.2 Billion Daily API Requests with Caching at RevenueCat | SUMFIのBlog</title><meta name="robots" content="noindex"><link rel="shortcut icon" href="/songcon.ico"><link rel="stylesheet" href="/css/index.css?version=1.7.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@latest/css/font-awesome.min.css?version=1.7.0"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css?version=1.7.0"><meta name="format-detection" content="telephone=no"><meta http-equiv="x-dns-prefetch-control" content="on"><link rel="dns-prefetch" href="https://cdn.jsdelivr.net"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.css"><script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.js" defer></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@latest/dist/gitalk.min.js"></script><script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.10.0/js/md5.min.js"></script><link rel="dns-prefetch" href="https://www.google-analytics.com"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-169368422-1', 'auto');
+ga('send', 'pageview');</script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: {"appId":"7LZ6OJ4D6C","apiKey":"9a84e13f74ea78c3fd54512c10139c56","indexName":"git blog","hits":{"per_page":10},"languages":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}.","hits_stats":"${hits} results found in ${time} ms"}},
+  localSearch: undefined,
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  }
+} </script><meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/rss2.xml" title="SUMFIのBlog" type="application/rss+xml">
+</head><body><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar" data-display="true"><div class="toggle-sidebar-info text-center"><span data-toggle="Toggle article">Toggle site</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">Catalog</div><div class="sidebar-toc__progress"><span class="progress-notice">You've read</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Scaling-to-1-2-Billion-Daily-API-Requests-with-Caching-at-RevenueCat"><span class="toc-number">1.</span> <span class="toc-text">Scaling to 1.2 Billion Daily API Requests with Caching at RevenueCat</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#The-Three-Key-Goals-of-Caching"><span class="toc-number">2.</span> <span class="toc-text">The Three Key Goals of Caching</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Low-Latency"><span class="toc-number">3.</span> <span class="toc-text">Low Latency</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-Pre-established-connections"><span class="toc-number">3.1.</span> <span class="toc-text">1 - Pre-established connections</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-Fail-fast-approach"><span class="toc-number">3.2.</span> <span class="toc-text">2 - Fail-fast approach</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Keeping-Cache-Servers-Warm"><span class="toc-number">4.</span> <span class="toc-text">Keeping Cache Servers Warm</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-Planning-for-Failure-with-Mirrored-and-Gutter-pool"><span class="toc-number">4.1.</span> <span class="toc-text">1 - Planning for Failure with Mirrored and Gutter pool</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-Dedicated-Pools"><span class="toc-number">4.2.</span> <span class="toc-text">2 - Dedicated Pools</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-Handling-Hot-Keys"><span class="toc-number">4.3.</span> <span class="toc-text">3 - Handling Hot Keys</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Key-Splitting"><span class="toc-number">4.3.1.</span> <span class="toc-text">Key Splitting</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Local-Caching"><span class="toc-number">4.3.2.</span> <span class="toc-text">Local Caching</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Avoiding-Thundering-Herds"><span class="toc-number">4.4.</span> <span class="toc-text">Avoiding Thundering Herds</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Cache-Server-Migrations"><span class="toc-number">5.</span> <span class="toc-text">Cache Server Migrations</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-Write-Failure-Tracking"><span class="toc-number">5.1.</span> <span class="toc-text">1 - Write Failure Tracking</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-Consistent-CRUD-Operations"><span class="toc-number">5.2.</span> <span class="toc-text">2 - Consistent CRUD Operations</span></a></li></ol></li></ol></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="https://avatars3.githubusercontent.com/u/37806785?s=460&amp;u=8c68d685faf7c5280cfbd736a6b1730b55fb4203&amp;v=4"></div><div class="author-info__name text-center">Song Hayoung</div><div class="author-info__description text-center"></div><div class="follow-button"><a target="_blank" rel="noopener" href="https://www.linkedin.com/in/hayoung-song-9523b61bb/">Follow Me</a></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="/archives"><span class="pull-left">Articles</span><span class="pull-right">10812</span></a><a class="author-info-articles__tags article-meta" href="/tags"><span class="pull-left">Tags</span><span class="pull-right">193</span></a><a class="author-info-articles__categories article-meta" href="/categories"><span class="pull-left">Categories</span><span class="pull-right">61</span></a></div><hr><div class="author-info-links"><div class="author-info-links__title text-center">VISITED</div><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Seoul Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Jeju Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">British Columbia Canada</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Boracay Philippines</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">三重　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">大阪　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">名古屋　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">静岡　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">札幌　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">京都　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Bangkok Thailand</a></div></div></div><div id="content-outer"><div id="top-container" style="background-image: url(https://xxxx.jpg)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="/">SUMFIのBlog</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus">   <a class="site-page" href="/">Home</a><a class="site-page" href="/archives">Archives</a><a class="site-page" href="/tags">Tags</a><a class="site-page" href="/categories">Categories</a><a class="site-page" href="/about">About</a></span><span class="pull-right"><a class="site-page social-icon search"><i class="fa fa-search"></i><span> Search</span></a></span></div><div id="post-info"><div id="post-title">[RevenueCat] Scaling to 1.2 Billion Daily API Requests with Caching at RevenueCat</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2024-06-19</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/">System Design</a><i class="fa fa-angle-right" aria-hidden="true"></i><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/Engineering/">Engineering</a><div class="post-meta-wordcount"><span>Word count: </span><span class="word-count">1.6k</span><span class="post-meta__separator">|</span><span>Reading time: 9 min</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div class="article-container" id="post-content"><h2 id="Scaling-to-1-2-Billion-Daily-API-Requests-with-Caching-at-RevenueCat"><a href="#Scaling-to-1-2-Billion-Daily-API-Requests-with-Caching-at-RevenueCat" class="headerlink" title="Scaling to 1.2 Billion Daily API Requests with Caching at RevenueCat"></a>Scaling to 1.2 Billion Daily API Requests with Caching at RevenueCat</h2><span id="more"></span>
+<p>캐싱을 사용하면 자주 액세스하는 데이터를 느린 백엔드 데이터베이스와 시스템 대신 빠른 메모리에서 빠르게 검색할 수 있다. 이를 통해 응답 시간을 획기적으로 단축할 수 있지만 캐시된 데이터가 데이터베이스의 원본과 일관성을 유지해야 하므로 복잡성을 증가시키기도 한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240619130512733.png" alt=""></p>
+<p>레비뉴캣과 같은 규모로 운영되는 애플리케이션의 경우 캐싱 계층의 작은 비효율이나 불일치가 큰 영향을 미칠 수도 있다. 이 포스트에서는 레비뉴 캣이 Memcached를 사용해 캐시를 사용하는데 발생하는 여러 문제를 살펴보고 개선한 방법을 알아본다.</p>
+<h2 id="The-Three-Key-Goals-of-Caching"><a href="#The-Three-Key-Goals-of-Caching" class="headerlink" title="The Three Key Goals of Caching"></a>The Three Key Goals of Caching</h2><p>레비뉴캣은 캐싱 인프라의 세 가지 주요 목표를 설정했다.</p>
+<ul>
+<li>Low Latency : 캐싱 레이어의 작은 지연도 이 요청량에서는 심각한 결과를 초래할 수 있으므로 캐시는 빨라야 한다. 요청을 재시도하고 새 연결을 여는 것은 전반적인 성능에 악영향을 미친다.</li>
+<li>Keeping cache servers up and warm : 캐시 서버는 백엔드 시스템의 부하를 덜어주기 위해 자주 액세스하는 데이터로 가득 채워져 있어야 한다.</li>
+<li>Maintaining data consistency : 캐시의 데이터는 일관성이 있어야한다. 일관성이 없으면 심각한 애플리케이션 문제가 발생할 수 있다.</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240619130714006.png" alt=""></p>
+<p>이런 주요 목표는 대규모로 운영되는 애플리케이션과 매우 관련이 있지만, 강력한 캐싱 솔루션에는 모니터링 및 가시성, 최적화, 일종의 자동화된 확장 등의 지원 기능도 필요하다. 이런 각 목표에 대해 레비뉴캣 엔지니어링 팀이 이를 어떻게 달성했는지 살펴본다.</p>
+<h2 id="Low-Latency"><a href="#Low-Latency" class="headerlink" title="Low Latency"></a>Low Latency</h2><p>지연 시간이 사용자 경험에 큰 영향을 미친다는 아마존의 연구 결과도 있듯이, 수백 밀리초의 작은 지연이라도 사용자 참여도와 만족도를 떨어트릴 수 있다. 레비뉴 캣은 두 가지 핵심 기술을 통해 캐싱 레이어에서 짧은 지연 시간을 달성한다.</p>
+<h3 id="1-Pre-established-connections"><a href="#1-Pre-established-connections" class="headerlink" title="1 - Pre-established connections"></a>1 - Pre-established connections</h3><p>캐시 클라이언트는 캐시 서버에 대한 개방형 연결 풀을 유지한다.애플리케이션이 캐시 요청을 해야할 때 새로운 TCP 연결을 설정하는 대신 풀에서 연결을 빌려온다. TCP 핸드셰이크는 캐시 응답 시간을 거의 두 배로 늘릴 수 있기 때문에 커넥션 풀을 사용하면 각 요청에 대한 TCP 핸드셰이크의 오버헤드를 피할 수 있다.</p>
+<p>하지만 커넥션을 계속 유지하면 클라이언트와 서버 모두 메모리와 기타 리소스가 소모되기 때문에 커넥션 수를 신중하게 조정해 리소스 사용량과 트래픽 급증을 처리하는 능력에 균형을 맞춰야 한다.</p>
+<h3 id="2-Fail-fast-approach"><a href="#2-Fail-fast-approach" class="headerlink" title="2 - Fail-fast approach"></a>2 - Fail-fast approach</h3><p>캐시 서버가 응답하지 않으면 클라이언트는 즉시 몇초 동안 캐시 서버를 다운 상태로 표시하고 요청을 실패로 처리해 캐시 미스를 처리한다. 즉, 클라이언트는 이 기간 동안 요청을 다시 시도하거나 문제가 있는 서버에 새 연결을 설정하려고 시도하지 않는다. 여기서 중요한 인사이트는 100ms의 짧은 재시도 지연도 과부하 상태에서는 연쇄적 장애를 일으킬 수 있다는 점이다. 수 많은 재시도로 인해 연쇄적 시스템 다운이 발생하는 문제를 예방할 수 있다. 하지만 그 대가로 서버에 일시적 문제가 발생하면 캐시 누락이 약간 증가할 수 있다. 이는 시스템 전체가 중단되는 위험보다 훨씬 낮은 위험도다. 0.01%의 요청이 장애를 유발한다면 99.99%의 캐시 적중률은 무의미하다. 완벽한 효율성보다 안정성을 우선시 하는게 좋은 선택이다. </p>
+<h2 id="Keeping-Cache-Servers-Warm"><a href="#Keeping-Cache-Servers-Warm" class="headerlink" title="Keeping Cache Servers Warm"></a>Keeping Cache Servers Warm</h2><p>다음 목표는 캐시 서버를 웜업된 상태로 유지하는 것이다.</p>
+<h3 id="1-Planning-for-Failure-with-Mirrored-and-Gutter-pool"><a href="#1-Planning-for-Failure-with-Mirrored-and-Gutter-pool" class="headerlink" title="1 - Planning for Failure with Mirrored and Gutter pool"></a>1 - Planning for Failure with Mirrored and Gutter pool</h3><p>장애를 처리하기 위해 fallback 캐시 풀을 사용한다. 이 전략은 두 가지 접근방식을 혼용해서 사용해 캐시 서버 장애를 처리하고 고가용성을 유지하도록 설계되었다.</p>
+<ul>
+<li>Mirror pool : 완전히 동기화된 보조 캐시 풀로, 모든 쓰기를 수신하고 기본 풀에 장애가 발생하면 즉시 읽기 트래픽을 옮길 수 있다.</li>
+<li>Gutter pool : 기본 풀이 실패할 때 짧은 TTL로 값을 임시로 캐시해 기본 풀이 복구될 때까지 백엔드의 부하를 줄여주는 작고 비어있는 캐시 풀이다. 이 방법은 Facebook이 Memcached로 캐싱 아키텍처를 구축할 때도 사용한 기법이다.</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240619131621386.png" alt=""></p>
+<p>여기에도 서버 크기와 관련해 고려해야 할 장단점이 있다. 예를 들어 서버가 작을수록 다음과 같은 이점이 있다.</p>
+<ul>
+<li>세분화된 장애 영향 : 소규모 캐시 서버가 많으면 단일 서버의 장애가 캐시된 데이터의 더 작은 부분에 영향을 미친다. 따라서 전체 트래픽의 더 작은 하위 집합을 처리해야 하므로 폴팩 풀이 더 효과적일 수 있다.</li>
+<li>더 빠른 워밍업 : 소규모 서버에 장애가 발생해 거터 풀이 이를 대신하면 데이터 볼륨이 작기 때문에 해당 서버의 키 공간에 대한 캐시를 더 빨리 워밍업할 수 있다.</li>
+</ul>
+<p>하지만 소규모 서버에는 단점도 있다.</p>
+<ul>
+<li>더 많은 수의 서버를 관리하면 운영 복잡성이 증가한다.</li>
+<li>각 애플리케이션 서버가 모든 캐시 서버에 대한 연결을 유지해야 하므로 연결 오버헤드가 증가한다.</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240619131922980.png" alt=""></p>
+<ul>
+<li>간소화된 관리 : 다수의 소규모 인스턴스에 비해 적은 수의 대규모 서버가 관리 및 유지보수가 더 쉽다. 전체 시스템에서 움직이는 부품이 적고 복잡성이 적다.</li>
+<li>리소스 활용도 향상 : 서버가 클수록 사용 가능한 CPU, 메모리, 네트워크 리소스를 더 효과적으로 활용할 수 있어 비용 효율성이 향상된다.</li>
+<li>커넥션 수 감소 : 캐시 서버 수가 적으면 애플리케이션 서버의 총 커넥션 수가 줄어들어 연결 오버헤드가 최소화된다.</li>
+</ul>
+<p>서버가 커지면 몇 가지 단점도 있다.</p>
+<ul>
+<li>대규모 서버에 장애가 발생하면 캐시된 데이터의 더 많은 부분을 사용할 수 없게 된다. 폴백 풀은 더 많은 양의 트래픽을 처리해야 하므로 잠재적으로 백엔드의 부하가 증가할 수 있다.</li>
+<li>장애가 발생하면 데이터 볼륨이 증가하기 때문에 더 큰 키 공간을 위해 캐시를 워밍업하는데 시간이 더 오래 걸릴 수 있다.</li>
+</ul>
+<p>따라서 빠른 장애 조치를 위해 미러 풀을 사용하고 임시 캐싱을 위해 거터 풀을 사용하는 전략이 가용성과 비용 간의 균형을 맞출 수 있다. 미러 풀은 즉각적인 가용성을 보장한다. 반면 거터 풀은 장애를 일시적으로 처리할 수 있는 비용 효율적인 방법을 제공한다.</p>
+<h3 id="2-Dedicated-Pools"><a href="#2-Dedicated-Pools" class="headerlink" title="2 - Dedicated Pools"></a>2 - Dedicated Pools</h3><p>캐시 서버를 웜업하기 위해 사용하는 또 다른 기술은 특정 사용 사례에 전용 캐시 풀을 사용하는 것이다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240619132304168.png" alt=""></p>
+<ul>
+<li><strong>Identifying high-value data</strong>: 애플리케이션의 데이터 액세스 패턴을 분석하고 성능, 정확성 또는 사용자 경험에 중요한 데이터 세트를 식별하는 것이다. 여기에는 자주 액세스하는 구성 설정, 중요한 사용자별 데이터 또는 계산 비용이 많이 드는 결과가 포함될 수 있다.</li>
+<li><strong>Creating dedicated pools</strong>: 하나의 공유 캐시 풀에 의존하는 대신, 가치가 높은 각 데이터 세트에 대해 별도의 풀을 만들 수 있다. 이런 전용 풀은 자체적으로 할당된 메모리가 있으며 기본 캐시 풀과 독립적으로 작동한다.</li>
+<li><strong>Reserving memory</strong>: 각 풀에 전용 메모리를 할당함으로써 중요도가 높은 데이터가 캐시에서 보장된 공간을 확보할 수 있도록 한다. 이렇게 하면 메모리 사용량이 많은 상황에서도 중요도가 낮은 다른 데이터가 중요한 정보를 밀어내는 것을 방지할 수 있다.</li>
+<li><strong>Tailored eviction policies</strong>: 각 전용 풀은 데이터 세트의 특정 특성에 맞게 퇴출 정책을 설정할 수 있다. 예를 들어, 계싼 비용이 많이 드는 데이터를 보관하는 풀은 자주 업데이트되는 데이터가 있는 풀에 비해 TTL이 더 길거나 다른 퇴출 알고리즘을 사용할 수 있따.</li>
+</ul>
+<p>전용 풀 전략에는 몇 가지 장점이 있다.</p>
+<ul>
+<li>중요 데이터의 캐시 적중률 향상</li>
+<li>데이터 정확도 향상</li>
+<li>캐시 관리의 유연성</li>
+</ul>
+<h3 id="3-Handling-Hot-Keys"><a href="#3-Handling-Hot-Keys" class="headerlink" title="3 - Handling Hot Keys"></a>3 - Handling Hot Keys</h3><p>핫키를 처리하는데 크게 두 가지 전략을 사용한다.</p>
+<h4 id="Key-Splitting"><a href="#Key-Splitting" class="headerlink" title="Key Splitting"></a>Key Splitting</h4><ul>
+<li>클라이언트는 한 버전에서 데이터를 읽지만 일관성을 위해 모든 버전에 데이터를 쓴다.</li>
+<li>키 분할의 과제는 핫 키를 실시간으로 감지하고 모든 클라이언트에서 분할 프로세스를 조정하는 일이다.</li>
+<li>핫 키를 식별하고 분할 계수를 결정하고 모든 클라이언트가 동시에 분할을 수행해 불일치를 방지하는 파이프라인이 필요하다.</li>
+<li>핫키 목록은 동적이며 실제 이벤트나 트렌드에 따라 변경될 수 있으므로 감지 및 분할 프로세스는 반응성이 뛰어나야 한다.</li>
+</ul>
+<h4 id="Local-Caching"><a href="#Local-Caching" class="headerlink" title="Local Caching"></a>Local Caching</h4><ul>
+<li>로컬 캐싱은 클라이언트 간의 조정이 필요하지 않지만, 업데이트가 자주 발생하는 경우 약한 일관성이 발생할 수 있다.</li>
+<li>이를 완화하기 위해 로컬 캐시는 TTL을 짧게 사용하고 변경이 거의 없는 데이터에만 적용하는 편이 좋다.</li>
+</ul>
+<h3 id="Avoiding-Thundering-Herds"><a href="#Avoiding-Thundering-Herds" class="headerlink" title="Avoiding Thundering Herds"></a>Avoiding Thundering Herds</h3><p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240619132950090.png" alt=""></p>
+<p>레비뉴캣은 쓰기 중에 캐시를 업데이트해 캐시 일관성을 유지하므로 이런 상황을 피할 수 있다. 그러나 낮은 TTL과 DB 변경으로 인한 무효화를 사용하는 경우 thundering herd problem을 유발시킬 수 있다. 이를 피하기 위한 잠재적 해결책은 다음과 같다.</p>
+<ul>
+<li>Recache policy : GET 요청에 리캐싱 정책을 포함할 수 있다. 남은 TTL이 주어진 값보다 작으면 클라이언트 중 하나가 미스를 받고 캐시에 값을 다시 채우는 반면 다른 클라이언트는 기존 값을 계속 사용한다.</li>
+<li>Stale policy : 삭제 명령에서는 키는 오래된 것으로 표시한다. 다른 클라이언트가 이전 값을 계속 사용하는 동안 한 클라이언트만 미스를 받는다.</li>
+<li>Lease policy : 이 정책에서는 한 클라이언트만 값을 다시 채울 수 있는 권한을 획득하고 패자는 승자가 다시 채울 때까지 기다려야 한다. Facebook의 memcached 설정에서 이 정책을 사용한다.</li>
+</ul>
+<h2 id="Cache-Server-Migrations"><a href="#Cache-Server-Migrations" class="headerlink" title="Cache Server Migrations"></a>Cache Server Migrations</h2><p>적중률과 사용자 경험에 미치는 영향을 최소화하면서 캐시 서버를 교체하기 위해 다음 단계로 구성된 캐시 서버 마이그레이션 시스템을 구축했다.</p>
+<ol>
+<li>새 클러스터 워밍업<ul>
+<li>트래픽을 전환하기 전에 팀은 새 캐시 클러스터를 워밍업하기 시작한다.</li>
+<li>기존 클러스터의 모든 쓰기를 미러링해 새 클러스터를 채운다.</li>
+<li>이렇게 하면 새 클러스터가 요청을 처리하기 전에 가장 최신의 데이터를 확보할 수 있다.</li>
+</ul>
+</li>
+<li>읽기 비율 전환<ul>
+<li>새 클러스터가 충분히 워밍업되면 읽기 트래픽의 일정 비율을 점차적으로 새 클러스터로 전환한다.</li>
+<li>이를 통해 실제 부하에서 새 클러스터의 성능과 안정성을 테스트할 수 있다.</li>
+</ul>
+</li>
+<li>모든 트래픽 전환<ul>
+<li>새 클러스터의 안정성과 성능이 입증되면 트래픽을 해당 클러스터로 전환한다.</li>
+<li>이 시점에서 새 클러스터가 기본 캐시 클러스터가 되어 모든 읽기 및 쓰기 요청을 처리한다.</li>
+<li>이전 클러스터는 한동안 계속 실행되며 쓰기는 미러링된다. 이렇게 함으로써 문제 발생시 폴백을 빠르게 수행할 수 있도록 한다.</li>
+</ul>
+</li>
+<li>이전 클러스터 해제<ul>
+<li>새 클러스터를 기본 클러스터로 설정해 일정 기간 안정적으로 운영한 후 기존 클러스터를 폐기한다.</li>
+</ul>
+</li>
+</ol>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240619133738565.png" alt=""></p>
+<p>분산 시스템에서 캐싱을 사용할 때 데이터 일관성을 유지하는 것은 가장 큰 과제 중 하나다. 근본적 문제는 데이터가 기본 데이터베이스와 캐시 등 여러 곳에 저장된다는 점이다. 동시 읽기 및 쓰기가 발생하는 상황에서 이런 인프라의 동기화를 유지하는 것은 결코 간단한 문제가 아니다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240619133903058.png" alt=""></p>
+<p>위 문제에서 살펴볼 수 있듯이 서로 다른 클라이언트가 서로 다른 시점에 다른 연산으로 인해 트리거된 작업이 캐시 일관성을 깨트리는 문제를 볼 수 있다.</p>
+<h3 id="1-Write-Failure-Tracking"><a href="#1-Write-Failure-Tracking" class="headerlink" title="1 - Write Failure Tracking"></a>1 - Write Failure Tracking</h3><p>레비뉴 캣의 시스템에서 캐시 쓰기 실패는 캐시와 기본 스토어 간에 불일치가 있을 수 있다는 강력한 신호다. 그러나 앞서 설명한 것처럼 연쇄적인 실패와 과부하로 이어질 수 있으므로 단순히 쓰기를 다시 시도하는 것보다 더 나은 옵션이 있다. 캐싱 클라이언트는 모든 쓰기 실패를 기록하고 이 데이터의 중복을 제거한 후 영향을 받은 키가 캐시에서 적어도 한 번은 무효화 되도록 한다. 필요에 따라 작업이 성공할 때 까지 재시도 하도록 처리한다. 이렇게 하면 해당 키에 대한 다음 읽기 작업이 기본 저장소에서 새로운 데이터를 가져와 캐시를 다시 동기화할 수 있다.</p>
+<p>이런 쓰기 실패 추적을 통해 캐시 쓰기가 항상 성공해야 하는 것처럼 처리할 수 있으므로 일관성 모델이 크게 간소화된다. 쓰기가 성공했다고 가정하고, 실패한 경우 트래커가 최종적으로 일관성을 보장한다.</p>
+<h3 id="2-Consistent-CRUD-Operations"><a href="#2-Consistent-CRUD-Operations" class="headerlink" title="2 - Consistent CRUD Operations"></a>2 - Consistent CRUD Operations</h3><p>각 데이터 작업 유형에 대해 캐시와 기본 저장소를 동기화하기 위한 전략을 개발했다.</p>
+<p>읽기의 경우 캐시에서 읽고 실패하면 기본 저장소에서 읽고 캐시를 채우는 표준 cache-aside 패턴을 사용한다. 새로운 값을 덮어쓰지 않도록 항상 “add” 연산을 통해 키가 존재하지 않는 경우에만 성공하는 방식으로 채운다.</p>
+<p>업데이트의 경우 다음과 같은 전략을 사용한다.</p>
+<ul>
+<li>업데이트 전에 캐시 항목의 TTL을 30초와 같이 낮은 값으로 줄인다.</li>
+<li>기본 데이터 저장소를 업데이트 한다.</li>
+<li>업데이트 후 캐시를 새 값으로 교체하고 TTL을 재설정한다.</li>
+</ul>
+<p>1단계와 2단계 사이에서 장애가 발생하면 업데이트가 기본 저장소에 도달하지 않으므로 캐시는 일관성을 유지한다. 2단계와 3단계 사이에 실패가 발생하면 캐시가 부실해지지만 감소된 TTL이 만료되는 짧은 시간동안만 유지된다. 또한 모든 완전한 실패는 앞서 설명한 쓰기 실패 추적에 의해 감지된다.</p>
+<p>삭제의 경우 기본 저장소 삭제 전에 유사한 TTL 감소 전략을 사용한다.</p>
+<!-- flag of hidden posts --></div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined">Song Hayoung</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="https://songhayoung.github.io/2024/06/19/System%20Design/engineering/scaling-to-12-billion-daily-api-requests/">https://songhayoung.github.io/2024/06/19/System%20Design/engineering/scaling-to-12-billion-daily-api-requests/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/System-Design/">System Design</a></div><nav id="pagination"></nav><div id="gitalk-container"></div><script>var gitalk = new Gitalk({
+  clientID: '3604b61642355579f55e',
+  clientSecret: 'f552120f18ac5aee3f6297e05e97d94c0a25cd4b',
+  repo: 'SongHayoung.github.io',
+  owner: 'SongHayoung',
+  admin: 'SongHayoung',
+  id: md5(decodeURI(location.pathname)),
+  language: 'en'
+})
+gitalk.render('gitalk-container')</script></div></div><footer class="footer-bg" style="background-image: url(https://xxxx.jpg)"><div class="layout" id="footer"><div class="copyright">&copy;2020 - 2024 By Song Hayoung</div><div class="framework-info"><span>Driven - </span><a target="_blank" rel="noopener" href="http://hexo.io"><span>Hexo</span></a><span class="footer-separator">|</span><span>Theme - </span><a target="_blank" rel="noopener" href="https://github.com/Molunerfinn/hexo-theme-melody"><span>Melody</span></a></div><div class="footer_custom_text">Learning how to walk slowly to not miss important things</div><div class="busuanzi"><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><span id="busuanzi_container_page_pv"><i class="fa fa-file"></i><span id="busuanzi_value_page_pv"></span><span></span></span></div></div></footer><i class="fa fa-arrow-up" id="go-up" aria-hidden="true"></i><script src="https://cdn.jsdelivr.net/npm/animejs@latest/anime.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@latest/velocity.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-ui-pack@latest/velocity.ui.min.js"></script><script src="/js/utils.js?version=1.7.0"></script><script src="/js/fancybox.js?version=1.7.0"></script><script src="/js/sidebar.js?version=1.7.0"></script><script src="/js/copy.js?version=1.7.0"></script><script src="/js/fireworks.js?version=1.7.0"></script><script src="/js/transition.js?version=1.7.0"></script><script src="/js/scroll.js?version=1.7.0"></script><script src="/js/head.js?version=1.7.0"></script><script src="/js/search/algolia.js"></script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+    processEscapes: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  },
+  CommonHTML: {
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "HTML-CSS": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "SVG": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  }
+});
+</script><script type="text/x-mathjax-config">MathJax.Hub.Queue(function() {
+  var all = MathJax.Hub.getAllJax(), i;
+  for (i=0; i < all.length; i += 1) {
+    all[i].SourceElement().parentNode.className += ' has-jax';
+  }
+});
+</script><script src="https://cdn.jsdelivr.net/npm/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><script>if(/Android|webOS|iPhone|iPod|iPad|BlackBerry/i.test(navigator.userAgent)) {
+  $('#nav').addClass('is-mobile')
+  $('footer').addClass('is-mobile')
+  $('#top-container').addClass('is-mobile')
+}</script><div class="search-dialog" id="algolia-search"><div class="search-dialog__title" id="algolia-search-title">Algolia</div><div id="algolia-input-panel"><div id="algolia-search-input"></div></div><hr><div id="algolia-search-results"><div id="algolia-hits"></div><div id="algolia-pagination"></div><div id="algolia-stats"></div></div><span class="search-close-button"><i class="fa fa-times"></i></span></div><div class="search-mask"></div></body></html>
