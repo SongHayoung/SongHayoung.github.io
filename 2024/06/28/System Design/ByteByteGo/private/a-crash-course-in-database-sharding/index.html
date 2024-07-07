@@ -1,0 +1,222 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="description" content="[ByteByteGo] A Crash Course in Database Sharding"><meta name="keywords" content="System Design"><meta name="author" content="Song Hayoung"><meta name="copyright" content="Song Hayoung"><title>[ByteByteGo] A Crash Course in Database Sharding | SUMFIのBlog</title><meta name="robots" content="noindex"><link rel="shortcut icon" href="/songcon.ico"><link rel="stylesheet" href="/css/index.css?version=1.7.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@latest/css/font-awesome.min.css?version=1.7.0"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css?version=1.7.0"><meta name="format-detection" content="telephone=no"><meta http-equiv="x-dns-prefetch-control" content="on"><link rel="dns-prefetch" href="https://cdn.jsdelivr.net"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.css"><script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.js" defer></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@latest/dist/gitalk.min.js"></script><script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.10.0/js/md5.min.js"></script><link rel="dns-prefetch" href="https://www.google-analytics.com"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-169368422-1', 'auto');
+ga('send', 'pageview');</script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: {"appId":"7LZ6OJ4D6C","apiKey":"9a84e13f74ea78c3fd54512c10139c56","indexName":"git blog","hits":{"per_page":10},"languages":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}.","hits_stats":"${hits} results found in ${time} ms"}},
+  localSearch: undefined,
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  }
+} </script><meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/rss2.xml" title="SUMFIのBlog" type="application/rss+xml">
+</head><body><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar" data-display="true"><div class="toggle-sidebar-info text-center"><span data-toggle="Toggle article">Toggle site</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">Catalog</div><div class="sidebar-toc__progress"><span class="progress-notice">You've read</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#A-Crash-Course-in-Database-Sharding"><span class="toc-number">1.</span> <span class="toc-text">A Crash Course in Database Sharding</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#What-is-Sharding"><span class="toc-number">2.</span> <span class="toc-text">What is Sharding?</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Benefits-of-Database-Sharding"><span class="toc-number">2.1.</span> <span class="toc-text">Benefits of Database Sharding</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Sharding-and-Replication"><span class="toc-number">2.2.</span> <span class="toc-text">Sharding and Replication</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Types-of-Sharding"><span class="toc-number">3.</span> <span class="toc-text">Types of Sharding</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Range-Based-Sharding"><span class="toc-number">3.1.</span> <span class="toc-text">Range-Based Sharding</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Key-or-Hash-Based-Sharding"><span class="toc-number">3.2.</span> <span class="toc-text">Key or Hash-Based Sharding</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Directory-Based-Sharding"><span class="toc-number">3.3.</span> <span class="toc-text">Directory Based Sharding</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Factors-to-Consider-When-Selecting-a-Shard-Key"><span class="toc-number">4.</span> <span class="toc-text">Factors to Consider When Selecting a Shard Key</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Cardinality"><span class="toc-number">4.1.</span> <span class="toc-text">Cardinality</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Frequency"><span class="toc-number">4.2.</span> <span class="toc-text">Frequency</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Monotonic-Change"><span class="toc-number">4.3.</span> <span class="toc-text">Monotonic Change</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Rebalancing-the-Shards"><span class="toc-number">5.</span> <span class="toc-text">Rebalancing the Shards</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Fixed-Number-of-Shards"><span class="toc-number">5.1.</span> <span class="toc-text">Fixed Number of Shards</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Dynamic-Shards"><span class="toc-number">5.2.</span> <span class="toc-text">Dynamic Shards</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Request-Routing-in-a-Sharded-Database"><span class="toc-number">6.</span> <span class="toc-text">Request Routing in a Sharded Database</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#MongoDB%E2%80%99s-Sharding-Architecture-A-Case-Study"><span class="toc-number">7.</span> <span class="toc-text">MongoDB’s Sharding Architecture - A Case Study</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Shard"><span class="toc-number">7.1.</span> <span class="toc-text">Shard</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Mongos-Router"><span class="toc-number">7.2.</span> <span class="toc-text">Mongos Router</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Config-Servers"><span class="toc-number">7.3.</span> <span class="toc-text">Config Servers</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Real-World-Industry-Case-Studies-of-Sharding"><span class="toc-number">8.</span> <span class="toc-text">Real-World Industry Case Studies of Sharding</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Notion"><span class="toc-number">8.1.</span> <span class="toc-text">Notion</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-Selecting-the-Table-to-Shard"><span class="toc-number">8.1.1.</span> <span class="toc-text">1 - Selecting the Table to Shard</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-Choosing-the-Sharding-Key"><span class="toc-number">8.1.2.</span> <span class="toc-text">2 - Choosing the Sharding Key</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-The-Number-of-Shards"><span class="toc-number">8.1.3.</span> <span class="toc-text">3 - The Number of Shards</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Lessons-Learned"><span class="toc-number">8.1.4.</span> <span class="toc-text">Lessons Learned</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Discord"><span class="toc-number">8.2.</span> <span class="toc-text">Discord</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Summary"><span class="toc-number">9.</span> <span class="toc-text">Summary</span></a></li></ol></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="https://avatars3.githubusercontent.com/u/37806785?s=460&amp;u=8c68d685faf7c5280cfbd736a6b1730b55fb4203&amp;v=4"></div><div class="author-info__name text-center">Song Hayoung</div><div class="author-info__description text-center"></div><div class="follow-button"><a target="_blank" rel="noopener" href="https://www.linkedin.com/in/hayoung-song-9523b61bb/">Follow Me</a></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="/archives"><span class="pull-left">Articles</span><span class="pull-right">10832</span></a><a class="author-info-articles__tags article-meta" href="/tags"><span class="pull-left">Tags</span><span class="pull-right">193</span></a><a class="author-info-articles__categories article-meta" href="/categories"><span class="pull-left">Categories</span><span class="pull-right">61</span></a></div><hr><div class="author-info-links"><div class="author-info-links__title text-center">VISITED</div><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Seoul Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Jeju Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">British Columbia Canada</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Boracay Philippines</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">三重　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">大阪　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">名古屋　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">静岡　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">札幌　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">京都　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Bangkok Thailand</a></div></div></div><div id="content-outer"><div id="top-container" style="background-image: url(https://xxxx.jpg)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="/">SUMFIのBlog</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus">   <a class="site-page" href="/">Home</a><a class="site-page" href="/archives">Archives</a><a class="site-page" href="/tags">Tags</a><a class="site-page" href="/categories">Categories</a><a class="site-page" href="/about">About</a></span><span class="pull-right"><a class="site-page social-icon search"><i class="fa fa-search"></i><span> Search</span></a></span></div><div id="post-info"><div id="post-title">[ByteByteGo] A Crash Course in Database Sharding</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2024-06-28</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/">System Design</a><i class="fa fa-angle-right" aria-hidden="true"></i><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/Byte-Byte-Go/">Byte Byte Go</a><div class="post-meta-wordcount"><span>Word count: </span><span class="word-count">3k</span><span class="post-meta__separator">|</span><span>Reading time: 18 min</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div class="article-container" id="post-content"><h2 id="A-Crash-Course-in-Database-Sharding"><a href="#A-Crash-Course-in-Database-Sharding" class="headerlink" title="A Crash Course in Database Sharding"></a>A Crash Course in Database Sharding</h2><span id="more"></span>
+<p>애플리케이션의 인기가 높아지면 더 많은 활성 사용자를 끌어들이고 추가 기능을 통합한다. 이런 성장은 매일 데이터 생성의 증가로 이어지며, 이는 비즈니스 관점에서 긍정적인 지표다. 그러나 이는 특히 데이터베이스 확장성 측면에서 애플리케이션의 아키텍처에 문제를 야기할 수도 있다.</p>
+<p>데이터베이스는 모든 애플리케이션의 핵심 구성 요소이지만 수평적으로 확장하기 가장 어려운 구성 요소 중 하나다. 애플리케이션에 트래픽과 데이터 양이 증가하면 데이터베이스가 성능 병목 현상이 발생해 사용자 경험에 영향을 미칠 수 있다.</p>
+<p>샤딩은 수평적 데이터베이스 확장의 문제를 해결하는 기술이다. 여기에는 데이터베이스를 샤드라고 하는 더 작고 관리하기 쉬운 단위로 분할하는 것이 포함된다. 이 글에서는 데이터베이스 샤딩의 기본 사항을 다루면서 다양한 접근 방식, 기술적 고려 사항, 그리고 기업들이 데이터베이스를 확장하기 위해 샤딩을 구현한 실제 사례 연구를 살펴본다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240628134925530.png" alt=""></p>
+<h2 id="What-is-Sharding"><a href="#What-is-Sharding" class="headerlink" title="What is Sharding?"></a>What is Sharding?</h2><p>샤딩은 데이터베이스에서 대규모 데이터세트를 관리하고 쿼리할 때 발생하는 문제를 해결하는 아키텍처 패턴이다. 여기에는 큰 데이터베이스를 샤드라고 하는 더 작고 관리하기 쉬운 부분으로 분할하는 것이 포함된다. 샤딩은 파티션 키를 기반으로 테이블의 행을 여러 개의 테이블로 나누는 수평 파티셔닝 개념을 기반으로 한다. 이런 테이블을 파티션이라고 한다. 데이터를 여러 파티션에 분산하면 데이터를 쿼리하고 조작하는데 필요한 노력이 줄어든다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240628135115088.png" alt=""></p>
+<p>데이터베이스 샤딩은 수평적 파티셔닝을 한 단계 더 발전시킨 것이다. 파티셔닝은 모든 데이터 그룹을 동일한 컴퓨터 내에 저장하는 반면, 샤딩은 여러 컴퓨터 또는 노드에 분산 저장한다. 이 접근 방식은 여러 컴퓨터의 리소스를 활용해 확장성과 성능을 개선할 수 있다.</p>
+<p>샤딩에 사용되는 용어는 데이터베이스마다 다르다는 점에 주목할 필요가 있다.</p>
+<ul>
+<li>MongoDB에서는 파티션을 샤드라고 한다.</li>
+<li>Couchbase는 샤드를 표현하기 위해 vBucket이라는 용어를 사용한다.</li>
+<li>Cassandra는 샤드를 vNode라고 한다.</li>
+</ul>
+<p>용어의 차이에도 불구하고 쿼리 성능과 확장성을 개선하기 위해 데이터를 더 작고 관리하기 쉬운 단위로 분할한다는 기본 개념은 동일하게 유지된다.</p>
+<h3 id="Benefits-of-Database-Sharding"><a href="#Benefits-of-Database-Sharding" class="headerlink" title="Benefits of Database Sharding"></a>Benefits of Database Sharding</h3><ul>
+<li><strong>Scalability:</strong> 샤딩의 주된 동기는 확장성을 확보하기 위해서다. 대규모 데이터 세트를 여러 샤드에 분산하면 쿼리 부하를 여러 노드에 분산할 수 있다. 단일 샤드에서 작동하는 쿼리의 경우, 각 노드는 할당된 데이터에 대한 쿼리를 독립적으로 실행할 수 있다. 또한, 유지보수를 위해 애플리케이션을 종료할 필요 없이 런타임에 새 샤드를 동적으로 추가할 수 있다.</li>
+<li><strong>Improved Performance:</strong> 하나의 대규모 데이터베이스에서 데이터를 검색하는데는 많은 시간이 소요될 수 있다. 쿼리는 필요한 데이터를 찾기 위해 방대한 수의 행을 검색해야 한다. 반면 사드에는 전체 데이터베이스에 비해 더 작은 행의 하위 집합이 포함되어 있다. 이렇게 검색 공간이 줄어들면 쿼리에서 처리해야 할 행 수가 줄어들기 때문에 데이터를 더 빠르게 검색할 수 있다.</li>
+<li><strong>Availability:</strong> 모놀리식 데이터베이스 아키텍처에서는 데이터베이스를 호스팅하는 노드에 장애가 발생하면 종속 애플리케이션도 다운타임을 경험하게 된다. 데이터베이스 샤딩은 데이터를 여러 노드에 분산하여 이런 위험을 완화한다. 노드에 장애가 발생해도 애플리케이션은 나머지 샤드를 사용해 계속 작동할 수 있다.</li>
+</ul>
+<h3 id="Sharding-and-Replication"><a href="#Sharding-and-Replication" class="headerlink" title="Sharding and Replication"></a>Sharding and Replication</h3><p>샤딩은 분산 데이터베이스 시스템에서 고가용성 및 내결함성을 달성하기 위해 복제와 함께 자주 사용된다. 복제에는 데이터의 복사본을 여러 개 만들어 서로 다른 노드에 저장하는 작업이 포함된다. 리더-팔로워 복제 모델에서는 한 노드가 리더 역할을 하며 쓰기 작업을 처리하고, 팔로워 노드는 리더의 데이터를 복제하고 읽기 작업을 처리한다.</p>
+<p>각 샤드를 여러 노드에 복제함으로써 시스템은 개별 노드에 장애가 발생하더라도 데이터에 계속 액세스할 수 있도록 보장한다. 노드는 여러 개의 샤드를 저장할 수 있으며, 각 샤드는 리더-팔로워 복제 모델에서 리더 또는 팔로워가 될 수 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240628135706367.png" alt=""></p>
+<p>이 설정에서 노드는 일부 파티션의 리더 역할과 다른 파티션의 팔로워 역할을 동시에 수행할 수 있다. 이런 분산 아키텍처를 통해 노드 장애 또는 네트워크 중단시에도 데이터 가용성과 복원력을 유지할 수 있다.</p>
+<h2 id="Types-of-Sharding"><a href="#Types-of-Sharding" class="headerlink" title="Types of Sharding"></a>Types of Sharding</h2><p>데이터베이스 샤딩의 주요 목적은 데이터와 쿼리 부하를 여러 노드에 고르게 분산하는 것이다. 그러나 데이터 분할이 균형을 이루지 못하면 일부 샤드가 다른 샤드에 비해 불균형적으로 더 많은 양의 데이터나 쿼리를 처리하게 될 수 있다. 이런 시나리오를 왜곡된 샤드라고 하며, 샤딩의 이점을 감소시킨다.</p>
+<p>극단적인 경우, 샤딩 전략을 잘못 설계하면 하나의 샤드가 전체 부하를 감당하는 반면 나머지 샤드는 유휴 상태로 남게 될 수 있다. 이런 상황을 핫스팟이라고 하며, 한 노드가 불균형적으로 높은 부하로 인해 과부하가 걸리게 된다.</p>
+<p>왜곡된 샤드와 핫스팟의 위험을 완화하려면 샤드 전체에 데이터와 쿼리가 균등하게 분산되도록 하는 적절한 샤딩 전략을 선택하는 것이 중요하다.</p>
+<h3 id="Range-Based-Sharding"><a href="#Range-Based-Sharding" class="headerlink" title="Range-Based Sharding"></a>Range-Based Sharding</h3><p>범위 기반 샤딩은 값의 범위를 기준으로 데이터베이스 행을 분할하는 기술이다. 이 접근 방식에서는 각 샤드에 최소값에서 최대값에 이르는 연속적인 키 범위가 할당된다. 각 샤드 내의 키는 효율적인 범위 스캔을 위해 정렬된 순서로 유지된다. 이 개념을 설명하기 위해 제품 정보를 저장하는 제품 데이터베이스를 예로 들어보자.</p>
+<p>범위 기반 샤딩을 적용하면 제품의 가격 범위에 따라 데이터베이스를 여러 개의 샤드로 분할할 수 있다. 예를 들어 한 샤드에는 <code>$0 ~ $75</code> 가격대의 모든 제품을 저장하고, 다른 샤드에는 <code>$76 ~ $150</code> 가격대의 제품을 포함할 수 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240628140251277.png" alt=""></p>
+<p>키의 범위가 반드시 균등한 간격일 필요는 없다는 점에 유의해야 한다. 실제 애플리케이션에서는 데이터 분포가 균일하지 않을 수 있으며, 이에 따라 키 범위를 조정해 샤드 전체에 균형 잡힌 데이터 분포를 달성할 수 있다.</p>
+<p>그러나 범위 기반 샤딩에는 잠재적 단점이 있다. 특정 액세스 패턴으로 인해 핫스팟이 형성될 수 있다. 예를 들어, 데이터베이스에 있는 제품의 상당 부분이 특정 가격 범위에 속하는 경우, 해당 범위를 저장하는 샤드에는 불균형적으로 높은 부하가 발생하는 반면 다른 샤드는 활용도가 낮은 상태로 유지될 수 있다.</p>
+<h3 id="Key-or-Hash-Based-Sharding"><a href="#Key-or-Hash-Based-Sharding" class="headerlink" title="Key or Hash-Based Sharding"></a>Key or Hash-Based Sharding</h3><p>해시 기반 샤딩이라고도 하는 키 기반 샤딩은 해시 함수를 사용해 샤드에 특정 키를 할당하는 기술이다. 잘 설계된 해시 함수는 키의 균형 잡힌 분배를 달성하는데 중요한 역할을 한다. 해시 기반 샤딩은 각 샤드에 키 범위를 할당하는 대신 각 샤드에 해시 범위를 할당한다. 일관된 해싱은 해시 기반 샤딩을 구현하는데 자주 사용되는 기술 중 하나다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240628140525358.png" alt=""></p>
+<p>해시 기반 샤딩의 주요 장점 중 하나는 샤드 간에 키를 공정하게 분배할 수 있다는 점이다. 이 기술은 키에 해시 함수를 적용함으로써 핫스팟의 위험을 완화하는데 도움이 된다. 그러나 해시 기반 샤딩에는 단점이 있다. 키 자체 대신 키의 해시를 사용하면 효율적인 범위 쿼리를 수행할 수 없게 된다. 인접한 키가 여러 파티션에 흩어져 있을 수 있고, 그 과정에서 자연스러운 정렬 순서가 손실되기 때문이다.</p>
+<p>해시 기반 샤딩은 핫스팟을 줄이는데 도움이 되지만, 핫스팟을 완전히 제거할 수 없다는 점에 유의해야 한다. 모든 읽기 및 쓰기가 단일 키에 집중되는 극단적인 경우에 모든 요청이 여전히 동일한 파티션으로 라우팅된다. 예를 들어, 소셜 미디어 웹사이트에서 유명인 사용자가 동일한 키에 대량의 쓰기를 생성하는 콘텐츠를 게시할 수 있다.</p>
+<h3 id="Directory-Based-Sharding"><a href="#Directory-Based-Sharding" class="headerlink" title="Directory Based Sharding"></a>Directory Based Sharding</h3><p>디렉터리 기반 샤딩은 조회 테이블을 사용해 샤드 전반의 레코드 분포를 결정하는 접근 방식이다. 조회 테이블은 디록토리 또는 주소록 역할을 하며, 데이터와 데이터가 있는 특정 샤드 간의 관계를 매핑한다. 이 테이블은 샤드 자체와는 별도로 저장된다.</p>
+<p>아래 다이어그램은 “Location” 필드를 샤드 키로 사용하는 디렉터리 기반 샤딩의 개념을 설명한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240628140818702.png" alt=""></p>
+<p>디렉토리 기반 샤딩의 주요 장점 중 하나는 다른 샤딩 전략에 비해 유연성이 뛰어나다는 점이다. 데이터와 샤드 간의 매핑이 룩업 테이블에 명시적으로 정의되어 있기 때문에 샤드 간 데이터 배치를 더 잘 제어할 수 있다.</p>
+<p>그러나 디렉터리 기반 샤딩에는 룩업 테이블에 크게 의존한다는 중요한 단점도 있다. 조회 테이블과 관련된 모든 문제나 장애는 데이터베이스의 전반적인 성능과 가용성에 영향을 미칠 수 있다.</p>
+<h2 id="Factors-to-Consider-When-Selecting-a-Shard-Key"><a href="#Factors-to-Consider-When-Selecting-a-Shard-Key" class="headerlink" title="Factors to Consider When Selecting a Shard Key"></a>Factors to Consider When Selecting a Shard Key</h2><p>효과적인 샤딩 전략을 구현하려면 적절한 샤드 키를 선택하는 것이 중요하다. 데이터베이스 설계자는 이 결정을 내릴 때 몇 가지 주요 요소를 고려해야 한다.</p>
+<h3 id="Cardinality"><a href="#Cardinality" class="headerlink" title="Cardinality"></a>Cardinality</h3><p>카니덜리티는 샤드 키가 가질 수 있는 가능한 값의 수를 나타낸다. 카디널리티는 생성할 수 있는 샤드의 최대 개수를 결정한다.</p>
+<p>예를 들어 bool 데이터 필드를 샤드 키로선택하면 시스템은 2개의 샤드로만 제한된다. 수평 확장의 이점을 극대화하려면 일반적으로 카디널리티가 높은 샤드키를 선택하는 것이 좋다. </p>
+<h3 id="Frequency"><a href="#Frequency" class="headerlink" title="Frequency"></a>Frequency</h3><p>샤드 키의 빈도는 특정 샤드 키 값이 데이터 세트에 나타내는 빈도를 나타낸다. 레코드의 상당 부분이 가능한 샤드 키 값의 하위 집합만 포함하는 경우, 해당 하위 집합을 저장하는 샤드가 핫스팟이 될 수 있다.</p>
+<p>예를 들어, 피트니스 웹사이트의 데이터베이스가 나이를 샤드 키로 사용하는 경우, 대부분의 레코드가 30세에서 45세 사이의 구독자를 포함하는 샤드에 저장되어 데이터의 분포가 고르지 않게 될 수 있다.</p>
+<h3 id="Monotonic-Change"><a href="#Monotonic-Change" class="headerlink" title="Monotonic Change"></a>Monotonic Change</h3><p>단조로운 변화란 특정 레코드에 대해 시간이 지남에 따라 샤드 키 값이 증가하거나 감소하는 것을 말한다. 샤드 키가 단조롭게 증가하거나 감소하는 값을 기반으로 하는 경우, 샤드의 불균형이 발생할 수 있다.</p>
+<p>사용자 댓글을 저장하는 데이터베이스의 샤딩 체계를 생각해 보자.</p>
+<ul>
+<li>샤드 A는 댓글이 10개 미만인 사용자의 데이터를 저장한다.</li>
+<li>샤드 B는 댓글이 11~20개인 사용자에 대한 데이터를 저장한다.</li>
+<li>샤드 C는 댓글이 21개 이상인 사용자에 대한 데이터를 저장한다.</li>
+</ul>
+<p>사용자가 시간이 지남에 따라 계속해서 댓글을 추가하면 점차적으로 샤드 C로 마이그레이션되어 샤드 A와 샤드 B보다 불균형이 심해진다.</p>
+<h2 id="Rebalancing-the-Shards"><a href="#Rebalancing-the-Shards" class="headerlink" title="Rebalancing the Shards"></a>Rebalancing the Shards</h2><p>시간이 지남에 따라 데이터베이스는 노드 간에 데이터와 워크로드를 재분배해야 하는 다양한 변화를 겪게 된다. 이런 변화에는 다음이 포함된다.</p>
+<ul>
+<li>쿼리 처리량이 증가하면 CPU 리소스가 추가로 필요하다.</li>
+<li>데이터 세트 크기가 증가하면 더 많은 스토리지 용량이 필요하다.</li>
+<li>특정 머신에 장애가 발생하면 다른 머신이 그 책임을 이어 받는다.</li>
+</ul>
+<p>이런 모든 시나리오는 클러스터 내의 한 노드에서 다른 노드로 데이터와 요청을 이동해야 한다는 공통된 주제를 공유한다. 이 프로세스를 샤드 리밸런싱이라고 한다.</p>
+<p>샤드 리벨런싱은 몇 가지 주요 목표를 달성하는 것을 목적으로 한다.</p>
+<ul>
+<li>공정한 부하 분산 : 리밸런싱 프로세스 후에는 클러스터의 노드 간에 워크로드가 균등하게 분산되어야 한다.</li>
+<li>중단 최소화 : 데이터베이스는 리밸런싱 프로세스 중에도 읽기 및 쓰기 작업을 계속 해야 한다.</li>
+<li>효율적인 데이터 이동 : 노드 간에 이동되는 데이터의 양을 최소한으로 유지해야 한다.</li>
+</ul>
+<p>이런 목표를 고려할 때, 샤드 리밸런싱에는 여러 가지 접근 방식을 사용할 수 있으며 각각 장단점과 고려사항이 있다.</p>
+<h3 id="Fixed-Number-of-Shards"><a href="#Fixed-Number-of-Shards" class="headerlink" title="Fixed Number of Shards"></a>Fixed Number of Shards</h3><p>고정 파티션 구성에서 샤드 수는 데이터베이스가 처음 설정될 때 결정되며, 일반적으로 그 이후에는 변경되지 않는다.</p>
+<p>예를 들어, 10개의 노드로 구성된 클러스터에서 실행되는 데이터베이스를 생각해보자. 데이터베이스를 100개의 샤드로 분할하고 각 노드에 10개의 샤드를 할당할 수 있다. 총 샤드 수(100개)는 고정된 상태로 유지된다.</p>
+<p>클러스터에 새 노드가 추가되면 시스템은 공정한 분포를 유지하기 위해 기존 노드에서 새 노드로 몇 개의 샤드를 마이그레이션하여 샤드의 균형을 재조정 할 수 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240628141714694.png" alt=""></p>
+<p>이 접근 방식에서는 샤드의 수나 샤드에 대한 키 할당이 변경되지 않는다는 점에 유의해야 한다. 리밸런싱 과정에서 전체 샤드만 노드 간에 이동된다. 그러나 고정 파티션 접근 방식은 데이터의 총 크기가 매우 가변적인 경우 적절한 샤드 수를 선택하는데 어려움이 있다. 또한 단일 샤드의 크기를 결정할 때도 몇 가지 고려 사항이 필요하다.</p>
+<ul>
+<li>샤드가 너무 크면 노드 장애에 따른 리밸런싱과 복구에 많은 시간과 리소스가 소요될 수 있다.</li>
+<li>반면에 샤드가 너무 작으면 샤드를 유지 및 관리하는데 많은 오버헤드가 발생한다.</li>
+</ul>
+<h3 id="Dynamic-Shards"><a href="#Dynamic-Shards" class="headerlink" title="Dynamic Shards"></a>Dynamic Shards</h3><p>동적 샤딩은 데이터베이스에 저장된 총 데이터 양에 따라 샤드 수를 조정하는 접근 방식이다. 데이터 세트가 상대적으로 작은 경우, 동적 샤딩은 샤드 수를 적게 유지해 샤드 관리 및 유지 보수와 관련된 오버헤드를 최소화한다.</p>
+<p>데이터 세트가 성장해 상당한 크기에 도달하면 동적 샤딩은 확장된 데이터 볼륨을 수용하기 위해 자동으로 샤드 수를 늘린다. 각 파티션의 크기는 일반적으로 구성 가능한 최대 임계값으로 제한된다.</p>
+<p>새 샤드를 추가할 때 시스템은 기존 샤드의 데이터 일부를 새로 생성된 샤드로 재분배한다. 이 프로세스를 통해 데이터가 모든 샤드에 고르게 분산된다. 동적 샤딩의 주요 장점 중 하나는 유연성이다. 동적 샤딩은 범위 기반 샤딩과 해시 기반 샤딩 전략 모두에 적용할 수 있다.</p>
+<h2 id="Request-Routing-in-a-Sharded-Database"><a href="#Request-Routing-in-a-Sharded-Database" class="headerlink" title="Request Routing in a Sharded Database"></a>Request Routing in a Sharded Database</h2><p>데이터 세트를 샤딩한 후 가장 중요한 고려 사항은 클라이언트가 들어오는 요청에 대해 어떤 노드에 연결할지 결정하는 방법이다. 이 문제는 샤드의 밸런스가 재조정될 수 있고 노드에 대한 샤드 할당이 동적으로 변경될 수 있기 때문에 까다로운 문제가 된다.</p>
+<p>이 문제를 해결하기 위한 세 가지 주요 접근 방식이 있다.</p>
+<ul>
+<li><strong>Shard-Aware Node:</strong> 이 접근 방식에서는 클라이언트가 라운드 로빈 로드 밸런서를 사용해 모든 노드에 연결할 수 있다. 접촉한 노드가 요청과 관련된 샤드를 소유하고 있으면 요청을 직접 처리할 수 있다. 그렇지 않으면 요청을 적절한 샤드로 전달하고 응답을 클라이언트로 다시 라우팅한다.</li>
+<li><strong>Routing Tier:</strong> 이 접근 방식에서는 클라이언트 요청이 각 요청을 처리할 노드를 결정하는 전용 라우팅 계층으로 전송된다. 라우팅 계층은 요청을 적절한 노드로 전달하고 클라이언트에 응답을 반환한다. 애플리케이션은 노드가 아닌 라우팅 티어와 직접 통신한다.</li>
+<li><strong>Shard-Aware Client:</strong> 이 접근 방식에서는 클라이언트가 노드 간 샤드 분포를 인지한다. 클라이언트는 먼저 구성 서버에서 접속해 현재 샤드-노드 매핑을 얻는다. 그런 다음 클라이언트는 이 지식을 사용해 각 요청에 적합한 노드에 직접 연결할 수 있다.</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240628142323167.png" alt=""></p>
+<p>어떤 접근 방식을 선택하든, 라우팅 결정을 내리는 구성 요소가 샤드-노드 매핑에 대해 계속 업데이트되도록 하는 방법이라는 공통된 결정이 있다.</p>
+<p>데이터베이스마다 이를 달성하기 위해 서로 다른 매커니즘을 사용한다.</p>
+<ul>
+<li>LinkedIn의 Espresso는 클러스터 관리를 위해 Helix를 사용하며 구성 정보를 저장하기 위해 Zookeeper에 의존한다.</li>
+<li>MongoDB는 별도의 구성 서버와 전용 라우팅 계층을 활용한다.</li>
+<li>Cassandra는 노드 간에 가십 프로토콜을 사용해 매핑에 대한 변경 사항을 모든 노드에 전파한다.</li>
+</ul>
+<h2 id="MongoDB’s-Sharding-Architecture-A-Case-Study"><a href="#MongoDB’s-Sharding-Architecture-A-Case-Study" class="headerlink" title="MongoDB’s Sharding Architecture - A Case Study"></a>MongoDB’s Sharding Architecture - A Case Study</h2><p>샤딩의 개념을 살펴본 후, 인기 있는 데이터베이스가 실제로 샤딩을 어떻게 구현하는지 살펴보자.</p>
+<p>가장 널리 사용되는 문서 데이터베이스 중 하나인 MongoDB를 예로 들어 보자. MongoDB의 샤딩 아키텍처는 앞서 설명한 구성 요소(샤드, 라우팅, 구성)가 어떻게 함께 작동해 확장 가능한 분산 데이터베이스를 만드는지 보여준다.</p>
+<p>MongoDB의 샤딩 아키텍처는 노드라고도 하는 상호 연결될 서버의 클러스터에 의존한다. 샤드 클러스터라고 하는 이 클러스터는 세 가지 주요 구성 요소로 이루어져 있다.</p>
+<ul>
+<li>Shard</li>
+<li>Mongos Router</li>
+<li>Config Servers</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240628142643258.png" alt=""></p>
+<h3 id="Shard"><a href="#Shard" class="headerlink" title="Shard"></a>Shard</h3><p>샤드는 클러스터에 있는 데이터의 하위 집합이다. 각 샤드는 개별 MongoDB 인스턴스의 클러스터 복제본 세트로 구현된다. 각 샤드를 복제본 세트로 배포함으로써, MongoDB는 샤드 내에서 데이터 복제를 가능하게 한다. 이런 설계 선택은 고가용성과 내결함성을 보장한다.</p>
+<h3 id="Mongos-Router"><a href="#Mongos-Router" class="headerlink" title="Mongos Router"></a>Mongos Router</h3><p>Mongos 라우터는 클러스터의 핵심이다. 클라이언트 애플리케이션과 샤드 간의 상호 작용을 조율하는 중심 구성 요소 역할을 한다.</p>
+<p>Mongos 라우터는 두 가지 필수 기능을 수행한다.</p>
+<ul>
+<li><strong>Query Routing and Load Balancing:</strong> 라우터는 클라이언트 애플리케이션의 단일 진입점 역할을 한다. 라우터는 들어오는 쿼리를 수신하고 샤드 키와 데이터 배포에 따라 적절한 샤드로 라우팅한다.</li>
+<li><strong>Metadata Caching:</strong> 라우터는 또한 데이터를 해당 샤드에 매핑하는 메타데이터 캐시를 유지한다. 라우터는 구성 서버에서 이 메타데이터를 검색해 로컬에 캐시해 성능을 향상시킨다.</li>
+</ul>
+<h3 id="Config-Servers"><a href="#Config-Servers" class="headerlink" title="Config Servers"></a>Config Servers</h3><p>구성 서버는 전체 클러스터의 메타데이터를 저장하고 관리한다. 구성 서버에 저장되는 메타데이터에는 다음과 같은 세부 정보가 포함된다.</p>
+<ul>
+<li><strong>Shard configuration:</strong> 이름, 호스트, 포트 등 각 샤드에 대한 정보</li>
+<li><strong>Chunk distribution:</strong> 데이터 청크를 특정 샤드에 매핑하여 효율적인 데이터 검색을 가능하게 함</li>
+<li><strong>Cluster state:</strong> 개별 샤드와 몽고 인스턴스의 사앹를 포함해 샤드화된 클러스터의 현재 건강 상태</li>
+</ul>
+<p>Mongos 인스턴스는 올바른 라우팅 결정을 내리기 위해 구성 서버에 크게 의존한다. 이 아키텍처는 몇 가지 이점을 제공한다.</p>
+<ul>
+<li><strong>Scalability:</strong> 여러 샤드에 데이터를 분산시킴으로써 MongoDB는 대규모 데이터 세트와 대량의 쿼리를 처리할 수 있다.</li>
+<li><strong>High Availability:</strong> 각 샤드 내에서 데이터를 복제하여 데이터 중복성과 내결함성을 보장한다.</li>
+<li><strong>Load Balancing:</strong> Mongos 라우터는 쿼리를 여러 샤드에 분산시켜 워크로드를 균등하게 분산시킨다.</li>
+</ul>
+<h2 id="Real-World-Industry-Case-Studies-of-Sharding"><a href="#Real-World-Industry-Case-Studies-of-Sharding" class="headerlink" title="Real-World Industry Case Studies of Sharding"></a>Real-World Industry Case Studies of Sharding</h2><h3 id="Notion"><a href="#Notion" class="headerlink" title="Notion"></a>Notion</h3><p>2020년 중반, 노션은 존립의 위험에 직면했다. 이 회사는 5년 동안 모놀리식 PostgreSQL 데이터베이스에 의존해 왔으며, 이 데이터베이스는 몇 배에 달하는 엄청난 성장을 뒷받침해 왔다. 그러나 노션이 계속 빠르게 확장되면서 데이터베이스는 그 속도를 따라 잡기 어려웠다. 여러 지표에서 데이터베이스에 대한 부담이 커지고 있음을 알 수 있었다.</p>
+<ul>
+<li>데이터베이스 노드의 잦은 CPU 급증</li>
+<li>안전하지 않은 마이그레이션</li>
+<li>대량의 대기 요청</li>
+</ul>
+<p>게다가 두 가지의 큰 문제가 제기되었다.</p>
+<ul>
+<li><strong>VACUUM Stalling:</strong> 디스크 공간을 정리하고 회수하는 PostgreSQL VACUUM 프로세스가 멈추기 시작했다. 이는 데이터베이스가 스토리지를 효과적으로 관리하지 못해 성능 저하로 이어진다는 것을 의미했다.</li>
+<li><strong>TXID Wraparound:</strong> 노션은 TXID wraparound의 형태로 실존적 위협에 직면했다. 이 문제는 PostgreSQL의 트랜잭션 ID 카운터가 최대 값에 도달하여 0으로 랩어라운드될 때 발생한다. 이 문제를 해결하지 않으면 데이터 손상과 장애로 이어질 수 있다.</li>
+</ul>
+<p>이런 문제에 직면한 노션 엔지니어링 팀은 데이터베이스 샤딩을 구현하기로 결정했다. 수직 확장을 옵션으로 검토했지만, 규모에 비해 비용이 너무 많이 드는 것으로 판명되었다. 하지만 샤딩 프로세스의 성공을 보장하기 위해 노션은 올바른 샤딩 전략을 개발해야 했다. 여기에는 몇 가지 주요 고려 사항이 포함되어 있다.</p>
+<h4 id="1-Selecting-the-Table-to-Shard"><a href="#1-Selecting-the-Table-to-Shard" class="headerlink" title="1 - Selecting the Table to Shard"></a>1 - Selecting the Table to Shard</h4><p>노션의 데이터 모델은 블록이라는 개념을 중심으로 전개되며, 노션 페이지의 각 항목은 블록으로 표시된다. 더 큰 블록은 더 작은 블록으로 구성되어 계층 구조를 형성할 수 있다.</p>
+<p>블록 테이블은 노션의 데이터 모델에서 그 중요성 때문에 샤딩의 최우선 후보로 떠올랐다. 그러나 블록 테이블은 워크스페이스 및 토론과 같은 다른 테이블에 종속성이 있었다. 데이터 무결성을 유지하고 복잡한 교차 샤드 쿼리(성능에 영향을 미칠 수 있음)를 피하기 위해 노션은 블록 테이블과 관련된 모든 테이블을 샤딩하기로 결정했다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240628143657484.png" alt=""></p>
+<h4 id="2-Choosing-the-Sharding-Key"><a href="#2-Choosing-the-Sharding-Key" class="headerlink" title="2 - Choosing the Sharding Key"></a>2 - Choosing the Sharding Key</h4><p>효율적인 샤딩을 위해서는 좋은 샤딩 키가 중요하다. 노션은 블록이 워크스페이스에 속하는 팀 기반 제품이기 때문에 워크스페이스 ID를 파티셔닝 키로 사용하기로 결정했다. 이 결정은 동일한 워크스페이스에 연결된 블록이 동일한 샤드 내에 저장되기 때문에 데이터를 가져올 때 샤드 간 조인을 최소화하기 위한 것이였다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240628143800303.png" alt=""></p>
+<h4 id="3-The-Number-of-Shards"><a href="#3-The-Number-of-Shards" class="headerlink" title="3 - The Number of Shards"></a>3 - The Number of Shards</h4><p>최적의 샤드 수를 결정하는 것은 노션의 확장성에 직접적인 영향을 미치기 때문에 또 다른 중요한 결정이었다. 목표는 2년간의 사용량 예측을 고려하면서 기존 데이터 볼륨을 수용하는 것이었다.</p>
+<ul>
+<li>480개의 샤드가 32개의 노드에 분산되어 노드당 15개의 샤드가 생성되었다. 이 접근 방식은 샤드 수가 미리 결정되는 고정 샤드 수 전략과 일치한다.</li>
+<li>테이블당 스토리지 상한은 500GB로 제한되었다.</li>
+</ul>
+<h4 id="Lessons-Learned"><a href="#Lessons-Learned" class="headerlink" title="Lessons Learned"></a>Lessons Learned</h4><p>결국 노션은 샤드 데이터베이스로의 마이그레이션을 성공적으로 마쳤다. 그 과정에서 얻은 몇 가지 귀중한 교훈은 다음과 같다.</p>
+<ul>
+<li>성급한 최적화는 좋지 않다. 그러나 샤딩을 너무 오래 기다리면 제약이 생길 수 도 있다.</li>
+<li>제로 다운타임 마이그레이션을 목표로 하는 것은 좋은 사용자 경험을 위해 매우 중요하다.</li>
+<li>적절한 샤딩 키를 선택하는 것이 좋은 결과를 위한 가장 중요한 요소다.</li>
+</ul>
+<h3 id="Discord"><a href="#Discord" class="headerlink" title="Discord"></a>Discord</h3><p>2017년, 전 세계 사용자들이 보낸 수십억 개의 메세지를 저장하고 있던 디스코드는 확장 가능하고 내결함성이 있으며 유지보수가 적은 데이터베이스 솔루션을 찾기 위해 MongoDB에서 Cassandra로 마이그레이션 하기로 결정했다. 이후 몇 년 동안 디스코드의 사용자 기반 메세지 양이 증가함에 따라 수조 개의 메세지를 저장하게 되었다. 데이터베이스 클러스터는 12개에서 177개의 카산드라 노드로 확장되었다. 그러나 노드 수가 증가했음에도 불구하고 클러스터에는 심각한 성능 문제가 발생했다. 여러가지 요인이 성능 저하의 원인이였지만, 가장 큰 원인은 디스코드의 샤딩 전략이였다.</p>
+<p>데이터베이스 스키마에서 모든 메세지는 특정 채널에 속하며 메세지라는 테이블에 저장되었다. 메세지 테이블은 두 개의 필드를 기반으로 분할되었다(channel_id, bucket). “bucket” 필드는 메세지가 속한 static time window를 나타낸다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240628144300094.png" alt=""></p>
+<p>이는 특정 채널과 기간(버킷) 내의 모든 메세지가 동일한 파티션에 저장된다는 것을 의미한다. 따라서 수십만 명의 활성 사용자가 있는 인기 디스코드 서버는 단시간에 엄청난 양의 메세지를 생성해 특정 샤드를 압도할 수 있었다.</p>
+<p>일반적으로 읽기 작업은 쓰기 작업보다 비용이 많이 들기 때문에, 대략의 디스코드 채널에서 동시 읽기가 발생하면 특정 샤드에 핫스팟이 발생할 수 있다. 이런 핫스팟은 전체 데이터베이스 클러스터에 걸쳐 연쇄적인 지연 문제를 일으켜 궁극적으로 최종 사용자 경험에 영향을 미쳤다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240628144423996.png" alt=""></p>
+<p>이런 문제를 해결하기 위해 디스코드는 다음과 같은 몇 가지 아키텍처를 변경했다.</p>
+<ul>
+<li><strong>Migration to ScyllaDB:</strong> 디스코드는 더 나은 성능과 리소스 격리를 약속하는 카산드라 호환 데이터베이스인 ScyllaDB로 마이그레이션했다.</li>
+<li><strong>Optimizing Data Access:</strong> 디스코드는 API와 데이터베이스 클러스터 사이에 데이터 서비스라는 중개 서비스를 도입했다. 이런 서비스는 요청 통합과 일관된 해시 기반 라우팅을 구현해 데이터베이스의 부하를 최소화하고 샤드 간에 트래픽을 보다 균등하게 분산시켰다.</li>
+</ul>
+<p>디스코드의 경험에 따르면 특정 액세스 패턴에 따라 샤딩 전략을 잘못 수립하면 애플리케이션에서 예기치 않은 성능 문제가 발생할 수 있다. 샤딩 전략과 데이터 액세스 패턴을 최적화함으로써 디스코드는 핫스팟 문제를 성공적으로 완화하고 메세지 저장 시스템의 성능과 확장성을 개선했다.</p>
+<h2 id="Summary"><a href="#Summary" class="headerlink" title="Summary"></a>Summary</h2><ul>
+<li><strong>Sharding Fundamentals:</strong> 데이터베이스 샤딩은 데이터베이스를 여러 노드에 분할해 수평적으로 확장하는 기술이다.</li>
+<li><strong>Sharding Strategies:</strong>  샤딩 전략에는 범위 기반, 키 또는 해시 기반, 디렉터리 기반 샤딩의 세 가지 주요 유형이 있다. 각 전략에는 장단점이 있으며, 해시 기반 샤딩은 샤드 전체에 데이터를 고르게 분산할 수 있어 가장 일반적으로 사용되는 방식이다.</li>
+<li><strong>Shard Key Selection:</strong> 데이터베이스 설계자는 샤드 키를 선택할 때 카디널리티, 빈도, 단조로운 변화와 같은 요소를 고려해야 한다. 샤드 키를 잘 선택해야 데이터를 균등하게 분배하고 핫스팟을 최소화할 수 있다.</li>
+<li><strong>Shard Rebalancing:</strong> 데이터베이스는 정적이 아니며 계속 변화하기 때문에 샤드의 균형을 다시 맞춰야 한다. 리밸런싱을 처리하기 위해 고정 파티셔닝 및 동적 샤딩과 같은 다양한 접근 방식을 사용할 수 있다.</li>
+<li><strong>Request Routing:</strong> 요청을 적절한 샤드로 라우팅하는 방법에는 partition-aware client, central router, partition-aware nodes 등 여러 가지 접근 방식이 있다.</li>
+</ul>
+<!-- flag of hidden posts --></div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined">Song Hayoung</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="https://songhayoung.github.io/2024/06/28/System%20Design/ByteByteGo/private/a-crash-course-in-database-sharding/">https://songhayoung.github.io/2024/06/28/System%20Design/ByteByteGo/private/a-crash-course-in-database-sharding/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/System-Design/">System Design</a></div><nav id="pagination"></nav><div id="gitalk-container"></div><script>var gitalk = new Gitalk({
+  clientID: '3604b61642355579f55e',
+  clientSecret: 'f552120f18ac5aee3f6297e05e97d94c0a25cd4b',
+  repo: 'SongHayoung.github.io',
+  owner: 'SongHayoung',
+  admin: 'SongHayoung',
+  id: md5(decodeURI(location.pathname)),
+  language: 'en'
+})
+gitalk.render('gitalk-container')</script></div></div><footer class="footer-bg" style="background-image: url(https://xxxx.jpg)"><div class="layout" id="footer"><div class="copyright">&copy;2020 - 2024 By Song Hayoung</div><div class="framework-info"><span>Driven - </span><a target="_blank" rel="noopener" href="http://hexo.io"><span>Hexo</span></a><span class="footer-separator">|</span><span>Theme - </span><a target="_blank" rel="noopener" href="https://github.com/Molunerfinn/hexo-theme-melody"><span>Melody</span></a></div><div class="footer_custom_text">Learning how to walk slowly to not miss important things</div><div class="busuanzi"><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><span id="busuanzi_container_page_pv"><i class="fa fa-file"></i><span id="busuanzi_value_page_pv"></span><span></span></span></div></div></footer><i class="fa fa-arrow-up" id="go-up" aria-hidden="true"></i><script src="https://cdn.jsdelivr.net/npm/animejs@latest/anime.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@latest/velocity.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-ui-pack@latest/velocity.ui.min.js"></script><script src="/js/utils.js?version=1.7.0"></script><script src="/js/fancybox.js?version=1.7.0"></script><script src="/js/sidebar.js?version=1.7.0"></script><script src="/js/copy.js?version=1.7.0"></script><script src="/js/fireworks.js?version=1.7.0"></script><script src="/js/transition.js?version=1.7.0"></script><script src="/js/scroll.js?version=1.7.0"></script><script src="/js/head.js?version=1.7.0"></script><script src="/js/search/algolia.js"></script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+    processEscapes: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  },
+  CommonHTML: {
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "HTML-CSS": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "SVG": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  }
+});
+</script><script type="text/x-mathjax-config">MathJax.Hub.Queue(function() {
+  var all = MathJax.Hub.getAllJax(), i;
+  for (i=0; i < all.length; i += 1) {
+    all[i].SourceElement().parentNode.className += ' has-jax';
+  }
+});
+</script><script src="https://cdn.jsdelivr.net/npm/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><script>if(/Android|webOS|iPhone|iPod|iPad|BlackBerry/i.test(navigator.userAgent)) {
+  $('#nav').addClass('is-mobile')
+  $('footer').addClass('is-mobile')
+  $('#top-container').addClass('is-mobile')
+}</script><div class="search-dialog" id="algolia-search"><div class="search-dialog__title" id="algolia-search-title">Algolia</div><div id="algolia-input-panel"><div id="algolia-search-input"></div></div><hr><div id="algolia-search-results"><div id="algolia-hits"></div><div id="algolia-pagination"></div><div id="algolia-stats"></div></div><span class="search-close-button"><i class="fa fa-times"></i></span></div><div class="search-mask"></div></body></html>
