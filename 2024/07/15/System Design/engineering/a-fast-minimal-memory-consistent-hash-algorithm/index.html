@@ -1,0 +1,221 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="description" content="[Paper Review] A Fast, Minimal Memory, Consistent Hash Algorithm"><meta name="keywords" content="System Design"><meta name="author" content="Song Hayoung"><meta name="copyright" content="Song Hayoung"><title>[Paper Review] A Fast, Minimal Memory, Consistent Hash Algorithm | SUMFIのBlog</title><meta name="robots" content="noindex"><link rel="shortcut icon" href="/songcon.ico"><link rel="stylesheet" href="/css/index.css?version=1.7.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@latest/css/font-awesome.min.css?version=1.7.0"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css?version=1.7.0"><meta name="format-detection" content="telephone=no"><meta http-equiv="x-dns-prefetch-control" content="on"><link rel="dns-prefetch" href="https://cdn.jsdelivr.net"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.css"><script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.js" defer></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@latest/dist/gitalk.min.js"></script><script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.10.0/js/md5.min.js"></script><link rel="dns-prefetch" href="https://www.google-analytics.com"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-169368422-1', 'auto');
+ga('send', 'pageview');</script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: {"appId":"7LZ6OJ4D6C","apiKey":"9a84e13f74ea78c3fd54512c10139c56","indexName":"git blog","hits":{"per_page":10},"languages":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}.","hits_stats":"${hits} results found in ${time} ms"}},
+  localSearch: undefined,
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  }
+} </script><meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/rss2.xml" title="SUMFIのBlog" type="application/rss+xml">
+</head><body><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar" data-display="true"><div class="toggle-sidebar-info text-center"><span data-toggle="Toggle article">Toggle site</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">Catalog</div><div class="sidebar-toc__progress"><span class="progress-notice">You've read</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#A-Fast-Minimal-Memory-Consistent-Hash-Algorithm"><span class="toc-number">1.</span> <span class="toc-text">A Fast, Minimal Memory, Consistent Hash Algorithm</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Jump-consistent-hash"><span class="toc-number">2.</span> <span class="toc-text">Jump consistent hash</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Ref"><span class="toc-number">3.</span> <span class="toc-text">Ref</span></a></li></ol></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="https://avatars3.githubusercontent.com/u/37806785?s=460&amp;u=8c68d685faf7c5280cfbd736a6b1730b55fb4203&amp;v=4"></div><div class="author-info__name text-center">Song Hayoung</div><div class="author-info__description text-center"></div><div class="follow-button"><a target="_blank" rel="noopener" href="https://www.linkedin.com/in/hayoung-song-9523b61bb/">Follow Me</a></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="/archives"><span class="pull-left">Articles</span><span class="pull-right">10854</span></a><a class="author-info-articles__tags article-meta" href="/tags"><span class="pull-left">Tags</span><span class="pull-right">193</span></a><a class="author-info-articles__categories article-meta" href="/categories"><span class="pull-left">Categories</span><span class="pull-right">61</span></a></div><hr><div class="author-info-links"><div class="author-info-links__title text-center">VISITED</div><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Seoul Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Jeju Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">British Columbia Canada</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Boracay Philippines</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">三重　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">大阪　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">名古屋　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">静岡　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">札幌　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">京都　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Bangkok Thailand</a></div></div></div><div id="content-outer"><div id="top-container" style="background-image: url(https://xxxx.jpg)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="/">SUMFIのBlog</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus">   <a class="site-page" href="/">Home</a><a class="site-page" href="/archives">Archives</a><a class="site-page" href="/tags">Tags</a><a class="site-page" href="/categories">Categories</a><a class="site-page" href="/about">About</a></span><span class="pull-right"><a class="site-page social-icon search"><i class="fa fa-search"></i><span> Search</span></a></span></div><div id="post-info"><div id="post-title">[Paper Review] A Fast, Minimal Memory, Consistent Hash Algorithm</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2024-07-15</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/">System Design</a><i class="fa fa-angle-right" aria-hidden="true"></i><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/Engineering/">Engineering</a><div class="post-meta-wordcount"><span>Word count: </span><span class="word-count">680</span><span class="post-meta__separator">|</span><span>Reading time: 4 min</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div class="article-container" id="post-content"><h2 id="A-Fast-Minimal-Memory-Consistent-Hash-Algorithm"><a href="#A-Fast-Minimal-Memory-Consistent-Hash-Algorithm" class="headerlink" title="A Fast, Minimal Memory, Consistent Hash Algorithm"></a><strong>A Fast, Minimal Memory, Consistent Hash Algorithm</strong></h2><span id="more"></span>
+<p>이 포스트에서는 일관된 해시 알고리즘 중 하나인 jump consistent algorithm에 대해 소개한다. 앞서 <a href="https://songhayoung.github.io/2023/03/16/System%20Design/etc/consistent-hashing-algorithm/">소개한</a> Hash ring 아이디어를 사용하는 consistent hash 알고리즘은 cassandra, dynamo 와 같은 데이터베이스에서 사용될 만큼 효과적인 알고리즘이다. 다만 virtual node를 사용하는 아이디어가 만들어지기 전의 consistent hashing 알고리즘은 몇 가지 문제가 존재했다.</p>
+<ul>
+<li>100개의 노드가 존재하는 클러스터에서 부하 균형의 표준 편차는 10%이다.</li>
+<li>1000개의 노드가 존재하는 클러스터에서 부하 균형의 표준 편차는 3.2%이다.</li>
+</ul>
+<p>즉, 노드 수가 적을 때는 노드 간 편차가 심하게 존재하며, 노드 수가 많아져야만 링 위에 노드가 균등하게 분포되어 있을 기회가 많아지는 것이 부하 균형의 편차가 줄어드는 이유이다. 적은 수의 노드에서도 편차를 줄이기 위해 virtual node라는 개념을 도입하여 적은 수의 노드에서도 편차를 줄일 수 있었다. 하지만, virtual node의 도입은 다른 문제를 야기한다. virtual node 또한 hash ring위에 위치하기 위해 매우 많은 수의 데이터가 메모리에 존재해야 했다. 따라서 consistent hash 의 알려진 문제는 다음과 같다.</p>
+<ul>
+<li>노드가 적은 경우에 노드 간 부하 균형의 표준 편차가 높다.</li>
+<li>노드가 많은 경우에 노드 데이터를 메모리에 상주시키는 비용이 높다.</li>
+</ul>
+<p>Jump consistent hash는 consistent hash의 단점들을 제거하는 대신 일관된 해싱의 4가지 주요 속성중 단조성이 특정 조건 하에서 만족하게 된다. 일관된 해싱의 4가지 주요 속성은 다음과 같다.</p>
+<ol>
+<li><strong>균형(Balance)</strong>:</li>
+</ol>
+<ul>
+<li>객체가 버킷 간에 균등하게 분배된다. 이는 각 버킷이 비슷한 수의 객체를 가지도록 보장한다.</li>
+</ul>
+<ol>
+<li><strong>단조성(Monotonicity)</strong>:</li>
+</ol>
+<ul>
+<li>시스템에 노드가 추가되거나 제거될 때, 기존 데이터의 재배치가 최소화된다. 이를 통해 시스템 확장 또는 축소 시 데이터 이동에 따른 부하를 최소화할 수 있다.</li>
+</ul>
+<ol>
+<li><strong>분산(Spread)</strong>:</li>
+</ol>
+<ul>
+<li><p>해시 함수가 어떻게 동작하는지 측정하는 속성으로, 각 클라이언트가 임의의 버킷 하위 집합을 볼 수 있다고 가정한다.</p>
+</li>
+<li><p>분산은 시스템이 클라이언트 요청을 처리할 때 다양한 버킷에 균등하게 접근할 수 있음을 보장한다.</p>
+</li>
+</ul>
+<ol>
+<li><strong>부하(Load)</strong>:</li>
+</ol>
+<ul>
+<li>각 클라이언트가 시스템의 임의의 버킷 하위 집합을 볼 수 있다고 가정할 때, 특정 버킷에 너무 많은 요청이 몰리지 않도록 하는 속성이다.</li>
+<li>이는 클라이언트가 볼 수 있는 버킷의 집합이 전체 버킷 집합의 임의의 부분 집합일 때 중요한 속성이다.</li>
+</ul>
+<h2 id="Jump-consistent-hash"><a href="#Jump-consistent-hash" class="headerlink" title="Jump consistent hash"></a>Jump consistent hash</h2><p>점프 해시는 링 해시가 가지는 두 가지 단점을 모두 해결하며, 링 해시가 샤드를 찾기 위해 수행하는 작업의 시간 복잡도 측면에서 약간의 성능적 이득을 챙길 수 있다. 점프 해시의 i 번째 버킷에서 점프가 발생할 확률은 <code>1 / i</code>이며, n보다 작은 목적지로의 점프 기대값은 조화 급수로 표현할 수 잇다 $\displaystyle \sum_{n=1}^\infty$ 1/n. 또한 버킷 계산이 전적으로 몇 개의 레지스터에서 이루어지며, 캐시 미스 오버헤드를 지불하지 않는 다는 점에서 링 해시보다 성능이 우수하다. 점프 해시의 코드는 다음과 같다.</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">int32_t</span> <span class="title">JumpConsistentHash</span><span class="params">(<span class="type">uint64_t</span> key, <span class="type">int32_t</span> num_buckets)</span> </span>&#123;</span><br><span class="line">  <span class="type">int64_t</span> b = <span class="number">-1</span>, j = <span class="number">0</span>;</span><br><span class="line">  <span class="keyword">while</span> (j &lt; num_buckets) &#123;</span><br><span class="line">    b = j;</span><br><span class="line">    key = key * <span class="number">2862933555777941757ULL</span> + <span class="number">1</span>;</span><br><span class="line">    j = (b + <span class="number">1</span>) * (<span class="built_in">double</span>(<span class="number">1LL</span> &lt;&lt; <span class="number">31</span>) / <span class="built_in">double</span>((key &gt;&gt; <span class="number">33</span>) + <span class="number">1</span>));</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> b;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>그렇다고 점프 해시가 모든 측면에서 좋은 것이라고 하기는 어려운 영역이 단조성이다. 이 이야기를 하기 전에 세 키 k1, k2, k3에 대한 버킷 수 증가에 따른 일관된 해시 값 예제를 살펴보자.</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th></th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+<th>5</th>
+<th>6</th>
+<th>7</th>
+<th>8</th>
+<th>9</th>
+<th>10</th>
+<th>11</th>
+<th>12</th>
+<th>13</th>
+<th>14</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>k1</td>
+<td>0</td>
+<td>0</td>
+<td>2</td>
+<td>2</td>
+<td>4</td>
+<td>4</td>
+<td>4</td>
+<td>4</td>
+<td>4</td>
+<td>4</td>
+<td>4</td>
+<td>4</td>
+<td>4</td>
+<td>4</td>
+</tr>
+<tr>
+<td>k2</td>
+<td>0</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td>7</td>
+<td>7</td>
+<td>7</td>
+<td>7</td>
+<td>7</td>
+<td>7</td>
+<td>7</td>
+</tr>
+<tr>
+<td>k3</td>
+<td>0</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td>5</td>
+<td>5</td>
+<td>7</td>
+<td>7</td>
+<td>7</td>
+<td>10</td>
+<td>10</td>
+<td>10</td>
+<td>10</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>버킷 번호에 매핑되는 해시 값은 단조롭게 증가하는 방식으로 동작한다. 이는 샤드 범위의 마지막에서만 노드를 정상적으로 추가하거나 제거할 수 있음을 의미한다. 즉, 임의의 노드 제거를 지원하기가 매우 어려워진다. 이러한 문제 때문에 점프 해시는 복제를 사용하여 노드 장애를 완화할 수 있는 데이터 저장 애플리케이션에 더 적합하다. </p>
+<p>또한 점프 해싱에서 다루기 어려운 문제중 하나는 핫스팟 문제이다. 링 해시는 토큰 범위를 수동으로 조정하는 등의 다양한 해결법을 제시할 수 있지만, 점프 해싱에서는 복제본을 추가한다던가, 키 자체를 분산시키는 방식 (e.g. hot-key-0, hot-key-1)과 같은 선택지만 존재한다.</p>
+<p>마지막으로 링 해시와 점프 해시의 성능 측정 결과를 추가하며 이 글을 마친다.</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>알고리즘</th>
+<th>버킷당 포인트</th>
+<th>표준 오차</th>
+<th>99% 신뢰 구간</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Karger et al.</td>
+<td>1</td>
+<td>0.9979060</td>
+<td>(0.005, 5.25)</td>
+</tr>
+<tr>
+<td></td>
+<td>10</td>
+<td>0.3151810</td>
+<td>(0.37, 1.98)</td>
+</tr>
+<tr>
+<td></td>
+<td>100</td>
+<td>0.0996996</td>
+<td>(0.76, 1.28)</td>
+</tr>
+<tr>
+<td></td>
+<td>1000</td>
+<td>0.0315723</td>
+<td>(0.92, 1.09)</td>
+</tr>
+<tr>
+<td>Jump Consistent Hash</td>
+<td></td>
+<td>0.00000000764</td>
+<td>(0.99999998, 1.00000002)</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h2 id="Ref"><a href="#Ref" class="headerlink" title="Ref"></a>Ref</h2><ul>
+<li><a target="_blank" rel="noopener" href="https://arxiv.org/ftp/arxiv/papers/1406/1406.2294.pdf">https://arxiv.org/ftp/arxiv/papers/1406/1406.2294.pdf</a></li>
+</ul>
+<!-- flag of hidden posts --></div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined">Song Hayoung</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="https://songhayoung.github.io/2024/07/15/System%20Design/engineering/a-fast-minimal-memory-consistent-hash-algorithm/">https://songhayoung.github.io/2024/07/15/System%20Design/engineering/a-fast-minimal-memory-consistent-hash-algorithm/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/System-Design/">System Design</a></div><nav id="pagination"></nav><div id="gitalk-container"></div><script>var gitalk = new Gitalk({
+  clientID: '3604b61642355579f55e',
+  clientSecret: 'f552120f18ac5aee3f6297e05e97d94c0a25cd4b',
+  repo: 'SongHayoung.github.io',
+  owner: 'SongHayoung',
+  admin: 'SongHayoung',
+  id: md5(decodeURI(location.pathname)),
+  language: 'en'
+})
+gitalk.render('gitalk-container')</script></div></div><footer class="footer-bg" style="background-image: url(https://xxxx.jpg)"><div class="layout" id="footer"><div class="copyright">&copy;2020 - 2024 By Song Hayoung</div><div class="framework-info"><span>Driven - </span><a target="_blank" rel="noopener" href="http://hexo.io"><span>Hexo</span></a><span class="footer-separator">|</span><span>Theme - </span><a target="_blank" rel="noopener" href="https://github.com/Molunerfinn/hexo-theme-melody"><span>Melody</span></a></div><div class="footer_custom_text">Learning how to walk slowly to not miss important things</div><div class="busuanzi"><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><span id="busuanzi_container_page_pv"><i class="fa fa-file"></i><span id="busuanzi_value_page_pv"></span><span></span></span></div></div></footer><i class="fa fa-arrow-up" id="go-up" aria-hidden="true"></i><script src="https://cdn.jsdelivr.net/npm/animejs@latest/anime.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@latest/velocity.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-ui-pack@latest/velocity.ui.min.js"></script><script src="/js/utils.js?version=1.7.0"></script><script src="/js/fancybox.js?version=1.7.0"></script><script src="/js/sidebar.js?version=1.7.0"></script><script src="/js/copy.js?version=1.7.0"></script><script src="/js/fireworks.js?version=1.7.0"></script><script src="/js/transition.js?version=1.7.0"></script><script src="/js/scroll.js?version=1.7.0"></script><script src="/js/head.js?version=1.7.0"></script><script src="/js/search/algolia.js"></script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+    processEscapes: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  },
+  CommonHTML: {
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "HTML-CSS": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "SVG": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  }
+});
+</script><script type="text/x-mathjax-config">MathJax.Hub.Queue(function() {
+  var all = MathJax.Hub.getAllJax(), i;
+  for (i=0; i < all.length; i += 1) {
+    all[i].SourceElement().parentNode.className += ' has-jax';
+  }
+});
+</script><script src="https://cdn.jsdelivr.net/npm/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><script>if(/Android|webOS|iPhone|iPod|iPad|BlackBerry/i.test(navigator.userAgent)) {
+  $('#nav').addClass('is-mobile')
+  $('footer').addClass('is-mobile')
+  $('#top-container').addClass('is-mobile')
+}</script><div class="search-dialog" id="algolia-search"><div class="search-dialog__title" id="algolia-search-title">Algolia</div><div id="algolia-input-panel"><div id="algolia-search-input"></div></div><hr><div id="algolia-search-results"><div id="algolia-hits"></div><div id="algolia-pagination"></div><div id="algolia-stats"></div></div><span class="search-close-button"><i class="fa fa-times"></i></span></div><div class="search-mask"></div></body></html>

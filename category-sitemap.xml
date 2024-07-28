@@ -10,14 +10,21 @@
 
     <url>
         <loc>https://songhayoung.github.io/categories/PS/LeetCode/</loc>
-        <lastmod>2024-07-07T03:08:23.000Z</lastmod>
+        <lastmod>2024-07-28T05:10:00.000Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
 
     <url>
         <loc>https://songhayoung.github.io/categories/PS/</loc>
-        <lastmod>2024-07-07T03:08:23.000Z</lastmod>
+        <lastmod>2024-07-28T05:10:00.000Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/categories/PS/Codeforces/</loc>
+        <lastmod>2024-07-28T01:40:30.000Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
@@ -32,13 +39,6 @@
     <url>
         <loc>https://songhayoung.github.io/categories/System-Design/</loc>
         <lastmod>2024-05-13T02:22:27.000Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/categories/PS/Codeforces/</loc>
-        <lastmod>2024-05-13T01:32:17.000Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>

@@ -1,0 +1,198 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="description" content="[ByteByteGo] A Crash Course on Distributed Systems"><meta name="keywords" content="System Design"><meta name="author" content="Song Hayoung"><meta name="copyright" content="Song Hayoung"><title>[ByteByteGo] A Crash Course on Distributed Systems | SUMFIのBlog</title><meta name="robots" content="noindex"><link rel="shortcut icon" href="/songcon.ico"><link rel="stylesheet" href="/css/index.css?version=1.7.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@latest/css/font-awesome.min.css?version=1.7.0"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css?version=1.7.0"><meta name="format-detection" content="telephone=no"><meta http-equiv="x-dns-prefetch-control" content="on"><link rel="dns-prefetch" href="https://cdn.jsdelivr.net"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.css"><script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.js" defer></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@latest/dist/gitalk.min.js"></script><script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.10.0/js/md5.min.js"></script><link rel="dns-prefetch" href="https://www.google-analytics.com"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-169368422-1', 'auto');
+ga('send', 'pageview');</script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: {"appId":"7LZ6OJ4D6C","apiKey":"9a84e13f74ea78c3fd54512c10139c56","indexName":"git blog","hits":{"per_page":10},"languages":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}.","hits_stats":"${hits} results found in ${time} ms"}},
+  localSearch: undefined,
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  }
+} </script><meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/rss2.xml" title="SUMFIのBlog" type="application/rss+xml">
+</head><body><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar" data-display="true"><div class="toggle-sidebar-info text-center"><span data-toggle="Toggle article">Toggle site</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">Catalog</div><div class="sidebar-toc__progress"><span class="progress-notice">You've read</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#A-Crash-Course-on-Distributed-Systems"><span class="toc-number">1.</span> <span class="toc-text">A Crash Course on Distributed Systems</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Understanding-Distributed-Systems"><span class="toc-number">2.</span> <span class="toc-text">Understanding Distributed Systems</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Decentralized-Systems-Vs-Distributed-Systems"><span class="toc-number">2.1.</span> <span class="toc-text">Decentralized Systems Vs. Distributed Systems</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Parallel-Systems-vs-Distributed-Systems"><span class="toc-number">2.2.</span> <span class="toc-text">Parallel Systems vs Distributed Systems</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Key-Benefits-of-Distributed-Systems"><span class="toc-number">3.</span> <span class="toc-text">Key Benefits of Distributed Systems</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Challenges-of-Distributed-Systems"><span class="toc-number">4.</span> <span class="toc-text">Challenges of Distributed Systems</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Communication"><span class="toc-number">4.1.</span> <span class="toc-text">Communication</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-Reliable-Communication-with-TCP"><span class="toc-number">4.1.1.</span> <span class="toc-text">1 - Reliable Communication with TCP</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-Securing-Communication-with-TLS"><span class="toc-number">4.1.2.</span> <span class="toc-text">2 - Securing Communication with TLS</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-Service-Discovery-with-DNS"><span class="toc-number">4.1.3.</span> <span class="toc-text">3 - Service Discovery with DNS</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Coordination"><span class="toc-number">4.2.</span> <span class="toc-text">Coordination</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-Failure-Detection"><span class="toc-number">4.2.1.</span> <span class="toc-text">1 - Failure Detection</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-Event-Ordering-and-Timing"><span class="toc-number">4.2.2.</span> <span class="toc-text">2 - Event Ordering and Timing</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-Leader-Election"><span class="toc-number">4.2.3.</span> <span class="toc-text">3 - Leader Election</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4-Data-Replication-and-Consistency"><span class="toc-number">4.2.4.</span> <span class="toc-text">4 - Data Replication and Consistency</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Scalability"><span class="toc-number">4.3.</span> <span class="toc-text">Scalability</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-Functional-Decomposition"><span class="toc-number">4.3.1.</span> <span class="toc-text">1 - Functional Decomposition</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-Partitioning"><span class="toc-number">4.3.2.</span> <span class="toc-text">2 - Partitioning</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-Duplication"><span class="toc-number">4.3.3.</span> <span class="toc-text">3 - Duplication</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Resiliency"><span class="toc-number">4.4.</span> <span class="toc-text">Resiliency</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-Downstream-Resiliency"><span class="toc-number">4.4.1.</span> <span class="toc-text">1 - Downstream Resiliency</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-Upstream-Resiliency"><span class="toc-number">4.4.2.</span> <span class="toc-text">2 - Upstream Resiliency</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Summary"><span class="toc-number">5.</span> <span class="toc-text">Summary</span></a></li></ol></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="https://avatars3.githubusercontent.com/u/37806785?s=460&amp;u=8c68d685faf7c5280cfbd736a6b1730b55fb4203&amp;v=4"></div><div class="author-info__name text-center">Song Hayoung</div><div class="author-info__description text-center"></div><div class="follow-button"><a target="_blank" rel="noopener" href="https://www.linkedin.com/in/hayoung-song-9523b61bb/">Follow Me</a></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="/archives"><span class="pull-left">Articles</span><span class="pull-right">10854</span></a><a class="author-info-articles__tags article-meta" href="/tags"><span class="pull-left">Tags</span><span class="pull-right">193</span></a><a class="author-info-articles__categories article-meta" href="/categories"><span class="pull-left">Categories</span><span class="pull-right">61</span></a></div><hr><div class="author-info-links"><div class="author-info-links__title text-center">VISITED</div><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Seoul Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Jeju Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">British Columbia Canada</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Boracay Philippines</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">三重　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">大阪　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">名古屋　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">静岡　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">札幌　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">京都　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Bangkok Thailand</a></div></div></div><div id="content-outer"><div id="top-container" style="background-image: url(https://xxxx.jpg)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="/">SUMFIのBlog</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus">   <a class="site-page" href="/">Home</a><a class="site-page" href="/archives">Archives</a><a class="site-page" href="/tags">Tags</a><a class="site-page" href="/categories">Categories</a><a class="site-page" href="/about">About</a></span><span class="pull-right"><a class="site-page social-icon search"><i class="fa fa-search"></i><span> Search</span></a></span></div><div id="post-info"><div id="post-title">[ByteByteGo] A Crash Course on Distributed Systems</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2024-07-13</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/">System Design</a><i class="fa fa-angle-right" aria-hidden="true"></i><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/Byte-Byte-Go/">Byte Byte Go</a><div class="post-meta-wordcount"><span>Word count: </span><span class="word-count">2.8k</span><span class="post-meta__separator">|</span><span>Reading time: 17 min</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div class="article-container" id="post-content"><h2 id="A-Crash-Course-on-Distributed-Systems"><a href="#A-Crash-Course-on-Distributed-Systems" class="headerlink" title="A Crash Course on Distributed Systems"></a>A Crash Course on Distributed Systems</h2><span id="more"></span>
+<p>분산 시스템은 특정 작업을 수행하거나 서비스를 제공하기 위해 협업하는 노드라고 불리는 컴퓨터의 집합이다. 이런 노드는 물리적으로 분리되어 있으며 네트워크를 통해 메세지를 전달해 서로 통신한다. 분산 시스템은 지리적 경계를 넘나들 수 있으므로 서로 다른 위치의 리소스를 활용할 수 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240713122212526.png" alt=""></p>
+<p>분산형 시스템은 기존의 중앙 집중식 시스템과 구별되는 몇 가지 특징이 있다.</p>
+<ul>
+<li>분산 시스템의 컴퓨터는 물리적으로 분리되어 있으며 네트워크를 통해 연결된다. 메모리나 common clock을 공유하지 않는다.</li>
+<li>외부에서 볼 때 분산 시스템은 최종 사용자에게 하나의 통합된 엔티티로 보인다.</li>
+<li>분산 시스템은 시스템에서 컴퓨터를 추가하거나 제거할 수 있는 유연성을 제공한다.</li>
+<li>분산 시스템의 노드는 독립적으로 장애를 일으킬 수 있으며, 네트워크를 통해 메세지가 손실되거나 지연될 수 있다.</li>
+<li>분산 시스템은 일상 생활에서 어디에나 존재한다. 이런 시스템은 여러 대의 컴퓨터가 함께 작동하는 성능을 활용해 원활하고 반응이 빠른 사용자 경험을 제공한다.</li>
+</ul>
+<p>이 포스트에서는 분산 시스템의 장점과 문제점을 살펴본다. 또한 이런 문제를 해결하고 분산 시스템의 안정적인 운영을 보장하는데 사용되는 일반적인 접근 방식과 기술에 대해서도 논의한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240713122814813.png" alt=""></p>
+<h2 id="Understanding-Distributed-Systems"><a href="#Understanding-Distributed-Systems" class="headerlink" title="Understanding Distributed Systems"></a>Understanding Distributed Systems</h2><p>분산 시스템이라는 용어는 때때로 개발자를 혼란스럽게 할 수 있다. 몇 가지 일반적인 혼동은 탈중앙화 시스템과 병렬 시스템에 관한 내용이다. 분산 시스템의 맥락에서 이런 용어의 의미와 유사점 또는 차이점을 이해해보자.</p>
+<h3 id="Decentralized-Systems-Vs-Distributed-Systems"><a href="#Decentralized-Systems-Vs-Distributed-Systems" class="headerlink" title="Decentralized Systems Vs. Distributed Systems"></a>Decentralized Systems Vs. Distributed Systems</h3><p>“탈중앙화 시스템”과 “분산 시스템”과 같은 용어는 종종 같은 의미로 사용되지만 중요한 차이점이 있다. 두 유형의 시스템 모두 여러 구성 요소가 함께 작동하지만, 의사 결정 프로세스에 차이가 있다.</p>
+<p>분산 시스템의 일종인 탈중앙화 시스템에서는 단일 구성 요소가 의사 결정 과정을 완전히 제어할 수 없다. 대신 각 구성 요소는 의사 결정의 일부를 소유하지만 독립적인 의사 결정에 필요한 완전한 정보를 소유하지는 않는다.</p>
+<h3 id="Parallel-Systems-vs-Distributed-Systems"><a href="#Parallel-Systems-vs-Distributed-Systems" class="headerlink" title="Parallel Systems vs Distributed Systems"></a>Parallel Systems vs Distributed Systems</h3><p>분산 시스템과 병렬 시스템은 모두 계산 능력을 확장하는 것을 목표로 하지만, 서로 다른 수단을 사용해 이 목표를 달성한다. 병렬 컴퓨팅에서는 단일 컴퓨터 내의 여러 프로세서가 여러 작업을 동시에 수행한다. 이런 프로세서는 종종 공유 메모리에 액세스하여 데이터를 교환하고 효율적으로 활동을 조정할 수 있다.</p>
+<p>반면 분산 시스템은 메모리를 공유하지 않는 여러 대의 자율적인 시스템으로 구성된다. 이런 시스템은 네트워크를 통해 메세지를 전달해 서로 소통하고 작업을 조정한다. 각 머신은 독립적으로 작동하며 할당된 작업을 수행해 전체 연산에 기여한다.</p>
+<h2 id="Key-Benefits-of-Distributed-Systems"><a href="#Key-Benefits-of-Distributed-Systems" class="headerlink" title="Key Benefits of Distributed Systems"></a>Key Benefits of Distributed Systems</h2><p>분산 시스템을 설계하고 구축하는 것은 기존의 중앙 집중식 시스템보다 더 복잡할 수 있지만 그 이점은 그만한 가치가 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240713123445659.png" alt=""></p>
+<ul>
+<li><strong>Scalability:</strong> 단일 시스템의 하드웨어 리소스를 늘리는 수직적 확장은 물리적 제약에 의해 제한되는 경우가 많다. 예를 들어, 단일 시스템에 추가할 수 있는 프로세서 코어 수에는 제한이 있다. 이와 달리 분산 시스템은 수평적 확장이 가능하여 상용 머신을 시스템에 추가할 수 있다. 따라서 상대적으로 저렴한 하드웨어를 추가해 시스템을 확장할 수 있다.</li>
+<li><strong>Reliability:</strong> 분산 시스템은 중앙 집중식 시스템에 비해 장애에 대한 복원력이 뛰어나다. 데이터가 여러 노드에 걸쳐 복제되므로 단일 노드 또는 노드의 하위 집합에 장애가 발생하더라도 전체 시스템이 다운되는 것은 아니다. 나머지 노드는 비록 용량이 줄어들더라도 계속 작동할 수 있으므로 전체 시스템이 계속 작동할 수 있다.</li>
+<li><strong>Performance:</strong> 분산 컴퓨팅은 복잡한 워크로드를 여러 컴퓨터에서 동시에 처리할 수 있는 관리하기 쉬운 작은 부분으로 나누는 작업을 수반하는 경우가 많다. 이런 병렬 처리 기능은 행렬 곱셈이나 대규모 데이터 처리와 같이 계산 집약적인 작업의 성능을 향상시킨다.</li>
+</ul>
+<h2 id="Challenges-of-Distributed-Systems"><a href="#Challenges-of-Distributed-Systems" class="headerlink" title="Challenges of Distributed Systems"></a>Challenges of Distributed Systems</h2><p>분산 시스템은 운영과 관련해 여러 가지 과제를 안고 있다. 이런 과제와 이를 극복하기 위한 기술을 아는 것이 분산 시스템을 활용하기 위한 핵심이다.</p>
+<h3 id="Communication"><a href="#Communication" class="headerlink" title="Communication"></a>Communication</h3><p>분산 시스템에서 노드는 네트워크를 통해 서로 통신하고 조율해야 응집력 있는 단위로 기능을 할 수 있다. 그러나 기본 네트워크 인프라의 불안정한 특성으로 인해 이런 통신은 쉽지 않다. 노드 간 패킷 전달을 담당하는 인터넷 프로토콜(IP)은 “최선의 노력” 서비스만 제공한다. 즉, 네트워크가 패킷의 안정적인 전송을 보장하지 않는다. 그러므로 패킷 전송 중 몇 가지 문제가 발생할 수 있다.</p>
+<ul>
+<li>패킷 손실 : 네트워크 혼잡, 하드웨어 장애 또는 기타 요인으로 인해 패킷이 전송 도중에 손실되거나 삭제될 수 있다.</li>
+<li>패킷 중복 : 경우에 따라 패킷이 중복되어 동일한 패킷의 복사본이 여러 개 대상 노드에 전달될 수 있다.</li>
+<li>패킷 손상 : 패킷은 전송 중에 손상될 수 있다. 손상된 패킷에는 유효하지 않거나 잘못된 데이터가 포함될 수 있으며, 이로 인해 통신 오류가 발생할 수 있다.</li>
+<li>비순차적 전달 : 패킷이 전송된 순서와 다른 순서로 대상 노드에 도착할 수 있다.</li>
+</ul>
+<p>이런 불안정한 기반 위에 신뢰할 수 있는 커뮤니케이션을 구축하는 것은 중요한 과제다. 분산 시스템에서 이런 문제를 처리하기 위해 사용하는 몇 가지 주요 기술은 다음과 같다.</p>
+<h4 id="1-Reliable-Communication-with-TCP"><a href="#1-Reliable-Communication-with-TCP" class="headerlink" title="1 - Reliable Communication with TCP"></a>1 - Reliable Communication with TCP</h4><p>TCP는 프로세스 간에 바이트 스트림을 순서대로 안정적으로 전달하기 위한 강력한 메커니즘을 제공하는 기본 프로토콜로, 분산 시스템에서 안정적인 데이터 전송의 초석이 된다. 네트워크의 내재된 불안정성을 극복하기 위해 몇 가지 주요 메커니즘을 사용한다.</p>
+<ul>
+<li>TCP는 바이트 스트림을 세그먼트라고 하는 더 작고 순차적인 패킷으로 분할한다.</li>
+<li>수신자는 패킷을 수신하는 즉시 발신자에게 확인(ACK)을 보내야 한다.</li>
+<li>TCP는 체크섬을 사용해 전송된 데이터의 무결성을 확인한다.</li>
+<li>TCP는 발신자가 수신자에게 데이터를 과도하게 전송하지 않도록 흐름 제어를 구현한다.</li>
+<li>마지막으로, TCP는 사용 가능한 네트워크 대역폭에 적응하기 위해 혼잡 제어를 메커니즘으로 사용한다.</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240713124249249.png" alt=""></p>
+<h4 id="2-Securing-Communication-with-TLS"><a href="#2-Securing-Communication-with-TLS" class="headerlink" title="2 - Securing Communication with TLS"></a>2 - Securing Communication with TLS</h4><p>TCP는 신뢰할 수 없는 네트워크에서 안정적인 통신을 보장하지만 데이터 전송의 보안 측면을 해결하지는 못한다. 바로 이 점이 TLS(Transport Layer Security) 프로토콜의 역할이다. TLS는 TCP가 설정한 통신 채널에 암호화, 인증 및 무결성을 추가하는 암호화 프로토콜이다. TLS는 여러 가지 메커니즘을 사용해 노드 간의 통신을 보호한다.</p>
+<ul>
+<li>TLS는 비대칭 암호화와 대칭 암호화의 조합을 사용해 데이터의 기밀성을 보호한다.</li>
+<li>TLS는 디지털 인증서를 사용해 통신 당사자의 신원을 인증한다.</li>
+<li>전송된 데이터의 무결성을 보장하기 위해 TLS는 각 메세지에 체크섬 또는 메세지 인증 코드를 포함한다.</li>
+</ul>
+<h4 id="3-Service-Discovery-with-DNS"><a href="#3-Service-Discovery-with-DNS" class="headerlink" title="3 - Service Discovery with DNS"></a>3 - Service Discovery with DNS</h4><p>분산 시스템에서 노드는 서로를 발견하고 통신할 수 있는 메커니즘이 필요하다. 바로 여기에서 DNS가 등장해 서비스 검색 문제를 해결한다. DNS는 사람이 읽을 수 있는 도메인 이름과 해당 IP 주소 간에 매핑을 제공한다. 이를 통해 노드는 복잡한 숫자 IP 주소 대신 기억하기 쉬운 이름을 사용해 서로를 찾고 연결할 수 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240713124543954.png" alt=""></p>
+<p>내부적으로 DNS는 분산된 계층적 키-값 저장소로 구현된다. 도메인 이름을 IP 주소로 확인하기 위해 함께 작동하는 서버 네트워크로 구성된다. DNS의 계층적 구조는 인터넷 전반에서 효율적이고 확장 가능한 이름 확인을 가능하게 한다.</p>
+<h3 id="Coordination"><a href="#Coordination" class="headerlink" title="Coordination"></a>Coordination</h3><p>분산 시스템을 구축할 때 노드 간의 조정은 중요한 과제다. 조정과 관련된 몇 가지 주요 문제는 다음과 같다.</p>
+<ul>
+<li>실패 가능성 : 분산 시스템에서는 서버나 네트워크 장치와 같은 개별 구성 요소가 언제든지 장애를 일으킬 수 있다. 이런 장애는 제대로 처리하지 않으면 정보 흐름을 방해하고 불일치를 초래할 수 있다.</li>
+<li>신뢰할 수 없는 네트워크 : 앞서 살펴본 바와 같이 분산 시스템은 지연, 패킷 손실 및 기타 문제가 발생하기 쉬운 네트워크를 통해 통신한다. 따라서 정보 교환을 안정적으로 조율하는 것은 큰 과제다.</li>
+<li>글로벌 시계의 부족 : 분산 시스템에는 글로벌 시계가 없기 때문에 모든 구성 요소에 걸쳐 일관된 시간 개념을 설정하기가 어렵다.</li>
+</ul>
+<p>분산 시스템의 조정과 관련된 문제를 해결하는데 사용되는 몇 가지 주요 기술을 살펴보자.</p>
+<h4 id="1-Failure-Detection"><a href="#1-Failure-Detection" class="headerlink" title="1 - Failure Detection"></a>1 - Failure Detection</h4><p>분산 환경에서는 실패한 프로세스와 단순히 응답 속도가 매우 느린 프로세스를 명확하게 구분하는 것이 불가능하다. 이렇게 모호한 이유는 네트워크 지연, 패킷 손실 또는 일시적인 네트워크 파티션으로 인해 프로세스가 여전히 올바르게 작동하고 있음에도 불구하고 응답하지 않는 것처럼 보일 수 있기 때문이다. 이런 문제를 해결하기 위해서 분산 시스템에서는 장애 감지기를 사용한다.</p>
+<p>장애 감지기는 프로세스의 상태를 모니터링하고 가용성을 결정하는 구성요소다. 그러나 장애 감지기는 감지 시간과 오탐지율 사이에서 절충점을 찾아야 한다. 장애 감지기가 장애를 빠르게 감지하도록 구성되면 느린 프로세스를 장애로 잘못 분류해 오탐률이 높아질 수 있다. 반면, 장애 감지기를 보다 보수적으로 구성하여 프로세스가 응답하는데 더 많은 시간을 허용하면 실제 장애를 탐지하는데 더 오래 걸리므로 탐지 시간이 더 느려질 수 있다.</p>
+<h4 id="2-Event-Ordering-and-Timing"><a href="#2-Event-Ordering-and-Timing" class="headerlink" title="2 - Event Ordering and Timing"></a>2 - Event Ordering and Timing</h4><p>이벤트의 타이밍과 순서를 합의하는 것은 분산 시스템에서 큰 조율 과제다. 이런 문제가 발생하는 주된 이유 중 하나는 분산 시스템의 물리적 시계가 불완전하기 때문이다. 시스템의 각 노드에는 일반적으로 quartz crystal oscillator를 기반으로 하는 물리적 시계가 있다. 이런 물리적 시계는 드리프트가 발생할 수 있으며 시간이 지남에 따라 점차적으로 서로 달라질 수 있다. 클럭 주파수의 작은 변화에도 노드 간에 인식되는 시간에 상당한 차이가 발생할 수 있다.</p>
+<p>또한 분산 시스템에서 이벤트의 전체 순서를 달성하려면 노드 간의 조정이 필요하다. 전체 순서에서 모든 노드는 노드 간의 인과 관계에 관계없이 정확한 이벤트 순서에 동의한다. 이런 문제를 해결하기 위해 분산 시스템에서는 논리적 시계와 벡터 시계에 의존해 이벤트의 인과적 순서를 파악하는 경우가 많다. </p>
+<p>램포트 타임스탬프와 같은 논리적 시계는 각 노드의 로컬 시계를 기반으로 이벤트에 단조롭게 증가하는 타임스탬프를 할당한다. 이런 타임스탬프는 이벤트의 부분적인 순서를 설정해 이벤트 간의 발생 전 관계를 포착한다.</p>
+<p>반면 벡터 시계는 이벤트 간의 인과 관계를 보다 포괄적으로 표현한다. 각 노드는 시스템에서 노드 당 하나의 항목이 있는 논리적 타임스탬프의 벡터를 유지한다. 이벤트가 발생하면 노드는 타임스탬프를 증가시키고 통신한 다른 모든 노드의 최대 타임스탬프를 포함한다. 노드는 벡터 클럭 값을 비교함으로써 이벤트 간의 인과 관계를 파악하고 잠재적인 충돌이나 불일치를 감지할 수 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240713125427452.png" alt=""></p>
+<h4 id="3-Leader-Election"><a href="#3-Leader-Election" class="headerlink" title="3 - Leader Election"></a>3 - Leader Election</h4><p>분산 시스템에서는 잠금을 유지하거나 트랜잭션을 커밋하는 등 많은 조정 작업을 수행하려면 단일 “리더” 프로세스가 필요하다. 리더는 이런 작업의 실행을 관리하고 조정할 책임이 있다.</p>
+<p>Raft는 분산 환경에서 리더 선출의 문제를 해결하기 위해 널리 채택된 합의 알고리즘이다. 이 알고리즘은 프로세스 그룹 중에서 리더를 선출하는 메커니즘을 제공해 한 임기당 최대 한 명의 리더를 선출할 수 있도록 한다. Raft 알고리즘은 리더가 선출되어 역할을 수행하는 논리적 시계 또는 기간을 나타내는 “term”의 관점에서 작동한다. 각 임기에는 단조롭게 증가하는 고유한 숫자가 할당된다.</p>
+<p>Raft의 핵심 원칙 중 하나는 후보 프로세스의 로그가 최신 상태일 때만 리더가 될 수 있다는 점이다. 즉, 후보 프로세스는 시스템의 다른 프로세스에 비해 가장 최신의 완전한 로그 항목 집합을 가지고 있어야 한다. 아래는 Raft 노드가 거칠 수 있는 상태 변경 다이어그램이다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240713125700646.png" alt=""></p>
+<h4 id="4-Data-Replication-and-Consistency"><a href="#4-Data-Replication-and-Consistency" class="headerlink" title="4 - Data Replication and Consistency"></a>4 - Data Replication and Consistency</h4><p>여러 노드에서 복제된 데이터를 동기화 상태로 유지하는 것은 분산 시스템에서 근본적인 조정 과제다. 복제는 데이터 가용성과 내결함성을 보장하는데 필수적이지만 복제본 간의 일관성을 유지해야 하는 복잡성을 수반한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240713125745386.png" alt=""></p>
+<p>CAP 정리는 분산 시스템에서는 일관성, 가용성, 파티션 허용 오차를 동시에 제공하는 것이 불가능 하다는 것을 말한다. 이 정리에 따르면 분산 시스템은 주어진 시간에 세 가지 보장 중 두 가지 보장만 제공할 수 있다. 네트워크 파티션이 있는 경우 일관성과 가용성 간에 절충점이 존재한다. 시스템은 가용성을 낮추는 대신 강력한 일관성을 유지하거나, 약한 일관성 보장을 수용하면서 가용성을 우선시하는 것을 선택해야 한다. 또한 분산 시스템은 복제된 데이터에 대한 읽기 및 쓰기 작업에 대한 보장을 정의하는 여러 일관성 모델을 지원한다.</p>
+<ul>
+<li><strong>Linearizability:</strong> 가장 강력한 일관성 모델이며, 각 작업이 호출과 완료 사이의 어느 시점에서 즉각적으로 적용되는 것처럼 보이도록 보장한다.</li>
+<li><strong>Sequential Consistency:</strong> 모든 실행의 결과가 모든 프로세스의 작업이 순차적으로 실행된 것처럼 동일하게 나타나도록 보장한다.</li>
+<li><strong>Causal consistency:</strong> 인과적으로 관련된 작업(e.g. 후속 읽기에 영향을 미치는 쓰기)이 모든 프로세스에서 동일한 순서로 표시되도록 보장한다.</li>
+<li><strong>Eventual Consistency:</strong> 가장 약한 일관성 모델이며, 데이터 항목에 대한 새로운 업데이트가 이루어지지 않으면 결국 해당 항목에 대한 모든 읽기가 마지막으로 업데이트된 값을 반환하도록 보장한다.</li>
+</ul>
+<h3 id="Scalability"><a href="#Scalability" class="headerlink" title="Scalability"></a>Scalability</h3><p>앞서 설명한 것처럼 확장성은 분산 시스템을 도입할 때 얻을 수 있는 주요 이점 중 하나다. 확장 가능한 시스템은 리소스를 추가해 더 많은 부하를 처리할 수 있는 용량을 늘릴 수 있다. 그러나 올바른 확장성 패턴을 선택하는 것도 중요하다. 분산 시스템을 확장하기 위해 몇 가지 주요 패턴을 살펴보자.</p>
+<h4 id="1-Functional-Decomposition"><a href="#1-Functional-Decomposition" class="headerlink" title="1 - Functional Decomposition"></a>1 - Functional Decomposition</h4><p>기능적 분해의 예로는 모놀리식 애플리케이션을 독립적으로 배포 가능한 더 작은 서비스로 분해하는 것을 들 수 있다. 각 서비스에는 잘 정의된 책임이 있으며 API를 통해 다른 서비스와 통신한다.</p>
+<p>API 게이트웨이는 외부 클라이언트가 마이크로서비스와 상호 작용할 수 있는 단일 진입점 역할을 한다. 클라이언트에 통합된 인터페이스를 제공하여 요청 라우팅 및 구성을 처리한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240713130333337.png" alt=""></p>
+<p>또 다른 기능적 분해 접근 방식으로는 CQRS와 같은 패턴이 있다. CQRS는 애플리케이션의 읽기 경로와 쓰기 경로를 분리하는 패턴이다. 이는 읽기 및 쓰기 작업을 독립적으로 확장할 수 있도록 하여 성능을 최적화한다. CQRS는 효율적인 데이터 검색 및 수정을 위해 마이크로서비스와 함께 사용되는 경우가 많다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240713130435615.png" alt=""></p>
+<p>기능적 분해 접근 방식은 또한 비동기 메시징을 통신 패턴으로 사용한다. 이는 서비스를 분리해 복원력과 확장성을 높이는데 도움이 된다. 서비스는 메세지 대기열 또는 pub-sub 시스템을 통해 통신하므로 각자의 속도에 맞춰 요청을 처리하고 과부하를 방지할 수 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240713130534262.png" alt=""></p>
+<h4 id="2-Partitioning"><a href="#2-Partitioning" class="headerlink" title="2 - Partitioning"></a>2 - Partitioning</h4><p>파티셔닝은 분산 시스템에서 단일 노드에서 저장 및 처리하기에는 너무 큰 데이터 집합을 여러 노드로 분할하는데 사용되는 기본 기술이다. 파티셔닝은 데이터를 분산시킴으로써 수평적 확장성을 가능하게 하고 시스템이 증가하는 데이터 볼륨을 처리할 수 있도록 한다. 아래 다이어그램은 카테고리 필드를 기준으로 도서 테이블을 분할하는 데이터 파티셔닝의 개념을 보여준다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240713130650330.png" alt=""></p>
+<ul>
+<li>범위 파티셔닝 : 특정 키 범위를 기준으로 데이터를 분할하는 방식이다. 각 파티션은 인접한 범위의 키를 저장하는 역할을 담당한다. 이 접근 방식은 더 빠른 범위 스캔을 가능하게 하지만 특정 키 범위에 불균형한 트래픽이나 데이터가 수신되면 잠재적인 핫스팟이 발생할 수 있다.</li>
+<li>해시 파티셔닝 : 해시 파티셔닝은 해시 함수를 사용해 데이터를 여러 파티션에 고르게 분산시킨다. 해시 파티셔닝은 보다 균일한 데이터 분포를 보장하지만, 키의 자연스러운 순서를 잃게 되어 범위 스캔의 효율성이 떨어진다.</li>
+<li>리밸런싱 : 리밸런싱은 데이터의 균형 잡힌 분포를 유지하기 위해 클러스터 크기가 변경될 때 노드 간에 파티션을 이동하는 프로세스다.</li>
+<li>일관된 해싱 : 일관된 해싱은 클러스터에 노드를 추가하거나 제거할 때 데이터 이동을 최소화하는 파티셔닝 기법이다.</li>
+</ul>
+<h4 id="3-Duplication"><a href="#3-Duplication" class="headerlink" title="3 - Duplication"></a>3 - Duplication</h4><p>복제는 분산 시스템에서 구성 요소의 이중화를 도입하여 용량을 확장하고 가용성을 높이기 위해 사용되는 중요한 기술이다. 서버, 데이터 및 기타 리소스를 복제함으로써 시스템은 더 많은 부하를 처리하고 장애에 대한 복원력을 제공할 수 있다. 복제를 가능하게 하는 몇 가지 주요 기술은 다음과 같다.</p>
+<ul>
+<li><strong>Load Balancing:</strong> 부하 분산은 서버 풀에 들어오는 요청을 분산하여 최적의 리소스 활용도를 보장하는 프로세스다. 로드 밸런서는 다양한 알고리즘을 사용해 특정 요청을 처리할 서버를 결정한다. 또한 다음과 같이 네트워크 스택의 여러 계층에서 부하 분산을 구현할 수 있다.<ul>
+<li>DNS 수준에서 요청을 분산하는 DNS-based load balancing</li>
+<li>IP 주소 및 포트 번호화 같은 전송 계층 정보를 기반으로 요청을 분산하는 Layer 4 load balancing</li>
+<li>HTTP 헤더, URL 또는 세션 데이터와 같은 애플리케이션 수준 정보를 기반으로 요청을 분산하는 Layer 7 load balancing</li>
+</ul>
+</li>
+<li><strong>Server-Side Discovery:</strong> 동적 확장을 지원하기 위해 분산 시스템에서는 서버 측 검색을 사용한다. 이를 통해 서버는 중앙 레지스트리 또는 검색 서비스에 동적으로 자신을 등록할 수 있다. 서버의 상태를 모니터링하고 장애를 감지하기 위해 상태 검사가 수행된다.</li>
+<li><strong>Data Replication:</strong> 복제에는 분산 시스템의 여러 노드에 걸쳐 여러 개의 데이터 복사본을 만드는 작업이 포함된다. 다음과 같은 다양한 복제 스타일이 있다.<ul>
+<li><strong>Single-leader replication:</strong> 한 노드가 리더 역할을 하여 쓰기 작업과 중요한 읽기를 처리하고 다른 노드는 팔로워 역할을 한다.</li>
+<li><strong>Multi-leader replication:</strong> 여러 노드가 쓰기 작업을 수락할 수 있으며, 변경 사항은 리더 간에 비동기적으로 전파된다.</li>
+<li><strong>Leaderless replication:</strong> 모든 노드가 쓰기 작업을 수락하며 쿼럼 합의와 같은 기술을 통해 일관성이 유지된다.</li>
+</ul>
+</li>
+</ul>
+<p>아래 다이어그램은 로드 밸런서가 여러 서비스 인스턴스 간에 트래픽을 분산하는 방법을 보여준다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240713131449535.png" alt=""></p>
+<h3 id="Resiliency"><a href="#Resiliency" class="headerlink" title="Resiliency"></a>Resiliency</h3><p>복원력은 장애가 발생하더라도 시스템이 계속 올바르게 작동할 수 있는 능력이다. 분산 시스템의 규모와 복잡성이 확장됨에 따라 장애는 가능성은 물론이고, 피할 수 없는 일이 되었다. 가장 일반적인 장애의 원인은 다음과 같다.</p>
+<ul>
+<li>서버, 스토리지, 네트워크의 하드웨어 장애</li>
+<li>소프트웨어 버그 및 메모리 누수</li>
+<li>구성 및 배포 시 인적 오류</li>
+<li>한 구성 요소의 결함이 다른 구성 요소의 결함을 유발하는 연쇄적 장애</li>
+<li>예기치 않은 부하 급증으로 용량이 압도되는 경우</li>
+</ul>
+<p>분산 시스템 내에서 구성 요소의 복원력을 관리하는 데는 크게 두 가지 범주가 있다.</p>
+<h4 id="1-Downstream-Resiliency"><a href="#1-Downstream-Resiliency" class="headerlink" title="1 - Downstream Resiliency"></a>1 - Downstream Resiliency</h4><p>서비스가 동기식 요청/응답 통신을 통해 상호 작용할 때는 한 구성 요소나 서비스에서 다른 구성 요소나 서비스로 장애가 전파되는 것을 막는 것이 중요하다. 이를 가능하게 하는 주요 기술은 다음과 같다.</p>
+<ul>
+<li><strong>Timeouts:</strong> 타임아웃은 한 서비스가 다른 서비스의 응답을 무한정 기다리지 않도록 하는데 사용된다. 적절한 타임아웃 값을 설정하면 호출된 서비스가 응답하지 않을 경우 호출 서비스가 장시간 차단되는 것을 방지할 수 있다. 시간 초과가 발생하면 호출 서비스는 오류를 반환하거나 기본 동작으로 되돌아가는 등 적절한 조치를 취할 수 있다.</li>
+<li><strong>Retries with Exponential Backoff:</strong> 재시도는 일시적인 네트워크 문제와 같은 일시적인 장애를 처리하기 위한 일반적인 패턴이다. 요청이실패하면 호출 서비스는 일정 시간 지연 후 요청을 재시도할 수 있다. 그러나 많은 재시도로 인해 호출 서비스가 과부하되는 것을 방지하기 위해 지수 백오프가 사용된다. 각 재시도 사이의 지연이 기하급수적으로 증가해 호출된 서비스가 복구할 수 있는 시간을 제공한다.</li>
+<li><strong>Circuit Breakers:</strong> 회로 차단기는 서비스가 비정상적이거나 응답하지 않을 때 연쇄적인 장애를 방지하는데 도움이 된다. 서킷 브레이커는 호출 서비스와 호출된 서비스 사이의 중개자 역할을 한다. 요청의 성공과 실패를 모니터링 하며 실패율이 특정 임계값을 넘으면 회로 차단기가 작동해 후속 요청을 거부한다. 이 빠른 실패 접근 방식은 호출 서비스가 실패한 서비스를 대기하는 것을 방지한다.</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240713132007192.png" alt=""></p>
+<h4 id="2-Upstream-Resiliency"><a href="#2-Upstream-Resiliency" class="headerlink" title="2 - Upstream Resiliency"></a>2 - Upstream Resiliency</h4><p>복원력 기술은 서비스 소유자 수준에서도 중요하다. 들어오는 요청으로 인해 서비스가 과부하되지 않도록 보호하는 여러 가지 전략이 있다.</p>
+<ul>
+<li><strong>Load Shedding:</strong> 로드 쉐딩은 서비스에 과부하가 걸리거나 수요가 많을 때 들어오는 요청의 일부를 거부하는 것이다. 요청을 선택적으로 삭제함으로써 서비스의 응답성을 유지하고 완전한 고장을 방지한다.</li>
+<li><strong>Rate Limiting and Throttling:</strong> 이 두 가지 기술은 클라이언트의 공정한 서비스 사용을 보장하기 위해 사용된다. 속도 제한은 클라이언트가 특정 시간 내에 요청할 수 있는 최대 요청 수를 설정한다. 반면 스로툴링은 클라이언트가 특정 임계값을 초과할 때 요청 처리 속도를 늦추는 것이다.</li>
+<li><strong>Bulkheads:</strong> 벌크헤드는 선박 설계에 사용되는 구획화 기법에서 영감을 받은 복원력 패턴이다. 서비스에서 격벽은 한 부분의 장애가 다른 부분으로 확산되는 것을 방지하기 위해 시스템의 여러 부분을 격리하는 것을 포함한다.</li>
+<li><strong>Health Checks with Load Balancer Integration:</strong> 상태 점검은 서비스 인스턴스의 상태와 가용성을 주기적으로 평가하는 것이다. 로드 밸런서는 서비스 인스턴스의 상태를 정기적으로 모니터링하여 건강하지 않거나 응답이 없는 인스턴스에서 트래픽을 감지하고 라우팅할 수 있다.</li>
+</ul>
+<h2 id="Summary"><a href="#Summary" class="headerlink" title="Summary"></a>Summary</h2><ul>
+<li>분산 시스템은 특정 작업을수행하거나 서비스를 제공하기 위해 협업하는 노드라고 하는 컴퓨터의 집합이다.</li>
+<li>분산 시스템에서는 각 컴퓨터가 독립적으로 작동하여 할당된 작업을 수행함으로써 전체 계산에 기여한다.</li>
+<li>분산 시스템의 주요 이점으로는 확장성, 안정성 및 성능이 있다.</li>
+<li>분산 시스템은 커뮤니케이션, 조정, 확장성 및 복원력과 관련된 몇 가지 과제를 안고 있다. 하지만 이런 문제를 해결하기 위해 여러가지 기술을 사용할 수 있다.</li>
+<li>분산 시스템에서는 기본 네트워크 인프라의 불안정한 특성으로 인해 통신이 어렵다. 이 문제는 안정적 통신을 위한 TCP, 보안 통신을 위한 TLS, 서비스 검색을 위한 DNS와 같은 프로토콜을 사용해 해결할 수 있다.</li>
+<li>분산 시스템은 여러 구성 요소로 이루어져 있기 때문에 이들 간의 조율은 큰 과제다. 장애 감지, 이벤트 순서 및 타이밍, 리더 선출, 일관성 수준과 같은 기술은 분산 시스템 내에서 조정을 개선하는데 큰 도움이 된다.</li>
+<li>확장성은 분산 시스템의 주요 이점이다. 그러나 올바른 확장 패턴을 선택하는 것이 중요하다. 몇 가지 일반적인 패턴으로는 마이크로서비스로의 기능적 분해, 데이터 파티셔닝, 복제 및 로드 밸런싱을 통한 리소스 복제 등이 있다.</li>
+<li>분산 시스템이 확장되면 장애를 피할 수 없게 되고 복원력이 중요한 과제가 된다. 다운 스트림 복원력(타임아웃, 재시도, 회로 차단기 등)과 업스트림 복원력(부하 분산, 속도 제한, 벌크헤드 패턴)을 위해 여러 가지 기술을 사용할 수 있다.</li>
+</ul>
+<!-- flag of hidden posts --></div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined">Song Hayoung</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="https://songhayoung.github.io/2024/07/13/System%20Design/ByteByteGo/private/a-crash-course-on-distributed-systems/">https://songhayoung.github.io/2024/07/13/System%20Design/ByteByteGo/private/a-crash-course-on-distributed-systems/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/System-Design/">System Design</a></div><nav id="pagination"></nav><div id="gitalk-container"></div><script>var gitalk = new Gitalk({
+  clientID: '3604b61642355579f55e',
+  clientSecret: 'f552120f18ac5aee3f6297e05e97d94c0a25cd4b',
+  repo: 'SongHayoung.github.io',
+  owner: 'SongHayoung',
+  admin: 'SongHayoung',
+  id: md5(decodeURI(location.pathname)),
+  language: 'en'
+})
+gitalk.render('gitalk-container')</script></div></div><footer class="footer-bg" style="background-image: url(https://xxxx.jpg)"><div class="layout" id="footer"><div class="copyright">&copy;2020 - 2024 By Song Hayoung</div><div class="framework-info"><span>Driven - </span><a target="_blank" rel="noopener" href="http://hexo.io"><span>Hexo</span></a><span class="footer-separator">|</span><span>Theme - </span><a target="_blank" rel="noopener" href="https://github.com/Molunerfinn/hexo-theme-melody"><span>Melody</span></a></div><div class="footer_custom_text">Learning how to walk slowly to not miss important things</div><div class="busuanzi"><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><span id="busuanzi_container_page_pv"><i class="fa fa-file"></i><span id="busuanzi_value_page_pv"></span><span></span></span></div></div></footer><i class="fa fa-arrow-up" id="go-up" aria-hidden="true"></i><script src="https://cdn.jsdelivr.net/npm/animejs@latest/anime.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@latest/velocity.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-ui-pack@latest/velocity.ui.min.js"></script><script src="/js/utils.js?version=1.7.0"></script><script src="/js/fancybox.js?version=1.7.0"></script><script src="/js/sidebar.js?version=1.7.0"></script><script src="/js/copy.js?version=1.7.0"></script><script src="/js/fireworks.js?version=1.7.0"></script><script src="/js/transition.js?version=1.7.0"></script><script src="/js/scroll.js?version=1.7.0"></script><script src="/js/head.js?version=1.7.0"></script><script src="/js/search/algolia.js"></script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+    processEscapes: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  },
+  CommonHTML: {
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "HTML-CSS": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "SVG": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  }
+});
+</script><script type="text/x-mathjax-config">MathJax.Hub.Queue(function() {
+  var all = MathJax.Hub.getAllJax(), i;
+  for (i=0; i < all.length; i += 1) {
+    all[i].SourceElement().parentNode.className += ' has-jax';
+  }
+});
+</script><script src="https://cdn.jsdelivr.net/npm/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><script>if(/Android|webOS|iPhone|iPod|iPad|BlackBerry/i.test(navigator.userAgent)) {
+  $('#nav').addClass('is-mobile')
+  $('footer').addClass('is-mobile')
+  $('#top-container').addClass('is-mobile')
+}</script><div class="search-dialog" id="algolia-search"><div class="search-dialog__title" id="algolia-search-title">Algolia</div><div id="algolia-input-panel"><div id="algolia-search-input"></div></div><hr><div id="algolia-search-results"><div id="algolia-hits"></div><div id="algolia-pagination"></div><div id="algolia-stats"></div></div><span class="search-close-button"><i class="fa fa-times"></i></span></div><div class="search-mask"></div></body></html>
