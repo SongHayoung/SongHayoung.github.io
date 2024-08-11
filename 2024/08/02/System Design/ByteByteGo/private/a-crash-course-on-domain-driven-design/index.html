@@ -1,0 +1,192 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="description" content="[ByteByteGo] A Crash Course on Domain-Driven Design"><meta name="keywords" content="System Design"><meta name="author" content="Song Hayoung"><meta name="copyright" content="Song Hayoung"><title>[ByteByteGo] A Crash Course on Domain-Driven Design | SUMFIのBlog</title><meta name="robots" content="noindex"><link rel="shortcut icon" href="/songcon.ico"><link rel="stylesheet" href="/css/index.css?version=1.7.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@latest/css/font-awesome.min.css?version=1.7.0"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css?version=1.7.0"><meta name="format-detection" content="telephone=no"><meta http-equiv="x-dns-prefetch-control" content="on"><link rel="dns-prefetch" href="https://cdn.jsdelivr.net"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.css"><script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.js" defer></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@latest/dist/gitalk.min.js"></script><script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.10.0/js/md5.min.js"></script><link rel="dns-prefetch" href="https://www.google-analytics.com"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-169368422-1', 'auto');
+ga('send', 'pageview');</script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: {"appId":"7LZ6OJ4D6C","apiKey":"9a84e13f74ea78c3fd54512c10139c56","indexName":"git blog","hits":{"per_page":10},"languages":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}.","hits_stats":"${hits} results found in ${time} ms"}},
+  localSearch: undefined,
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  }
+} </script><meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/rss2.xml" title="SUMFIのBlog" type="application/rss+xml">
+</head><body><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar" data-display="true"><div class="toggle-sidebar-info text-center"><span data-toggle="Toggle article">Toggle site</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">Catalog</div><div class="sidebar-toc__progress"><span class="progress-notice">You've read</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#A-Crash-Course-on-Domain-Driven-Design"><span class="toc-number">1.</span> <span class="toc-text">A Crash Course on Domain-Driven Design</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Core-Principles-of-Domain-Driven-Design"><span class="toc-number">2.</span> <span class="toc-text">Core Principles of Domain-Driven Design</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Creating-a-Rich-Domain-Model"><span class="toc-number">2.1.</span> <span class="toc-text">Creating a Rich Domain Model</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Using-a-Ubiquitous-Language"><span class="toc-number">2.2.</span> <span class="toc-text">Using a Ubiquitous Language</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Domain-Model-to-Software-Design"><span class="toc-number">2.3.</span> <span class="toc-text">Domain Model to Software Design</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Key-Patterns-to-Craft-a-Domain-Model"><span class="toc-number">3.</span> <span class="toc-text">Key Patterns to Craft a Domain Model</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Layered-Architecture"><span class="toc-number">3.1.</span> <span class="toc-text">Layered Architecture</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Entities"><span class="toc-number">3.2.</span> <span class="toc-text">Entities</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Value-Object"><span class="toc-number">3.3.</span> <span class="toc-text">Value Object</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Services"><span class="toc-number">3.4.</span> <span class="toc-text">Services</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Aggregates"><span class="toc-number">3.5.</span> <span class="toc-text">Aggregates</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Repository"><span class="toc-number">3.6.</span> <span class="toc-text">Repository</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Factory"><span class="toc-number">3.7.</span> <span class="toc-text">Factory</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Strategic-Design-Concepts-of-DDD"><span class="toc-number">4.</span> <span class="toc-text">Strategic Design Concepts of DDD</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Bounded-Contexts"><span class="toc-number">4.1.</span> <span class="toc-text">Bounded Contexts</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Relationships-Between-Bounded-Contexts"><span class="toc-number">4.2.</span> <span class="toc-text">Relationships Between Bounded Contexts</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-Context-Maps"><span class="toc-number">4.2.1.</span> <span class="toc-text">1 - Context Maps</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-Shared-Kernel"><span class="toc-number">4.2.2.</span> <span class="toc-text">2 - Shared Kernel</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-Anticorruption-Layer"><span class="toc-number">4.2.3.</span> <span class="toc-text">3 - Anticorruption Layer</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Summary"><span class="toc-number">5.</span> <span class="toc-text">Summary</span></a></li></ol></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="https://avatars3.githubusercontent.com/u/37806785?s=460&amp;u=8c68d685faf7c5280cfbd736a6b1730b55fb4203&amp;v=4"></div><div class="author-info__name text-center">Song Hayoung</div><div class="author-info__description text-center"></div><div class="follow-button"><a target="_blank" rel="noopener" href="https://www.linkedin.com/in/hayoung-song-9523b61bb/">Follow Me</a></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="/archives"><span class="pull-left">Articles</span><span class="pull-right">10882</span></a><a class="author-info-articles__tags article-meta" href="/tags"><span class="pull-left">Tags</span><span class="pull-right">193</span></a><a class="author-info-articles__categories article-meta" href="/categories"><span class="pull-left">Categories</span><span class="pull-right">61</span></a></div><hr><div class="author-info-links"><div class="author-info-links__title text-center">VISITED</div><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Seoul Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Jeju Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">British Columbia Canada</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Boracay Philippines</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">三重　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">大阪　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">名古屋　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">静岡　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">札幌　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">京都　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Bangkok Thailand</a></div></div></div><div id="content-outer"><div id="top-container" style="background-image: url(https://xxxx.jpg)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="/">SUMFIのBlog</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus">   <a class="site-page" href="/">Home</a><a class="site-page" href="/archives">Archives</a><a class="site-page" href="/tags">Tags</a><a class="site-page" href="/categories">Categories</a><a class="site-page" href="/about">About</a></span><span class="pull-right"><a class="site-page social-icon search"><i class="fa fa-search"></i><span> Search</span></a></span></div><div id="post-info"><div id="post-title">[ByteByteGo] A Crash Course on Domain-Driven Design</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2024-08-02</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/">System Design</a><i class="fa fa-angle-right" aria-hidden="true"></i><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/Byte-Byte-Go/">Byte Byte Go</a><div class="post-meta-wordcount"><span>Word count: </span><span class="word-count">2.6k</span><span class="post-meta__separator">|</span><span>Reading time: 16 min</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div class="article-container" id="post-content"><h2 id="A-Crash-Course-on-Domain-Driven-Design"><a href="#A-Crash-Course-on-Domain-Driven-Design" class="headerlink" title="A Crash Course on Domain-Driven Design"></a>A Crash Course on Domain-Driven Design</h2><span id="more"></span>
+<p>복잡한 도메인을 위한 소프트웨어를 개발하는 것은 쉽지 않은 작업이다. 문제 도메인의 복잡성이 커질수록 비즈니스 개념, 규칙 및 프로세스를 정확하게 표현하는 소프트웨어를 만드는 것이 점점 더 어려워진다. 잘못 설계된 소프트웨어는 금방 이해할 수 없는 코드의 엉킴으로 바뀌어 이해, 유지 관리 및 확장이 어려워질 수 있다. DDD는 이 문제에 대한 해결책을 제시한다.</p>
+<p>DDD는 핵심 도메인과 비즈니스 로직을 모델링하고 이러한 모델을 소프트웨어 설계의 기초로 사용하는 것의 중요성을 강조함으로써 도메인 복잡성을 해결하는 소프트웨어 개발 접근 방식이다. 도메인 중심 설계의 핵심은 다음과 같다.</p>
+<ul>
+<li>핵심 도메인에 주안점을 둔다.</li>
+<li>도메인 모델을 기반으로 복잡한 디자인을 설계한다.</li>
+<li>기술 전문가와 도메인 전문가 간의 협업을 구축한다.</li>
+</ul>
+<p>도메인 중심 설계의 필요성은 최근 몇 년 동안 커졌다. 마이크로서비스와 클라우드 컴퓨팅을 기반으로 하는 아키텍처로 인해 복잡한 방식으로 상호 작용하는 수많은 작은 구성 요소로 구성된 시스템이 탄생했다. 설계를 안내하는 명확하고 잘 정의된 도메인 모델이 없다면 이런 시스템은 금방 진흙탕 속의 큰 공이 되어버린다. </p>
+<p>이 포스트에서는 도메인 중심 설계의 기본 사항과 핵심 도메인 및 비즈니스 로직과 일치하는 보다 유지 관리가 용이하고 확장 ㅏㄱ능한 시스템을 구축하는데 도움이 되는 주요 개념을 살펴본다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240802083122199.png" alt=""></p>
+<h2 id="Core-Principles-of-Domain-Driven-Design"><a href="#Core-Principles-of-Domain-Driven-Design" class="headerlink" title="Core Principles of Domain-Driven Design"></a>Core Principles of Domain-Driven Design</h2><p>DDD는 기본 비즈니스 도메인과 밀접하게 연계된 소프트웨어 시스템을 만드는데 중점을 둔다. 도메인 모델을 개발 프로세스의 중심에 배치해 기술 구현과 비즈니스 요구 사항간의 격차를 해소하는 것을 목표로 한다. DDD에는 세 가지 핵심 원칙이 있다.</p>
+<ul>
+<li>도메인 전문가의 의견을 바탕으로 풍부한 도메인 만들기</li>
+<li>도메인 모델에 기반한 유비쿼터스 언어 사용</li>
+<li>도메인 모델에서 소프트웨어 설계 추진</li>
+</ul>
+<p>이런 각 원칙에 대해 자세히 살펴보자.</p>
+<h3 id="Creating-a-Rich-Domain-Model"><a href="#Creating-a-Rich-Domain-Model" class="headerlink" title="Creating a Rich Domain Model"></a>Creating a Rich Domain Model</h3><p>DDD의 기초는 문제 도메인의 핵심 개념, 관계 및 비즈니스 규칙을 정확하게 포착하는 풍부한 도메인 모델을 만드는데 있다. 이 모델은 개발팀이 단독으로 만드는 것이 아니라 비즈니스에 대한 깊은 지식을 보유한 도메인 전문가와의 긴밀한 협업을 통해 탄생한다. 도메인 지식을 사용 가능한 모델로 추출하는 과정을 지식 크런칭이라 한다.</p>
+<p>이 과정에서 개발팀은 도메인 전문가와 긴밀히 협력하여 문제에 가장 적합한 개념과 규칙을 식별하고 구체화한다. 이러한 협업 노력에는 브레인스토밍 세션, 다양한 모델 디자인 실험, 개발 과정에서 얻은 피드백과 인사이트를 바탕으로 한 반복적인 개선 작업이 포함된다.</p>
+<p>예를 들어 은행 시스템의 경우 재무 부서의 도메인 전문가와 함께하는 지식 세션에서는 계좌, 고객, 거래, 이자 계산과 같은 핵심 개념을 이해하는데 중점을 둔다. 목표는 도메인 전문가가 이해할 수 있고 소프트웨어 시스템의 실질적인 기반이 되는 이런 기본 개념과 그 관계를 포착하는 모델을 만드는 것이다.</p>
+<h3 id="Using-a-Ubiquitous-Language"><a href="#Using-a-Ubiquitous-Language" class="headerlink" title="Using a Ubiquitous Language"></a>Using a Ubiquitous Language</h3><p>도메인 모델이 구체화되면 개발 팀과 도메인 전문가가 공유하는 공통 언어가 생긴다. DDD는 이를 프로젝트의 모든 측면에 스며드는 유비쿼터스 언어라고 한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240802083542328.png" alt=""></p>
+<p>유비쿼터스 언어는 모데인 모델을 직접 기반으로 한다. 코드의 클래스, 메서드, 변수의 이름은 모델 개념에서 파생된다. 마찬가지로 토론과 문서에서 팀은 명확한 의사소통을 보장하고 모호함을 피하기 위해 유비쿼터스 언어의 용어와 문구를 사용한다. 유비쿼터스 언어를 일관되게 사용하면 코드가 모델을 직접 반영하므로 모델과 관련된 내용을 더 쉽게 이해하고 수정할 수 있다. </p>
+<p>예를 들어 뱅킹 도메인 모델에 “계정”, “입금”, “출금” 등의 개념이 포함된 경우 코드 개발자와 도메인 전문가 간의 토론, 프로젝트 문서에서 동일한 용어가 일관되게 사용된다. 모든 사람이 동일한 언어를 사용하면 이해의 모호함이나 불일치가 빠르게 드러난다. 다음은 클래스와 그 메서드를 작성하는 동안 유비쿼터스 언어의 사용을 보여주는 예다.</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Account</span> &#123;</span><br><span class="line">    <span class="keyword">private</span> String accountNumber;</span><br><span class="line">    <span class="keyword">private</span> <span class="type">double</span> balance;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">deposit</span><span class="params">(<span class="type">double</span> amount)</span> &#123;</span><br><span class="line">        <span class="comment">// Perform deposit logic</span></span><br><span class="line">        balance += amount;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">withdraw</span><span class="params">(<span class="type">double</span> amount)</span> &#123;</span><br><span class="line">        <span class="comment">// Perform withdrawal logic</span></span><br><span class="line">        <span class="keyword">if</span> (balance &gt;= amount) &#123;</span><br><span class="line">            balance -= amount;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">InsufficientFundsException</span>(<span class="string">&quot;Insufficient funds for withdrawal&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="Domain-Model-to-Software-Design"><a href="#Domain-Model-to-Software-Design" class="headerlink" title="Domain Model to Software Design"></a>Domain Model to Software Design</h3><p>DDD에서 도메인 모델은 단순한 개념적 도구가 아니다. 도메인 모델은 소프트웨어 설꼐의 기초다. 소프트웨어의 구조와 동작은 모델의 구조와 동작을 반영한다. 이런 접근 방식을 모델 중심 설계라 한다.</p>
+<p>실제로는 코드의 클래스, 관계 및 동작이 도메인 모델의 개념, 관계 및 규칙과 직접적으로 일치한다는 의미다. 이 설계는 기술적 문제나 인프라 세부 사항이 아니라 도메인 모델을 효과적으로 표현해야 할 필요성에 의해 주도된다. 예를 들어 은행 도메인 모델에서 “입금” 및 “출금”과 같은 동작이 있는 “계정” 개념을 정의하는 경우 소프트웨어 설계에는 “입금” 및 “출금” 메서드가 있는 “계정” 클래스가 포함된다. 이러한 메서드의 작동 방식에 대한 구현 세부 사항은 모델에 캡처된 규칙과 요구 사항에 따라 안내된다. 이전 섹션에서 이미 이러한 메서드가 실제로 작동하는 것을 보았다.</p>
+<h2 id="Key-Patterns-to-Craft-a-Domain-Model"><a href="#Key-Patterns-to-Craft-a-Domain-Model" class="headerlink" title="Key Patterns to Craft a Domain Model"></a>Key Patterns to Craft a Domain Model</h2><p>도메인 모델을 만드는 것은 도메인 중심 디자인의 가장 중요한 측면이다. 하지만 몇 가지 주요 패턴과 관행이 최적의 결과를 얻는 데 도움이 될 수 있다. 주요 패턴을 자세히 살펴보자.</p>
+<h3 id="Layered-Architecture"><a href="#Layered-Architecture" class="headerlink" title="Layered Architecture"></a>Layered Architecture</h3><p>DDD의 맥락에서 계층화된 아키텍처는 도메인 모델을 분리하고 우려 사항을 명확하게 분리하는데 도움이 된다. 아래 다이어그램은 애플리케이션을 계층으로 구성하는 방법을 보여준다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240802084045612.png" alt=""></p>
+<p>일반적으로 계층화된 아키텍처는 네 가지 주요 계층으로 구성된다.</p>
+<ul>
+<li><strong>User Interface (Presentation) Layer:</strong> 이 계층은 사용자에게 정보를 표시하고 사용자 명령을 해석하는 역할을 담당한다. 애플리케이션 레어와 통신하여 사용자 요청을 보내고 응답을 받는다.</li>
+<li><strong>Application Layer:</strong> 애플리케이션 레이어는 전반적인 애플리케이션 활동을 조정하고 UI와 도메인 레이어 간의 데이터 흐름을 조율한다. 비즈니스 로직은 포함하지 않고 도메인 레이어에 위임한다. 애플리케이션 계층은 트랜잭션 관리 및 보안과 같은 애플리케이션별 작업을 처리한다.</li>
+<li><strong>Domain Layer:</strong> 도메인 계층은 소프트웨어 시스템의 핵심이며 도메인 중심 설계의 주요 초점이다. 도메인 계층은 문제 도메인 내의 실제 개념, 엔티티 및 이들의 관계를 나타낸다. 즉, 비즈니스 도메인에 대한 정보를 캡슐화하고 비즈니스 규칙과 논리를 포함한다.</li>
+<li><strong>Infrastructure Layer:</strong> 인프라 계층은 일반적인 기술 기능을 제공하고 아키텍처의 상위 계층을 지원한다. 여기에는 지속성, 메시징, 로깅 및 기타 기술 서비스와 같은 교차적인 문제가 포함된다.</li>
+</ul>
+<p>예를 들어 전자상거래 시스템에서 도메인 레이어에는 제품, 주문, 고객과 같은 핵심 비즈니스 개념이 포함된다. UI 레이어에는 제품 표시, 장바구니, 결제 화면이 있다. 애플리케이션 레이어는 주문 프로세스의 흐름을 처리한다. 인프라 계층은 지속성, 메시징 등과 같은 기능을 제공한다.</p>
+<h3 id="Entities"><a href="#Entities" class="headerlink" title="Entities"></a>Entities</h3><p>DDD에서 엔티티는 고유한 정체성과 연속성을 가진 개체를 나타내는 기본 개념이다. 엔티티는 도메인의 다른 개체와 구별되는 몇 가지 주요 특성을 가지고 있다. </p>
+<ul>
+<li>엔티티는 단순한 속성의 집합이 아니라 정체성에 의해 정의된다. 아이덴티티는 엔티티를 고유하게 만든다.</li>
+<li>엔티티는 시간이 지남에 따라 상태와 속성을 변경하면서도 그 정체성을 유지할 수 있다.</li>
+<li>엔티티의 ID는 시스템 내에서 엔티티를 추적하고 참조하는데 사용된다. 다른 엔티티는 엔티티의 ID를 기반으로 엔티티와 관계를 설정할 수 있다.</li>
+</ul>
+<p>엔티티의 개념을 이해하려면 은행 시스템을 생각해보자. 이런 맥락에서 BankAccount는 엔티티의 대표적인 예가 될 수 있다. 각 은행 계좌에는 고유한 계좌 번호가 있으며 이 계좌 번호가 신원 역할을 한다. 이 계좌 번호는 서로 다른 계좌가 공통적으로 가질 수 있는 다른 속성에 관계 없이 한 계좌를 다른 계좌와 구별한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240802084920072.png" alt=""></p>
+<p>은행 계좌의 정보는 입금, 출금 또는 계좌 소유자 정보 업데이트로 인해 시간이 지남에 따라 변경될 수 있다. 이러한 변경에도 불구하고 계쩡의 신원은 그대로 유지된다. 계정의 수명 주기 동안 동일한 계정으로 유지된다.</p>
+<h3 id="Value-Object"><a href="#Value-Object" class="headerlink" title="Value Object"></a>Value Object</h3><p>값 개체는 고유한 아이덴티티 없이 도메인의 설명적인 측면을 나타낸다. 다른 객체와 구별되는 별도의 아이덴티티를 갖지 않고 속성으로만 정의된다. 값 개체의 몇 가지 주요 특징은 다음과 같다.</p>
+<ul>
+<li>엔티티와 달리 값 객체에는 고유한 ID가 없다. 값 객체는 전적으로 속성에 의해 정의된다.</li>
+<li>값 객체는 불변이므로 생성 후에는 상태를 수정할 수 없다. 값 객체를 변경한다는 것은 원하는 속성 값을 가진 새 인스턴스를 생성한다는 의미다.</li>
+<li>동일한 속성 값을 가진 두 개의 값 객체는 동일하고 상호 교환 가능한 것으로 간주된다.</li>
+</ul>
+<p>예를 들어 고객 엔티티 내에서 특정 위치를 나타내는 주소는 값 객체의 대표적인 예다. 주소는 거리, 도시 및 핀 코드와 같은 속성으로 정의된다. 또한 동일한 세부 정보를 가진 두 주소를 동일한 주소로 간주된다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240802085208515.png" alt=""></p>
+<p>다른 값 객체의 예로는 “MonetaryAmount”, “GeographicLocation”, “Color”, 등이 있다.</p>
+<h3 id="Services"><a href="#Services" class="headerlink" title="Services"></a>Services</h3><p>서비스는 엔티티나 값 객체의 책임에 장녀스럽게 속하지 않는 작업이나 동작을 나타내는 개념이다. 특정 객체에 속하지 않지만 도메인 모델에서 여전히 중요한 역할을 하는 논리를 캡슐화 한다. 서비스의 주요 특징은 다음과 같다.</p>
+<ul>
+<li>서비스는 엔티티와 값 객체에서 작동하지만 그 동작에 영향을 미치는 내부 상태는 없다.</li>
+<li>서비스의 인터페이스는 다른 요소를 사용하여 정의된다. 예를 들어 서비스는 엔티티 또는 값 객체를 입력으로 받아 연산을 수행하고 다른 엔티티 또는 값 객체를 출력으로 반환할 수 있다.</li>
+<li>서비스는 상태가 없다. 즉, 모든 서비스 인스턴스는 다른 클라이언트에 영향을 주지 않고 모든 클라이언트에서 사용할 수 있다.</li>
+</ul>
+<p>예를 들어, 항공사 예약 시스템에는 제공된 기준에 따라 이용 가능한 항공편을 찾는 “FlightSchedulingService”가 있을 수 있다. 이 서비스의 메서드는 출발지와 목적지 공항을 입력으로 받아 이용 가능한 항공편 목록을 반환할 수 있다. 이런 작업은 여러 소스의 정보를 조정하고 비즈니스 규칙을 적용해야 하므로 “공항” 또는 “항공편”과 같은 단일 엔티티에 속하지 않는다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240802085604849.png" alt=""></p>
+<h3 id="Aggregates"><a href="#Aggregates" class="headerlink" title="Aggregates"></a>Aggregates</h3><p>DDD에서 집합은 관련 객체를 응집력 있는 단위로 그룹화하여 도메인 모델의 복잡성을 관리하는데 도움이 되는 패턴이다. 다음과 같은 몇 가지 주요 특징이 있다.</p>
+<ul>
+<li>집합은 관련 객체 그룹을 둘러싼 일관된 경계를 정의한다. 즉, 집계 내의 개체는 항상 서로 일관된 상태에 있다.</li>
+<li>모든 집계에는 집계 루트라고 하는 지정된 루트 엔티티가 있다. 루트 엔티티는 외부 객체가 참조를 보유할 수 있는 유일한 집계 멤버다. 집계 내부의 객체와의 모든 상호 작용은 루트 엔티티를 거쳐야 한다.</li>
+<li>집계는 일관성과 유지 관리성을 보장할 수 있을 만큼 충분히 작으면서도 필요한 모든 관련 객체를 초함할 수 있을 만큼 충분히 크도록 설계해야 한다.</li>
+</ul>
+<p>집합의 개념을 설명하기 위해 주문 처리 시스템의 예를 들어보자.</p>
+<p>이 예에서는 “Order”와 관련 “LineItems”가 자연스러운 집하을 형성한다. “주문”은 총액 계싼, 할인 적용, 품목의 유효성 확인 등 주문 처리와 관련된 비즈니스 규칙 및 불변성을 캡슐화 한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240802085850498.png" alt=""></p>
+<p>코드의 관점에서 볼때 주문 aggregates는 LineItems를 처리할 때 다음과 같이 보일 수 있다.</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Order</span> &#123;</span><br><span class="line">    <span class="keyword">private</span> String orderId;</span><br><span class="line">    <span class="keyword">private</span> List&lt;LineItem&gt; lineItems;</span><br><span class="line">    <span class="keyword">private</span> BigDecimal totalAmount;</span><br><span class="line">    <span class="keyword">private</span> OrderStatus status;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">addLineItem</span><span class="params">(LineItem lineItem)</span> &#123;</span><br><span class="line">        lineItems.add(lineItem);</span><br><span class="line">        totalAmount = totalAmount.add(lineItem.getSubtotal());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">removeLineItem</span><span class="params">(LineItem lineItem)</span> &#123;</span><br><span class="line">        lineItems.remove(lineItem);</span><br><span class="line">        totalAmount = totalAmount.subtract(lineItem.getSubtotal());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">LineItem</span> &#123;</span><br><span class="line">    <span class="keyword">private</span> String productId;</span><br><span class="line">    <span class="keyword">private</span> <span class="type">int</span> quantity;</span><br><span class="line">    <span class="keyword">private</span> BigDecimal unitPrice;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>고객 또는 결제와 같은 외부 객체는 주문 엔티티에 대한 참조만 보유하며 라인아이템에 대한 참조는 직접 보유하지 않는다. 품목 추가, 제거 또는 업데이트와 같은 라인아이템에 대한 모든 작업 또는 수정은 주문 엔티티를 통해 이루어진다.</p>
+<h3 id="Repository"><a href="#Repository" class="headerlink" title="Repository"></a>Repository</h3><p>레포지토리는 특정 유형의 엔티티 또는 집계 루트에 대해 지속성 계층을 통해 추상화를 제공하는 패턴이다. 레포지토리는 컬렉션과 같은 인터페이스 역할을 하며 기본 데이터 엑세스 및 저장 메커니즘을 캡슐화 한다. 레포지토리에 대한 몇 가지 핵심 사항은 다음과 같다.</p>
+<ul>
+<li>레포지토리는 객체 추가, 제거, 쿼리 등 컬렉션의 동작을 시뮬레이션하는 메서드를 제공한다. 클라이언트 코드는 기본 지속성 메커니즘의 복잡성을 노출하지 않고 마치 단순한 컬렉션인 것처럼 레포지토리와 상호작용할 수 있다.</li>
+<li>레포지토리는 특정 집계 또는 엔티티에 대한 지속성 계층의 게이트웨이 역할을 한다.</li>
+<li>레포지토리는 애플리케이션과 도메인 디자인을 지속성 계층의 세부 사항으로부터 분리한다.</li>
+</ul>
+<p>예를 들어 “CustomerRepository”는 스토리지 접근 방식의 세부 사항을 노출하지 않고도 고객 엔티티의 지속성을 관리하기 위해 add(customer), remove(customer), findByID(id) 등의 메소드를 관리할 수 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240802090351260.png" alt=""></p>
+<p>이런 메서드를 사용하면 클라이언트 코드가 “고객” 개체 모음을 모방하는 식으로 “CustomerRepository”와 상호 작용할 수 있다. 클라이언트는 데이터가 데이터베이스에 저장되는 방식에 대한 걱정 없이 고객을 추가, 제거 및 쿼리할 수 있다. 백그라운드에서 리포지토리는 ORM 도구, SQL 쿼리 또는 기타 지속성 메커니즘을 사용하여 기본 스토리지 시스템과 상호 작용할 수 있다.</p>
+<h3 id="Factory"><a href="#Factory" class="headerlink" title="Factory"></a>Factory</h3><p>DDD에서 factory는 복잡한 엔티티 또는 집합의 생성을 캡슐화하는 패턴이다. 클라이언트가 생성 프로세스의 세부 사항이나 관련된 종속성을 노출하지 않고도 객체를 생성할 수 있는 인터페이스를 제공한다. 패곹리의 몇 가지 주요 특징은 다음과 같다.</p>
+<ul>
+<li>팩토리는 객체 인스턴스화 유효성 검사 및 종속성 처리의 복잡성을 숨긴다.</li>
+<li>팩토리를 사용하면 팩토리를 사용하는 클라이언트와 독립적으로 생성 프로세스를 변경할 수 있다. 이는 시스템의 유연성과 유지보수성을 향상시킨다.</li>
+<li>팩토리는 생성된 객체가 항상 일관되고 완전히 초기화된 상태를 유지하도록 보장한다.</li>
+</ul>
+<p>예를 들어 전자상거래 시스템의 “OrderFactory”는 필요한 모든 세부 정보(고객, 품목, 수량 등)을 가져와 “주문” 및 “라인 아이템” 인스턴스를 생성하고 이를 적절하게 연결한 다음 결과 주문 집계를 클라이언트에 반환할 수 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240802090807500.png" alt=""></p>
+<h2 id="Strategic-Design-Concepts-of-DDD"><a href="#Strategic-Design-Concepts-of-DDD" class="headerlink" title="Strategic Design Concepts of DDD"></a>Strategic Design Concepts of DDD</h2><p>대규모 프로젝트에서 대규모 모델을 다룰 때는 도메인 중심 디자인의 이점을 얻기 위해 몇 가지 전략적 디자인 개념을 따라야 한다.</p>
+<h3 id="Bounded-Contexts"><a href="#Bounded-Contexts" class="headerlink" title="Bounded Contexts"></a>Bounded Contexts</h3><p>대규모 소프트웨어 프로젝트에서 도메인 모델은 여러 개의 하위 도메인을 포함하며, 각 도메인에는 고유한 개념, 엔티티 및 비즈니스 규칙이 있는 경우가 많다. 이러한 모든 하위 도메인에 걸쳐 하나의 통합된 모델을 유지하려고 하면 시간이 지남에 따라 이해, 추론 및 유지 관리가 어려워지는 복잡하고 얽힌 모델이 될 수 있다. 이 문제에 대한 해결책은 바운디드 컨텍스트 개념을 도입하는 것이다.</p>
+<p>바운디드 컨텍스트는 도메인 모델 내에서 특정 하위 도메인 또는 관련 개념의 응집된 집합을 나타내는 특정 영역이다. 각 바운드 컨텍스트는 해당 하위 도메인의 특정 필요와 요구 사항에 맞게 조정된 통합 모델을 캡슐화 한다. 잘 정의된 바운디드 컨텍스트는 다음과 같은 특징을 나타낸다.</p>
+<ul>
+<li><strong>Unified Model:</strong> 바운디드 컨텍스트 내에는 해당 하위 도메인에 특정한 개념, 엔티티 및 관계를 나타내는 일관되고 응집력 있는 모델이 있어야 한다.</li>
+<li><strong>Ubiquitous Language:</strong> 각 바운디드 컨텍스트에는 고유한 유비쿼터스 언어가 있어야 한다.</li>
+<li><strong>Clear Scope and Boundary:</strong> 바운디드 컨텍스트에는 잘 정의된 범위와 경계가 있어야 한다.</li>
+</ul>
+<p>바운드 컨텍스트의 개념을 이해하기 위해 전자 상거래 시스템의 예를 들어 보자. 이 시스템에서는 여러 개의 하위 도메인을 식별할 수 있으며 각 도메인은 별도의 바운디드 컨텍스트가 될 수 있다.</p>
+<ul>
+<li><strong>Catalog Context:</strong> 이 컨텍스트는 제품 정보, 카테고리 및 속성을 포함한 제품 카탈로그 관리에 중점을 둔다. 여기에는 제품, 제품 변형 및 제품 간의 관계를 나타내는 모델이 있다.</li>
+<li><strong>Order Context:</strong> 주문 컨텍스트는 주문을 배치하고 관리하는 프로세스를 다룬다. 주문, 주문 항목, 주문 처리 및 주문 처리를 위한 관련 비즈니스 규칙을 나타내는 모델이 있다.</li>
+<li><strong>Billing Context:</strong> 청구 컨텍스트는 인보이스 발행, 결제, 환불 등 전자상거래 시스템의 재무적인 측면을 처리한다. 여기에는 인보이스, 결제 거래 및 관련 비즈니스 규칙을 나타내는 모델이 있다.</li>
+<li><strong>Fulfillment Context:</strong> 주문 처리 컨텍스트는 주문의 물류 및 배송을 담당한다. 여기에는 배송 방법, 추적 정보 및 주문 처리와 관련된 프로세스를 나타내는 모델이 있다.</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240802091440915.png" alt=""></p>
+<h3 id="Relationships-Between-Bounded-Contexts"><a href="#Relationships-Between-Bounded-Contexts" class="headerlink" title="Relationships Between Bounded Contexts"></a>Relationships Between Bounded Contexts</h3><p>서로 다른 바운드 컨텍스트 간에는 관계와 상호 작용이 있을 수 있다. 이런 관계는 일반적으로 서로 다른 컨텍스트의 모델 간에 공유된 개념이나 번역을 통해 표현된다. 바운디드 컨텍스트 간의 관계를 설정하는 몇 가지 주요 패턴은 다음과 같다.</p>
+<h4 id="1-Context-Maps"><a href="#1-Context-Maps" class="headerlink" title="1 - Context Maps"></a>1 - Context Maps</h4><p>DDD 프로젝트에서 여러 개의 바운디드 컨텍스트는 서로 다른 하위 도메인 또는 시스템의 일부를 나타낸다. 전체 시스템 환경을 이해하기 어려울 수 있다. 이때 컨텍스트 맵을 만드는 것이 도움이 된다. 컨텍스트 맵은 프로젝트의 바운디드 컨텍스트와 컨텍스트 간의 관계를 높은 수준의 시각적 표현으로 나타낸 것이다. 컨텍스트 맵은 시스템의 조감도를 제공하며 주요 경계와 통합 지점을 강조한다. 컨텍스트 맵은 다음에 대한 명확한 개요를 제공해야 한다.</p>
+<ul>
+<li><strong>Bounded Contexts:</strong> 시스템 내의 뚜렷한 하위 도메인 또는 논리적 경계로 각각 도메인 모델의 특정 영역을 나타낸다.</li>
+<li><strong>Relationships:</strong> 바운디드 컨텍스트 간의 연결 및 상호 작용으로, 서로 어떻게 관련되고 소통하는지를 나타낸다.</li>
+<li><strong>Integration Points:</strong> 바운디드 컨텍스트가 데이터를 교환하거나 동작을 조정하는 통합의 핵심 지점이다.</li>
+</ul>
+<h4 id="2-Shared-Kernel"><a href="#2-Shared-Kernel" class="headerlink" title="2 - Shared Kernel"></a>2 - Shared Kernel</h4><p>공유 커널은 여러 팀 또는 바운디드 컨텍스트에서 공통으로 사용하고 의존하는 도메인 모델의 일부를 나타낸다. 이는 도메인의 기본이 되고 시스템의 여러 부분에 걸쳐 관련된 핵심 개념, 엔티티 및 이들의 관계를 캡슐화 한다.</p>
+<p>예를 들어 판매와 주문 처리라는 두 개의 바운디드 컨텍스트가 있다고 가정해보자. 판매 바운디드 컨텍스트에는 제품 카탈로그, 가격, 프로모션, 장바구니 및 주문 배치가 포함된다. 주문 처리 바운디드 컨텍스트는 재고, 공급업체, 물류 및 배송을 처리한다.</p>
+<p>이런 바운디드 컨텍스트는 서로 다른 관심사를 가지고 있지만 “주문”은 두 컨텍스트가 공유하는 하나의 개념이다. “주문”은 판매 바운디드 컨텍스트에서 시작되지만 일단 주문이 접수되면 주문 처리 바운디드 컨텍스트에서 처리해야 한다. 따라서 주문은 영업과 주문 처리 간에 공유 커널을 형성한다. 두 팀 모두 “주문”의 의미와 수명 주기에 대해 동의해야 한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240802092013750.png" alt=""></p>
+<h4 id="3-Anticorruption-Layer"><a href="#3-Anticorruption-Layer" class="headerlink" title="3 - Anticorruption Layer"></a>3 - Anticorruption Layer</h4><p>새 시스템을 호환되지 않거나 바람직하지 않은 모델을 가진 레거시 시스템 또는 외부 파트너의 시스템과 통합할 때는 새 시스템 모델의 무결성과 순수성을 보호하는 것이 필수적이다. 바로 이 지점에서 부패 방지 계층 패턴이 등장한다.</p>
+<p>부패 방지 계층은 새 시스템과 기존 시스템 또는 외부 파트너의 시스템 사이의 절연 계층 역할을 한다. 새 시스템이 자체 모델과 설계 원칙을 손상시키지 않고 다른 시스템과 상호 작용할 수 있는 변환 메커니즘을 제공한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240802092156993.png" alt=""></p>
+<p>작동 방식은 다음과 같다.</p>
+<ul>
+<li>새 시스템은 레거시 시스템이나 외부 시스템과 직접 상호작용하는 대신 부패 방지 계층으로 요청을 보낸다.</li>
+<li>부패 방지 계층은 새 시스템으로부터 요청을 수신하고 이를 레거시 또는 외부 시스템의 모델과 호환되는 형식으로 변환한다. 이렇게 번역된 요청을 사용하여 외부 시스템과 통신한다.</li>
+<li>외부 시스템이 응답하면 부패 방지 계층은 응답을 새 시스템의 모데인 모델과 일치하는 형식으로 다시 번역한 후 이를 통과시킨다.</li>
+</ul>
+<h2 id="Summary"><a href="#Summary" class="headerlink" title="Summary"></a>Summary</h2><p>이 포스트에서는 도메인 중심 설계의 기본 사항과 핵심 도메인을 기반으로 시스템을 설계하는 데 도움이 되는 방법에 대해 살펴봤다.</p>
+<ul>
+<li>DDD는 비즈니스 도메인에 대한 깊은 이해를 반영하는 풍부한 도메인 모델을 만드는데 중점을 둔다. 도메인 모델은 도메인 전문가의 의견을 기반으로 하며 소프트웨어의 개념적 프레임워크 역할을 한다.</li>
+<li>도메인 모델을 기반으로 유비쿼터스 언어가 개발된다. 이 언어는 개발자와 도메인 전문가가 대화, 문서 및 코드 자체 등 모든 커뮤니케이션에서 일관되게 사용한다. 유비쿼터스 언어를 사용하면 모델과 구현을 일관되게 유지하는데 도움이 된다.</li>
+<li>소프트웨어 설계는 기술적인 문제보다는 도메인 모델에 의해 주도된다. 이를 모델 중심 설꼐라 한다.</li>
+<li>DDD는 도메인 계층을 인프라 및 사용자 인터페이스 문제로부터 분리하고 대규모 모델을 바운드 컨텍스트로 나누어 복잡성을 관리한다.</li>
+<li>도메인 모델을 구축하기 위해 DDD는 계층화된 아키텍처, 엔티티, 값 객체, 서비스, 집계, 리포지토리 및 팩토리와 같은 여러 가지 패턴을 활용한다.</li>
+<li>더 복잡한 도메인의 경우 바운디드 컨텍스트와 같은 전략적 디자인 패턴을 사용한다.</li>
+<li>여러 바운드 컨텍스트 간의 관계를 관리하기 위해 컨텍스트 맵, 공유 커널 및 손상 방지 레이어와 같은 기술이 사용된다.</li>
+</ul>
+<!-- flag of hidden posts --></div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined">Song Hayoung</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="https://songhayoung.github.io/2024/08/02/System%20Design/ByteByteGo/private/a-crash-course-on-domain-driven-design/">https://songhayoung.github.io/2024/08/02/System%20Design/ByteByteGo/private/a-crash-course-on-domain-driven-design/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/System-Design/">System Design</a></div><nav id="pagination"></nav><div id="gitalk-container"></div><script>var gitalk = new Gitalk({
+  clientID: '3604b61642355579f55e',
+  clientSecret: 'f552120f18ac5aee3f6297e05e97d94c0a25cd4b',
+  repo: 'SongHayoung.github.io',
+  owner: 'SongHayoung',
+  admin: 'SongHayoung',
+  id: md5(decodeURI(location.pathname)),
+  language: 'en'
+})
+gitalk.render('gitalk-container')</script></div></div><footer class="footer-bg" style="background-image: url(https://xxxx.jpg)"><div class="layout" id="footer"><div class="copyright">&copy;2020 - 2024 By Song Hayoung</div><div class="framework-info"><span>Driven - </span><a target="_blank" rel="noopener" href="http://hexo.io"><span>Hexo</span></a><span class="footer-separator">|</span><span>Theme - </span><a target="_blank" rel="noopener" href="https://github.com/Molunerfinn/hexo-theme-melody"><span>Melody</span></a></div><div class="footer_custom_text">Learning how to walk slowly to not miss important things</div><div class="busuanzi"><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><span id="busuanzi_container_page_pv"><i class="fa fa-file"></i><span id="busuanzi_value_page_pv"></span><span></span></span></div></div></footer><i class="fa fa-arrow-up" id="go-up" aria-hidden="true"></i><script src="https://cdn.jsdelivr.net/npm/animejs@latest/anime.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@latest/velocity.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-ui-pack@latest/velocity.ui.min.js"></script><script src="/js/utils.js?version=1.7.0"></script><script src="/js/fancybox.js?version=1.7.0"></script><script src="/js/sidebar.js?version=1.7.0"></script><script src="/js/copy.js?version=1.7.0"></script><script src="/js/fireworks.js?version=1.7.0"></script><script src="/js/transition.js?version=1.7.0"></script><script src="/js/scroll.js?version=1.7.0"></script><script src="/js/head.js?version=1.7.0"></script><script src="/js/search/algolia.js"></script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+    processEscapes: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  },
+  CommonHTML: {
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "HTML-CSS": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "SVG": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  }
+});
+</script><script type="text/x-mathjax-config">MathJax.Hub.Queue(function() {
+  var all = MathJax.Hub.getAllJax(), i;
+  for (i=0; i < all.length; i += 1) {
+    all[i].SourceElement().parentNode.className += ' has-jax';
+  }
+});
+</script><script src="https://cdn.jsdelivr.net/npm/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><script>if(/Android|webOS|iPhone|iPod|iPad|BlackBerry/i.test(navigator.userAgent)) {
+  $('#nav').addClass('is-mobile')
+  $('footer').addClass('is-mobile')
+  $('#top-container').addClass('is-mobile')
+}</script><div class="search-dialog" id="algolia-search"><div class="search-dialog__title" id="algolia-search-title">Algolia</div><div id="algolia-input-panel"><div id="algolia-search-input"></div></div><hr><div id="algolia-search-results"><div id="algolia-hits"></div><div id="algolia-pagination"></div><div id="algolia-stats"></div></div><span class="search-close-button"><i class="fa fa-times"></i></span></div><div class="search-mask"></div></body></html>

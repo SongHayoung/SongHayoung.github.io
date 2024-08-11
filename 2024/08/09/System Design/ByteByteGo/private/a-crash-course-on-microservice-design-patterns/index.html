@@ -1,0 +1,253 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="description" content="[ByteByteGo] A Crash Course on Microservices Design Patterns"><meta name="keywords" content="System Design"><meta name="author" content="Song Hayoung"><meta name="copyright" content="Song Hayoung"><title>[ByteByteGo] A Crash Course on Microservices Design Patterns | SUMFIのBlog</title><meta name="robots" content="noindex"><link rel="shortcut icon" href="/songcon.ico"><link rel="stylesheet" href="/css/index.css?version=1.7.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@latest/css/font-awesome.min.css?version=1.7.0"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css?version=1.7.0"><meta name="format-detection" content="telephone=no"><meta http-equiv="x-dns-prefetch-control" content="on"><link rel="dns-prefetch" href="https://cdn.jsdelivr.net"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.css"><script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.js" defer></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@latest/dist/gitalk.min.js"></script><script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.10.0/js/md5.min.js"></script><link rel="dns-prefetch" href="https://www.google-analytics.com"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-169368422-1', 'auto');
+ga('send', 'pageview');</script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: {"appId":"7LZ6OJ4D6C","apiKey":"9a84e13f74ea78c3fd54512c10139c56","indexName":"git blog","hits":{"per_page":10},"languages":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}.","hits_stats":"${hits} results found in ${time} ms"}},
+  localSearch: undefined,
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  }
+} </script><meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/rss2.xml" title="SUMFIのBlog" type="application/rss+xml">
+</head><body><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar" data-display="true"><div class="toggle-sidebar-info text-center"><span data-toggle="Toggle article">Toggle site</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">Catalog</div><div class="sidebar-toc__progress"><span class="progress-notice">You've read</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#A-Crash-Course-on-Microservices-Design-Patterns"><span class="toc-number">1.</span> <span class="toc-text">A Crash Course on Microservices Design Patterns</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Database-Per-Service-Pattern"><span class="toc-number">2.</span> <span class="toc-text">Database Per Service Pattern</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Benefits"><span class="toc-number">2.1.</span> <span class="toc-text">Benefits</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Challenges"><span class="toc-number">2.2.</span> <span class="toc-text">Challenges</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#API-Gateway-Pattern"><span class="toc-number">3.</span> <span class="toc-text">API Gateway Pattern</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Benefit"><span class="toc-number">3.1.</span> <span class="toc-text">Benefit</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Challenges-of-API-Gateway"><span class="toc-number">3.2.</span> <span class="toc-text">Challenges of API Gateway</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Backends-for-Frontends-Pattern"><span class="toc-number">4.</span> <span class="toc-text">Backends-for-Frontends Pattern</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Benefits-of-BFF-Pattern"><span class="toc-number">4.1.</span> <span class="toc-text">Benefits of BFF Pattern</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Challenges-1"><span class="toc-number">4.2.</span> <span class="toc-text">Challenges</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Command-Query-Responsibility-Segregation-Pattern"><span class="toc-number">5.</span> <span class="toc-text">Command Query Responsibility Segregation Pattern</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Benefits-of-CQRS"><span class="toc-number">5.1.</span> <span class="toc-text">Benefits of CQRS</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Challenges-2"><span class="toc-number">5.2.</span> <span class="toc-text">Challenges</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Event-Sourcing-Pattern"><span class="toc-number">6.</span> <span class="toc-text">Event Sourcing Pattern</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Benefits-of-Event-Sourcing"><span class="toc-number">6.1.</span> <span class="toc-text">Benefits of Event Sourcing</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Cons"><span class="toc-number">6.2.</span> <span class="toc-text">Cons</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Saga-Pattern"><span class="toc-number">7.</span> <span class="toc-text">Saga Pattern</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Benefits-of-the-Saga-Pattern"><span class="toc-number">7.1.</span> <span class="toc-text">Benefits of the Saga Pattern</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Challenges-3"><span class="toc-number">7.2.</span> <span class="toc-text">Challenges</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Sidecar-Pattern"><span class="toc-number">8.</span> <span class="toc-text">Sidecar Pattern</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Benefits-of-Sidecar-Pattern"><span class="toc-number">8.1.</span> <span class="toc-text">Benefits of Sidecar Pattern</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Challenges-4"><span class="toc-number">8.2.</span> <span class="toc-text">Challenges</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Circuit-Breaker-Pattern"><span class="toc-number">9.</span> <span class="toc-text">Circuit Breaker Pattern</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Benefits-of-Circuit-Breaker-Pattern"><span class="toc-number">9.1.</span> <span class="toc-text">Benefits of Circuit Breaker Pattern</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Challenges-5"><span class="toc-number">9.2.</span> <span class="toc-text">Challenges</span></a></li></ol></li></ol></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="https://avatars3.githubusercontent.com/u/37806785?s=460&amp;u=8c68d685faf7c5280cfbd736a6b1730b55fb4203&amp;v=4"></div><div class="author-info__name text-center">Song Hayoung</div><div class="author-info__description text-center"></div><div class="follow-button"><a target="_blank" rel="noopener" href="https://www.linkedin.com/in/hayoung-song-9523b61bb/">Follow Me</a></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="/archives"><span class="pull-left">Articles</span><span class="pull-right">10882</span></a><a class="author-info-articles__tags article-meta" href="/tags"><span class="pull-left">Tags</span><span class="pull-right">193</span></a><a class="author-info-articles__categories article-meta" href="/categories"><span class="pull-left">Categories</span><span class="pull-right">61</span></a></div><hr><div class="author-info-links"><div class="author-info-links__title text-center">VISITED</div><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Seoul Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Jeju Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">British Columbia Canada</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Boracay Philippines</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">三重　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">大阪　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">名古屋　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">静岡　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">札幌　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">京都　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Bangkok Thailand</a></div></div></div><div id="content-outer"><div id="top-container" style="background-image: url(https://xxxx.jpg)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="/">SUMFIのBlog</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus">   <a class="site-page" href="/">Home</a><a class="site-page" href="/archives">Archives</a><a class="site-page" href="/tags">Tags</a><a class="site-page" href="/categories">Categories</a><a class="site-page" href="/about">About</a></span><span class="pull-right"><a class="site-page social-icon search"><i class="fa fa-search"></i><span> Search</span></a></span></div><div id="post-info"><div id="post-title">[ByteByteGo] A Crash Course on Microservices Design Patterns</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2024-08-09</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/">System Design</a><i class="fa fa-angle-right" aria-hidden="true"></i><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/Byte-Byte-Go/">Byte Byte Go</a><div class="post-meta-wordcount"><span>Word count: </span><span class="word-count">2.6k</span><span class="post-meta__separator">|</span><span>Reading time: 16 min</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div class="article-container" id="post-content"><h2 id="A-Crash-Course-on-Microservices-Design-Patterns"><a href="#A-Crash-Course-on-Microservices-Design-Patterns" class="headerlink" title="A Crash Course on Microservices Design Patterns"></a>A Crash Course on Microservices Design Patterns</h2><span id="more"></span>
+<p>마이크로서비스 아키텍처는 소프트웨어 시스템의 유연성, 테스트 가능성 및 확장성을 개선할 수 있는 기능으로 인기를 얻고 있다. 마이크로서비스는 모놀리식 애플리케이션을 독립적으로 배포 가능한 소규모 서비스로 세분화함으로써 각 팀이 각 서비스를 독립적으로 개발, 배포 및 확장할 수 있도록 지원한다. 하지만 마이크로서비스 아키텍처를 구현하는데에는 여러가지 어려움이 따른다.</p>
+<ul>
+<li>데이터 일관성 및 최종 일관성 : 마이크로서비스 아키텍처에서는 데이터가 여러 노드에 분산되는 경우가 많으며, 이런 노드는 서로 다른 데이터 센터 또는 서로 다른 지역에 위치할 수도 있다. 특정 시점에 여러 노드 간에 데이터 상태에 불일치가 발생할 수 있다.</li>
+<li>보안 : 마이크로서비스 아키텍처는 모놀리식 시스템에 비해 악의적인 공격자에게 더 큰 공격 표면을 제공한다. 따라서 마이크로서비스를 구축할 때 적절한 보안 메커니즘을 구축하는 것이 중요하다. API 게이트웨이 패턴과 같은 디자인 패턴이 도움이 될 수 있다.</li>
+<li>확장성 및 데이터베이스 성능 : 마이크로서비스는 확장성이 뛰어난 것으로 알려져 있다. 그러나 인스턴스를 추가하여 애플리케이션 계층을 확장하는 것은 비교적 쉽지만, 확장성을 고려하여 설계하지 않으면 데이터베이스가 성능 병목 현상을 일으킬 수 있다. 서비스별 데이터베이스 및 CQRS와 같은 패턴은 이 문제를 해결하는데 도움이 된다.</li>
+</ul>
+<p>디자인 패턴은 마이크로서비스 아키텍처에서 발생하는 일반적인 문제에 대한 검증된 솔루션을 제공한다. 적절한 디자인 패턴을 적용하면 이런 문제를 효과적으로 해결할 수 있다. </p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240809183701719.png" alt=""></p>
+<h2 id="Database-Per-Service-Pattern"><a href="#Database-Per-Service-Pattern" class="headerlink" title="Database Per Service Pattern"></a>Database Per Service Pattern</h2><p>각 마이크로서비스가 전용 데이터베이스를 보유해 데이터 격리 및 자율성을 보장하는 패턴이다. 이 패턴에서는 어떤 마이크로서비스도 다른 마이크로서비스가 관리하는 데이터에 직접 액세스하거나 조작할 수 없다. 대신 데이터를 교환하거나 조작하려면 데이터를 소유한 마이크로서비스가 노출한 잘 정의된 API 집합을 통해 수행해야 한다. 그 결과, 우려 사항을 명확하게 분리하고 마이크로서비스 간의 느슨한 결합을 촉진하는 아키텍처가 탄생한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240809183914049.png" alt=""></p>
+<p>서비스별 데이터베이스 패턴은 새로운 애플리케이션으로 시작할 때 구현하기 더 쉽다. 하지만 기존의 모놀리식 애플리케이션을 마이크로서비스 아키텍처로 마이그레이션할 때는 서비스 간의 경계가 명확하지 않다. 모놀리식 애플리케이션의 기능은 시스템의 여러 부분이 비공식적으로 다른 부분의 데이터에 액세스할 수 있는 방식으로 작성되는 경우가 많기 때문이다. 이런 긴밀한 결합과 명확한 경계가 없기 때문에 마이크로서비스 아키텍처로 전환할 때 데이터 소유권을 명확히 분리하기 어렵다. 서비스별 데이터베이스 패턴을 채택할 때는 두 가지 주요 영역을 신중히 고려해야 한다.</p>
+<ul>
+<li><strong>Defining Bounded Contexts for Each Service:</strong> 경계 컨택스트는 각 마이크로서비스의 경계와 책임을 정의하는데 도움이 되는 도메인 중심 설계 철학의 개념이다. 각 마이크로서비스가 특정 도메인 또는 비즈니스 기능을 캡슐화할 수 있도록 각 서비스에 대한 명확한 경계 컨텍스트를 식별하고 설정하는 것이 중요하다. 이 프로세스에는 애플리케이션의 도메인 모델을 분석하고, 엔티티와 그 관계를 식별하고, 마이크로서비스 아키텍처에 맞게 조정하는 작업이 포함된다.</li>
+<li><strong>Managing Business Transactions Spanning Multiple Microservices:</strong> 마이크로서비스 아키텍처에서 비즈니스 트랜잭션은 여러 마이크로서비스에 걸쳐 있는 경우가 많다. 단일 트랜잭션에서 여러 마이크로서비스에서 관리하는 데이터가 포함되면 데이터 일관성과 무결성을 유지하기가 어려워진다. 이런 시나리오를 처리하려면 분산 트랜잭션과 최종 일관성 기술을 사용해야 한다. 여기에는 사가 패턴이나 이벤트 중심 아키텍처와 같은 기술을 사용해 마이크로서비스 전반에서 트랜잭션을 조정하고 관리하는 것도 포함될 수 있다.</li>
+</ul>
+<h3 id="Benefits"><a href="#Benefits" class="headerlink" title="Benefits"></a>Benefits</h3><ul>
+<li>마이크로서비스는 서비스별 데이터베이스 패턴을 채택함으로써 데이터 격리, 확장성 및 자율성을 향상시킬 수 있다.</li>
+<li>각 마이크로서비스는 다른 서비스에 영향을 주지 않고 독립적으로 데이터 모델을 발전시킬 수 있다.</li>
+<li>각 마이크로서비스의 특정 요구사항에 가장 적합한 다양한 데이터베이스 기술을 사용할 수 있다.</li>
+</ul>
+<h3 id="Challenges"><a href="#Challenges" class="headerlink" title="Challenges"></a>Challenges</h3><ul>
+<li>마이크로서비스 전반에서 데이터 일관성 관리</li>
+<li>여러 서비스에 걸쳐 있는 복잡한 쿼리 처리</li>
+<li>여러 컨텍스트에 걸쳐 있는 비즈니스 프로세스 전반에 걸친 트랜잭션 관리</li>
+</ul>
+<h2 id="API-Gateway-Pattern"><a href="#API-Gateway-Pattern" class="headerlink" title="API Gateway Pattern"></a>API Gateway Pattern</h2><p>마이크로서비스가 특정 기능에 초점을 맞춰 세분화된 방식으로 설계된 경우 클라이언트 애플리케이션이나 UI는 특정 기능을 지원하기 위해 많은 마이크로서비스와 통신해야할 수 있다. 이로 인해 복잡성 증가, 지연 시간 및 보안 문제와 같은 문제가 발생할 수 있다.</p>
+<p>API 게이트웨이 패턴은 클라이언트 애플리케이션과 백엔드 마이크로서비스 사이의 중개자 역할을 함으로써 이런 문제에 대한 해결책을 제시한다. 클라이언트를 위한 단일 진입점 역할을 하여 커뮤니케이션을 간소화하고 필요한 왕복 횟수를 줄인다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240809184601002.png" alt=""></p>
+<ul>
+<li><strong>Reverse Proxy:</strong> API 게이트웨이는 역방향 프록시 역할을 하여 URL 경로나 요청 매개변수 등 요청의 특성에 따라 클라이언트 요청을 적절한 마이크로서비스로 라우팅한다.</li>
+<li><strong>Request Aggregation:</strong> API 게이트웨이는 여러 마이크로서비스에 대한 요청을 집계하고 응답을 결합한 후 클라이언트로 다시 보낼 수 있다. 이는 클라이언트가 단일 보기를 렌더링하거나 특정 작업을 수행하기 위해 여러 마이크로서비스의 데이터가 필요할 때 특히 유용하다. API 게이트웨이는 요청과 응답을 집계함으로써 왕복 횟수를 줄이고 성능을 개선한다.</li>
+<li><strong>Cross-Cutting Concerns:</strong> API 게이트웨이는 여러 마이크로서비스에 걸쳐 공통적으로 발생하는 크로스 커팅 문제를 처리할 수 있다. 이런 문제에는 인증, 권한 부여, 속도 제한, 캐싱 및 로깅이 포함된다. 개발자는 API 게이트웨이에서 이런 기능을 중앙 집중화함으로써 일관된 구현을 보장하고 개별 마이크로서비스에 대한 부담을 줄일 수 있다.</li>
+<li><strong>Security:</strong> API 게이트웨이는 사용자와의 단일 접점 역할을 하여 보안을 강화한다. 인증 및 권한 부여 정책을 시행하고, 수신 요청의 유효성을 검사 및 살균하며, SQL 인잭션 및 XSS와 같은 일반적 보안 위협으로 부터 보호한다.</li>
+<li><strong>Protocol Translation:</strong> API 게이트웨이는 클라이언트와 마이크로서비스에서 사용하는 서로 다른 통신 프로토콜 간에 번역할 수 있다. 예를 들어 클라이언트는 HTTP/REST를 사용하고 일부 마이크로서비스는 gRPC를 사용하는 경우 API 게이트웨이가 프로토콜 변환을 처리할 수 있다.</li>
+</ul>
+<h3 id="Benefit"><a href="#Benefit" class="headerlink" title="Benefit"></a>Benefit</h3><ul>
+<li>클라이언트 애플리케이션은 개별 마이크로서비스에 대한 여러 연결을 관리하지 않고 단일 엔트포인트와 통신하면 된다.</li>
+<li>API 게이트웨이는 클라이언트와 마이크로서비스 간의 왕복 횟수를 줄여준다.</li>
+<li>API 게이트웨이는 인증, 권한 부여, 로깅과 같은 여러 가지 문제를 중앙에서 구현할 수 있는 위치를 제공한다.</li>
+<li>API 게이트웨이는 인증 및 권한 부여 정책을 시행하는 보안 게이트웨이 역할을 한다.</li>
+</ul>
+<h3 id="Challenges-of-API-Gateway"><a href="#Challenges-of-API-Gateway" class="headerlink" title="Challenges of API Gateway"></a>Challenges of API Gateway</h3><ul>
+<li>제대로 설계하고 구현하지 않으면 단일 장애 지점이 될 수 있다.</li>
+<li>API 게이트웨이가 많은 처리를 수행하면 병목 현상이 발생할 수 있다.</li>
+</ul>
+<h2 id="Backends-for-Frontends-Pattern"><a href="#Backends-for-Frontends-Pattern" class="headerlink" title="Backends-for-Frontends Pattern"></a>Backends-for-Frontends Pattern</h2><p>마이크로서비스를 도입할 때는 프론트엔드 서비스와 백엔드 서비스를 분리하는 것이 일반적이다. 클라이언트는 API를 사용하여 서비스와 통신한다. 그러나 웹 및 모바일 애플리케이션과 같이 서로 다른 프론트엔드 클라이언트에 동일한 백엔드 마이크로서비스를 사용하면 문제가 발생할 수 있다. 웹 및 모바일 애플리케이션은 화면 크기, 디스플레이, 성능, 네트워크 대역폭 및 기타 요인 측면에서 서로 다른 요구 사항을 가지고 있다. 단일 백엔드 내에서 이런 다양한 요구 사항을 수용하려고 하면 문제가 될 수 있다. 이 지점에서 BFF 패턴이 등장한다.</p>
+<p>BFF 패턴은 각 프론트엔드 클라이언트를 위해 특별히 맞춤화된 별도의 백엔드 서비스를 만드는 것을 제안한다. 즉, 각 사용자 인터페이스는 고유한 요구 사항을 충족하도록 설계된 전용 백엔드를 갖게 된다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240809185300805.png" alt=""></p>
+<ul>
+<li>별도의 백엔드 : 하나의 백엔드가 모든 프런트엔드 클라이언트에 서비스를 제공하는 대신, BFF 패턴은 각 프런트엔드에 대해 별도의 백엔드 서비스를 만드는 것을 지지한다.</li>
+<li>맞춤형 API : 각 BFF는 해당 프런트엔드의 특정 요구사항에 최적화된 API 엔드포인트를 제공할 책임이 있다.</li>
+<li>다운스트림 마이크로서비스를 위한 파사드 : BFF는 다운스트림 마이크로서비스의 파사드 또는 게이트웨이 역할을 하며 클라이언트를 위해 기본 마이크로서비스 아키텍처의 복잡성을 추상화한다.</li>
+<li>수다스러운 커뮤니케이션 감소 : BFF 레이어는 프런트 엔드와 다운스트림 마이크로서비스 간의 채팅 통신을 줄여준다.</li>
+</ul>
+<h3 id="Benefits-of-BFF-Pattern"><a href="#Benefits-of-BFF-Pattern" class="headerlink" title="Benefits of BFF Pattern"></a>Benefits of BFF Pattern</h3><ul>
+<li>각 프런트엔트에 대해 별도의 백엔드를 보유함으로써 개발자는 각 클라이언트에 대한 사용자 경험을 최적화할 수 있다.</li>
+<li>BFF는 프론트엔드 개발자가 서비스 아키텍처의 복잡성을 추상화하여 사용자 인터페이스 구축에 집중할 수 있도록 한다.</li>
+<li>BFF는 집계 및 기타 최적화를 수행하여 클라이언트 애플리케이션의 성능을 향상시킬 수 있다.</li>
+<li>BFF는 클라이언트 및 서비스 계층의 독립적인 발전과 확장을 가능하게 한다.</li>
+</ul>
+<h3 id="Challenges-1"><a href="#Challenges-1" class="headerlink" title="Challenges"></a>Challenges</h3><ul>
+<li>관리 및 유지해야 하는 백엔드가 여러개 이므로 복잡성이 증가한다.</li>
+<li>BFF의 소유권은 논쟁의 대상이 될 수 있다.</li>
+<li>올바른 BFF를 구축하기 위해서는 고객과 서비스 팀 간의 조율 노력에 대한 초기 투자가 필요하다.</li>
+</ul>
+<h2 id="Command-Query-Responsibility-Segregation-Pattern"><a href="#Command-Query-Responsibility-Segregation-Pattern" class="headerlink" title="Command Query Responsibility Segregation Pattern"></a>Command Query Responsibility Segregation Pattern</h2><p>CQRS는 애플리케이션의 읽기 및 쓰기 작업을 별개의 경로로 분리하는 아키텍처 패턴이다. CQRS는 이런 책임을 분리함으로써 읽기 및 쓰기 작업의 성능을 최적화하고 독립적으로 확장할 수 있다.</p>
+<p>마이크로서비스 아키텍처에서는 각 마이크로서비스가 읽기 및 쓰기를 위한 별도의 데이터베이스를 유지하도록 함으로써 CQRS 패턴을 구현할 수 있다. 쓰기 데이터베이스는 쓰기 작업을 처리하고 상태 변경 사항을 유지하는데 사용되며, 읽기 데이터베이스는 복잡한 쿼리 및 집계를 제공하는데 최적화되어 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240809185803683.png" alt=""></p>
+<ul>
+<li>도메인 이벤트 : 마이크로서비스가 상태 변경을 초래하는 쓰기 작업을 수행하면 도메인 이벤트를 게시한다. 도메인 이벤트는 마이크로서비스의 바인딩된 컨텍스트 내에서 중요한 발생을 나타낸다.</li>
+<li>데이터베이스 읽기 업데이트 : 이벤트 수신기는 수신된 도메인 이벤트를 처리하고 읽기 데이터베이스를 업데이트한다. 읽기 데이터베이스는 효율적인 쿼리 및 집계 작업을 지원하도록 특별히 설계되고 최적화되어 있다.</li>
+<li>쿼리 서비스 : 클라이언트 애플리케이션이 데이터를 검색해야 하는 경우 읽기 데이터베이스에서 데이터를 가져오는 쿼리 처리 서비스에 쿼리 요청을 보낸다.</li>
+</ul>
+<h3 id="Benefits-of-CQRS"><a href="#Benefits-of-CQRS" class="headerlink" title="Benefits of CQRS"></a>Benefits of CQRS</h3><ul>
+<li>읽기 데이터베이스는 복잡한 쿼리 및 집계를 위해 특별히 설계하고 최적화할 수 있다. 읽기 작업의 빠른 응답 시간을 보장하기 위해 비정규화 기술, 구체화된 뷰, 캐싱 메커니즘을 사용할 수 있다.</li>
+<li>CQRS를 사용하면 읽기 및 쓰기 경로를 특정 성능 및 리소스 요구 사항에 따라 독립적으로 확장할 수 있다. 쓰기 경로는 대량의 쓰기 작업을 처리하도록 확장할 수 있고, 읽기 경로는 많은 수의 동시 쿼리를 처리하도록 확장할 수 있다. 이를 통해 리소스 활용도와 확장성을 개선할 수 있다.</li>
+<li>별도의 읽기 데이터베이스를 유지함으로써 쓰기 작업에 영향을 주지 않고 쿼리 로직을 단순화 및 최적화할 수 있다. 읽기 데이터베이스는 효율적인 쿼리를 지원하는 방식으로 구조화할 수 있어 복잡한 쿼리 로직을 더 쉽게 개발하고 유지관리할 수 있다.</li>
+</ul>
+<h3 id="Challenges-2"><a href="#Challenges-2" class="headerlink" title="Challenges"></a>Challenges</h3><ul>
+<li>데이터 일관성을 보장하기 위해 읽기 데이터베이스와 쓰기 데이터베이스간의 신중한 조정과 동기화가 필요하다.</li>
+<li>CQRS의 최종 일관성 모델은 모든 시나리오, 특히 강력한 일관성 보장이 필요한 시나리오에 적합하지 않을 수 있다.</li>
+</ul>
+<h2 id="Event-Sourcing-Pattern"><a href="#Event-Sourcing-Pattern" class="headerlink" title="Event Sourcing Pattern"></a>Event Sourcing Pattern</h2><p>기존의 CRUD 모델에는 시스템 성능, 응답성 및 확장성에 영향을 줄 수 있는 특정 제한 사항이 있다. 이런 제한은 데이터베이스에서 직접 데이터를 업데이트하고 검색할 때 발생하는 처리 오버헤드에서 비롯된다. 이벤트 소싱 패턴은 이런 한계를 극복하는데 도움이 되는 강력한 접근 방식이다.</p>
+<p>이 패턴에서는 엔티티의 상태가 데이터베이스에서 수정되지 않는다. 대신 엔티티 상태의 모든 변경 이벤트가 캡처되어 데이터베이스에 유지된다. 또한 이 패턴은 읽기 및 쓰기 명령을 분리하기 위해 CQRS 패턴과 함께 자주 사용된다. </p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240809190338541.png" alt=""></p>
+<p>이 맥락에서 이벤트에는 프로필 생성, 취미 업데이트 또는 현재 위치 수정과 같은 작업이 포함될 수 있다. 각 이벤트는 사용자 프로필 상태의 특정 변화를 나타낸다.</p>
+<ul>
+<li>이벤트 스토어 : 시스템에서 발생하는 모든 이벤트는 이벤트 스토어에 저장된다. 이벤트 스토어는 모든 이벤트의 저장소 역할을 하며 시스템 상태 변경에 대한 전체 기록을 유지한다.</li>
+<li>메세지 큐 : 이벤트가 이벤트 스토어에 저장되면 메세징 대기열에도 추가되어 시스템의 다른 구성 요소로 전파된다.</li>
+<li>구체화된 뷰 : 이벤트 저장소에 저장된 이벤트는 구체화된 보기 데이터베이스를 구성하는데 사용된다. 이 데이터베이스는 엔티티의 현재 상태에 대한 읽기 최적화된 표현을 제공해 사용자가 실시간으로 정보에 액세스할 수 있도록 한다.</li>
+<li>이벤트 리플레이 : 사용자가 특정 시점의 엔티티 상태를 요청하면 시스템은 이벤트 저장소에서 해당 시점까지의 이벤트를 재생할 수 있다. 이를 통해 특정 시점의 엔티티 상태를 재구성해 시스템 동작에 대한 과거 기록을 제공할 수 있다.</li>
+</ul>
+<h3 id="Benefits-of-Event-Sourcing"><a href="#Benefits-of-Event-Sourcing" class="headerlink" title="Benefits of Event Sourcing"></a>Benefits of Event Sourcing</h3><ul>
+<li>이벤트 저장소에 이벤트를 추가하기만 하면 되므로 쓰기 작업의 오버헤드가 줄어든다. 이벤트 스토어는 주로 이벤트 추가에 집중하기 때문에 대량의 쓰기 작업을 효율적으로 처리할 수 있다.</li>
+<li>이벤트 저장소는 시스템의 모든 변경 사항에 대한 완전한 기록을 유지한다. 이는 디버깅, 문제 해결 및 규정 준수 목적으로 사용할 수 있는 감사 추적을 제공한다.</li>
+<li>구체화된 뷰 데이터베이스는 읽기 작업에 최적화할 수 있으므로 독립적으로 확장할 수 있다.</li>
+<li>이벤트 소싱 패턴을 사용하면 시스템에 미치는 영향을 최소화하면서 새로운 기능과 동작을 추가할 수 있다. 기존 이벤트 기록을 수정하지 않고도 새로운 이벤트를 도입할 수 있다.</li>
+</ul>
+<h3 id="Cons"><a href="#Cons" class="headerlink" title="Cons"></a>Cons</h3><ul>
+<li>이벤트 스토어와 구체화된 뷰의 일관성과 무결성을 보장하기 위한 설계화 구현</li>
+<li>이벤트 버전 관리, 이벤트 스키마 진화, 장기 실행 프로세스 처리 측면에서 복잡성 증가</li>
+</ul>
+<h2 id="Saga-Pattern"><a href="#Saga-Pattern" class="headerlink" title="Saga Pattern"></a>Saga Pattern</h2><p>마이크로서비스 아키텍처에서는 비즈니스 트랜잭션이 여러 서비스에 걸쳐 있는 경우가 많다. 예를 들어 전자상거래 플랫폼에서 주문을 할 대는 주문 서비스, 결제 서비스, 배송 서비스 등 다양한 서비스 간의 상호 작용이 수반된다. 이런 분산된 트랜잭션의 일관성과 무결성을 보장하는 것은 어려울 수 있다.</p>
+<p>사가 패턴은 비즈니스 트랜잭션을 각각 다른 서비스에서 처리하는 일련의 로컬 트랜잭션으로 세분화하여 이런 문제를 해결한다. 이 패턴에서는 비즈니스 트랜잭션에 관련된 각 서비스가 로컬 트랜잭션을 수행하고 완료되면 이벤트를 게시한다. 이 이벤트는 시퀀스의 다음 트랜잭션을 트리거하며, 이 트랜잭션은 다른 서비스에서 처리한다. 트랜잭션 체인은 전체 비즈니스 트랜잭션이 완료될 때까지 계속된다.</p>
+<p>체인에서 특정 트랜잭션이 실패하면 사가는 일련의 보상 트랜잭션을 실행하여 롤백 프로세스를 시작한다. 이런 보상 트랜잭션은 이전 트랜잭션의 영향을 모두 취소하여 시스템이 일관된 상태를 유지하도록 한다.</p>
+<ul>
+<li><strong>Orchestration-Based Saga:</strong><ul>
+<li>사가의 단계를 조정하고 결정을 내리는 중앙 오케스트레이터가 있다.</li>
+<li>사가의 워크플로는 오케스트레이터에 명시적으로 정의되어 있으므로 프로세스를 시각화하고 추론하기가 더 쉽다.</li>
+<li>오케스트레이터는 참여하는 서비스에서 로컬 트랜잭션을 호출하고 필요한 경우 보상 작업을 처리할 책임이 있다.</li>
+</ul>
+</li>
+<li><strong>Choreography-Based Saga:</strong> <ul>
+<li>이 접근 방식에서는 사가에 참여하는 각 서비스가 이벤트를 게시하고 구독함으로써 다른 서비스와 직접 소통한다.</li>
+<li>서비스는 자율성을 가지며 수신한 이벤트에 따라 로컬에서 결정을 내린다.</li>
+<li>서비스가 로컬 트랜잭션을 완료하면 사가의 다음 단계를 트리거하는 이벤트를 게시한다.</li>
+<li>트랜잭션이 실패하면 서비스는 롤백 프로세스를 트리거하는 보상 이벤트를 게시한다.</li>
+</ul>
+</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240809193936727.png" alt=""></p>
+<p>오케스트레이션 기반 사가는 단계 간에 엄격한 종속성이 있는 복잡하고 잘 정의된 프로세스에 적합하다. 반면 안무 기반 사가는 서비스가 독립적으로 변경될 수 있는 동적 워크플로와 서비스 간의 느슨한 결합이 필요한 상황에 적합하다.</p>
+<h3 id="Benefits-of-the-Saga-Pattern"><a href="#Benefits-of-the-Saga-Pattern" class="headerlink" title="Benefits of the Saga Pattern"></a>Benefits of the Saga Pattern</h3><p>사가 패턴은 마이크로서비스 아키텍처에서 분산 트랜잭션을 처리할 때 몇 가지 이점을 제공한다.</p>
+<ul>
+<li>사가 패턴은 비즈니스 트랜잭션을 일련의 로컬 트랜잭션으로 세분화함으로써 시스템이 일관된 상태를 유지하도록 보장한다.</li>
+<li>사가 패턴을 사용하면 서비스가 독립적으로 운영되고 로컬 트랜잭션을 수행하여 확장성과 성능을 향상시킬 수 있다.</li>
+</ul>
+<h3 id="Challenges-3"><a href="#Challenges-3" class="headerlink" title="Challenges"></a>Challenges</h3><ul>
+<li>여러 서비스에서 트랜잭션의 순서를 조정하고 관리하면 복잡성이 발생할 수 있다.</li>
+<li>사가 패턴은 최종 일관성에 의존하므로 모든 트랜잭션이 완료되거나 보정될 때까지 시스템이 일시적으로 일관되지 않은 상태에 있을 수 있다. 이는 엄격한 일관성 보장이 필요한 시나리오에는 적합하지 않을 수 있다.</li>
+<li>특히 외부 시스템이나 되돌릴 수 없는 작업을 처리할 때는 보상 트랜잭션을 설꼐하고 구현하는 것이 어려울 수 있다.</li>
+</ul>
+<h2 id="Sidecar-Pattern"><a href="#Sidecar-Pattern" class="headerlink" title="Sidecar Pattern"></a>Sidecar Pattern</h2><p>마이크로서비스 아키텍처에서 애플리케이션은 일반적으로 도메인와 운영이라는 두 가지 유형의 기능으로 구성된다. 도메인 기능은 느슨한 결합의 이점이 있지만 로깅, 모니터링, 인증, 회로 차단기 등의 운영 기능은 조직 전체에서 최적의 성능과 표준화를 위해 고도의 결합을 구현해야 하는 경우가 많다.</p>
+<p>일관된 솔루션을 보장하면서 각 서비스 팀이 운영 기능을 위해 다시 개발하는 것을 방지하기 위해 사이트카 패턴을 사용할 수 있다. 사이드카 패턴은 최소 2개의 컨테이너를 배포하는 것을 포함한다.</p>
+<ul>
+<li>애플리케이션 컨테이너 : 이 컨테이너에는 마이크로서비스의 비즈니스 요구사항을 충족하는 핵심 로직이 들어가 있다. 도메인별 기능에 중점을 둔다.</li>
+<li>사이드카 컨테이너 : 이 컨테이너는 로깅, 모니터링, 구성 관리, 서ㅣㅂ스 검색과 같은 운영 기능을 제공하여 애플리케이션 컨테이너를 보강한다.</li>
+</ul>
+<p>이런 컨테이너는 쿠버네티스와 같은 컨테이너 오케스트레이션 플랫폼을 사용해 동일한 머신에 공동 스케쥴링된다. 애플리케이션 컨테이너와 사이드카 컨테이너는 쿠버네티스 파드 API를 활용해 다음과 같은 리소스를 공유할 수 있다.</p>
+<ul>
+<li>파일시스템의 일부</li>
+<li>호스트 이름 및 네트워크</li>
+<li>네임스페이스</li>
+</ul>
+<p>이런 공동 스케쥴링 및 리소스 공유를 통해 애플리케이션과 사이드카 컨테이너간의 원활한 통신 및 조정이 가능하다. 사이드카 패턴의 작동 방식을 설명하기 위해 예시 시나리오를 살펴보자.</p>
+<p>파일에서 구성 설정을 읽는 애플리케이션이 있다고 가정해보자. 이제 애플리케이션 코드를 수정하지 않고도 GitHub 레포지토리에서 구성을 읽도록 애플리케이션을 업그레이드하려고 한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240809194542857.png" alt=""></p>
+<ul>
+<li>Configuration Manager 사이드카가 시작되고 구성 파일이 있는 GitHub 리포지토리를 확인한다.</li>
+<li>그리고 리포지토리의 구성을 현재 구성과 비교한다.</li>
+<li>변경 사항이 감지되면 사이드카는 리포지토리에서 업데이트된 구성을 다운로드하여 공유 파일 시스템에 저장한다.</li>
+<li>사이드카는 애플리케이션이 업데이트된 구성을 기반으로 스스로 재구성하도록 신호를 보낸다.</li>
+</ul>
+<h3 id="Benefits-of-Sidecar-Pattern"><a href="#Benefits-of-Sidecar-Pattern" class="headerlink" title="Benefits of Sidecar Pattern"></a>Benefits of Sidecar Pattern</h3><ul>
+<li>핵심 애플리케이션 로직과 운영 기능을 명확히 분리할 수 있다.</li>
+<li>사이드카 컨테이너에 운영 기능을 캡슐화함으로써 여러 마이크로서비스에서 동일한 사이드카를 재사용할 수 있다. 이는 시스템 전체에서 운영 기능의 표준화를 촉진한다.</li>
+<li>사이드카 컨테이너는 애플리케이션 컨테이너와 독립적으로 확장할 수 있으므로 세분화된 리소스 할당이 가능하다.</li>
+<li>사이드카 패턴은 핵심 애플리케이션에 영향을 주지 않으면서 운영 기능을 추가하거나 수정할 수 있는 유연성을 제공한다.</li>
+</ul>
+<h3 id="Challenges-4"><a href="#Challenges-4" class="headerlink" title="Challenges"></a>Challenges</h3><ul>
+<li>사이드카를 도입하면 시스템에 복잡성이 한 층 더 추가된다.</li>
+<li>각 아미크로서비스에 대해 여러 개의 컨테이너를 관리하면 운영 오버헤드가 증가할 수 있다.</li>
+<li>각 애플리케이션 컨테이너와 함께 사이드카를 실행하면 메모리 및 CPU와 같은 추가 리소스가 소모된다.</li>
+</ul>
+<h2 id="Circuit-Breaker-Pattern"><a href="#Circuit-Breaker-Pattern" class="headerlink" title="Circuit Breaker Pattern"></a>Circuit Breaker Pattern</h2><p>마이크로서비스 아키텍처에서 서비스 간의 커뮤니케이션은 비즈니스 요구 사항을 충족하는데 있어 기본적인 요소다. 하지만 이런 통신이 항상 안정적인 것은 아니다. 네트워크 연결 불량, 시간 초과, 서비스 사용 불가 등 다양한 원인으로 인해 장애가 발생할 수 있다.</p>
+<p>실패한 통화를 다시 시도하는 것은 이런 실패를 처리하는 일반적인 접근 방식이다. 대부분의 경우 재시도를 통해 문제를 해결하고 통신이 성공적으로 진행될 수 있다. 그러나 여러 번의 실패가 연속적으로 발생하여 재시도가 시간과 리소스 나입가 되는 경우도 있다. 바로 이때 서킷 브레이커 패턴이 작동한다.</p>
+<p>서킷 브레이커 패턴은 통신하는 마이크로서비스 사이에 프록시를 도입한다. 이 프록시는 지정된 기간 내에 발생하는 장애 횟수를 모니터링한다. 실패 횟수가 정의된 임계값을 초과하면 프록시는 더 이상의 요청이 통과하지 못하도록 차단한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240809195203559.png" alt=""></p>
+<p>회로 차단기 패턴의 동작은 전기 회로 차단기에 비유할 수 있다. 전기 회로 차단기가 전원 공급이 불안정해지거나 문제가 발생하면 자동으로 꺼지는 것처럼 회로 차단기 패턴은 장애 임계값에 도달하면 마이크로서비스 간의 통신을 차단한다. 회로 차단기 패턴은 세 가지 다른 상태로 작동한다.</p>
+<ul>
+<li><strong>Closed State:</strong><ul>
+<li>회로 차단기의 초기 상태</li>
+<li>마이크로서비스는 정상적으로 통신하며 회로 차단기 프록시는 정해진 기간 동안의 장애 횟수를 모니터링한다.</li>
+<li>실패 횟수가 임계값을 초과하면 회로 차단기는 개방 상태로 전환된다.</li>
+</ul>
+</li>
+<li><strong>Open State:</strong><ul>
+<li>회로 차단기가 마이크로서비스 간의 통신을 완전히 차단한다.</li>
+<li>회로 차단기는 요청을 통과시키는 대신 현재 서비스를 사용할 수 없음을 나타내는 표준 출력을 클라이언트에 제공할 수 있다.</li>
+<li>개방 상태는 특정 시간 초과 기간이 끝날 때까지 지속된다.</li>
+</ul>
+</li>
+<li><strong>Half-Open State:</strong><ul>
+<li>개방 상태의 타임아웃 기간이 지나면 회로 차단기가 반-개방 상태로 전환된다.</li>
+<li>이 상태에서는 회로 차단기가 대상 마이크로서비스에 대해 제한된 수의 요청만 통과하도록 허용한다.</li>
+<li>이런 요청이 성공하면 회로 차단기는 문제가 해결된 것으로 간주하고 다시 닫힘 상태로 전환한다.</li>
+<li>요청이 계속 실패하면 회로 차단기는 다시 개방 상태로 되돌아가 정해진 시간 초과 기간 동안 통신을 다시 차단한다.</li>
+</ul>
+</li>
+</ul>
+<h3 id="Benefits-of-Circuit-Breaker-Pattern"><a href="#Benefits-of-Circuit-Breaker-Pattern" class="headerlink" title="Benefits of Circuit Breaker Pattern"></a>Benefits of Circuit Breaker Pattern</h3><ul>
+<li>회로 차단기 패턴은 과도한 재시도를 방지하고 통신을 차단함으로써 시스템의 복원력을 개선하는데 도움이 된다.</li>
+<li>회로 차단기 패턴은 빠른 장애 조치를 가능하게 한다.</li>
+<li>개방 상태에서 회로 차단기는 클라이언트에 폴백 또는 기본 응담을 제공하여 기능의 점진적 저하를 허용할 수 있다.</li>
+<li>마이크로서비스의 상태 및 성능에 대한 귀중한 인사이트를 제공한다.</li>
+</ul>
+<h3 id="Challenges-5"><a href="#Challenges-5" class="headerlink" title="Challenges"></a>Challenges</h3><ul>
+<li>최적의 장애 임계값과 시간 초과 기간을 결정하기 어려울 수 있다.</li>
+<li>외부 라이브러리를 사용하여 서킷 브레이커를 구현하면 서비스의 복잡성이 증가할 수 있다.</li>
+</ul>
+<!-- flag of hidden posts --></div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined">Song Hayoung</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="https://songhayoung.github.io/2024/08/09/System%20Design/ByteByteGo/private/a-crash-course-on-microservice-design-patterns/">https://songhayoung.github.io/2024/08/09/System%20Design/ByteByteGo/private/a-crash-course-on-microservice-design-patterns/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/System-Design/">System Design</a></div><nav id="pagination"></nav><div id="gitalk-container"></div><script>var gitalk = new Gitalk({
+  clientID: '3604b61642355579f55e',
+  clientSecret: 'f552120f18ac5aee3f6297e05e97d94c0a25cd4b',
+  repo: 'SongHayoung.github.io',
+  owner: 'SongHayoung',
+  admin: 'SongHayoung',
+  id: md5(decodeURI(location.pathname)),
+  language: 'en'
+})
+gitalk.render('gitalk-container')</script></div></div><footer class="footer-bg" style="background-image: url(https://xxxx.jpg)"><div class="layout" id="footer"><div class="copyright">&copy;2020 - 2024 By Song Hayoung</div><div class="framework-info"><span>Driven - </span><a target="_blank" rel="noopener" href="http://hexo.io"><span>Hexo</span></a><span class="footer-separator">|</span><span>Theme - </span><a target="_blank" rel="noopener" href="https://github.com/Molunerfinn/hexo-theme-melody"><span>Melody</span></a></div><div class="footer_custom_text">Learning how to walk slowly to not miss important things</div><div class="busuanzi"><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><span id="busuanzi_container_page_pv"><i class="fa fa-file"></i><span id="busuanzi_value_page_pv"></span><span></span></span></div></div></footer><i class="fa fa-arrow-up" id="go-up" aria-hidden="true"></i><script src="https://cdn.jsdelivr.net/npm/animejs@latest/anime.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@latest/velocity.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-ui-pack@latest/velocity.ui.min.js"></script><script src="/js/utils.js?version=1.7.0"></script><script src="/js/fancybox.js?version=1.7.0"></script><script src="/js/sidebar.js?version=1.7.0"></script><script src="/js/copy.js?version=1.7.0"></script><script src="/js/fireworks.js?version=1.7.0"></script><script src="/js/transition.js?version=1.7.0"></script><script src="/js/scroll.js?version=1.7.0"></script><script src="/js/head.js?version=1.7.0"></script><script src="/js/search/algolia.js"></script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+    processEscapes: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  },
+  CommonHTML: {
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "HTML-CSS": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "SVG": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  }
+});
+</script><script type="text/x-mathjax-config">MathJax.Hub.Queue(function() {
+  var all = MathJax.Hub.getAllJax(), i;
+  for (i=0; i < all.length; i += 1) {
+    all[i].SourceElement().parentNode.className += ' has-jax';
+  }
+});
+</script><script src="https://cdn.jsdelivr.net/npm/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><script>if(/Android|webOS|iPhone|iPod|iPad|BlackBerry/i.test(navigator.userAgent)) {
+  $('#nav').addClass('is-mobile')
+  $('footer').addClass('is-mobile')
+  $('#top-container').addClass('is-mobile')
+}</script><div class="search-dialog" id="algolia-search"><div class="search-dialog__title" id="algolia-search-title">Algolia</div><div id="algolia-input-panel"><div id="algolia-search-input"></div></div><hr><div id="algolia-search-results"><div id="algolia-hits"></div><div id="algolia-pagination"></div><div id="algolia-stats"></div></div><span class="search-close-button"><i class="fa fa-times"></i></span></div><div class="search-mask"></div></body></html>
