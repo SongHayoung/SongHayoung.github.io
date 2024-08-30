@@ -1,0 +1,147 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="description" content="[ByteByteGo] A Crash Course on Architectural Scalability"><meta name="keywords" content="System Design"><meta name="author" content="Song Hayoung"><meta name="copyright" content="Song Hayoung"><title>[ByteByteGo] A Crash Course on Architectural Scalability | SUMFIのBlog</title><meta name="robots" content="noindex"><link rel="shortcut icon" href="/songcon.ico"><link rel="stylesheet" href="/css/index.css?version=1.7.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@latest/css/font-awesome.min.css?version=1.7.0"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css?version=1.7.0"><meta name="format-detection" content="telephone=no"><meta http-equiv="x-dns-prefetch-control" content="on"><link rel="dns-prefetch" href="https://cdn.jsdelivr.net"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.css"><script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.js" defer></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@latest/dist/gitalk.min.js"></script><script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.10.0/js/md5.min.js"></script><link rel="dns-prefetch" href="https://www.google-analytics.com"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-169368422-1', 'auto');
+ga('send', 'pageview');</script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: {"appId":"7LZ6OJ4D6C","apiKey":"9a84e13f74ea78c3fd54512c10139c56","indexName":"git blog","hits":{"per_page":10},"languages":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}.","hits_stats":"${hits} results found in ${time} ms"}},
+  localSearch: undefined,
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  }
+} </script><meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/rss2.xml" title="SUMFIのBlog" type="application/rss+xml">
+</head><body><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar" data-display="true"><div class="toggle-sidebar-info text-center"><span data-toggle="Toggle article">Toggle site</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">Catalog</div><div class="sidebar-toc__progress"><span class="progress-notice">You've read</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#A-Crash-Course-on-Architectural-Scalability"><span class="toc-number">1.</span> <span class="toc-text">A Crash Course on Architectural Scalability</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#What-is-Scalability"><span class="toc-number">2.</span> <span class="toc-text">What is Scalability?</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#The-Alternative-Definition-of-Scalability"><span class="toc-number">2.1.</span> <span class="toc-text">The Alternative Definition of Scalability</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Comparing-the-Scalability-of-Systems"><span class="toc-number">2.2.</span> <span class="toc-text">Comparing the Scalability of Systems</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Architectural-Bottlenecks-to-Scalability"><span class="toc-number">3.</span> <span class="toc-text">Architectural Bottlenecks to Scalability</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Centralized-Components"><span class="toc-number">3.1.</span> <span class="toc-text">Centralized Components</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#High-Latency-Components"><span class="toc-number">3.2.</span> <span class="toc-text">High Latency Components</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Key-Tenets-of-Building-a-Scalable-Architecture"><span class="toc-number">4.</span> <span class="toc-text">Key Tenets of Building a Scalable Architecture</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Statelessness"><span class="toc-number">4.1.</span> <span class="toc-text">Statelessness</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Loose-Coupling"><span class="toc-number">4.2.</span> <span class="toc-text">Loose Coupling</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Asynchronous-Processing"><span class="toc-number">4.3.</span> <span class="toc-text">Asynchronous Processing</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Choosing-the-Right-Scaling-Strategy-Vertical-vs-Horizontal"><span class="toc-number">5.</span> <span class="toc-text">Choosing the Right Scaling Strategy: Vertical vs Horizontal</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Vertical-Scaling"><span class="toc-number">5.1.</span> <span class="toc-text">Vertical Scaling</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Horizontal-Scaling"><span class="toc-number">5.2.</span> <span class="toc-text">Horizontal Scaling</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Techniques-for-Reliable-Scalability"><span class="toc-number">6.</span> <span class="toc-text">Techniques for Reliable Scalability</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Load-Balancing"><span class="toc-number">6.1.</span> <span class="toc-text">Load Balancing</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Caching"><span class="toc-number">6.2.</span> <span class="toc-text">Caching</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Sharding"><span class="toc-number">6.3.</span> <span class="toc-text">Sharding</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Avoid-Centralized-Resources"><span class="toc-number">6.4.</span> <span class="toc-text">Avoid Centralized Resources</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Modularity"><span class="toc-number">6.5.</span> <span class="toc-text">Modularity</span></a></li></ol></li></ol></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="https://avatars3.githubusercontent.com/u/37806785?s=460&amp;u=8c68d685faf7c5280cfbd736a6b1730b55fb4203&amp;v=4"></div><div class="author-info__name text-center">Song Hayoung</div><div class="author-info__description text-center"></div><div class="follow-button"><a target="_blank" rel="noopener" href="https://www.linkedin.com/in/hayoung-song-9523b61bb/">Follow Me</a></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="/archives"><span class="pull-left">Articles</span><span class="pull-right">10919</span></a><a class="author-info-articles__tags article-meta" href="/tags"><span class="pull-left">Tags</span><span class="pull-right">196</span></a><a class="author-info-articles__categories article-meta" href="/categories"><span class="pull-left">Categories</span><span class="pull-right">61</span></a></div><hr><div class="author-info-links"><div class="author-info-links__title text-center">VISITED</div><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Seoul Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Jeju Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">British Columbia Canada</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Boracay Philippines</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">三重　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">大阪　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">名古屋　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">静岡　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">札幌　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">京都　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Bangkok Thailand</a></div></div></div><div id="content-outer"><div id="top-container" style="background-image: url(https://xxxx.jpg)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="/">SUMFIのBlog</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus">   <a class="site-page" href="/">Home</a><a class="site-page" href="/archives">Archives</a><a class="site-page" href="/tags">Tags</a><a class="site-page" href="/categories">Categories</a><a class="site-page" href="/about">About</a></span><span class="pull-right"><a class="site-page social-icon search"><i class="fa fa-search"></i><span> Search</span></a></span></div><div id="post-info"><div id="post-title">[ByteByteGo] A Crash Course on Architectural Scalability</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2024-08-16</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/">System Design</a><i class="fa fa-angle-right" aria-hidden="true"></i><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/Byte-Byte-Go/">Byte Byte Go</a><div class="post-meta-wordcount"><span>Word count: </span><span class="word-count">1.9k</span><span class="post-meta__separator">|</span><span>Reading time: 11 min</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div class="article-container" id="post-content"><h2 id="A-Crash-Course-on-Architectural-Scalability"><a href="#A-Crash-Course-on-Architectural-Scalability" class="headerlink" title="A Crash Course on Architectural Scalability"></a>A Crash Course on Architectural Scalability</h2><span id="more"></span>
+<p>애플리케이션을 구축하는 개발자에게는 예기치 않은 트래픽 급증에 대비하는 것이 필수적이다. 이에 대비하지 않으면 애플리케이션 인프라에 많은 부담을 줄 수 있다. 성능 저하를 유발할 뿐만 아니라 경우에 따라서는 시스템 전체에 장애가 발생할 수 있다. 이런 위험을 완화하고 우수한 사용자 경험을 보장하려면 확장 가능한 아키텍처를 선제적으로 구축하고 설계해야 한다.</p>
+<p>확장성은 애플리케이션이 성능이나 가용성의 저하 없이 변화하는 워크로드 요구사항에 동적으로 적응할 수 있게 해준다. 이 포스트에선 다양한 관점에서 확장성의 의미를 이해하고 애플리케이션 아키텍처를 확장하는데 도움이 되는 다양한 기술과 원칙을 살펴본다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240816170032381.png" alt=""></p>
+<h2 id="What-is-Scalability"><a href="#What-is-Scalability" class="headerlink" title="What is Scalability?"></a>What is Scalability?</h2><p>확장성은 시스템 설계의 중요한 측면으로 시스템이 성능 저하 없이 증가하는 워크로드를 얼마나 잘 처리할 수 있는지를 결정한다. 서버나 처리 능력과 같은 리소스를 추가해 성능을 크게 저하시키지 않고 성장을 수용할 수 있다면 시스템은 확장성이 있는 것으로 간주된다.</p>
+<p>개발자의 주요 초점은 시스템이 허용 가능한 수준에서 작동할 수 있는 수요 간격을 결정하는 것이다. 이 구간은 시스템이 심각한 성능 저하 없이 처리할 수 있는 워크로드 범위를 나타낸다. 이 수준을 넘어서면 성능이 급격히 떨어진다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240816170150653.png" alt=""></p>
+<p>실제 시나리오에서 활발하게 사용되는 시스템의 개발자는 워크로드 수준을 지속적으로 모니터링한다. 이들은 다양한 모니터링 도구와 기법을 사용해 다음과 같은 주요 지표를 추적한다.</p>
+<ul>
+<li>CPU 사용률</li>
+<li>메모리 사용량</li>
+<li>네트워크 대역폭 사용량</li>
+<li>응답 시간</li>
+<li>처리량(RPS)</li>
+</ul>
+<p>그러나 확장성을 이해하는데 있어 간과하기 쉬운 또 다른 측면이 있다. 이 측면은 확장성에 대한 또 다른 정의를 통해 명확해진다.</p>
+<h3 id="The-Alternative-Definition-of-Scalability"><a href="#The-Alternative-Definition-of-Scalability" class="headerlink" title="The Alternative Definition of Scalability"></a>The Alternative Definition of Scalability</h3><p>확장성은 시스템 용량 확장을 위한 비용 효율적인 전략을 반복적으로 적용하여 증가하는 업무량을 처리할 수 있는 시스템의 능력을 말한다. 이 정의는 단순히 더 많은 작업을 처리하는 것에서 확장 접근 방식의 효율성과 효과로 초점을 옮긴다.</p>
+<ul>
+<li>용량을 늘리기 위해 프로세서를 더 추가하는 경우 추가된 프로세서 간의 작업을 조정하는 방법은 무엇인가? 조정 방법은 확장 전략의 효과를 결정하는데 중요한 역할을 한다.</li>
+<li>조정 방법으로 인해 추가 처리 주기가 소모되는가? 조정 오버헤드가 상당한 경우 프로세서 추가의 이점이 감소할 수 있다. 이런 경우 특정 시점을 넘어 프로세서를 추가하는 것은 확장성 개선에 비용 효율적이지 않을 수 있다.</li>
+</ul>
+<p>이 정의는 확장 전략의 반복적인 적용을 강조함으로써 선택에 대한 인식과 시스템의 확장성에 대한 장기적 영향을 높인다.</p>
+<p>예를 들어 다음 시나리오를 생각해보자.</p>
+<p>O(n^2) 알고리즘을 O(nlogn) 알고리즘으로 대체하면 시스템이 동일한 시간에 더 많은 워크로드를 처리할 수 있다. 즉, 알고리즘의 효율성을 개선하면 시스템의 확장성이 향상된다. 그러나 가장 효율적인 알고리즘을 구현한 후에는 알고리즘 대체 전략이 더 이상 효과적이지 않다. 즉, 이 전략을 여러 번 적용해 시스템의 확장성을 높일 수는 없다. 이 모든 것을 고려할 때 확장성을 살펴볼 수 있는 또 다른 관점이 있다.</p>
+<h3 id="Comparing-the-Scalability-of-Systems"><a href="#Comparing-the-Scalability-of-Systems" class="headerlink" title="Comparing the Scalability of Systems"></a>Comparing the Scalability of Systems</h3><p>시스템의 확장성을 평가할 때는 개별 시스템에 확장 가능 여부를 표시하는 것보다 서로 다른 두 시스템의 확장성을 비교하는 것이 더 의미가 있다. 고려 중인 시스템의 응답 곡선과 수요 곡선을 분석하는 것이 유용한 접근 방식이다.</p>
+<p>아래 그래프의 예는 가상의 두 시스템인 A, B의 응답 대 수요 곡선을 보여준다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240816170726818.png" alt=""></p>
+<p>이 그래프에서 특정 수요 수준에 대해 시스템 A가 시스템 B에 비해 응답 메트릭이 더 나쁘다는 것을 알 수 있다. 이는 시스템 B가 시스템 A보다 더 나은 성능으로 동일한 수준의 수요를 처리할 수 있음을 의미한다.</p>
+<p>응답 메트릭에 허용 가능한 최대 값이 있는 경우 시스템 A는 시스템 B 보다 더 빨리 해당 임계값을 초과한다. 즉, 시스템 B는 응답 메트릭이 만족스럽지 않게 되기 전에 더 높은 수준의 수요를 수용할 수 있다.</p>
+<p>이 분석에 따라 결론은 시스템 B가 시스템 A보다 확장성이 뛰어나다는 것이다. 궁극적으로 무한히 확장 가능한 시스템은 없다는 점을 이해하는 것이 중요하다. 응답 대 수요 곡선이 모두 동일한 단조로운 속도로 계쏙 증가하면 결국 리소스에 대한 수요가 가용성을 초과하는 지점에 도달하게 된다. 이 시점에서 두 시스템의 응답 시간은 수요 수준은 다르지만 모두 불만족스러워 진다. 응답 메트릭이 만족스럽지 않게 되는 시점은 시스템 확장성의 한계를 의미한다. 이 지점을 넘어서면 시스템은 성능 저하 없이 증가하는 수요를 처리할 수 없다.</p>
+<p>실제로 시스템이 항상 응답 대 수요 지표의 단조로운 증가율을 따르는 것은 아니다. 아래 예시와 같이 곡선이 비선형 형태를 띠는 경우가 많다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240816171923807.png" alt=""></p>
+<p>이 가상의 시스템에서 응답 지표는 상당한 설계 한계에 도달할 때까지 수요 증가를 상당히 잘 견뎌낸다. 이 한계는 응답 대 수요 곡선에서 무릎 모양으로 나타난다. 특정 수요 수준을 넘으면 응답 지표가 급격히 악화되어 시스템이 확장성 한계에 도달했음을 나타낸다. 더 이상 수요가 증가하면 시스템이 언덕 아래로 밀려나 성능이 허용할 수 없는 수준에 도달하게 된다. 따라서 확장성을 개선하기 위한 시스템 설계자의 중요한 목표는 응답 대 수요 곡선의 무릎을 가능한 한 오른쪽으로 유지하는 것이다. 즉, 확장성 한계에 도달하기 전에 더 높은 수준의 수요를 처리할 수 있도록 시스템을 설계해야 한다.</p>
+<h2 id="Architectural-Bottlenecks-to-Scalability"><a href="#Architectural-Bottlenecks-to-Scalability" class="headerlink" title="Architectural Bottlenecks to Scalability"></a>Architectural Bottlenecks to Scalability</h2><p>일반적으로 두 가지 주요 문제가 확장 병목 현상을 일으키는 원인이 된다.</p>
+<h3 id="Centralized-Components"><a href="#Centralized-Components" class="headerlink" title="Centralized Components"></a>Centralized Components</h3><p>애플리케이션 아키텍처에서 중앙 집중식 구성 요소는 쉽게 확장할 수 없는 단일 처리 또는 제어 지점을 의미한다. 이런 구성 요소는 병목 현상 역할을 하여 전체 아키텍처 또는 요청 파이프라인이 처리할 수 있는 요청 수에 상한선을 설정한다.</p>
+<p>예를 들어 모든 데이터 저장 및 검색 작업을 처리하기 위해 단일 데이터베이스 서버에 의존하는 웹 애플리케이션을 생각해보자. 애플리케이션이 성장하고 동시 사용자 수가 증가하면 데이터베이스 서버는 확장성을 제한하는 중앙 집중식 구성 요소가 된다. 데이터베이스 서버는 시스템에 추가된 애플리케이션 서버 수에 관계없이 초당 특정 수의 요청만 처리할 수 있다.</p>
+<h3 id="High-Latency-Components"><a href="#High-Latency-Components" class="headerlink" title="High Latency Components"></a>High Latency Components</h3><p>지연 시간이 긴 구성 요소는 요청 파이프라인 내에서 상당한 지연 또는 속도 저하를 유발해 애플리케이션의 전체 응답 시간에 하한선을 설정하는 구성 요소다. 예를 들어 요청 처리의 일부로 복잡한 데이터 처리 작업이 있는 웹 애플리케이션을 생각해보자. 이 작업에는 데이터 변환, 외부 API 호출 또는 리소스 집약적인 계산과 같이 시간이 많이 소요되는 작업이 포함될 수 있다.</p>
+<p>이런 지연 시간이 긴 구성 요소가 요청 파이프라인 내에서 동기식으로 실행되면 클라이언트 응답이 지연되고 시스템의 처리량이 제한된다.</p>
+<h2 id="Key-Tenets-of-Building-a-Scalable-Architecture"><a href="#Key-Tenets-of-Building-a-Scalable-Architecture" class="headerlink" title="Key Tenets of Building a Scalable Architecture"></a>Key Tenets of Building a Scalable Architecture</h2><p>보편적인 확장성 아키텍처 모델 같은 것은 존재하지 않는다. 시스템과 아키텍처는 시간이 지남에 따라 유기적으로 진화하기 때문에 모든 경우에 적용할 수 있는 확장성에 대한 고정된 원칙을 갖기는 어렵다. 하지만 대부분의 상황에서 몇 가지 핵심 원칙이 적용된다.</p>
+<h3 id="Statelessness"><a href="#Statelessness" class="headerlink" title="Statelessness"></a>Statelessness</h3><p>확장 가능한 시스템의 세계에서 상태 비저장성은 매우 바람직한 특성이다. 상태가 없는 시스템은 상태가 있는 시스템에 비해 훨씬 쉽게 확장될 수 있다. 상태 비저장성은 서버가 요청 사이에 클라이언트별 상태를 유지하지 않는다는 것을 의미한다. 들어오는 요청을 처리하는 웹 서버가 있다고 상상해보자. 이 서버가 RESTful 원칙을 따른다면 상태 비저장 서버가 될 것이다. 각 요청에는 서버가 이전 요청의 저장된 컨텍스트에 의존하지 않고 해당 요청을 처리하는데 필요한 모든 정보가 포함된다.</p>
+<p>상태 비버장 서버에는 몇 가지 장점이 있다.</p>
+<ul>
+<li>수평적 확장이 더 쉽다.</li>
+<li>하나의 서버 인스턴스가 다운되더라도 전체 시스템에 영향을 미치지 않으므로 내결함성이 뛰어나다.</li>
+<li>상태 비저장 서버는 인스턴스 간에 상태 일관성을 유지할 필요가 없으므로 독립적으로 배포 및 유지 관리할 수 있다.</li>
+</ul>
+<p>상태 비저장성은 확장성 측면에서 이상적이지만 대부분의 애플리케이션은 의미 있는 기능과 사용자 경험을ㅈ ㅔ공하기 위해 어떤 형태의 상태 관리가 필요하다는 점에 유의해야 한다.</p>
+<p>일반적인 다계층 아키텍처에서 애플리케이션은 프레젠테이션 계층, 백엔드 계층, 데이터 계층 등 여러 계층으로 나뉜다. 핵심은 데이터 계층의 상태를 가능한 한 많이 유지하면서 다른 계층은 비저장 상태로 유지하는 것이다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240816172818617.png" alt=""></p>
+<h3 id="Loose-Coupling"><a href="#Loose-Coupling" class="headerlink" title="Loose Coupling"></a>Loose Coupling</h3><p>느슨하게 결합된 아키텍처를 가진 시스템에서는 종속성에 큰 영향을 주지 않고 개별 구성 요소를 수정하거나 교체할 수 있다. 이런 모듈식 접근 방식은 특히 확장성 측면에서 여러 가지 이점을 제공한다. 구성 요소가 긴밀하게 연결되어 있는 경우, 한 구성 요소를 변경하려면 해당 종속성에 대한 광범위한 수정이 필요한 경우가 많다. 이런 긴밀한 상호 연결성은 한 번의 변경으로 애플리케이션의 많은 부분을 업데이트해야 하는 파급 효과로 이어질 수 있다.</p>
+<p>반면 느슨한 연결은 종속성을 다시 작업할 필요 없이 개별 컴포넌트를 대상으로 세분화된 변경을 수행할 수 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240816172949985.png" alt=""></p>
+<p>이런 모듈성은 시스템을 확장할 때 특히 유용하다. 확장성 요구 사항을 특정 구성 요소로 분리함으로써 개발자는 애플리케이션의 해당 부분만 최적화하고 확장하는데 집중할 수 있다.</p>
+<h3 id="Asynchronous-Processing"><a href="#Asynchronous-Processing" class="headerlink" title="Asynchronous Processing"></a>Asynchronous Processing</h3><p>모놀리식 애플리케이션을 마이크로서비스로 세분화하면 모듈성 및 확장성과 같은 이점이 있지만, 이런 서비스 간의 통신으로 인해 다음과 같은 종속성이 발생할 수 있다.</p>
+<ul>
+<li>긴밀한 결합</li>
+<li>동기식 통신</li>
+<li>연쇄적 장애</li>
+</ul>
+<p>이런 문제를 완화하기 위한 한 가지 해결책은 이벤트를 사용하는 비동기 통신 방식을 채택하는 것이다. 이 패턴을 EDA라고 한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240816173143500.png" alt=""></p>
+<h2 id="Choosing-the-Right-Scaling-Strategy-Vertical-vs-Horizontal"><a href="#Choosing-the-Right-Scaling-Strategy-Vertical-vs-Horizontal" class="headerlink" title="Choosing the Right Scaling Strategy: Vertical vs Horizontal"></a>Choosing the Right Scaling Strategy: Vertical vs Horizontal</h2><p>확장 전략을 선택할 때 첫 번째 결정은 종종 수직적 확자오가 수평적 확장 중 하나를 선택하는 것이다. 두 접근 방식 모두 사용 사례와 이점이 있으며, 리소스를 남용하거나 낭비하지 않고 효율적으로 관리하려면 올바른 전략을 선택하는 것이 중요하다.</p>
+<h3 id="Vertical-Scaling"><a href="#Vertical-Scaling" class="headerlink" title="Vertical Scaling"></a>Vertical Scaling</h3><p>스케일업이라고도 하는 수직적 확장은 단일 리소스의 용량을 늘리는 것을 포함한다. 이는 더 큰 서버 또는 인스턴스 크기로 업그레이드하여 단일 인스턴스 내에서 더 많은 처리 능력, 메모리 또는 기타 리소스를 제공함으로써 달성할 수 있다. 이 접근 방식은 다음 시나리오에서 유용하다.</p>
+<ul>
+<li>워크로드를 더 작은 부분으로 쉽게 나눌 수 없거나 애플리케이션 아키텍처가 수평 확장을 지원하지 않는 경우 수직 확장이 적합한 옵션이다.</li>
+<li>워크로드에 상당한 처리 능력, 메모리 또는 기타 리소스가 필요한 경우 수직 확장을 통해 단일 인스턴스 내에서 필요한 용량을 제공할 수 있다.</li>
+</ul>
+<h3 id="Horizontal-Scaling"><a href="#Horizontal-Scaling" class="headerlink" title="Horizontal Scaling"></a>Horizontal Scaling</h3><p>스케일 아웃이라고도 하는 수평 확장은 인스턴스 또는 리소스를 추가하여 여러 서버에 워크로드를 분산하는 것이다. 수평 확장을 사용하면 단일 인스턴스의 용량을 늘리는 대신 여러 인스턴스에 부하를 분산해 트래픽 또는 워크로드 수요 증가를 처리할 수 있다.</p>
+<p>수평적 확장의 주요 이점 중 하나는 여러 가용 영역에 걸쳐 인스턴스를 분산할 수 있다는 점이다. 하나의 인스턴스 또는 전체 가용 영역이 중단되는 경우에도 다른 가용 영역에 있는 다른 인스턴스가 요청을 꼐속 처리하여 전체 시스템에 미치는 영향을 최소화할 수 있다. 그 결과 복원력 향상, 수용력 증가로 이어진다.</p>
+<p>수평적 확장의 이점을 최대한 활용하려면 애플리케이션이 상태 비저장 설계를 지원하는 것이 이상적이다. 인스턴스에서 상태를 분리함으로써 시스템은 인스턴스간 상태 동기화에 대한 걱정 없이 애플리케이션 계층을 원활하게 확장할 수 있다.</p>
+<p>워크로드를 독립적으로 실행되는 작은 부분으로 나눌 수 있는 경우 수평적 확장을 선택하는 것이 좋다. 일반적으로 여러 노드에서 실행되는 클라우드 네이티브 애플리케이션이 이에 해당한다.</p>
+<h2 id="Techniques-for-Reliable-Scalability"><a href="#Techniques-for-Reliable-Scalability" class="headerlink" title="Techniques for Reliable Scalability"></a>Techniques for Reliable Scalability</h2><h3 id="Load-Balancing"><a href="#Load-Balancing" class="headerlink" title="Load Balancing"></a>Load Balancing</h3><p>수평적 확장 시스템에서 가장 중요한 과제 중 하나는 여러 서버에 걸쳐 워크로드를 균등하게 분산하는 것이다. 적절한 워크로드 분산이 이루어지지 않으면 일부 서버는 과부하가 걸리고 다른 서버는 활용도가 낮아져 최적의 성능을 발휘하지 못하고 병목 현상이 발생할 수 있다.</p>
+<p>부하 분산은 사용자 요청을 시스템의 여러 노드에 지능적으로 분산하여 이런 문제를 해결하는 기술이다. 부하 분산은 워크로들를 균등하게 분산해 단일 서버가 성능 병목 현상을 일으키지 않도록 한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240816174204379.png" alt=""></p>
+<h3 id="Caching"><a href="#Caching" class="headerlink" title="Caching"></a>Caching</h3><p>캐싱은 성능을 향상시키면서 시스템을 크게 확장할 수 있는 강력한 기술이다. 캐싱은 가장 자주 요청되는 정보를 메모리에 보관함으로써 시간이 많이 걸리고 리소스를 많이 사용하는 데이터 검색 작업의 필요성을 줄여 응답 시간을 단축하고 시스템 효율성을 개선한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240816174253443.png" alt=""></p>
+<p>시스템의 다양한 수준에서 다양한 레벨의 캐싱을 구현할 수 있다.</p>
+<ul>
+<li>클라이언트 측 캐싱 : 웹 브라우저나 모바일 앱과 같은 클라이언트 디바이스에 데이터를 저장하는 방식</li>
+<li>서버 측 캐싱 : 자주 액세스하는 데이터를 서버 자체에 저장하는 방식</li>
+<li>분산 캐싱 : 분산 시스템의 여러 서버 또는 노드에서 공유되는 별도의 캐싱 계층</li>
+</ul>
+<h3 id="Sharding"><a href="#Sharding" class="headerlink" title="Sharding"></a>Sharding</h3><p>시스템의 데이터가 증가하면 데이터 세트가 확장됨에 따라 쿼리 및 데이터 작업의 성능이 저하되어 응답 시간이 느려지고 확장성이 저하될 수 있다. 샤딩은 이런 문제를 해결하는 기술이다.</p>
+<p>샤딩은 큰 데이터 집합을 샤드라고 하는 더 작고 독립적인 하위 집합으로 분할하는 것을 포함한다. 각 샤드는 일반적으로 별도의 서버나 노드에 저장되므로 데이터를 여러 컴퓨터에 분산할 수 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20240816174451403.png" alt=""></p>
+<p>쿼리 및 데이터 작업은 샤딩 키 또는 파티셔닝 전략에 따라 적절한 샤드로 전달된다. 이를 통해 시스템은 데이터 처리를 병렬화하고 여러 노드에 걸쳐 워크로드를 분산할 수 있다.</p>
+<h3 id="Avoid-Centralized-Resources"><a href="#Avoid-Centralized-Resources" class="headerlink" title="Avoid Centralized Resources"></a>Avoid Centralized Resources</h3><p>확장성, 내결함성 및 성능을 개선하려면 워크로드에 하나의 중앙 집중식 리소스를 사용하지 말고 여러 리소스에 분산하는 것이 중요하다. 고려할만한 몇 가지 시나리오는 다음과 같다.</p>
+<ul>
+<li>대기열 기반 부하 분산에서는 처리 부하를 분산하기 위해 여러 대기열에 걸쳐 워크로드를 분할하는 것을 고려하라.</li>
+<li>오래 실행되는 작업을 병렬 처리를 활용해 더 잘 확장할 수 있는 작은 작업으로 나누어라.</li>
+<li>팬아웃, 파이프, 필터와 같은 디자인 패턴을 사용하면 워크플로우에서 중앙 집중식 리로스가 생성되는 것을 방지할 수 있다.</li>
+</ul>
+<h3 id="Modularity"><a href="#Modularity" class="headerlink" title="Modularity"></a>Modularity</h3><p>모듈화는 복잡성을 관리하고 확장성, 보안, 유지보수성을 향상시키는 기본 원칙이다. 모듈식 설계는 최신 애플리케이션 개발에서 일반적으로 사용되는 접근 방식으로, 애플리케이션의 소프트웨어는 함수 또는 모듈이라고 하는 느슨하게 결합된 여러 개의 빌등 블록을 사용하여 구성된다.</p>
+<p>모듈식 설계의 핵심 아이디어는 아키텍처의 여러 구성 요소 간에 명확한 경계를 설정해 관심사를 분리하는 것이다. 각 묘듈은 특정 기능을 캡슐화하며 잘 정의된 인터페이스 또는 API를 통해 다른 모듈과 통신한다.</p>
+<p>모듈식 설계는 일반적으로 모놀리식 아키텍처와 관련된 “fate sharing”이라는 함정을 피하는데 도움이 된다. 모놀리식 애플리케이션에서는 모든 구성 요소가 긴밀하게 결합되어 하나의 단위로 배포되며, 수직적으로 확장된 서버에서 실행되는 경우가 많다. 이 접근 방식의 문제점은 서버의 모든 장애가 문제가 전체 애플리케이션에 영향을 미친다는 것이다.</p>
+<!-- flag of hidden posts --></div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined">Song Hayoung</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="https://songhayoung.github.io/2024/08/16/System%20Design/ByteByteGo/private/a-crash-course-on-architectural-scalability/">https://songhayoung.github.io/2024/08/16/System%20Design/ByteByteGo/private/a-crash-course-on-architectural-scalability/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/System-Design/">System Design</a></div><nav id="pagination"></nav><div id="gitalk-container"></div><script>var gitalk = new Gitalk({
+  clientID: '3604b61642355579f55e',
+  clientSecret: 'f552120f18ac5aee3f6297e05e97d94c0a25cd4b',
+  repo: 'SongHayoung.github.io',
+  owner: 'SongHayoung',
+  admin: 'SongHayoung',
+  id: md5(decodeURI(location.pathname)),
+  language: 'en'
+})
+gitalk.render('gitalk-container')</script></div></div><footer class="footer-bg" style="background-image: url(https://xxxx.jpg)"><div class="layout" id="footer"><div class="copyright">&copy;2020 - 2024 By Song Hayoung</div><div class="framework-info"><span>Driven - </span><a target="_blank" rel="noopener" href="http://hexo.io"><span>Hexo</span></a><span class="footer-separator">|</span><span>Theme - </span><a target="_blank" rel="noopener" href="https://github.com/Molunerfinn/hexo-theme-melody"><span>Melody</span></a></div><div class="footer_custom_text">Learning how to walk slowly to not miss important things</div><div class="busuanzi"><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><span id="busuanzi_container_page_pv"><i class="fa fa-file"></i><span id="busuanzi_value_page_pv"></span><span></span></span></div></div></footer><i class="fa fa-arrow-up" id="go-up" aria-hidden="true"></i><script src="https://cdn.jsdelivr.net/npm/animejs@latest/anime.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@latest/velocity.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-ui-pack@latest/velocity.ui.min.js"></script><script src="/js/utils.js?version=1.7.0"></script><script src="/js/fancybox.js?version=1.7.0"></script><script src="/js/sidebar.js?version=1.7.0"></script><script src="/js/copy.js?version=1.7.0"></script><script src="/js/fireworks.js?version=1.7.0"></script><script src="/js/transition.js?version=1.7.0"></script><script src="/js/scroll.js?version=1.7.0"></script><script src="/js/head.js?version=1.7.0"></script><script src="/js/search/algolia.js"></script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+    processEscapes: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  },
+  CommonHTML: {
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "HTML-CSS": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "SVG": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  }
+});
+</script><script type="text/x-mathjax-config">MathJax.Hub.Queue(function() {
+  var all = MathJax.Hub.getAllJax(), i;
+  for (i=0; i < all.length; i += 1) {
+    all[i].SourceElement().parentNode.className += ' has-jax';
+  }
+});
+</script><script src="https://cdn.jsdelivr.net/npm/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><script>if(/Android|webOS|iPhone|iPod|iPad|BlackBerry/i.test(navigator.userAgent)) {
+  $('#nav').addClass('is-mobile')
+  $('footer').addClass('is-mobile')
+  $('#top-container').addClass('is-mobile')
+}</script><div class="search-dialog" id="algolia-search"><div class="search-dialog__title" id="algolia-search-title">Algolia</div><div id="algolia-input-panel"><div id="algolia-search-input"></div></div><hr><div id="algolia-search-results"><div id="algolia-hits"></div><div id="algolia-pagination"></div><div id="algolia-stats"></div></div><span class="search-close-button"><i class="fa fa-times"></i></span></div><div class="search-mask"></div></body></html>
