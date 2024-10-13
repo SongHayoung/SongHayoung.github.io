@@ -1,0 +1,215 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="description" content="[ByteByteGo] CAP, PACELC, ACID, BASE - Essential Concepts for an Architect’s Toolkit"><meta name="keywords" content="System Design"><meta name="author" content="Song Hayoung"><meta name="copyright" content="Song Hayoung"><title>[ByteByteGo] CAP, PACELC, ACID, BASE - Essential Concepts for an Architect’s Toolkit | SUMFIのBlog</title><meta name="robots" content="noindex"><link rel="shortcut icon" href="/songcon.ico"><link rel="stylesheet" href="/css/index.css?version=1.7.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@latest/css/font-awesome.min.css?version=1.7.0"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css?version=1.7.0"><meta name="format-detection" content="telephone=no"><meta http-equiv="x-dns-prefetch-control" content="on"><link rel="dns-prefetch" href="https://cdn.jsdelivr.net"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.css"><script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.js" defer></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@latest/dist/gitalk.min.js"></script><script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.10.0/js/md5.min.js"></script><link rel="dns-prefetch" href="https://www.google-analytics.com"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-169368422-1', 'auto');
+ga('send', 'pageview');</script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: {"appId":"7LZ6OJ4D6C","apiKey":"9a84e13f74ea78c3fd54512c10139c56","indexName":"git blog","hits":{"per_page":10},"languages":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}.","hits_stats":"${hits} results found in ${time} ms"}},
+  localSearch: undefined,
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  }
+} </script><meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/rss2.xml" title="SUMFIのBlog" type="application/rss+xml">
+</head><body><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar" data-display="true"><div class="toggle-sidebar-info text-center"><span data-toggle="Toggle article">Toggle site</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">Catalog</div><div class="sidebar-toc__progress"><span class="progress-notice">You've read</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#CAP-PACELC-ACID-BASE-Essential-Concepts-for-an-Architect%E2%80%99s-Toolkit"><span class="toc-number">1.</span> <span class="toc-text">CAP, PACELC, ACID, BASE - Essential Concepts for an Architect’s Toolkit</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#The-CAP-Theorem"><span class="toc-number">2.</span> <span class="toc-text">The CAP Theorem</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Properties-of-the-CAP-Theorem"><span class="toc-number">2.1.</span> <span class="toc-text">Properties of the CAP Theorem</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Explanation-of-the-CAP-Theorem"><span class="toc-number">2.2.</span> <span class="toc-text">Explanation of the CAP Theorem</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Implications-and-Examples-of-CP-AP-and-CA-Systems"><span class="toc-number">2.3.</span> <span class="toc-text">Implications and Examples of CP, AP, and CA Systems</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Limitations-of-the-CAP-Model"><span class="toc-number">2.4.</span> <span class="toc-text">Limitations of the CAP Model</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#The-PACELC-Theorem"><span class="toc-number">3.</span> <span class="toc-text">The PACELC Theorem</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Latency-L-in-Normal-Operation"><span class="toc-number">3.1.</span> <span class="toc-text">Latency (L) in Normal Operation</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Availability-A-and-Consistency-C-During-a-Partition"><span class="toc-number">3.2.</span> <span class="toc-text">Availability (A) and Consistency (C) During a Partition</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Implications-and-Examples-of-Different-PACELC-Configurations"><span class="toc-number">3.3.</span> <span class="toc-text">Implications and Examples of Different PACELC Configurations</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#ACID"><span class="toc-number">4.</span> <span class="toc-text">ACID</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Definition-of-Atomicity-Consistency-Isolation-Durability"><span class="toc-number">4.1.</span> <span class="toc-text">Definition of Atomicity, Consistency, Isolation, Durability</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-Atomicity"><span class="toc-number">4.1.1.</span> <span class="toc-text">1 - Atomicity</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-Consistency"><span class="toc-number">4.1.2.</span> <span class="toc-text">2 - Consistency</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-Isolation"><span class="toc-number">4.1.3.</span> <span class="toc-text">3 - Isolation</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4-Durability"><span class="toc-number">4.1.4.</span> <span class="toc-text">4 - Durability</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Relevance-of-ACID-to-Transactional-Databases"><span class="toc-number">4.2.</span> <span class="toc-text">Relevance of ACID to Transactional Databases</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Challenges-of-Maintaining-ACID-Compliance-in-Distributed-Databases"><span class="toc-number">4.3.</span> <span class="toc-text">Challenges of Maintaining ACID Compliance in Distributed Databases</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#BASE"><span class="toc-number">5.</span> <span class="toc-text">BASE</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Definition-of-BASE"><span class="toc-number">5.1.</span> <span class="toc-text">Definition of BASE</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#How-BASE-Contrasts-with-ACID"><span class="toc-number">5.2.</span> <span class="toc-text">How BASE Contrasts with ACID</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Relevance-to-NoSQL-and-Other-AP-Systems"><span class="toc-number">5.3.</span> <span class="toc-text">Relevance to NoSQL and Other AP Systems</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Implications-and-Challenges-of-Eventual-Consistency"><span class="toc-number">5.4.</span> <span class="toc-text">Implications and Challenges of Eventual Consistency</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Choosing-the-Right-Model"><span class="toc-number">6.</span> <span class="toc-text">Choosing the Right Model</span></a></li></ol></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="https://avatars3.githubusercontent.com/u/37806785?s=460&amp;u=8c68d685faf7c5280cfbd736a6b1730b55fb4203&amp;v=4"></div><div class="author-info__name text-center">Song Hayoung</div><div class="author-info__description text-center"></div><div class="follow-button"><a target="_blank" rel="noopener" href="https://www.linkedin.com/in/hayoung-song-9523b61bb/">Follow Me</a></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="/archives"><span class="pull-left">Articles</span><span class="pull-right">11034</span></a><a class="author-info-articles__tags article-meta" href="/tags"><span class="pull-left">Tags</span><span class="pull-right">196</span></a><a class="author-info-articles__categories article-meta" href="/categories"><span class="pull-left">Categories</span><span class="pull-right">62</span></a></div><hr><div class="author-info-links"><div class="author-info-links__title text-center">VISITED</div><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Seoul Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Jeju Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">British Columbia Canada</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Boracay Philippines</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">三重　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">大阪　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">名古屋　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">静岡　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">札幌　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">京都　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Bangkok Thailand</a></div></div></div><div id="content-outer"><div id="top-container" style="background-image: url(https://xxxx.jpg)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="/">SUMFIのBlog</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus">   <a class="site-page" href="/">Home</a><a class="site-page" href="/archives">Archives</a><a class="site-page" href="/tags">Tags</a><a class="site-page" href="/categories">Categories</a><a class="site-page" href="/about">About</a></span><span class="pull-right"><a class="site-page social-icon search"><i class="fa fa-search"></i><span> Search</span></a></span></div><div id="post-info"><div id="post-title">[ByteByteGo] CAP, PACELC, ACID, BASE - Essential Concepts for an Architect’s Toolkit</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2024-10-12</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/">System Design</a><i class="fa fa-angle-right" aria-hidden="true"></i><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/Byte-Byte-Go/">Byte Byte Go</a><div class="post-meta-wordcount"><span>Word count: </span><span class="word-count">2.1k</span><span class="post-meta__separator">|</span><span>Reading time: 13 min</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div class="article-container" id="post-content"><h2 id="CAP-PACELC-ACID-BASE-Essential-Concepts-for-an-Architect’s-Toolkit"><a href="#CAP-PACELC-ACID-BASE-Essential-Concepts-for-an-Architect’s-Toolkit" class="headerlink" title="CAP, PACELC, ACID, BASE - Essential Concepts for an Architect’s Toolkit"></a>CAP, PACELC, ACID, BASE - Essential Concepts for an Architect’s Toolkit</h2><span id="more"></span>
+<p>오늘날 분산 시스템은 여러 도메인에 걸쳐 보편적인 시스템이 되었다. 이런 시스템의 복잡성과 규모가 커지면서 소프트웨어 설계자와 개발자는 이런 시스템의 설계 및 구축과 관련된 내재적인 장단점과 과제를 이해하는 것이 점점 더 중요해지고 있다.</p>
+<p>분산 시스템의 주요 과제 중 하나는 데이터 일관성, 가용성, 파티션 허용 오차를 보장하는 것이다. 이런 속성은 서로 상반 관계에 있는 경우가 많으며 CAP 정리에서 알 수 있듯이 이 세가지를 동시에 달성하는 것은  불가능하다. 이 정리는 분산 시스템 설계의 기본 원칙이 되어 설계자가 일관성, 가용성, 파티션 허용 오차 사이의 절충점에 대해 정보에 입각한 결정을 내릴 수 있도록 안내한다.</p>
+<p>CAP 정리를 기반으로 분산 시스템의 트레이드오프에 대한 추론을 돕기 위한 다른 프레임워크와 모델들이 등장했다. PACELC 정리는 CAP 정리를 확장하여 정상 운영과 네트워크 파티션 중 일관성과 가용성 간의 트레이드오프에 대한 보다 미묘한 이해를 제공한다.</p>
+<p>CAP와 PACELC 외에도 ACID, BASE 모델은 트랜잭션 시스템을 설계하고 분산 데이터베이스의 최종 일관성 문제를 처리하기 위한 지침을 제공한다. 설계자는 CAP, PACELC, ACID, BASE의 의미를 신중하게 고려하여 애플리케이션의 특정 요구 사항과 제약 조건에 맞는 정보에 입각한 선택을 할 수 있다. 이 포스트에선 이런 개념의 정의와 의미에 대해 살펴본다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20241012004750282.png" alt=""></p>
+<h2 id="The-CAP-Theorem"><a href="#The-CAP-Theorem" class="headerlink" title="The CAP Theorem"></a>The CAP Theorem</h2><p>Brewer’s theorem라고도 알려진 CAP 정리는 일관성, 가용성, 분할 허용이라는 세 가지 중요한 속성 간의 내재적 상충 관계를 강조하는 분산 시스템의 기본 개념이다. 분산 시스템에서는 이 세 가지 속성을 동시에 보장하는 것이 불가능하다는 것을 말한다.</p>
+<h3 id="Properties-of-the-CAP-Theorem"><a href="#Properties-of-the-CAP-Theorem" class="headerlink" title="Properties of the CAP Theorem"></a>Properties of the CAP Theorem</h3><ol>
+<li><strong>Consistency (C):</strong> 일관된 시스템에서는 모든 노드가 동시에 동이한 데이터를 볼 수 있다. 모든 읽기 작업은 가장 최근의 쓰기를 반환하므로 모든 클라이언트가 데이터를 일관되게 볼 수 있다.</li>
+<li><strong>Availability (A):</strong> 가용성 시스템에서는 모든 요청에 가장 최근 쓰기가 포함되어 있지 않더라도 오류 없는 응답을 받는다. 장애가 발생하더라도 시스템은 계속 작동하고 응답한다.</li>
+<li><strong>Partition Tolerance (P):</strong> 파티션 내성 시스템은 노드 간 네트워크에서 임의의 수의 메세지가 삭제되거나 지연되더라도 계속 작동한다. 이런 시스템은 완전한 시스템 장애 없이 네트워크 파티션을 허용할 수 있다.</li>
+</ol>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20241012005116054.png" alt=""></p>
+<h3 id="Explanation-of-the-CAP-Theorem"><a href="#Explanation-of-the-CAP-Theorem" class="headerlink" title="Explanation of the CAP Theorem"></a>Explanation of the CAP Theorem</h3><p>CAP 정리에 따르면 분산 시스템은 이 세 가지 속성 중 두 가지를 만족시킬 수는 있지만, 세 가지를 동시에 모두 만족시킬 수는 없다. 이 정리는 세 가지 가능한 속성 조합이 있음을 시사한다.</p>
+<ul>
+<li>CP (Consistent and Partition Tolerant)</li>
+<li>AP (Available and Partition Tolerant)</li>
+<li>CA (Consistent and Available)</li>
+</ul>
+<p>CAP 정리는 특히 네트워크 파티션 또는 장애와 관련이 있다. 파티션이 발생하여 노드 간 통신이 중단되는 경우 시스템은 일관성 유지와 가용성 중 하나를 선택해야 한다. 파티션이 있는 경우 두 가지 모두를 보장할 수는 없다.</p>
+<h3 id="Implications-and-Examples-of-CP-AP-and-CA-Systems"><a href="#Implications-and-Examples-of-CP-AP-and-CA-Systems" class="headerlink" title="Implications and Examples of CP, AP, and CA Systems"></a>Implications and Examples of CP, AP, and CA Systems</h3><p>CAP 정리는 분산 시스템의 설계와 동작에 중요한 영향을 미친다. </p>
+<p><strong>CP Systems (Consistent and Partition Tolerant):</strong></p>
+<ul>
+<li>CP 시스템에서는 파티션 중 가용성보다 일관성이 우선시 된다.</li>
+<li>파티션이 발생하면 시스템은 일부 작업을 차단하거나 취소하여 가용성을 희생하면서 일관성을 유지한다.</li>
+<li>CP 시스템의 예로는 PostgreSQL, MySQL이 있다.</li>
+</ul>
+<p><strong>AP Systems (Available and Partition Tolerant):</strong></p>
+<ul>
+<li>AP 시스템에서는 파티션이 발생하는 동안 일관성보다 가용성이 우선시 된다.</li>
+<li>파티션이 발생하면 시스템은 모든 노드에서 일관성을 보장할 수 없더라도 요청을 계속 처리한다.</li>
+<li>AP 시스템의 예로는 Cassandra, CouchDB, Riak, Dynamo가 있다.</li>
+</ul>
+<p><strong>CA Systems (Consistent and Available):</strong></p>
+<ul>
+<li>CA 시스템은 파티션이 있는 동안 일관성과 가용성을 동시에 보장할 수 없기 때문에 파티션이 있는 경우에는 현실적이지 않다.</li>
+<li>그러나 시스템이 파티션이 발생하지 않도록 보장할 수 있는 경우 (강력한 네트워크 인프라) 일관성과 가용성을 모두 보장할 수 있다.</li>
+<li>CA 시스템의 예로는 단일 노드 데이터베이스 또는 일관성이 강하고 네트워크 파티션이 없는 시스템을 들 수 있다.</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20241012005902867.png" alt=""></p>
+<h3 id="Limitations-of-the-CAP-Model"><a href="#Limitations-of-the-CAP-Model" class="headerlink" title="Limitations of the CAP Model"></a>Limitations of the CAP Model</h3><p>CAP 정리는 분산 시스템의 트레이드오프에 대한 귀중한 통찰력을 제공하지만, 몇 가지 한계가 있다.</p>
+<ol>
+<li><strong>Strict Definitions:</strong> CAP 정리는 일관성(선형과 가능성)과 가용성에 대한 엄격한 정의를 전제로 하는데, 이는 실제 요구사항과 항상 일치하지 않을 수 있다. 실제로 시스템에는 더 미묘한 일관성 및 가용성 요구사항이 있을 수 있다.</li>
+<li><strong>Performance and Latency:</strong> 이 정리는 많은 애플리케이션에서 중요한 요소인 시스템의 성능이나 지연 시간을 고려하지 않는다. 일관성, 가용성, 파티션 허용 오차 사이의 절충점에만 초점을 맞추고 있다.</li>
+<li><strong>Lack of Guidance:</strong> CAP 정리는 특정 사용 사례에 딸라 세 가지 속성 간의 절충점을 찾는 방법에 대한 구체적인 지침을 제공하지 않는다. 요구 사항에 따라 적절한 균형을 결정하는 것은 시스템 설계자의 몫이다.</li>
+</ol>
+<h2 id="The-PACELC-Theorem"><a href="#The-PACELC-Theorem" class="headerlink" title="The PACELC Theorem"></a>The PACELC Theorem</h2><p>PACELC 정리는 지연시간의 개념을 도입하고 분산 시스템의 트레이드 오프에 대환 보다 미묘한 시각을 제공하는 CAP 정리의 확장이다. 이 정리는 일관성, 가용성, 파티션 허용 오차, 지연 시간 문제를 다룰 때 시스템 설계자가 선택할 수 있는 선택지를 고려한다.</p>
+<h3 id="Latency-L-in-Normal-Operation"><a href="#Latency-L-in-Normal-Operation" class="headerlink" title="Latency (L) in Normal Operation"></a>Latency (L) in Normal Operation</h3><p>PACELC 정리는 시스템을 사용할 수 있고 네트워크 파티션이 발생하지 않는 정상 작동 시 지연시간(L)의 개념을 소개한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20241012101025093.png" alt=""></p>
+<p>이 상황에서 시스템은 일관성 또는 지연 시간 중 하나를 우선순위로 지정할 수 있다. 이 트레이드오프는 정리의 “PACEL” 부분으로 표현된다.</p>
+<ul>
+<li><strong>Prioritizing Consistency (C):</strong> 시스템이 정상 작동 중에 일관성을 우선시하면 일부 작업의 지연 시간이 길어지더라도 모든 노드가 항상 동일한 데이터를 볼 수 있도록 보장한다. 일관성은 지연 시간이 증가하는 대가로 유지된다.</li>
+<li><strong>Prioritizing Latency (L):</strong> 시스템이 정상 작동 중에 지연 시간을 우선시하면 일부 노드에 약간 오래된 데이터가 있을 수 있더라도 요청에 신속하게 응답한다. 낮은 지연 시간은 엄격한 일관성을 희생함으로써 달성된다.</li>
+</ul>
+<h3 id="Availability-A-and-Consistency-C-During-a-Partition"><a href="#Availability-A-and-Consistency-C-During-a-Partition" class="headerlink" title="Availability (A) and Consistency (C) During a Partition"></a>Availability (A) and Consistency (C) During a Partition</h3><p>PACELC 정리의 C 부분은 CAP 정리에서 설명한 것과 동일한 트레이드오프를 나타낸다. 네트워크 파티션(P) 중에 시스템은 가용성(A)와 일관성(C) 중 하나를 선택해야 한다. 이 것이 정리의 “PACE” 부분이다.</p>
+<ul>
+<li><strong>Maintaining Availability (A):</strong> 시스템이 파티션 중에 가용성을 유지하기로 선택하면 모든 노드에서 일관성을 보장할 수 없더라도 요청을 계속 처리한다. 일관성보다 가용성이 우선시 된다.</li>
+<li><strong>Maintaining Consistency (C):</strong> 파티션 중에 일관성을 유지하기로 선택한 경우 파티션이 해결될 때까지 일부 작업을 차단하거나 취소하여 가용성을 희생한다. 일관성이 가용성보다 우선시 된다.</li>
+</ul>
+<h3 id="Implications-and-Examples-of-Different-PACELC-Configurations"><a href="#Implications-and-Examples-of-Different-PACELC-Configurations" class="headerlink" title="Implications and Examples of Different PACELC Configurations"></a>Implications and Examples of Different PACELC Configurations</h3><p>PACELC 정리는 분산 시스템에 대해 네 가지 가능한 구성을 설명한다.</p>
+<ul>
+<li><strong>PA/EL:</strong> 파티션 중에는 일관성보다 가용성을 우선시하고 정상 작동 중에는 일관성보다 지연 시간을 우선시한다.<ul>
+<li>Examples: Cassandra, Amazon DynamoDB</li>
+<li>고가용성과 짧은 지연 시간이 필요하고 최종적인 일관성을 견딜 수 있는 사용 사례에 적합하다.</li>
+</ul>
+</li>
+<li><strong>PC/EC:</strong> 파티션 중에는 가용성보다 일관성을 우선시하고 정상 작동 중에는 지연 시간보다 일관성을 우선시 한다.<ul>
+<li>Examples: Google Spanner, Apache HBase, MongoDB (with strong consistency)</li>
+<li>강력한 일관성이 필요하고 파티션 중 지연 시간이 길어지고 가용성이 저하되는 것을 견딜 수 있는 사용 사례에 적합하다.</li>
+</ul>
+</li>
+<li><strong>PA/EC:</strong> 파티션 중에는 일관성보다 가용성을 우선시하고, 정상 작동 중에는 지연 시간보다 일관성을 우선시 한다.<ul>
+<li>Examples: Apache Cassandra (with tunable consistency), Apache CouchDB</li>
+<li>특정 요구 사항에 따라 가용성과 일관성 간의 균형이 필요한 사용 사례에 적합하다.</li>
+</ul>
+</li>
+<li><strong>PC/EL:</strong> 파티션 중에는 가용성보다 일관성을 우선시하고, 정상 작동 중에는 일관성보다 지연 시간을 우선시 한다.<ul>
+<li>Examples: 매우 특이한 조합이므로 실제로는 드물게 사용된다.</li>
+</ul>
+</li>
+</ul>
+<h2 id="ACID"><a href="#ACID" class="headerlink" title="ACID"></a>ACID</h2><p>ACID는 데이터베이스 트랜잭션의 안정성을 보장하는 속성 집합니다. ACID는 원자성, 일관성, 격리성, 내구성을 의미하며 이런 속성은 오류, 정전 또는 기타 중단이 발생하는 경우에도 데이터베이스 트랜잭션이 안정적으로 처리되도록 보장한다.</p>
+<h3 id="Definition-of-Atomicity-Consistency-Isolation-Durability"><a href="#Definition-of-Atomicity-Consistency-Isolation-Durability" class="headerlink" title="Definition of Atomicity, Consistency, Isolation, Durability"></a>Definition of Atomicity, Consistency, Isolation, Durability</h3><h4 id="1-Atomicity"><a href="#1-Atomicity" class="headerlink" title="1 - Atomicity"></a>1 - Atomicity</h4><p>원자성은 트랜잭션이 분할할 수 없는 단일 작업 단위로 취급되도록 보장한다. 트랜잭션의 모든 작업이 성공적으로 완료되거나 아무 작업도 적용되지 않는다. 트랜잭션이 실패하면 데이터베이스는 마치 트랜잭션이 시작되지 않은 것처럼 변경되지 않은 상태로 유지된다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20241012101847582.png" alt=""></p>
+<h4 id="2-Consistency"><a href="#2-Consistency" class="headerlink" title="2 - Consistency"></a>2 - Consistency</h4><p>일관성은 트랜잭션이 데이터베이스를 하나의 유효한 상태에서 다른 상태로 가져오는것을 보장한다. 데이터베이스에 기록되는 모든 데이터에는 제약 조건, 캐스케이드, 트리거 및 이들의 조합을 포함하여 정의된 모든 규칙에 따라 유효해야 한다.</p>
+<p>이렇게 하면 데이터 무결성이 유지되고 데이터의 손상이나 불일치를 방지할 수 있다. ACID의 일관성은 CAP 관점에서의 일관성과는 다른 개념이라는 점에 유의해야 한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20241012102004123.png" alt=""></p>
+<h4 id="3-Isolation"><a href="#3-Isolation" class="headerlink" title="3 - Isolation"></a>3 - Isolation</h4><p>격리는 동시 진행 중인 트랜잭션이 서로 간섭하지 않도록 보장한다. 각 트랜잭션은 다른 트랜잭션과 격리된 상태에서 실행되어야 하므로 한 트랜잭션의 중간 상태가 다른 트랜잭션에 표시되지 않는다. 이렇게 하면 더티 읽기, 반복 불가능한 읽기, 팬텀 읽기와 같은 문제를 방지할 수 있다. </p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20241012102105342.png" alt=""></p>
+<h4 id="4-Durability"><a href="#4-Durability" class="headerlink" title="4 - Durability"></a>4 - Durability</h4><p>내구성은 트랜잭션이 커밋되면 시스템 장애가 발생하더라도 트랜잭션이 커밋된 상태로 유지되도록 보장한다. 트랜잭션에 의해 변경된 내용은 데이터베이스에 영구적으로 저장되어야 하며 장애로 인해 손실되지 않아야 한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20241012102147619.png" alt=""></p>
+<h3 id="Relevance-of-ACID-to-Transactional-Databases"><a href="#Relevance-of-ACID-to-Transactional-Databases" class="headerlink" title="Relevance of ACID to Transactional Databases"></a>Relevance of ACID to Transactional Databases</h3><p>ACID 속성은 관계형 데이터베이스 및 일부 NoSQL 데이터베이스(MongoDB, FoundationDB)와 같은 트랜잭션 데이터베이스 시스템에 필수적이다. 이런 시스템은 중요한 데이터를 처리하고 데이터 무결성, 일관성 및 안정성을 보장하도록 설계되었다.</p>
+<p>트랜잭션 데이터베이스 시스템은 금융 시스템, 전자상거래 플랫폼, 의료 애플리케이션 등 데이터 정확성이 가장 중요한 애플리케이션에서 사용된다. 이런 시스템은 ACID 속성을 보장함으로써 장애가 발생하거나 여러 사용자가 동시에 액세스하는 경우에도 데이터가 일관되고 안정적으로 유지되도록 보장한다.</p>
+<h3 id="Challenges-of-Maintaining-ACID-Compliance-in-Distributed-Databases"><a href="#Challenges-of-Maintaining-ACID-Compliance-in-Distributed-Databases" class="headerlink" title="Challenges of Maintaining ACID Compliance in Distributed Databases"></a>Challenges of Maintaining ACID Compliance in Distributed Databases</h3><p>분산 데이터베이스에서 ACID 규정 준수를 유지하는 것은 분산 시스템의 특성으로 인해 어려울 수 있다.</p>
+<p>몇 가지 주요 과제는 다음과 같다.</p>
+<ul>
+<li><strong>Network Partitions and Failures:</strong> 분산 시스템은 네트워크 파티션과 노드 장애가 발생하기 쉬우므로 일관성과 가용성을 동시에 유지하기가 어려울 수 있다.</li>
+<li><strong>Latency:</strong> 여러 노드에 걸쳐 ACID 속성을 보장하면 네트워크 전반에서 트랜잭션을 조정하고 동기화해야 하므로 지연 시간이 발생할 수 있다.</li>
+<li><strong>Scalability:</strong> 노드와 트랜잭션 수가 증가하면 ACID 속성을 유지하는 것이 더 복잡하고 리소스 집약적이 될 수 있다.</li>
+</ul>
+<h2 id="BASE"><a href="#BASE" class="headerlink" title="BASE"></a>BASE</h2><p>BASE는 기본적으로 사용 가능, 소프트 상태, 최종적 일관성을 나타내는 약어다. 이는 강력한 일관성보다 가용성과 확장성을 우선시하는 분산 시스템, 특히 NoSQL 데이터베이스의 동작을 설명하는 데 자주 사용되는 일련의 속성이다.</p>
+<h3 id="Definition-of-BASE"><a href="#Definition-of-BASE" class="headerlink" title="Definition of BASE"></a>Definition of BASE</h3><ul>
+<li><strong>Basically Available:</strong><ul>
+<li>장애나 네트워크 파티션이 있는 경우에도 시스템을 대부분의 시간 동안 사용할 수 있다.</li>
+<li>즉, 시스템이 요청에 응답하지만 응답이 항상 최신 상태이거나 일관되지 않을 수 있다.</li>
+<li>시스템은 가용성을 유지하기 위해 어느 정도의 일관성을 희생할 수 있다.</li>
+</ul>
+</li>
+<li><strong>Soft-state:</strong><ul>
+<li>외부 소스의 입력 없이도 시간이 지남에 따라 시스템 상태가 변경될 수 있다.</li>
+<li>이는 명시적인 입력이나 트랜잭션에 대한 응답으로만 상태가 변경되는 기존 데이터베이스 시스템의 “하드 상태” 와는 다르다.</li>
+<li>소프트 상태 시스템에서는 복제본이 일시적으로 달라져 불일치가 발생할 수 있으며, 이는 시간이 지나면서 해결된다.</li>
+</ul>
+</li>
+<li><strong>Eventually Consistent:</strong><ul>
+<li>모든 업데이트가 모든 복제본 또는 노드에 전파되면 시스템은 결국 일관성을 갖게 된다.</li>
+<li>즉, 충분한 시간이 주어지면 시스템의 모든 노드가 동일한 데이터를 갖게 되지만 일시적인 불일치나 충돌이 발생하여 해결해야 할 수도 있다.</li>
+<li>일관성을 달성하는데 걸리는 시간은 네트워크 지연 시간, 시스템 부하, 복제본 수 등의 요인에 따라 달라질 수 있다.</li>
+</ul>
+</li>
+</ul>
+<h3 id="How-BASE-Contrasts-with-ACID"><a href="#How-BASE-Contrasts-with-ACID" class="headerlink" title="How BASE Contrasts with ACID"></a>How BASE Contrasts with ACID</h3><p>BASE 속성은 종종 ACID 속성과 대비되는 것으로 간주되기도 한다. ACID 시스템은 일관성과 격리성을 우선시하는 반면, BASE 시스템은 가용성과 확장성을 우선시한다.</p>
+<p>BASE 시스템에서는 가용성과 성능을 위해 일관성이 완화된다. 즉, 네트워크 파티션이나 노드 장애가 발생하더라도 시스템이 읽기 및 쓰기를 계속 허용하여 일시적인 불일치가 발생할 수 있다. 그러나 모든 업데이트가 전파되면 시스템은 결국 일관된 상태로 수렴한다.</p>
+<p>이런 일관성 완화 덕분에 특히 네트워크 파티션과 장애가 흔한 분산 환경에서 BASE 시스템의 가용성과 성능을 향상시킬 수 있다. 일시적인 불일치를 허용함으로써 BASE 시스템은 부하가 많거나 장애가 발생하더라도 요청을 계속 처리하고 수평적으로 확장할 수 있다.</p>
+<h3 id="Relevance-to-NoSQL-and-Other-AP-Systems"><a href="#Relevance-to-NoSQL-and-Other-AP-Systems" class="headerlink" title="Relevance to NoSQL and Other AP Systems"></a>Relevance to NoSQL and Other AP Systems</h3><p>BASE 속성은 특히 강력한 일관성보다 가용성 및 파티션 허용 오차(AP)를 우선시하는 NoSQL 데이터베이스 및 기타 시스템과 관련이 있다. Cassandra, Riak, DynamoDB 등 많은 NoSQL 데이터베이스는 네트워크 파티션과 노드 장애에도 불구하고 고가용성과 확장성을 갖추도록 설계되었다.</p>
+<p>이런 시스템은 최종 일관성 및 충돌 해결과 같은 기술을 사용하여 모든 복제본에서 데이터가 최종적으로 일관성을 유지하도록 하는 경우가 많다. 또한 샤딩, 복제, 분산 해시 테이블과 같은 기술을 사용하여 여러 노드에 데이터를 분산하고 고가용성을 보장할 수도 있다.</p>
+<h3 id="Implications-and-Challenges-of-Eventual-Consistency"><a href="#Implications-and-Challenges-of-Eventual-Consistency" class="headerlink" title="Implications and Challenges of Eventual Consistency"></a>Implications and Challenges of Eventual Consistency</h3><p>궁극적으로 일관성을 유지하면 가용성과 성능이 향상되지만, BASE 시스템을 설계하고 작업할 때 고려해야 할 몇 가지 과제와 시사점도 있다.</p>
+<ul>
+<li><strong>Stale Data:</strong> 최종적으로 일관된 시스템에서는 모든 업데이트가 전파될 때까지 읽기가 오래된 데이터를 반환할 수 있다. 이로 인해 해결해야 할 불일치 및 충돌이 발생할 수 있다.</li>
+<li><strong>Conflict Resolution:</strong> BASE 시스템은 ACID 시스템과 같은 강력한 일관성 보장을 제공하지 않는다. 즉, 애플리케이션은 일시적인 불일치 및 충돌을 처리하도록 설계되어야 하며, 데이터 무결성을 유지하기 위해 트랜잭션 보상 또는 읽기 복구와 같은 추가 기술을 사용해야 할 수도 있다.</li>
+<li><strong>Lack of Strong Consistency Guarantees:</strong> BASE 시스템은 ACID 시스템과 같은 강력한 일관성 보장을 제공하지 않는다. 즉, 애플리케이션은 일시적인 불일치 및 충동을 처리하도록 설계되어야 하며, 데이터 무결성을 유지하기 위해 트랜잭션 보상 또는 읽기 복구와 같은 추가 기술을 사용해야 할 수도 있다.</li>
+<li><strong>Complexity:</strong> 개발자가 잠재적인 불일치를 추론하고 적절한 충돌 해결 및 일관성 메커니즘을 설계해야 하기 때문에 궁극적으로 일관된 시스템을 구축하고 유지하는 것은 기존 ACID 시스템보다 더 복잡할 수 있다.</li>
+</ul>
+<p>이런 어려움에도 불구하고 대규모 분산 시스템 시대에 BASE 속성은 점점 더 중요해지고 있다. 가용성과 확장성을 우선시하는 BASE 시스템은 최신 데이터 집약적 워크로드의 요구를 처리할 수 있는 응답성과 복원력이 뛰어난 애플리케이션을 구축하기 위한 토대를 제공할 수 있다.</p>
+<h2 id="Choosing-the-Right-Model"><a href="#Choosing-the-Right-Model" class="headerlink" title="Choosing the Right Model"></a>Choosing the Right Model</h2><p>다양한 분산 시스템 모델의 적합성은 애플리케이션의 특정 사용 사례와 요구 사항에 따라 달라질 수 있다.</p>
+<ul>
+<li><strong>E-commerce:</strong><ul>
+<li>E-commerce 애플리케이션은 일반적으로 재고 및 주문 관리에 강력한 일관성이 필요하며, 일관성이 없으면 과잉 판매 또는 과소 판매로 이어질 수 있기 때문이다.</li>
+<li>이런 사용 사례에는 기존의 관계형 데이터베이스와 같은 ACID 트랜잭션 및 CP 시스템이 적합할 수 있다.</li>
+</ul>
+</li>
+<li><strong>Social Media:</strong><ul>
+<li>소셜 미디어 애플리케이션은 사용자가 실시간으로 콘텐츠에 액세스하고 상호 작용할 수 있기를 기대하기 때문에 강력한 일관성보다 가용성 및 확장성을 우선시하는 경우가 많다.</li>
+<li>네트워크 파티션이 있는 경우에도 높은 가용성과 짧은 지연 시간을 제공할 수 있는 NoSQL 데이터베이스 또는 궁극적으로 일관성 캐시와 같은 AP 시스템이 사용 사례에 적합할 수 있다.</li>
+</ul>
+</li>
+<li><strong>Real-time Analytics:</strong><ul>
+<li>실시간 분석 애플리케이션은 대량의 데이터를 실시간으로 수집 및 처리하고 빠른 쿼리 응답을 제공할 수 있는 기능이 필요하다.</li>
+<li>스트림 처리 프레임워크 또는 최종 일관성을 갖춘 NoSQL 데이터베이스와 같은 AP 시스템은 높은 처리량을 감당하고 지연 시간이 짧은 쿼리를 제공할 수 있으므로 이런 사용 사례에 적합할 수 있다.</li>
+</ul>
+</li>
+<li><strong>Financial Systems:</strong><ul>
+<li>금융 시스템에서는 금융 데이터의 무결성을 보장하고 이중 지출과 같은 이상 징후를 방지하기 위해 강력한 일관성과 ACID 트랜잭션이 필요한 경우가 많다.</li>
+<li>기존의 관계형 데이터베이스나 분산형 ACID 데이터베이스와 같은 CP 시스템은 강력한 일관성을 보장하고 복잡한 트랜잭션을 지원할 수 있으므로 이런 사용 사례에 적합할 수 있다.</li>
+</ul>
+</li>
+</ul>
+<p>경우에 따라 애플리케이션의 특정 요구 사항을 충족하기 위해 서로 다른 모델을 결합하거나 조정 가능한 일관성을 제공하는 하이브리드 접근 방식이 필요할 수 있다.</p>
+<ul>
+<li>강력한 일관성이 필요한 중요 데이터에는 CP 시스템을 사용하고 최종 일관성을 허용할 수 있는 덜 중요한 데이터에는 AP 시스템을 사용하는 경우</li>
+<li>일관성이 강한 데이터베이스 앞에 최종 일관성이 있는 캐싱 계층을 사용하여 쓰기 일관성을 유지하면서 읽기 성능을 개선하는 경우</li>
+<li>Cassandra, Dynamo와 같이 일관성을 조정할 수 있는 데이터베이스를 사용하면 각 사용 사례의 특정 요구 사항에 따라 일관성 수준을 작업별로 조정할 수 있음</li>
+</ul>
+<!-- flag of hidden posts --></div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined">Song Hayoung</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="https://songhayoung.github.io/2024/10/12/System%20Design/ByteByteGo/private/cap-pacelc-acid-base-essential-concepts/">https://songhayoung.github.io/2024/10/12/System%20Design/ByteByteGo/private/cap-pacelc-acid-base-essential-concepts/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/System-Design/">System Design</a></div><nav id="pagination"></nav><div id="gitalk-container"></div><script>var gitalk = new Gitalk({
+  clientID: '3604b61642355579f55e',
+  clientSecret: 'f552120f18ac5aee3f6297e05e97d94c0a25cd4b',
+  repo: 'SongHayoung.github.io',
+  owner: 'SongHayoung',
+  admin: 'SongHayoung',
+  id: md5(decodeURI(location.pathname)),
+  language: 'en'
+})
+gitalk.render('gitalk-container')</script></div></div><footer class="footer-bg" style="background-image: url(https://xxxx.jpg)"><div class="layout" id="footer"><div class="copyright">&copy;2020 - 2024 By Song Hayoung</div><div class="framework-info"><span>Driven - </span><a target="_blank" rel="noopener" href="http://hexo.io"><span>Hexo</span></a><span class="footer-separator">|</span><span>Theme - </span><a target="_blank" rel="noopener" href="https://github.com/Molunerfinn/hexo-theme-melody"><span>Melody</span></a></div><div class="footer_custom_text">Learning how to walk slowly to not miss important things</div><div class="busuanzi"><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><span id="busuanzi_container_page_pv"><i class="fa fa-file"></i><span id="busuanzi_value_page_pv"></span><span></span></span></div></div></footer><i class="fa fa-arrow-up" id="go-up" aria-hidden="true"></i><script src="https://cdn.jsdelivr.net/npm/animejs@latest/anime.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@latest/velocity.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-ui-pack@latest/velocity.ui.min.js"></script><script src="/js/utils.js?version=1.7.0"></script><script src="/js/fancybox.js?version=1.7.0"></script><script src="/js/sidebar.js?version=1.7.0"></script><script src="/js/copy.js?version=1.7.0"></script><script src="/js/fireworks.js?version=1.7.0"></script><script src="/js/transition.js?version=1.7.0"></script><script src="/js/scroll.js?version=1.7.0"></script><script src="/js/head.js?version=1.7.0"></script><script src="/js/search/algolia.js"></script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+    processEscapes: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  },
+  CommonHTML: {
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "HTML-CSS": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "SVG": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  }
+});
+</script><script type="text/x-mathjax-config">MathJax.Hub.Queue(function() {
+  var all = MathJax.Hub.getAllJax(), i;
+  for (i=0; i < all.length; i += 1) {
+    all[i].SourceElement().parentNode.className += ' has-jax';
+  }
+});
+</script><script src="https://cdn.jsdelivr.net/npm/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><script>if(/Android|webOS|iPhone|iPod|iPad|BlackBerry/i.test(navigator.userAgent)) {
+  $('#nav').addClass('is-mobile')
+  $('footer').addClass('is-mobile')
+  $('#top-container').addClass('is-mobile')
+}</script><div class="search-dialog" id="algolia-search"><div class="search-dialog__title" id="algolia-search-title">Algolia</div><div id="algolia-input-panel"><div id="algolia-search-input"></div></div><hr><div id="algolia-search-results"><div id="algolia-hits"></div><div id="algolia-pagination"></div><div id="algolia-stats"></div></div><span class="search-close-button"><i class="fa fa-times"></i></span></div><div class="search-mask"></div></body></html>
