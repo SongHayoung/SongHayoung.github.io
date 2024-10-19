@@ -9,6 +9,20 @@
 
 
     <url>
+        <loc>https://songhayoung.github.io/categories/PS/Hacker-Cup/</loc>
+        <lastmod>2024-10-19T21:26:51.000Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
+        <loc>https://songhayoung.github.io/categories/PS/</loc>
+        <lastmod>2024-10-19T21:26:51.000Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
         <loc>https://songhayoung.github.io/categories/Etc/</loc>
         <lastmod>2024-10-19T06:56:10.000Z</lastmod>
         <changefreq>weekly</changefreq>
@@ -17,13 +31,6 @@
 
     <url>
         <loc>https://songhayoung.github.io/categories/PS/Codeforces/</loc>
-        <lastmod>2024-10-17T10:53:11.000Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/categories/PS/</loc>
         <lastmod>2024-10-17T10:53:11.000Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
@@ -39,13 +46,6 @@
     <url>
         <loc>https://songhayoung.github.io/categories/PS/AtCoder/</loc>
         <lastmod>2024-10-09T00:53:14.000Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/categories/PS/Hacker-Cup/</loc>
-        <lastmod>2024-10-06T06:55:51.000Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
