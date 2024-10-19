@@ -1,0 +1,206 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="description" content="[ByteByteGo] Data Sharing Between Microservices"><meta name="keywords" content="System Design"><meta name="author" content="Song Hayoung"><meta name="copyright" content="Song Hayoung"><title>[ByteByteGo] Data Sharing Between Microservices | SUMFIのBlog</title><meta name="robots" content="noindex"><link rel="shortcut icon" href="/songcon.ico"><link rel="stylesheet" href="/css/index.css?version=1.7.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@latest/css/font-awesome.min.css?version=1.7.0"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css?version=1.7.0"><meta name="format-detection" content="telephone=no"><meta http-equiv="x-dns-prefetch-control" content="on"><link rel="dns-prefetch" href="https://cdn.jsdelivr.net"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.css"><script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.js" defer></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@latest/dist/gitalk.min.js"></script><script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.10.0/js/md5.min.js"></script><link rel="dns-prefetch" href="https://www.google-analytics.com"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-169368422-1', 'auto');
+ga('send', 'pageview');</script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: {"appId":"7LZ6OJ4D6C","apiKey":"9a84e13f74ea78c3fd54512c10139c56","indexName":"git blog","hits":{"per_page":10},"languages":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}.","hits_stats":"${hits} results found in ${time} ms"}},
+  localSearch: undefined,
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  }
+} </script><meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/rss2.xml" title="SUMFIのBlog" type="application/rss+xml">
+</head><body><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar" data-display="true"><div class="toggle-sidebar-info text-center"><span data-toggle="Toggle article">Toggle site</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">Catalog</div><div class="sidebar-toc__progress"><span class="progress-notice">You've read</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Data-Sharing-Between-Microservices"><span class="toc-number">1.</span> <span class="toc-text">Data Sharing Between Microservices</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Sharing-Data-Source-vs-Sharing-Data"><span class="toc-number">2.</span> <span class="toc-text">Sharing Data Source vs Sharing Data</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Synchronous-Data-Sharing-in-Microservices"><span class="toc-number">3.</span> <span class="toc-text">Synchronous Data Sharing in Microservices</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Request-Response-Model"><span class="toc-number">3.1.</span> <span class="toc-text">Request&#x2F;Response Model</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#The-Gateway-Approach"><span class="toc-number">3.2.</span> <span class="toc-text">The Gateway Approach</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Asynchronous-Data-Sharing-in-Microservices"><span class="toc-number">4.</span> <span class="toc-text">Asynchronous Data Sharing in Microservices</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Event-Driven-Architecture"><span class="toc-number">4.1.</span> <span class="toc-text">Event-Driven Architecture</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Message-Queues"><span class="toc-number">4.2.</span> <span class="toc-text">Message Queues</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Eventual-Consistency"><span class="toc-number">4.3.</span> <span class="toc-text">Eventual Consistency</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Hybrid-Approach"><span class="toc-number">5.</span> <span class="toc-text">Hybrid Approach</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Trade-offs-and-Decision-Making"><span class="toc-number">6.</span> <span class="toc-text">Trade-offs and Decision Making</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-Evaluating-Consistency-Requirements"><span class="toc-number">6.1.</span> <span class="toc-text">1 - Evaluating Consistency Requirements</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Strong-Consistency"><span class="toc-number">6.1.1.</span> <span class="toc-text">Strong Consistency</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Eventual-Consistency-1"><span class="toc-number">6.1.2.</span> <span class="toc-text">Eventual Consistency</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-Performance-Considerations"><span class="toc-number">6.2.</span> <span class="toc-text">2 - Performance Considerations</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-Scalability"><span class="toc-number">6.3.</span> <span class="toc-text">3 - Scalability</span></a></li></ol></li></ol></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="https://avatars3.githubusercontent.com/u/37806785?s=460&amp;u=8c68d685faf7c5280cfbd736a6b1730b55fb4203&amp;v=4"></div><div class="author-info__name text-center">Song Hayoung</div><div class="author-info__description text-center"></div><div class="follow-button"><a target="_blank" rel="noopener" href="https://www.linkedin.com/in/hayoung-song-9523b61bb/">Follow Me</a></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="/archives"><span class="pull-left">Articles</span><span class="pull-right">11043</span></a><a class="author-info-articles__tags article-meta" href="/tags"><span class="pull-left">Tags</span><span class="pull-right">196</span></a><a class="author-info-articles__categories article-meta" href="/categories"><span class="pull-left">Categories</span><span class="pull-right">62</span></a></div><hr><div class="author-info-links"><div class="author-info-links__title text-center">VISITED</div><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Seoul Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Jeju Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">British Columbia Canada</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Boracay Philippines</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">三重　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">大阪　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">名古屋　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">静岡　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">札幌　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">京都　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Bangkok Thailand</a></div></div></div><div id="content-outer"><div id="top-container" style="background-image: url(https://xxxx.jpg)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="/">SUMFIのBlog</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus">   <a class="site-page" href="/">Home</a><a class="site-page" href="/archives">Archives</a><a class="site-page" href="/tags">Tags</a><a class="site-page" href="/categories">Categories</a><a class="site-page" href="/about">About</a></span><span class="pull-right"><a class="site-page social-icon search"><i class="fa fa-search"></i><span> Search</span></a></span></div><div id="post-info"><div id="post-title">[ByteByteGo] Data Sharing Between Microservices</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2024-10-18</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/">System Design</a><i class="fa fa-angle-right" aria-hidden="true"></i><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/Byte-Byte-Go/">Byte Byte Go</a><div class="post-meta-wordcount"><span>Word count: </span><span class="word-count">1.5k</span><span class="post-meta__separator">|</span><span>Reading time: 9 min</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div class="article-container" id="post-content"><h2 id="Data-Sharing-Between-Microservices"><a href="#Data-Sharing-Between-Microservices" class="headerlink" title="Data Sharing Between Microservices"></a>Data Sharing Between Microservices</h2><span id="more"></span>
+<p>마이크로서비스 아키텍처의 기본 원칙 중 하나는 각 서비스가 자신의 데이터를 소유하고 관리해야 한다는 것이다. 이 원칙은 흔히 “서비스 간에 데이터베이스를 공유하지 않는다”로 표현되며, 서비스 간의 느슨한 결합과 자율성을 보장하여 독립적으로 발전할 수 있도록 하는 것을 목표로 한다. 그러나 데이터 소스 공유와 데이터 자체를 공유하는 것을 구분하는 것이 중요하다. 서비스 간에 데이터 소스를 공유하는 것은 권장하지 않지만, 서비스 간에 데이터를 공유하는 것은 종종 필요하고 허용될 수 있다.</p>
+<p>이 포스트에서는 마이크로서비스 간에 데이터를 공유하는 다양한 방법과 특정 접근 방식의 다양한 장단점을 살펴본다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20241018181731229.png" alt=""></p>
+<h2 id="Sharing-Data-Source-vs-Sharing-Data"><a href="#Sharing-Data-Source-vs-Sharing-Data" class="headerlink" title="Sharing Data Source vs Sharing Data"></a>Sharing Data Source vs Sharing Data</h2><p>마이크로서비스로 작업할 때는 데이터 소스 공유와 데이터 자체 공유의 차이점을 이해해야 한다. 이 차이는 서비스 결합, 독립성 및 전반적인 시스템 설계에 중요한 영향을 미친다. 데이터 소스를 공유한다는 것은 여러 서비스가 동일한 데이터베이스에 직접 액세스한다는 것을 의미하며, 잠재적으로 긴밀한 결합과 종속성을 초래할 수 있다. 이는 마이크로서비스에서 서비스 데이터 소유권 원칙에 위배된다.</p>
+<p>반면 데이터 공유는 서비스들이 잘 정의된 API 또는 메시징 패턴을 통해 데이터를 교환하고 필요한 데이터의 로컬 복사본을 유지한다. 이는 서비스 독립성과 느슨한 결합을 유지하는데 도움이 된다.</p>
+<p>데이터 공유 딜레마를 설명하기 위해 주문 서비스와 제품 서비스가 포함된 시나리오를 예로 들어보자.</p>
+<ul>
+<li>Order Service:<ul>
+<li>주문 정보를 관리한다.</li>
+<li>주문 세부 정보를 데이터베이스에 저장한다.</li>
+</ul>
+</li>
+<li>Product Service:<ul>
+<li>제품 정보를 처리한다.</li>
+<li>제품 세부 정보를 위한 별도의 데이터베이스를 유지한다.</li>
+</ul>
+</li>
+<li>Relationship:<ul>
+<li>각 주문은 제품 세트와 연결된다.</li>
+</ul>
+</li>
+</ul>
+<p>주문 서비스가 주문 세부 정보와 함께 제품 정보를 표시해야 할 때 문제가 발생한다. 모놀리식 아키텍처에서는 모든 데이터가 단일 데이터베이스에 있기 때문에 이 작업이 간단하다. 하지만 마이크로서비스 아키텍처에서는 주문 서비스가 제품 서비스 데이터베이스에 직접 액세스해서는 안된다. 대신 제품 서비스를 통해 데이터를 가져와야 한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20241018182123513.png" alt=""></p>
+<p>이 시나리오는 마이크로서비스에서 효과적인 데이터 공유 전략의 필요성을 강조한다.</p>
+<ul>
+<li><strong>Data Independence:</strong> 각 서비스가 데이터를 소유하므로 서비스 간에 데이터베이스에 직접 액세스할 수 없다.</li>
+<li><strong>Data Retrieval:</strong> 주문 서비스는 서비스 경계를 위반하지 않고 제품 정보를 검색할 수 있는 방법을 찾아야 한다.</li>
+<li><strong>Performance Considerations:</strong> 선택한 데이터 공유 방식은 시스템 성능에 큰 영향을 미치거나 과도한 지연 시간을 유발하지 않아야 한다.</li>
+<li><strong>Consistency:</strong> 서비스 경계를 넘어 데이터를 공유할 때는 서비스 간의 데이터 일관성을 보장하는 것이 매우 중요하다.</li>
+</ul>
+<h2 id="Synchronous-Data-Sharing-in-Microservices"><a href="#Synchronous-Data-Sharing-in-Microservices" class="headerlink" title="Synchronous Data Sharing in Microservices"></a>Synchronous Data Sharing in Microservices</h2><p>마이크로서비스의 동기식 데이터 공유는 서비스 간의 실시간 통신을 포함하며 요청하는 서비스는 응답을 기다린 후 작업을 진행한다. 이 접근 방식은 즉각적인 일관성을 보장하지만 확장성 및 성능 측면에서 문제가 발생한다.</p>
+<h3 id="Request-Response-Model"><a href="#Request-Response-Model" class="headerlink" title="Request/Response Model"></a>Request/Response Model</h3><p>요청 / 응답 모델은 가장 간단한 동기식 접근 방식이다.</p>
+<ul>
+<li>서비스 A가 서비스 B에 데이터 요청을 보낸다.</li>
+<li>서비스 B는 요청을 처리하고 응답을 다시 보낸다.</li>
+<li>서비스 A는 응답을 기다렸다가 작업을 계속 한다.</li>
+</ul>
+<p>예를 들어 주문 세부 정보를 제공하기 위해 주문 서비스가 호출될 때마다 제품 서비스를 호출하여 제품 데이터를 가져와야 한다. 예상대로 동기식 데이터 공유 방식은 몇 가지 문제에 직면한다.</p>
+<ul>
+<li><strong>Increased Response Time:</strong> 각 동기식 호출은 시스템의 전체 응답 시간을 증가시킨다.</li>
+<li><strong>Cascading Failures:</strong> 한 서비스가 느리거나 다운되면 종속된 서비스 체인 전체에 영향을 미칠 수 있다.</li>
+<li><strong>Resource Utilization:</strong> 응답을 기다리는 동안 서비스가 연결을 계속 열어두어야 하므로 리소스가 고갈될 수 있다.</li>
+<li><strong>Network Congestion:</strong> 서비스간 호출 수가 증가함에 따라 네트워크 트래픽이 병목 현상이 될 수 있다.</li>
+</ul>
+<p>이런 문제로 인해 서비스에서는 중복을 사용하여 데이터를 공유할 수 있다. 예를 들어 주문 테이블 내에 주문 세부 정보와 함께 제품 이름을 저장하는 것이다. 이렇게 하면 주문 서비스에서 제품 이름을 가져오기 위해 제품 서비스에 연락할 필요가 없다. 하지만 이렇게 하면 데이터 업데이트 시 일관성 문제가 발생한다.</p>
+<h3 id="The-Gateway-Approach"><a href="#The-Gateway-Approach" class="headerlink" title="The Gateway Approach"></a>The Gateway Approach</h3><p>게이트웨이 접근 방식은 여러 서비스에서 데이터를 공유하면서 데이터 일관성을 보장하는 간단한 접근 방식이다.</p>
+<ul>
+<li>게이트웨이 역할을 하는 코디네이터가 업데이트 프로세스를 시작한다.</li>
+<li>코디네이터는 모든 참여 서비스에 업데이트 요청을 보낸다.</li>
+<li>각 서비스는 업데이트를 수행하고 성공 또는 실패 응답을 다시 보낸다.</li>
+<li>모든 서비스가 성공하면 트랜잭션이 완료된 것으로 간주된다. 서비스가 실패하면 코디네이터는 모든 서비스에 대해 롤백을 시작해야 한다.</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20241018182908316.png" alt=""></p>
+<p>게이트웨이 접근 방식의 몇 가지 장점은 다음과 같다.</p>
+<ul>
+<li>구현 및 추론이 더 간단</li>
+<li>일관성 유지</li>
+</ul>
+<p>단점은 다음과 같다.</p>
+<ul>
+<li>장애 시나리오에서의 불안정성</li>
+<li>서비스 중 하나에 장애가 발생시 사용자 환경이 열악해짐</li>
+<li>부분적 장애 처리의 어려움</li>
+</ul>
+<p>위에서 알 수 있듯이 동기식 접근 방식은 강력한 일관성과 단순성을 제공하지만 확장성, 성능 및 복원력 측면에서 상당한 장단점이 있다.</p>
+<h2 id="Asynchronous-Data-Sharing-in-Microservices"><a href="#Asynchronous-Data-Sharing-in-Microservices" class="headerlink" title="Asynchronous Data Sharing in Microservices"></a>Asynchronous Data Sharing in Microservices</h2><p>마이크로서비스 아키텍처의 비동기 데이터 공유를 통해 서비스는 즉각적인 응답을 기다리지 않고 데이터를 교환할 수 있다. 이 접근 방식은 서비스 독립성을 촉진하고 전반적인 시스템 확장성과 복원력을 향상시킨다.</p>
+<h3 id="Event-Driven-Architecture"><a href="#Event-Driven-Architecture" class="headerlink" title="Event-Driven Architecture"></a>Event-Driven Architecture</h3><p>이벤트 중심 아키텍처에서 서비스는 이벤트를 통해 통신한다. </p>
+<ul>
+<li>서비스가 작업을 수행하거나 상태 변경을 경험하면 메세지 브로커에 이벤트를 게시한다.</li>
+<li>해당 이벤트에 관심이 있는 다른 서비스는 해당 이벤트를 구독하고 그에 따라 반응할 수 있다.</li>
+<li>이렇게 느슨하게 결합된 방식을 통해 서비스는 독립적으로 발전할 수 있다.</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20241018183220337.png" alt=""></p>
+<h3 id="Message-Queues"><a href="#Message-Queues" class="headerlink" title="Message Queues"></a>Message Queues</h3><p>RabbitMQ와 같은 메세지 큐는 마이크로서비스에서 비동기 통신의 중추 역할을 한다. 서비스 간에 메세지를 교환할 수 있는 안정적이고 확장 가능한 방법을 제공한다. 서비스는 특정 토픽이나 대기열에 메세지를 게시할 수 있다. 다른 서비스는 자신의 속도에 맞춰 해당 메세지를 사용할 수 있다.</p>
+<h3 id="Eventual-Consistency"><a href="#Eventual-Consistency" class="headerlink" title="Eventual Consistency"></a>Eventual Consistency</h3><p>비동기 데이터 공유는 종종 이벤트의 일관성을 유지한다. 서비스는 데이터의 로컬 복사본을 유지하고 수신된 이벤트에 따라 업데이트 한다. 즉, 서비스 전반의 데이터가 일시적으로 일관되지 않을 수 있지만 결국에는 일관된 상태에 도달하게 된다. 이 접근 방식을 사용하면 서비스가 독립적으로 작동하고 동기식 통신을 줄여 성능을 향상시킬 수 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20241018183509781.png" alt=""></p>
+<p>비동기 데이터 공유의 장점은 다음과 같다.</p>
+<ul>
+<li><strong>Loose Coupling:</strong> 서비스가 서로 긴밀하게 종속되지 않고 독립적으로 발전할 수 있다.</li>
+<li><strong>Scalability:</strong> 서비스는 각자의 속도에 맞춰 메세지를 처리할 수 있으므로 확장성과 리소스 활용도가 향상된다.</li>
+<li><strong>Resilience:</strong> 서비스를 일ㄹ시적으로 사용할 수 없는 경우 메세지를 대기열에 버퍼링했다가 나중에 처리할 수 있어 시스템 복원력이 향상된다.</li>
+<li><strong>Improved Performance:</strong> 비동기 통신을 사용하면 동기 요청의 필요성이 줄어들어 응답 시간이 빨라지고 전반적인 성능이 향상된다.</li>
+</ul>
+<p>비동기 데이터 공유의 단점은 다음과 같다.</p>
+<ul>
+<li><strong>Eventual Consistency:</strong> 데이터가 서비스 간에 일시적으로 일관되지 않을 수 있으며 이는 특정 시나리오에서 처리하기 어려울 수 있다.</li>
+<li><strong>Increased Complexity:</strong> 이벤트 중심 아키텍처를 구현하고 메세지 큐를 처리하면 시스템에 복잡성이 추가된다.</li>
+<li><strong>Message Ordering:</strong> 특히 메세지 순서가 중요한 시나리오에서는 메세지 처리의 올바른 순서를 보장하는 것이 어려울 수 있다.</li>
+<li><strong>Error Handling:</strong> 비동기식 통신의 실패와 오류를 처리하려면 재시도 메커니즘과 보상 조치를 신중하게 설계하고 구현해야 한다.</li>
+</ul>
+<h2 id="Hybrid-Approach"><a href="#Hybrid-Approach" class="headerlink" title="Hybrid Approach"></a>Hybrid Approach</h2><p>마이크로 서비스의 데이터 공유에 대한 하이브리드 접근 방식은 동기 방식과 비동기 방식의 요소를 모두 결합한다. 이 접근 방식은 로컬 데이터 가용성의 이점과 다른 서비스의 최신 상세 정보에 대한 필요성 간의 균형을 맞추는 것을 목표로 한다.</p>
+<p>두 개의 마이크로서비스가 있는 차량 공유 애플리케이션을 예로 들어 보자.</p>
+<ul>
+<li>라이드 서비스는 기본적인 운전자 정보(ID, 이름)을 로컬에 저장한다.</li>
+<li>자세한 정보(e.g. 운전자 등급, 차량 세부 정보)를 보려면 라이드 서비스가 드라이버 서비스에 동기식 호출을 한다.</li>
+</ul>
+<p>이런 하이브리드 접근 방식을 통해 라이드 서비스는 필수 운전자 데이터에 빠르게 액세스하는 동시에 필요할 때보다 포괄적인 정보를 검색할 수 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20241018183924979.png" alt=""></p>
+<p>하이브리드 접근 방식은 다음과 같은 몇 가지 이점을 제공한다.</p>
+<ul>
+<li><strong>Reduces Redundant Calls:</strong> 라이드 서비스는 기본 정보를 로컬에 저장함으로써 서비스 간 호출 빈도를 줄일 수 있다. 따라서 성능이 향상되고 네트워크 부하가 최소화된다.</li>
+<li><strong>Smaller Database Footprint:</strong> 필수 데이터만 서비스 간에 복제되므로 데이터베이스 설치 공간이 줄어든다. 따라서 저장 공간을 절약하고 중복 데이터 관리의 오버헤드를 줄일 수 있따.</li>
+</ul>
+<p>하지만 몇 가지 단점도 있다.</p>
+<ul>
+<li><strong>Still Affects Response Time:</strong> 기본 정보는 로컬에서 사용할 수 있지만 드라이버 서비스에 대한 동기식 호출을 통해 자세한 정보를 검색해야 하면 여전히 라이드 서비스의 전체 응답 시간에 영향을 미친다.</li>
+<li><strong>Some Data Duplication:</strong> 필수 데이터만 중복되더라도 서비스 간에 어느 정도의 데이터 중복은 여전히 존재한다. 따라서 데이터 일관성을 보장하고 불일치를 방지하기 위해 세심한 관리가 필요하다.</li>
+</ul>
+<p>하이브리드 접근 방식을 구현할 때는 다음 사항을 고려해야 한다.</p>
+<ul>
+<li><strong>Data Consistency:</strong> 중복된 데이터가 여러 서비스에서 일관성을 유지하는지 확인한다. 소스 서비스에서 변경 사항이 발생하면 데이터의 로컬 복사본을 업데이트하는 메커니즘을 구현해라.</li>
+<li><strong>Caching Strategies:</strong> 캐싱 전략을 사용하여 자주 액세스하는 세부 정보를 로컬에 저장해 다른 서비스에 대한 반복적 동기 호출의 필요성을 줄여라.</li>
+<li><strong>Asynchronous Updates:</strong> 이벤트 중심 아키텍처나 메세지 대기열과 같은 비동기 방식을 사용해 중복된 데이터에 대한 업데이트를 비동기식으로 전파해 응답 시간에 미치는 영향을 최소화해라.</li>
+</ul>
+<h2 id="Trade-offs-and-Decision-Making"><a href="#Trade-offs-and-Decision-Making" class="headerlink" title="Trade-offs and Decision Making"></a>Trade-offs and Decision Making</h2><p>데이터 공유가 포함된 마이크로서비스 아키텍처를 설계할 때는 일관성, 성능, 확장성 간의 절충점을 신중하게 평가하는 것이 중요하다.</p>
+<p>이런 의사 결정 과정에는 시스템의 요구 사항과 제약 조건에 대한 깊은 이해가 필요하다.</p>
+<h3 id="1-Evaluating-Consistency-Requirements"><a href="#1-Evaluating-Consistency-Requirements" class="headerlink" title="1 - Evaluating Consistency Requirements"></a>1 - Evaluating Consistency Requirements</h3><p>적절한 솔루션을 선택하는데 있어 핵심적인 요소 중 하나는 일관성 요구사항이다.</p>
+<h4 id="Strong-Consistency"><a href="#Strong-Consistency" class="headerlink" title="Strong Consistency"></a>Strong Consistency</h4><p>강력한 일관성은 모든 서비스가 항상 최신 데이터를 보유하도록 보장한다. 금융 거래나 의료 기록과 같이 데이터 정확성이 중요한 시스템에 적합하다. 주요 특징은 다음과 같다.</p>
+<ul>
+<li>게이트웨이 패턴이나 요청-응답 방식과 같은 동기식 통신 패턴을 사용해 구현되는 경우가 많다.</li>
+<li>모든 서비스에서 즉각적인 데이터 일관성을 보장한다.</li>
+<li>단점으로는 지연 시간이 길고 가용성이 저하된다는 점이 있다.</li>
+</ul>
+<h4 id="Eventual-Consistency-1"><a href="#Eventual-Consistency-1" class="headerlink" title="Eventual Consistency"></a>Eventual Consistency</h4><p>최종 일관성은 일시적인 데이터 불일치를 허용하지만 시간이 지남에 따라 데이터가 일관성을 유지하도록 보장한다. 소셜 미디어 게시물이나 제품 리뷰와 같이 일시적인 불일치를 용인할 수 있는 시스템에 적합하다. 최종 일관성을 기반으로 하는 시스템의 주요 특징은 다음과 같다.</p>
+<ul>
+<li>이벤트 중심 아키텍처와 같은 비동기 통신 패턴을 사용하여 구현된다.</li>
+<li>응답 시간이 빨라지고 가용성이 높아진다.</li>
+<li>충돌 해결 및 트랜잭션 보상을 처리하기 위해 신중한 설계가 필요하다.</li>
+</ul>
+<h3 id="2-Performance-Considerations"><a href="#2-Performance-Considerations" class="headerlink" title="2 - Performance Considerations"></a>2 - Performance Considerations</h3><ul>
+<li><strong>Latency</strong><ul>
+<li>일관성이 강하면 동기식 통신으로 인해 지연 시간이 길어지는 경우가 많다.</li>
+<li>최종 일관성은 지연 시간을 낮출 수 있지만 오래된 데이터를 제공할 수 있다.</li>
+</ul>
+</li>
+<li><strong>Throughput</strong><ul>
+<li>최종 일관성은 일반적으로 서비스가 보다 독립적으로 운영될 수 있으므로 처리량이 더 높다.</li>
+<li>강력한 일관성은 서비스 간의 조정이 필요하기 때문에 처리량을 제한할 수 있다.</li>
+</ul>
+</li>
+<li><strong>Resource Utilization</strong><ul>
+<li>강력한 일관성은 데이터 무결성을 유지하기 위해 더 많은 컴퓨팅 및 네트워크 리소스를 필요로 할 수 있다.</li>
+<li>최종 일관성은 리소스 사용 측면에서 더 효율적일 수 있지만 로컬 데이터 사본을 위한 추가 스토리지가 필요하다.</li>
+</ul>
+</li>
+</ul>
+<h3 id="3-Scalability"><a href="#3-Scalability" class="headerlink" title="3 - Scalability"></a>3 - Scalability</h3><p>데이터 공유 솔루션은 애플리케이션의 확장성에 큰 영향을 미친다. 몇 가지 주요 측면은 다음과 같다.</p>
+<ul>
+<li><strong>Horizontal Scaling:</strong> 최종 일관성 모델은 전체 시스템 성능에 큰 영향을 주지 않고 서비스를 추가할 수 있기 때문에 수평적으로 더 잘 확장되는 경우가 많다. 강력한 일관성 모델은 조정 오버헤드 증가로 인해 수평적 확장에 어려움을 겪을 수 있다.</li>
+<li><strong>Data Volume:</strong> 데이터 볼륨이 증가함에 따라 모든 서비스에서 강력한 일관성을 유지하는 것이 어려워진다. 최종 일관성은 대용량 데이터를 보다 원활하게 처리할 수 있지만 데이터 동기화에 대한 신중한 관리가 필요하다.</li>
+<li><strong>Service Independency:</strong> 최종 일관성은 서비스가 보다 독립적으로 발전할 수 있도록 하여 확장을 용이하게 한다. 강력한 일관성 모델은 서비스 간의 긴밀한 연계를 만들어 낸다.</li>
+</ul>
+<!-- flag of hidden posts --></div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined">Song Hayoung</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="https://songhayoung.github.io/2024/10/18/System%20Design/ByteByteGo/private/data-sharing-between-microservices/">https://songhayoung.github.io/2024/10/18/System%20Design/ByteByteGo/private/data-sharing-between-microservices/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/System-Design/">System Design</a></div><nav id="pagination"></nav><div id="gitalk-container"></div><script>var gitalk = new Gitalk({
+  clientID: '3604b61642355579f55e',
+  clientSecret: 'f552120f18ac5aee3f6297e05e97d94c0a25cd4b',
+  repo: 'SongHayoung.github.io',
+  owner: 'SongHayoung',
+  admin: 'SongHayoung',
+  id: md5(decodeURI(location.pathname)),
+  language: 'en'
+})
+gitalk.render('gitalk-container')</script></div></div><footer class="footer-bg" style="background-image: url(https://xxxx.jpg)"><div class="layout" id="footer"><div class="copyright">&copy;2020 - 2024 By Song Hayoung</div><div class="framework-info"><span>Driven - </span><a target="_blank" rel="noopener" href="http://hexo.io"><span>Hexo</span></a><span class="footer-separator">|</span><span>Theme - </span><a target="_blank" rel="noopener" href="https://github.com/Molunerfinn/hexo-theme-melody"><span>Melody</span></a></div><div class="footer_custom_text">Learning how to walk slowly to not miss important things</div><div class="busuanzi"><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><span id="busuanzi_container_page_pv"><i class="fa fa-file"></i><span id="busuanzi_value_page_pv"></span><span></span></span></div></div></footer><i class="fa fa-arrow-up" id="go-up" aria-hidden="true"></i><script src="https://cdn.jsdelivr.net/npm/animejs@latest/anime.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@latest/velocity.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-ui-pack@latest/velocity.ui.min.js"></script><script src="/js/utils.js?version=1.7.0"></script><script src="/js/fancybox.js?version=1.7.0"></script><script src="/js/sidebar.js?version=1.7.0"></script><script src="/js/copy.js?version=1.7.0"></script><script src="/js/fireworks.js?version=1.7.0"></script><script src="/js/transition.js?version=1.7.0"></script><script src="/js/scroll.js?version=1.7.0"></script><script src="/js/head.js?version=1.7.0"></script><script src="/js/search/algolia.js"></script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+    processEscapes: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  },
+  CommonHTML: {
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "HTML-CSS": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "SVG": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  }
+});
+</script><script type="text/x-mathjax-config">MathJax.Hub.Queue(function() {
+  var all = MathJax.Hub.getAllJax(), i;
+  for (i=0; i < all.length; i += 1) {
+    all[i].SourceElement().parentNode.className += ' has-jax';
+  }
+});
+</script><script src="https://cdn.jsdelivr.net/npm/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><script>if(/Android|webOS|iPhone|iPod|iPad|BlackBerry/i.test(navigator.userAgent)) {
+  $('#nav').addClass('is-mobile')
+  $('footer').addClass('is-mobile')
+  $('#top-container').addClass('is-mobile')
+}</script><div class="search-dialog" id="algolia-search"><div class="search-dialog__title" id="algolia-search-title">Algolia</div><div id="algolia-input-panel"><div id="algolia-search-input"></div></div><hr><div id="algolia-search-results"><div id="algolia-hits"></div><div id="algolia-pagination"></div><div id="algolia-stats"></div></div><span class="search-close-button"><i class="fa fa-times"></i></span></div><div class="search-mask"></div></body></html>
