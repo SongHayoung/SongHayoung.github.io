@@ -1,0 +1,201 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="description" content="[ByteByteGo] Event-Driven Architectural Patterns"><meta name="keywords" content="System Design"><meta name="author" content="Song Hayoung"><meta name="copyright" content="Song Hayoung"><title>[ByteByteGo] Event-Driven Architectural Patterns | SUMFIのBlog</title><meta name="robots" content="noindex"><link rel="shortcut icon" href="/songcon.ico"><link rel="stylesheet" href="/css/index.css?version=1.7.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@latest/css/font-awesome.min.css?version=1.7.0"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css?version=1.7.0"><meta name="format-detection" content="telephone=no"><meta http-equiv="x-dns-prefetch-control" content="on"><link rel="dns-prefetch" href="https://cdn.jsdelivr.net"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.css"><script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.js" defer></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@latest/dist/gitalk.min.js"></script><script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.10.0/js/md5.min.js"></script><link rel="dns-prefetch" href="https://www.google-analytics.com"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-169368422-1', 'auto');
+ga('send', 'pageview');</script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: {"appId":"7LZ6OJ4D6C","apiKey":"9a84e13f74ea78c3fd54512c10139c56","indexName":"git blog","hits":{"per_page":10},"languages":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}.","hits_stats":"${hits} results found in ${time} ms"}},
+  localSearch: undefined,
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  }
+} </script><meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/rss2.xml" title="SUMFIのBlog" type="application/rss+xml">
+</head><body><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar" data-display="true"><div class="toggle-sidebar-info text-center"><span data-toggle="Toggle article">Toggle site</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">Catalog</div><div class="sidebar-toc__progress"><span class="progress-notice">You've read</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Event-Driven-Architectural-Patterns"><span class="toc-number">1.</span> <span class="toc-text">Event-Driven Architectural Patterns</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Core-Components-of-EDA"><span class="toc-number">2.</span> <span class="toc-text">Core Components of EDA</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Event-Driven-Architectural-Patterns-1"><span class="toc-number">3.</span> <span class="toc-text">Event-Driven Architectural Patterns</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Competing-Consumer-Pattern"><span class="toc-number">3.1.</span> <span class="toc-text">Competing Consumer Pattern</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Consume-and-Project-Pattern"><span class="toc-number">3.2.</span> <span class="toc-text">Consume and Project Pattern</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Event-Sourcing"><span class="toc-number">3.3.</span> <span class="toc-text">Event Sourcing</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Asynchronous-Task-Execution-Pattern"><span class="toc-number">3.4.</span> <span class="toc-text">Asynchronous Task Execution Pattern</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Event-Aggregation-Pattern"><span class="toc-number">3.5.</span> <span class="toc-text">Event Aggregation Pattern</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Saga-Pattern"><span class="toc-number">3.6.</span> <span class="toc-text">Saga Pattern</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Transactional-Outbox-Pattern"><span class="toc-number">3.7.</span> <span class="toc-text">Transactional Outbox Pattern</span></a></li></ol></li></ol></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="https://avatars3.githubusercontent.com/u/37806785?s=460&amp;u=8c68d685faf7c5280cfbd736a6b1730b55fb4203&amp;v=4"></div><div class="author-info__name text-center">Song Hayoung</div><div class="author-info__description text-center"></div><div class="follow-button"><a target="_blank" rel="noopener" href="https://www.linkedin.com/in/hayoung-song-9523b61bb/">Follow Me</a></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="/archives"><span class="pull-left">Articles</span><span class="pull-right">11085</span></a><a class="author-info-articles__tags article-meta" href="/tags"><span class="pull-left">Tags</span><span class="pull-right">196</span></a><a class="author-info-articles__categories article-meta" href="/categories"><span class="pull-left">Categories</span><span class="pull-right">62</span></a></div><hr><div class="author-info-links"><div class="author-info-links__title text-center">VISITED</div><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Seoul Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Jeju Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">British Columbia Canada</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Boracay Philippines</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">三重　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">大阪　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">名古屋　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">静岡　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">札幌　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">京都　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Bangkok Thailand</a></div></div></div><div id="content-outer"><div id="top-container" style="background-image: url(https://xxxx.jpg)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="/">SUMFIのBlog</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus">   <a class="site-page" href="/">Home</a><a class="site-page" href="/archives">Archives</a><a class="site-page" href="/tags">Tags</a><a class="site-page" href="/categories">Categories</a><a class="site-page" href="/about">About</a></span><span class="pull-right"><a class="site-page social-icon search"><i class="fa fa-search"></i><span> Search</span></a></span></div><div id="post-info"><div id="post-title">[ByteByteGo] Event-Driven Architectural Patterns</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2024-10-25</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/">System Design</a><i class="fa fa-angle-right" aria-hidden="true"></i><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/Byte-Byte-Go/">Byte Byte Go</a><div class="post-meta-wordcount"><span>Word count: </span><span class="word-count">1.9k</span><span class="post-meta__separator">|</span><span>Reading time: 11 min</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div class="article-container" id="post-content"><h2 id="Event-Driven-Architectural-Patterns"><a href="#Event-Driven-Architectural-Patterns" class="headerlink" title="Event-Driven Architectural Patterns"></a>Event-Driven Architectural Patterns</h2><span id="more"></span>
+<p>EDA는 이벤트의 생성, 감지, 소비, 반응에 중점을 둔 소프트웨어 설계 방식이다. 이 아키텍처에서 이벤트는 시스템 내의 상태 변경 또는 업데이트를 의미한다. EDA는 서비스를 분리하고 확장성을 향상하며 응답성을 개선할 수 있기 때문에 최신 소프트웨어 개발에서 특히 유용하다.</p>
+<p>시스템이 이벤트에 비동기적으로 반응할 수 있도록 함으로써 EDA는 실시간 처리를 지원하고 시스템이 대량의 데이터를 효율적으로 처리할 수 있게 해준다. 이 접근 방식은 다양한 구성 요소가 독립적이면서도 일관되게 작동해야 하는 분산 시스템 및 마이크로서비스 아키텍처에 유용하다.</p>
+<p>오늘날의 소프트웨어 환경에서 EDA의 중요성은 아무리 강조해도 지나치지 않는다. 다음과 같은 중요한 이점을 제공한다.</p>
+<ul>
+<li>일부 구성요소에 장애가 발생하더라도 시스템이 계속 작동할 수 있도록 내결함성이 향상된다.</li>
+<li>수요에 따라 서비스를 독립적으로 확장할 수 있어 리소스 활용도가 향상된다.</li>
+<li>역동적이고 유연한 워크플로우를 지원하여 기업이 변화하는 요구사항과 시장 상황에 빠르게 적응할 수 있다.</li>
+</ul>
+<p>이 포스트에서는 이벤트 중심 아키텍처에서 사용되는 다양한 패턴을 살펴본다. 이런 패턴을 살펴봄으로써 강력하고 확장 가능하며 응답성이 뛰어난 시스템을 구축하는데 어떻게 적용할 수 있는지에 대한 인사이트를 살펴본다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20241025210105478.png" alt=""></p>
+<h2 id="Core-Components-of-EDA"><a href="#Core-Components-of-EDA" class="headerlink" title="Core Components of EDA"></a>Core Components of EDA</h2><ul>
+<li><strong>Event Producers:</strong> 시스템 내의 특정 작업이나 상태 변경에 따라 이벤트를 생성한다. 프로듀서는 이벤트를 생성하고 방출한 다음 이벤트 브로커로 전송한다.</li>
+<li><strong>Event Consumers:</strong> 특정 유형의 이벤트를 구독하고 작업을 수행하거나 추가 프로세스를 트리거해 이벤트에 반응하는 컴포넌트다. 이벤트 브로커로부터 이벤트를 수신하고 정의된 로직에 따라 이벤트를 처리한다.</li>
+<li><strong>Event Broker:</strong> 이벤트 생산자와 이벤트 소비자 사이의 중계자 역할을 한다. 생산자로부터 이벤트를 수신하고 구독에 따라 적절한 소비자에게 라우팅하며 안정적인 이벤트 전달을 보장한다.</li>
+<li><strong>Event Streams</strong>:  EDA에서 이벤트는 이벤트 생산자가 생성한 연속적인 이벤트 시퀀스인 이벤트 스트림으로 구성되는 경우가 많다. 이벤트 스트림은 실시간 데이터 처리를 가능하게 하고 시스템의 여러 구성 요소 간의 통신을 용이하게 한다.</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20241025210330408.png" alt=""></p>
+<p>이벤트 중심 아키텍처는 몇 가지 주요 측면에서 기존의 요청-응답 아키텍처와 다르다.</p>
+<ul>
+<li><strong>Synchronous vs. Asynchronous:</strong> 요청-응답 모델에서는 구성 요소 간의 상호 작용이 동기식으로 이루어지므로 클라이언트가 요청을 전송하고 응답을 기다린 후에 작업을 진행한다. 이와 대조적으로 EDA는 비동기적으로 작동하므로 컴포넌트가 즉각적인 응답을 기다리지 않고 이벤트를 발생시키고 실행을 계속할 수 있다.</li>
+<li><strong>Tight vs. Loose Coupling:</strong> 요청-응답 아키텍처는 클라이언트가 서버와 직접 통신하기 때문에 컴포넌트 간에 긴밀한 결합이 이루어지는 경우가 많다. EDA는 이벤트 브로커를 중개자로 도입해 컴포넌트가 이벤트를 통해 간접적으로 통신할 수 있도록 함으로써 느슨한 결합을 촉진한다.</li>
+<li><strong>Scalability and Performance:</strong> 시스템이 복잡해짐에 따라 요청-응답 아키텍처는 상호 작용의 동기적 특성으로 인해 확장성 문제에 직면할 수 있다. 반면 EDA는 비동기 처리와 컴포넌트의 독립적인 확장을 지원하여 확장성과 성능을 개선할 수 있다.</li>
+</ul>
+<h2 id="Event-Driven-Architectural-Patterns-1"><a href="#Event-Driven-Architectural-Patterns-1" class="headerlink" title="Event-Driven Architectural Patterns"></a>Event-Driven Architectural Patterns</h2><h3 id="Competing-Consumer-Pattern"><a href="#Competing-Consumer-Pattern" class="headerlink" title="Competing Consumer Pattern"></a>Competing Consumer Pattern</h3><p>경쟁 소비자 패턴은 여러 소비자가 공유 대기열에서 메세지를 처리하기 위해 경쟁할 수 있는 EDA 패턴이다. 이 패턴은 확장성을 달성하고 처리량을 개선하기 위해 병렬 처리가 필요한 대용량 시스템에서 유용하다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20241025210934244.png" alt=""></p>
+<ul>
+<li><strong>Shared Message Queue:</strong> 이벤트 브로커가 공유 메세지 큐를 관리한다. 이 큐는 메세지가 저장되고 소비할 수 있도록 제공되는 중앙 저장소 역할을 한다.</li>
+<li><strong>Competing Consumers:</strong> 여러 소비자가 공유 메세지 대기열에 가입해 사용 가능한 메세지가 나오면 서로 경쟁해 메세지를 검색하고 처리한다. 각 소비자는 대기열에서 독립적으로 메세지를 가져와서 해당 로직에 따라 처리한다.</li>
+<li><strong>Dynamic Load Balancing:</strong> 경쟁 소비자 패턴은 여러 소비자에게 워크로드를 분산해 동적 부하 분산이 가능하다. 대기열의 메세지 수가 증가하면 늘어난 부하를 처리하기 위해 소비자를 추가할 수 있다. 반대로 부하가 감소하면 소비자를 제거할 수 있다.</li>
+<li><strong>Fault Tolerance:</strong> 한 소비자에게 장애가 발생하거나 사용할 수 없게 되면 다른 소비자들이 대기열에서 메세지를 계속 처리할 수 있다. 이런 이중화는 개별 구성 요소에 장애가 발생하더라도 시스테ㅔㅁ이 계속 작동할 수 있도록 하여 시스템의 전반적인 내결함성과 안정성을 향상시킨다.</li>
+</ul>
+<p>경쟁 소비자 패턴을 구현할 때 염두해야 할 점은 다음과 같다.</p>
+<ul>
+<li><strong>Message Ordering:</strong> 멧지 순서가 중요한 경우 메세지가 올바른 순서로 처리되도록 하기 위해 추가적인 메커니즘이 필요할 수 있다. 이는 메세지 파티셔닝 또는 시퀀스 번호와 같은 기술을 통해 달성할 수 있다.</li>
+<li><strong>Message Idempotency:</strong> 소비자 실패 또는 재시도로 인한 잠재적인 메세지 중복을 처리하려면 소비자를 무력화하도록 설계하는 것이 중요하다. 무능력한 소비자는 의도하지 않은 부작용을 일으키지 않고 동일한 메세지를 여러 번 처리할 수 있다.</li>
+</ul>
+<h3 id="Consume-and-Project-Pattern"><a href="#Consume-and-Project-Pattern" class="headerlink" title="Consume and Project Pattern"></a>Consume and Project Pattern</h3><p>소비 및 프로젝트 패턴은 이벤트 중심 아키텍처에서 이벤트 스트림에 구체화된 뷰를 생성해 데이터 액세스를 최적화하고 레거시 시스템의 부하를 줄이기 위해 사용되는 전략이다. 이 패턴은 모놀리식 구조로 인해 병목 현상이 발생할 수 있는 특정 데이터에 대한 대량의 요청을 처리하는 서비스를 처리할 때 특히 유용하다. 다양한 엔티티에 대한 포괄적인 메타데이터를 저장하는 레거시 시스템에서는 소비 및 프로젝트 접근 방식을 사용할 수 있다.</p>
+<ul>
+<li>특정 사용 사례에 필요한 메타데이터의 하위 집합만 추출한다.</li>
+<li>해당 특정 쿼리에 최적화된 별도의 데이터베이스에 하위 집합을 저장한다.</li>
+</ul>
+<p>아래 다이어그램은 고객 및 주문 데이터가 읽기 요청을 위해 구체화된 뷰로 투영되는 패턴을 보여준다. 주문 투영 서비스는 이벤트를 통해 주문 데이터를 수신한 다음 고객 서비스에서 고객 데이터를 가져와서 보강한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20241025221726307.png" alt=""></p>
+<p>이 패턴의 주요 개념은 다음과 같다.</p>
+<ul>
+<li><strong>Event Streaming:</strong> 이 패턴은 기본 데이터베이스에서 이벤트 브로커로 관련 데이터 변경 사항을 스트리밍하는 것으로 시작된다. 여기에는 다운스트림 서비스에 중요한 업데이트 또는 새 항목이 포함된다.</li>
+<li><strong>Write-Only Service:</strong> 쓰기 전용 서비스들은 이런 이벤트를 소비하고 데이터의 특정 뷰를 데이터베이스에 투사한다.</li>
+<li><strong>Tailored Views:</strong> 투영된 보기는 특정 클라이언트 서비스의 쿼리 요구 사항을 충족하도록 맞춤화되어 원래 시스템에서 특정 쿼리를 효과적으로 오프로드 한다.</li>
+</ul>
+<p>프로세스 흐름은 다음과 같다.</p>
+<ul>
+<li>데이터 변경 사항이 기본 데이터베이스에서 이벤트 브로커로 스트리밍 된다.</li>
+<li>쓰기 전용 서비스가 이런 이벤트를 소비한다.</li>
+<li>이 서비스는 데이터의 특정 뷰를 별도의 데이터베이스에 투사한다.</li>
+<li>클라이언트 서비스는 원래 시스템 대신 이 최적화된 뷰를 쿼리한다.</li>
+</ul>
+<h3 id="Event-Sourcing"><a href="#Event-Sourcing" class="headerlink" title="Event Sourcing"></a>Event Sourcing</h3><p>이벤트 소싱은 소프트웨어 시스템에서 데이터가 저장되고 관리되는 방식을 근본적으로 바꾸는 아키텍처 패턴이다. 이벤트 소싱은 애플리케이션의 현재 상태만 저장하는 대신 애플리케이션 상태에 대한 모든 변경 사항을 일련의 이벤트로 캡처하는데 중점을 둔다. 이벤트 소싱의 작동 방식을 이해하려면 다음과 같은 핵심 개념을 파악하는 것이 중요하다.</p>
+<ul>
+<li><strong>Event Store:</strong> 시스템 내에서 수행된 모든 작업의 내구성 있는 로그 저장소다. 이벤트를 저장하고 새 이벤트를 추가하고 기존 이벤트를 검색하기 위한 API를 제공하는 데이터베이스 및 메세지 브로커의 역할을 한다.</li>
+<li><strong>Events:</strong> 각 이벤트는 상태의 개별적인 변경 사항을 나타내며 해당 변경 사항을 재구성하기에 충분한 정보를 포함한다. 예를 들어 주문 관리 시스템에서 이벤트에는 “주문 생성됨”, “주문 배송됨” 또는 “주문 취소됨”이 포함될 수 있다.</li>
+<li><strong>State Reconstruction:</strong> 이벤트 시퀀스를 재생해 모든 엔티티의 현재 상태를 어느 시점에나 재구성할 수 있다. 이를 통해 일시적인 쿼리가 가능하고 상태 변경에 대한 전체 기록을 제공한다.</li>
+<li><strong>Read Database:</strong> 쿼리 목적으로 데이터의 현재 상태를 제공하는 최종적으로 일관된 별도의 읽기 데이터베이스를 유지할 수 있다.</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20241025222317025.png" alt=""></p>
+<p>이벤트 소싱은 몇 가지 주요 이점을 제공한다.</p>
+<ul>
+<li><strong>Reliable Audit Trail:</strong> 이벤트 소싱은 모든 상태 변경 사항을 이벤트로 캡쳐함으로써 시스템 내에서 수행된 모든 작업에 대한 변경 불가능한 기록을 제공한다. 이는 규정 준수를 위해 상세한 감사 로그가 필요한 시스템에서 특히 유용하다.</li>
+<li><strong>Temporal Queries:</strong> 이벤트 소싱은 복잡한 시간적 쿼리를 가능하게 하여 개발자가 시간이 지남에 따라 엔티티의 상태가 어떻게 변화했는지 이해할 수 있게 해준다. 이는 변경 순서를 이해하는 것이 중요한 애플리케이션에서 매우 중요하다.</li>
+<li><strong>Concurrency and Conflict Resolution:</strong> 이벤트는 순차적으로 저장되므로 분산 시스템에서 동시성을 처리하고 충돌을 해결하기 위한 자연스러운 메커니즘을 제공한다.</li>
+</ul>
+<p>그러나 이벤트 소싱은 많은 이점을 제공하지만 몇 가지 문제점도 있다. 이벤트 소싱은 데이터 관리에 대한 다른 사고 방식을 도입하여 개발자가 데이터를 직접적인 상태 변경이 아닌 이벤트로 간주하도록 요구한다.</p>
+<h3 id="Asynchronous-Task-Execution-Pattern"><a href="#Asynchronous-Task-Execution-Pattern" class="headerlink" title="Asynchronous Task Execution Pattern"></a>Asynchronous Task Execution Pattern</h3><p>비동기 작업 실행 패턴은 일시적인 장애가 발생하더라도 예약된 작업을 최종적으로 처리할 수 있도록 설계된 이벤트 중심 접근 방식이다. 이 패턴의 주요 구성 요소는 다음과 같다.</p>
+<ul>
+<li><strong>Job Scheduler:</strong> 처리해야 할 예약된 작업을 나타내는 메시지를 이벤트 브로커에 생성해 작업을 시작한다.</li>
+<li><strong>Event Broker:</strong> 작업 메세지를 저장하고 관리하는 메세지 큐 이다.</li>
+<li><strong>Workers:</strong> 이벤트 브로커에서 메세지를 수신해 해당 작업을 실행하려고 시도하는 인스턴스다.</li>
+<li><strong>Retry Policy:</strong> 소비자 서비스가 작업 실패를 처리하고 재시도를 시도하는 방법을 규정하는 미리 정의된 규칙 집합이다.</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20241025222745528.png" alt=""></p>
+<p>이 패턴의 프로세스 흐름은 다음과 같다.</p>
+<ul>
+<li>작업 스케쥴러가 예약된 작업을 나타내는 메세지를 이벤트 브로커에 생성한다.</li>
+<li>워커 서비스가 이벤트 브로커로부터 메세지를 받는다.</li>
+<li>워커가 작업을 실행하려고 시도한다.</li>
+<li>일시적인 문제로 인한 작업이 실패하면 워커는 재시도 정책에 따라 메세지 처리를 다시 시도한다.</li>
+<li>재시도 정책에는 일시적인 오류를 원할하게 처리하기 위해 기하급수적인 백오프 간격이 포함되는 경우가 많다.</li>
+</ul>
+<p>이 패턴을 구현할 때 염두에 두어야 할 몇 가지 중요한 고려 사항은 다음과 같다.</p>
+<ul>
+<li><strong>Retry Policy Design:</strong> 의도하지 않은 결과를 초래하지 않고 다양한 실패 시나리오를 효과적으로 처리할 수 있도록 재시도 정책의 설계에 세심한 주의를 기울여야 한다.</li>
+<li><strong>Idempotency:</strong> 작업은 재시도 중 불일치를 피하기 위해 동일한 작업을 여러 번 실행해도 동일한 결과가 나오도록 무력화되도록 설계해야 한다.</li>
+</ul>
+<h3 id="Event-Aggregation-Pattern"><a href="#Event-Aggregation-Pattern" class="headerlink" title="Event Aggregation Pattern"></a>Event Aggregation Pattern</h3><p>이벤트 집계는 여러 개의 관련 이벤트를 보다 포괄적인 단일 이벤트로 결합하는데 중점을 두는 특정 EDA 패턴이다.</p>
+<p>이는 구성 요소를 분리하고 이벤트를 통해 비동기 통신을 활성화하는데 중점을 둔다. 여러 개의 세분화된 이벤트를 하나의 큰 단위의 이벤트로 통합하는 것이 목표다. 이벤트 에그리게이터는 여러 이벤트를 수집하고 처리한 후 집계된 새 이벤트를 생성한다.</p>
+<p>예를 들어 아래의 세분화된 이벤트를 생각해보자.</p>
+<ul>
+<li><strong>Create Contact:</strong> 시스템에서 새 고객 연락처가 생성되어 세분화된 이벤트가 트리거된다.</li>
+<li><strong>Create Account:</strong> 고객에 대한 계정이 생성되어 또 다른 세분화된 이벤트가 트리거된다.</li>
+<li><strong>Create Address:</strong> 고객의 배송 주소가 추가되어 세 번째 세분화된 이벤트가 트리거된다.</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20241025223319153.png" alt=""></p>
+<p>이벤트 애그리게이터 서비스는 세분화된 연락처, 계정 및 주소 이벤트를 하나의 큰 단위의 “고객 만들기” 이벤트로 통합한다. 이벤트 애그리게이터는 엔티티(연락처, 계정, 주소)와 전체 “고객” 간의 관계를 유지 관리한다.</p>
+<p>모든 세분화된 이벤트가 수신되면 애그리게이터는 통합된 “고객 만들기” 이벤트를 다운스트림 소비자에게 흘린다. 이 통합의 가장 큰 장점은 여러 세분화된 이벤트로 인한 채팅과 네트워크 오버헤드가 줄어든다는 것이다. 또한 소비자를 위한 이벤트 처리가 간소화된다.</p>
+<h3 id="Saga-Pattern"><a href="#Saga-Pattern" class="headerlink" title="Saga Pattern"></a>Saga Pattern</h3><p>사가 패턴은 기존의 2PC 프로토콜에 의존하지 않고 여러 서비스에서 분산 트랜잭션을 관리하는 데 사용하는 설계 전략이다. 분산 시스템, 특히 마이크로서비스를 사용하는 시스템에서는 중앙화된 트랜잭션 관리자가 없기 대문에 서비스 전반에서 데이터 일관성을 유지하는 것이 어려울 수 있다. 사가 패턴은 분산 트랜잭션을 일련의 작고 독립적인 단계로 나누어 각각 서비스에서 관리함으로써 분산 트랜잭션의 문제를 해결한다.</p>
+<p>사가 패턴의 주요 개념은 다음과 같다.</p>
+<ul>
+<li><strong>Local Transactions:</strong> 사가의 각 단계는 단일 서비스 내에서 상태를 업데이트하는 로컬 트랜잭션이다.</li>
+<li><strong>Event-Driven Communication:</strong> 로컬 트랜잭션을 완료한 후 각 서비스는 이벤트를 게시하여 사가의 다음 단계를 트리거한다.</li>
+<li><strong>Compensating Actions:</strong> 사가의 어떤 단계가 실패하면 보상 작업이 실행되어 이전 단계의 변경 사항을 취소하여 시스템이 결국 일관된 상태에 도달하도록 한다.</li>
+</ul>
+<p>사가 패턴의 일반적인 사용 사례는 이커머스 플랫폼의 주문 처리와 같이 장기간 실행되는 비즈니스 프로세스다. 이 프로세스에는 각각 특정 작업을 담당하는 여러 서비스가 포함된다.</p>
+<ul>
+<li><strong>Order Service:</strong> 고객이 접수한 주문을 관리한다.</li>
+<li><strong>Payment Service:</strong> 주문에 대한 결제를 처리한다.</li>
+<li><strong>Shipping Service:</strong> 주문에 대한 배송 정보를 업데이트한다.</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20241025224020857.png" alt=""></p>
+<p>이런 각 작업은 사가의 한 단계다. 결제가 완료된 후 배송 개시가 실패하면 보상 거래로 결제가 취소된다. EDA는 이벤트를 통해 서비스 간의 커뮤니케이션을 촉진함으로써 사가 패턴을 구현하는데 중요한 역할을 한다. </p>
+<ul>
+<li><strong>Event Publishing:</strong> 한 서비스가 로컬 트랜잭션을 완료하면 이벤트를 게시하여 사가의 다음 서비스에 알린다.</li>
+<li><strong>Event Consumption:</strong> 사가의 다음 서비스가 이벤트를 소비하고 수신된 정보를 기반으로 로컬 트랜잭션을 수행한다.</li>
+<li><strong>Decoupling of Services:</strong> EDA를 사용하면 서비스가 독립적으로 작동하고 수요에 따라 확장할 수 있으므로 내결함성과 확장성이 향상된다.</li>
+<li><strong>Eventual Consistency:</strong> 각 서비스가 상태를 업데이트하고 이벤트에 비동기적으로 반응할 수 있도록 함으로써 EDA는 분산 시스템에 최종적인 일관성을 지원한다.</li>
+</ul>
+<h3 id="Transactional-Outbox-Pattern"><a href="#Transactional-Outbox-Pattern" class="headerlink" title="Transactional Outbox Pattern"></a>Transactional Outbox Pattern</h3><p>트랜잭션 아웃박스 패턴은 2PC와 같은 분산 트랜잭션에 의존하지 않고 상태 변경 및 이벤트 게시의 원자성을 보장하는 기본적인 EDA 패턴이다. 이 패턴은 특히 마이크로서비스 기반 시스템에서 서비스의 내부 상태와 게시하는 이벤트 간의 일관성을 유지해야 하는 문제를 해결한다. 트랜잭션 아웃박스 패턴의 주요 개념은 다음과 같다.</p>
+<ul>
+<li><strong>Local Transactions:</strong> 이 패턴은 로컬 데이터베이스 트랜잭션을 사용하여 동일한 데이터베이스 내의 비즈니스 데이터와 보낼 편지함 테이블을 업데이트한다.</li>
+<li><strong>Outbox Table:</strong> 게시해야 하는 이벤트의 임시 보관소 역할을 한다.</li>
+<li><strong>Event Publication:</strong> 별도의 프로세스 또는 스레드가 주기적으로 보낼 편지함 테이블에서 새 이벤트를 검색하여 이벤트 브로커에 게시한 후 보낸 것으로 표시한다.</li>
+</ul>
+<p>이 패턴은 이벤트 생산과 소비를 분리하여 부분적인 장애로 인한 불일치 위험 없이 이벤트를 안정적으로 전송할 수 있도록 한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20241025224559303.png" alt=""></p>
+<p>다음은 패턴에 대한 프로세스 흐름이다.</p>
+<ul>
+<li>서비스가 트랜잭션을 처리할 때 단일 데이터베이스 트랜잭션 내에서 두 가지 작업을 수행한다.<ul>
+<li>관련 비즈니스 엔티티를 업데이트한다.</li>
+<li>해당 이벤트를 보낼 편지함 테이블에 삽입한다.</li>
+</ul>
+</li>
+<li>트랜잭션이 커밋된 후 별도의 프로세스 또는 스레드가 보낼 편지함 테이블에서 새 이벤트를 검색한다.</li>
+<li>이벤트를 이벤트 브로커에 게시하고 해당 이벤트를 보낼 편지함 테이블에 보낸 것으로 표시한다.</li>
+</ul>
+<p>트랜잭션 아웃 박스 패턴은 주문 처리를 처리하는 전자상거래 플랫폼과 같이 무중단성과 일관성이 중요한 시나리오에서 특히 유용하다.</p>
+<ul>
+<li>주문이 접수되면 주문 서비스가 주문 데이터베이스를 업데이트하고 단일 트랜잭션 내에서 이벤트를 보낼 편지함 테이블에 삽입한다.</li>
+<li>별도의 프로세스가 이벤트를 메세지 브로커에 게시하여 재고 관리 및 배송과 같은 다운스트림 서비스를 트리거한다.</li>
+<li>네트워크 문제로 인해 이벤트 게시가 실패하면 성공적으로 처리될 때까지 보낼 편지함에 남아 주문이 손실되거나 중복되지 않도록 한다.</li>
+</ul>
+<!-- flag of hidden posts --></div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined">Song Hayoung</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="https://songhayoung.github.io/2024/10/25/System%20Design/ByteByteGo/private/event-driven-architectural-patterns/">https://songhayoung.github.io/2024/10/25/System%20Design/ByteByteGo/private/event-driven-architectural-patterns/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/System-Design/">System Design</a></div><nav id="pagination"></nav><div id="gitalk-container"></div><script>var gitalk = new Gitalk({
+  clientID: '3604b61642355579f55e',
+  clientSecret: 'f552120f18ac5aee3f6297e05e97d94c0a25cd4b',
+  repo: 'SongHayoung.github.io',
+  owner: 'SongHayoung',
+  admin: 'SongHayoung',
+  id: md5(decodeURI(location.pathname)),
+  language: 'en'
+})
+gitalk.render('gitalk-container')</script></div></div><footer class="footer-bg" style="background-image: url(https://xxxx.jpg)"><div class="layout" id="footer"><div class="copyright">&copy;2020 - 2024 By Song Hayoung</div><div class="framework-info"><span>Driven - </span><a target="_blank" rel="noopener" href="http://hexo.io"><span>Hexo</span></a><span class="footer-separator">|</span><span>Theme - </span><a target="_blank" rel="noopener" href="https://github.com/Molunerfinn/hexo-theme-melody"><span>Melody</span></a></div><div class="footer_custom_text">Learning how to walk slowly to not miss important things</div><div class="busuanzi"><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><span id="busuanzi_container_page_pv"><i class="fa fa-file"></i><span id="busuanzi_value_page_pv"></span><span></span></span></div></div></footer><i class="fa fa-arrow-up" id="go-up" aria-hidden="true"></i><script src="https://cdn.jsdelivr.net/npm/animejs@latest/anime.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@latest/velocity.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-ui-pack@latest/velocity.ui.min.js"></script><script src="/js/utils.js?version=1.7.0"></script><script src="/js/fancybox.js?version=1.7.0"></script><script src="/js/sidebar.js?version=1.7.0"></script><script src="/js/copy.js?version=1.7.0"></script><script src="/js/fireworks.js?version=1.7.0"></script><script src="/js/transition.js?version=1.7.0"></script><script src="/js/scroll.js?version=1.7.0"></script><script src="/js/head.js?version=1.7.0"></script><script src="/js/search/algolia.js"></script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+    processEscapes: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  },
+  CommonHTML: {
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "HTML-CSS": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "SVG": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  }
+});
+</script><script type="text/x-mathjax-config">MathJax.Hub.Queue(function() {
+  var all = MathJax.Hub.getAllJax(), i;
+  for (i=0; i < all.length; i += 1) {
+    all[i].SourceElement().parentNode.className += ' has-jax';
+  }
+});
+</script><script src="https://cdn.jsdelivr.net/npm/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><script>if(/Android|webOS|iPhone|iPod|iPad|BlackBerry/i.test(navigator.userAgent)) {
+  $('#nav').addClass('is-mobile')
+  $('footer').addClass('is-mobile')
+  $('#top-container').addClass('is-mobile')
+}</script><div class="search-dialog" id="algolia-search"><div class="search-dialog__title" id="algolia-search-title">Algolia</div><div id="algolia-input-panel"><div id="algolia-search-input"></div></div><hr><div id="algolia-search-results"><div id="algolia-hits"></div><div id="algolia-pagination"></div><div id="algolia-stats"></div></div><span class="search-close-button"><i class="fa fa-times"></i></span></div><div class="search-mask"></div></body></html>
