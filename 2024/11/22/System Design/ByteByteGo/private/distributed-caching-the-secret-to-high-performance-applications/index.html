@@ -1,0 +1,175 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="description" content="[ByteByteGo] Distributed Caching: The Secret to High-Performance Applications"><meta name="keywords" content="System Design"><meta name="author" content="Song Hayoung"><meta name="copyright" content="Song Hayoung"><title>[ByteByteGo] Distributed Caching: The Secret to High-Performance Applications | SUMFIのBlog</title><meta name="robots" content="noindex"><link rel="shortcut icon" href="/songcon.ico"><link rel="stylesheet" href="/css/index.css?version=1.7.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@latest/css/font-awesome.min.css?version=1.7.0"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css?version=1.7.0"><meta name="format-detection" content="telephone=no"><meta http-equiv="x-dns-prefetch-control" content="on"><link rel="dns-prefetch" href="https://cdn.jsdelivr.net"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.css"><script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.js" defer></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@latest/dist/gitalk.min.js"></script><script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.10.0/js/md5.min.js"></script><link rel="dns-prefetch" href="https://www.google-analytics.com"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-169368422-1', 'auto');
+ga('send', 'pageview');</script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: {"appId":"7LZ6OJ4D6C","apiKey":"9a84e13f74ea78c3fd54512c10139c56","indexName":"git blog","hits":{"per_page":10},"languages":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}.","hits_stats":"${hits} results found in ${time} ms"}},
+  localSearch: undefined,
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  }
+} </script><meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/rss2.xml" title="SUMFIのBlog" type="application/rss+xml">
+</head><body><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar" data-display="true"><div class="toggle-sidebar-info text-center"><span data-toggle="Toggle article">Toggle site</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">Catalog</div><div class="sidebar-toc__progress"><span class="progress-notice">You've read</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Distributed-Caching-The-Secret-to-High-Performance-Applications"><span class="toc-number">1.</span> <span class="toc-text">Distributed Caching: The Secret to High-Performance Applications</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Why-Distributed-Caching"><span class="toc-number">2.</span> <span class="toc-text">Why Distributed Caching?</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Benefits-of-Distributed-Caching"><span class="toc-number">2.1.</span> <span class="toc-text">Benefits of Distributed Caching</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#How-Distributed-Caching-Works"><span class="toc-number">3.</span> <span class="toc-text">How Distributed Caching Works?</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#How-Data-Retrieval-Works-in-Distributed-Caching"><span class="toc-number">3.0.1.</span> <span class="toc-text">How Data Retrieval Works in Distributed Caching</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Hosting-and-Deployment-Options"><span class="toc-number">4.</span> <span class="toc-text">Hosting and Deployment Options</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Dedicated-Cache-Nodes"><span class="toc-number">4.1.</span> <span class="toc-text">Dedicated Cache Nodes</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Co-located-Caching"><span class="toc-number">4.2.</span> <span class="toc-text">Co-located Caching</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Cloud-Based-Caching-Solutions-e-g-Amazon-ElastiCache"><span class="toc-number">4.3.</span> <span class="toc-text">Cloud-Based Caching Solutions (e.g., Amazon ElastiCache)</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Caching-Strategies-in-Distributed-Systems"><span class="toc-number">5.</span> <span class="toc-text">Caching Strategies in Distributed Systems</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Cache-Consistency-and-Synchronization-in-Write-Heavy-Applications"><span class="toc-number">5.1.</span> <span class="toc-text">Cache Consistency and Synchronization in Write-Heavy Applications</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Challenges-with-Distributed-Caching"><span class="toc-number">6.</span> <span class="toc-text">Challenges with Distributed Caching</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Data-Consistency-Issues"><span class="toc-number">6.1.</span> <span class="toc-text">Data Consistency Issues</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Network-Partitioning"><span class="toc-number">6.2.</span> <span class="toc-text">Network Partitioning</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Cache-Invalidation-and-Expiration-Strategies"><span class="toc-number">6.3.</span> <span class="toc-text">Cache Invalidation and Expiration Strategies</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Load-Balancing-and-Latency"><span class="toc-number">6.4.</span> <span class="toc-text">Load Balancing and Latency</span></a></li></ol></li></ol></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="https://avatars3.githubusercontent.com/u/37806785?s=460&amp;u=8c68d685faf7c5280cfbd736a6b1730b55fb4203&amp;v=4"></div><div class="author-info__name text-center">Song Hayoung</div><div class="author-info__description text-center"></div><div class="follow-button"><a target="_blank" rel="noopener" href="https://www.linkedin.com/in/hayoung-song-9523b61bb/">Follow Me</a></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="/archives"><span class="pull-left">Articles</span><span class="pull-right">11129</span></a><a class="author-info-articles__tags article-meta" href="/tags"><span class="pull-left">Tags</span><span class="pull-right">198</span></a><a class="author-info-articles__categories article-meta" href="/categories"><span class="pull-left">Categories</span><span class="pull-right">62</span></a></div><hr><div class="author-info-links"><div class="author-info-links__title text-center">VISITED</div><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Seoul Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Jeju Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">British Columbia Canada</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Boracay Philippines</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">三重　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">大阪　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">名古屋　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">静岡　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">札幌　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">京都　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Bangkok Thailand</a></div></div></div><div id="content-outer"><div id="top-container" style="background-image: url(https://xxxx.jpg)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="/">SUMFIのBlog</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus">   <a class="site-page" href="/">Home</a><a class="site-page" href="/archives">Archives</a><a class="site-page" href="/tags">Tags</a><a class="site-page" href="/categories">Categories</a><a class="site-page" href="/about">About</a></span><span class="pull-right"><a class="site-page social-icon search"><i class="fa fa-search"></i><span> Search</span></a></span></div><div id="post-info"><div id="post-title">[ByteByteGo] Distributed Caching: The Secret to High-Performance Applications</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2024-11-22</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/">System Design</a><i class="fa fa-angle-right" aria-hidden="true"></i><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/Byte-Byte-Go/">Byte Byte Go</a><div class="post-meta-wordcount"><span>Word count: </span><span class="word-count">1.9k</span><span class="post-meta__separator">|</span><span>Reading time: 12 min</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div class="article-container" id="post-content"><h2 id="Distributed-Caching-The-Secret-to-High-Performance-Applications"><a href="#Distributed-Caching-The-Secret-to-High-Performance-Applications" class="headerlink" title="Distributed Caching: The Secret to High-Performance Applications"></a>Distributed Caching: The Secret to High-Performance Applications</h2><span id="more"></span>
+<p>데이터 검색을 가속화하고 애플리케이션 응답성을 개선하는 핵심 기술 중 하나는 캐싱이다. 시스템이 성장함에 따라 단일 캐시 노드만으로는 불충분한 경우가 발생할 수 있으며 이 때 분산 캐싱이 등장한다.</p>
+<p>분산 캐싱은 캐시된 데이터를 여러 서버 또는 노드에 분산하여 캐시를 수평적으로 확장함으로써 대규모 애플리케이션을 처리할 수 있도록 한다. 분산 캐시를 사용하면 데이터가 여러 위치에 저장되므로 단일 노드에 장애가 발생해도 전체 캐시가 손상되지 않으며 시스템에서 요청을 원활하게 계속 처리할 수 있다. 이 포스트에선 분산 캐싱의 개념에 대해 살펴본다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20241122181226111.png" alt=""></p>
+<h2 id="Why-Distributed-Caching"><a href="#Why-Distributed-Caching" class="headerlink" title="Why Distributed Caching?"></a>Why Distributed Caching?</h2><p>단일 캐시 노드의 몇 가지 한계는 다음과 같다.</p>
+<ul>
+<li><strong>Scalability Constraints:</strong> 단일 노드 캐시는 단일 서버의 메모리와 처리 능력에 의해 제한된다. 데이터 양과 사용자 요청이 증가하면 이 단일 캐시가 수요를 따라잡지 못해 응답 시간이 느려지고 성능이 저하된다.</li>
+<li><strong>Single Point of Failure:</strong> 단일 캐시 서버에 의존하면 취약점이 발생한다. 이 서버에 장애가 발생하면 전체 캐시를 사용할 수 없게 되어 애플리케이션이 기본 데이터베이스에서 모든 데이터를 가져와야 한다. 이는 특히 부하가 많은 상황에서 심각한 지연을 초래할 수 있다.</li>
+<li><strong>Inefficient Load Management:</strong> 단일 노드 캐시는 이커머스 사이트나 라이브 이벤트 스트리밍의 피크 시간대와 같이 트래픽이 급증하는 경우 이를 처리하는데 어려움을 겪을 수 있다. 이런 과부하로 인해 요청이 끊기거나 성능이 심각하게 저하될 수 있다.</li>
+<li><strong>Limited Redundancy:</strong> 하나의 노드에 데이터가 저장되어 있으면 해당 노드를 사용할 수 없게 되더라도 백업할 수 없다. 이런 중복성 부족은 데이터 가용성을 유지하는데 있어 큰 약점이 된다.</li>
+</ul>
+<h3 id="Benefits-of-Distributed-Caching"><a href="#Benefits-of-Distributed-Caching" class="headerlink" title="Benefits of Distributed Caching"></a>Benefits of Distributed Caching</h3><p>분산 캐싱은 캐시된 데이터를 여러 노드에 분산하여 애플리케이션의 요구에 따라 확장할 수 있는 탄력적이고 확장 가능한 캐싱 계층을 생성함으로써 이런 한계를 해결한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20241122181641132.png" alt=""></p>
+<p>분산 캐싱이 확장성, 성능, 내결함성을 향상시키는 방법은 다음과 같다.</p>
+<ul>
+<li><strong>Scalability:</strong> 분산 캐싱은 필요에 따라 캐시 노드를 추가하여 수평적으로 확장할 수 있다. 각 노드는 데이터의 일부를 보유하므로 단일 노드의 부하를 줄이고 시스템이 수백만 명의 사용자와 방대한 데이터 세트를 원활하게 처리할 수 있다.</li>
+<li><strong>Performance Optimization:</strong> 분산 캐싱은 자주 액세스하는 데이터를 여러 노드에 저장함으로써 응답 시간을 개선한다.</li>
+<li><strong>Fault Tolerance:</strong> 분산 캐시에서는 데이터가 여러 노드에 복제되므로 한 노드에 장애가 발생해도 다른 노드에서 중단 없이 캐시된 데이터를 계속 제공할 수 있다. 이런 중복성은 개별 노드가 오프라인 상태가 되더라도 시스템이 계속 작동할 수 있도록 보장하므로 고가용성 애플리케이션에 매우 중요하다.</li>
+</ul>
+<h2 id="How-Distributed-Caching-Works"><a href="#How-Distributed-Caching-Works" class="headerlink" title="How Distributed Caching Works?"></a>How Distributed Caching Works?</h2><p>분산 캐싱 아키텍처는 캐시된 데이터를 여러 서버 또는 노드에 분산하여 대규모 애플리케이션의 확장성 및 성능 요구 사항을 해결하도록 설계되었다.</p>
+<p>일반적인 분상 캐싱 아키텍처의 주요 구성 요소는 다음과 같다.</p>
+<ul>
+<li><strong>Cache Nodes:</strong> 분산 캐시에서는 데이터가 여러 서버 또는 노드에 분산된다. 각 캐시 노드는 캐시된 데이터의 일부를 보유하므로 노드가 추가될 때마다 전체 캐시를 수평적으로 확장할 수 있다. 캐시 노드는 함께 작동하여 데이터 요청에 응답하고 워크로드를 공유하며 노드 장애 시 중복성을 제공한다.</li>
+<li><strong>Client Libraries:</strong> 클라이언트 라이브러리는 애플리케이션과 분산 캐시 노드 사이의 중개자 역할을 한다. 애플리케이션에 필요한 데이터를 저장할 노드를 결정하고 그에 따라 요청을 라우팅한다. 또한 클라이언트 라이브러리는 데이터 배포를 처리하고 데이터 검색을 관리하며 애플리케이션이 올바른 캐시 노드와 상호 작용하도록 보장한다.</li>
+<li><strong>Consistent Hashing:</strong> 분산 캐시는 종종 일관된 해싱을 사용하여 여러 노드에 데이터를 효율적으로 배포한다. 이 해싱 기법은 데이터 키의 해시를 기반으로 특정 노드에 데이터를 할당한다. 일관된 해싱은 노드를 추가하거나 제거할 때 데이터 이동을 최소화하도록 설계되어 캐시 안정성을 유지하고 재할당 비용을 절감할 수 있다.</li>
+<li><strong>Data Replication:</strong> 분산 캐시는 내결함성을 개선하기 위해 복제를 사용하는 경우가 많다. 데이터가 한 노드에 캐시되면 백업 노드에도 복사된다. 기본 노드를 사용할 수 없게 되면 백업 노드가 데이터를 계속 서비스하여 중단 없는 액세스를 보장할 수 있다.</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20241122182322688.png" alt=""></p>
+<h4 id="How-Data-Retrieval-Works-in-Distributed-Caching"><a href="#How-Data-Retrieval-Works-in-Distributed-Caching" class="headerlink" title="How Data Retrieval Works in Distributed Caching"></a>How Data Retrieval Works in Distributed Caching</h4><ul>
+<li><strong>Data Request</strong>: 애플리케이션에서 사용자의 세션 세부정보와 같이 자주 액세스하는 데이터를 검색해야 한다고 가정해 보자. 애플리케이션은 이 데이터에 대한 요청을 캐시로 보낸다.</li>
+<li><strong>Determining Data Location</strong>: 클라이언트 라이브러리는 요청을 수신하고 일관된 해싱을 사용하여 키를 기반으로 이 특정 데이터를 포함해야 하는 적절한 캐시 노드를 결정한다.</li>
+<li><strong>Cache Hit Scenario</strong>:<ul>
+<li>데이터가 지정된 캐시 노드에서 발견되면 캐시 노드는 데이터를 검색하여 클라이언트 라이브러리로 다시 보낸다.</li>
+<li>그러면 클라이언트 라이브러리는 데이터를 애플리케이션에서 반환하여 기본 데이터베이스를 쿼리할 필요 없이 요청을 신속하게 처리한다.</li>
+<li>캐시 히트는 요청된 데이터를 캐시에서 직접 전달하여 지연 시간을 줄이고 애플리케이션 성능을 개선한다.</li>
+</ul>
+</li>
+<li><strong>Cache Miss Scenario</strong>:<ul>
+<li>요청된 데이터를 캐시 노드에서 사용할 수 없는 경우 클라이언트 라이브러리는 요청을 기본 데이터베이스 또는 데이터 소스로 전달한다.</li>
+<li>데이터베이스에서 데이터를 검색하면 애플리케이션으로 반환된다. 그러면 클라이언트 라이브러리는 이 데이터를 적절한 캐시 노드에 저장하여 향후 요청에 사용할 수 있도록 하고, 캐시 미스를 후속 요청에서 캐시 히트로 변환할 수 있다.</li>
+</ul>
+</li>
+<li><strong>Data Replication (Optional)</strong>: 복제를 사용하도록 설정하면 캐시된 데이터를 백업 노드로 복사하여 고가용성을 보장할 수도 있다. 기본 노드에 장애가 발생하면 클라이언트 라이브러리는 향후 요청을 백업 노드로 라우팅할 수 있다.</li>
+<li><strong>Load Balancing via Sharding</strong>: 샤딩은 대용량 데이터 세트와 과중한 요청 부하가 캐시 노드에 고르게 분산되도록 한다. 새 캐시 노드가 추가되면 일관된 해싱을 통해 상당한 데이터 재할당 없이도 데이터 배포의 균형을 재조정할 수 있다.</li>
+</ul>
+<h2 id="Hosting-and-Deployment-Options"><a href="#Hosting-and-Deployment-Options" class="headerlink" title="Hosting and Deployment Options"></a>Hosting and Deployment Options</h2><h3 id="Dedicated-Cache-Nodes"><a href="#Dedicated-Cache-Nodes" class="headerlink" title="Dedicated Cache Nodes"></a><strong>Dedicated Cache Nodes</strong></h3><p>전용 캐시 노드는 캐싱을 위해 특별히 할당된 독립형 머신 또는 가상 인스턴스다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20241122182844027.png" alt=""></p>
+<p>애플리케이션 서버와 분리되어 있으므로 애플리케이션 수준 프로세스의 간섭 없이 캐싱 작업만 처리할 수 있다.</p>
+<p>이 설정의 주요 장점은 다음과 같다.</p>
+<ul>
+<li><strong>Scalability</strong>: 전용 캐시 서버는 애플리케이션 증가에 맞춰 독립적으로 확장할 수 있다. 수요가 증가하면 애플리케이션 서버에 영향을ㅈ ㅜ지 않고 전용 캐시 노드를 더 추가할 수 있어 트래픽이 많은 대규모 애플리케이션에 유연한 솔루션이 될 수 있다.</li>
+<li><strong>Resource Isolation</strong>: 전용 캐시 서버는 애플리케이션 서버와 분리되어 있기 때문에 캐시 관련 활동이 애플리케이션 처리에 필요한 리소스를 소비하지 못하도록 한다. 이러한 격리는 캐싱 프로세스가 다른 작업과 CPU 또는 메모리를 놓고 경쟁하지 않기 때문에 안정적인 성능을 유지하는데 도움이 된다.</li>
+</ul>
+<p>단점은 다음과 같다.</p>
+<ul>
+<li><strong>Network Latency</strong>: 전용 캐시 서버는 애플리케이션 서버와 분리되어 있기 때문에 캐시된 데이터에 액세스하려면 서버 간에 네트워크 호출이 필요하다. 이로 인해 지연 시간이 발생할 수 있으며 특히 사소한 지연도 성능에 영향을 미치는 실시간 애플리케이션에서는 더욱 그렇다.</li>
+<li><strong>Higher Costs</strong>: 특히 높은 캐시 트래픽을 처리하거나 내결함성을 위해 이중화가 필요한 경우 별도의 캐시 서버를 운영하면 비용이 많이 들 수 있다. 각 전용 서버에는 하드웨어, 유지보수, 에너지 비용이 발생하므로 이런 비용이 합산될 수 있다.</li>
+</ul>
+<h3 id="Co-located-Caching"><a href="#Co-located-Caching" class="headerlink" title="Co-located Caching"></a><strong>Co-located Caching</strong></h3><p>Co-located 캐싱에서는 캐시와 애플리케이션 서버가 동일한 물리적 머신 또는 가상 인스턴스에서 실행된다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20241122183215270.png" alt=""></p>
+<p>이 설정은 캐싱과 애플리케이션 프로세스 모두에 공유 리소스를 활용하므로 인프라 관리를 간소화하고 운영 비용을 절감할 수 있다.</p>
+<p>이 설정의 주요 장점은 다음과 같다.</p>
+<ul>
+<li><strong>Low Latency</strong>: 캐시가 애플리케이션과 동일한 서버에 상주하므로 데이터 검색이 더 빨라지고 원격 캐시 서버와 관련된 네트워크 지연이 제거된다.</li>
+<li><strong>Cost Efficiency</strong>: 캐시를 애플리케이션 서버와 함께 배치하는 것이 특히 소규모 애플리케이션의 경우 전용 캐싱보다 비용 효율이 더 높은 경우가 많다.</li>
+</ul>
+<p>주요 단점은 다음과 같다.</p>
+<ul>
+<li><strong>Resource Contention</strong>: 캐싱과 애플리케이션 프로세스가 동일한 리소스를 공유하면 리소스 경합의 위험이 있다. 캐시 사용량이 많으면 서버에 부담을 주어 특히 부하가 많은 경우 애플리케이션 성능에 영향을 줄 수 있다.</li>
+<li><strong>Limited Scalability</strong>: 공동 위치 캐시 설정은 전용 캐시 서버보다 확장성이 떨어진다. 캐시를 확장하려면 전체 서버를 업그레이드 해야 하므로 대규모 애플리케이션의 경우 비용이 많이 들거나 기술적으로 어려울 수 있다.</li>
+</ul>
+<h3 id="Cloud-Based-Caching-Solutions-e-g-Amazon-ElastiCache"><a href="#Cloud-Based-Caching-Solutions-e-g-Amazon-ElastiCache" class="headerlink" title="Cloud-Based Caching Solutions (e.g., Amazon ElastiCache)"></a><strong>Cloud-Based Caching Solutions (e.g., Amazon ElastiCache)</strong></h3><p>클라우드 기반 캐싱 서비스는 몇 분 안에 설정하고 다양한 애플리케이션 요구 사항에 맞게 조정할 수 있는 완전 관리형 캐싱 솔루션을 제공한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20241122183514223.png" alt=""></p>
+<p>이런 솔루션은 Redis 또는 Memcached를 비롯한 인기 있는 캐싱 엔진을 지원하며 엔터프라이즈급 캐싱에 적합한 기능 모음을 제공한다.</p>
+<p>이 설정의 주요 장점은 다음과 같다.</p>
+<ul>
+<li><strong>Auto-Scaling</strong>: 클라우드 캐싱 솔루션은 일반적으로 자동 확장 기능을 제공하여 수요에 따라 캐시 인프라를 자동으로 조정할 수 있다. 이런 동적 확장은 예기치 않은 트래픽이 급증 시 매우 유용하다.</li>
+<li><strong>Multi-Zone Deployment</strong>: 매니지드 클라우드 서비스는 다중 AZ 배포를 지원하여 고가용성 및 내결함성을 보장한다.</li>
+<li><strong>Simplified Management</strong>: 클라우드 제공업체가 설정, 유지관리, 패치, 모니터링을 처리하므로 개발팀은 인프라가 아닌 애플리케이션 수준의 문제에 집중할 수 있다. 또한 다른 클라우드 서비스와의 통합을 제공하므로 클라우드 네이티브 환경에서 분산 캐시를 더 쉽게 관리할 수 있다.</li>
+<li><strong>Flexible Cost Model</strong>: 클라우드 캐싱 서비스는 종량제 요금제를 사용하는 경우가 많으며, 이는 애플리케이션이 증가하는 경우 비용 효율성이 높을 수 있다. 조직은 수요에 따라 확장하거나 축소할 수 있으며, 사용한 리소스에 대해서만 비용을 지불하므로 고정 비용의 온프레미스 솔루션에 비해 이점이 있다.</li>
+</ul>
+<p>단점은 다음과 같다.</p>
+<ul>
+<li><strong>Dependency on Cloud Provider</strong>: 관리형 클라우드 서비스를 사용하면 캐시 데이터나 구성을 다른 공급업체로 마이그레이션하기가 어려울 수 있으므로 공급업체 종속성이 발생할 수 있다. 이런 종속성은 엄격한 데이터 거버넌스 정책이나 멀티 클라우드 전략을 가진 회사에서 고려해야 할 사항이다.</li>
+<li><strong>Network Costs and Latency</strong>: 데이터 검색은 빠르지만 클라우드 호스팅 캐시에 액세스하려면 여전히 네트워크 오버헤드가 발생하며, 특히 데이터 액세스 요구가 매우 높은 애플리케이션의 경우 추가적인 데이터 전송 비용과 지연 시간이 발생할 수 있다.</li>
+</ul>
+<h2 id="Caching-Strategies-in-Distributed-Systems"><a href="#Caching-Strategies-in-Distributed-Systems" class="headerlink" title="Caching Strategies in Distributed Systems"></a>Caching Strategies in Distributed Systems</h2><h3 id="Cache-Consistency-and-Synchronization-in-Write-Heavy-Applications"><a href="#Cache-Consistency-and-Synchronization-in-Write-Heavy-Applications" class="headerlink" title="Cache Consistency and Synchronization in Write-Heavy Applications"></a><strong>Cache Consistency and Synchronization in Write-Heavy Applications</strong></h3><p>캐시와 기본 데이터 소스 간의 일관성을 유지하는 것은 특히 데이터가 자주 업데이트되는 쓰기 작업량이 많은 애플리케이션에서 매우 중요한 과제다. 다음은 캐시 일관성을 보장하기 위한 몇 가지 전략이다.</p>
+<ul>
+<li><strong>Cache Invalidation:</strong> 캐시에서 오래되거나 오래된 데이터를 제거하여 다음 요청이 데이터베이스에서 새로운 데이터를 가져올 수 있도록 한다. 무효화는 시간 또는 이벤트를 기준으로 트리거할 수 있다.</li>
+<li><strong>Write-Through Consistency:</strong> Write-Through 캐싱은 캐시와 데이터베이스를 동시에 업데이트하여 일관성을 유지한다. 이 접근 방식은 지연 시간이 발생할 수 있지만 캐시된 데이터가 항상 기본 데이터 소스와 동기화되도록 보장한다.</li>
+<li><strong>Event-Based Updates:</strong> 데이터 흐름이 복잡한 애플리케이션의 경우 이벤트 기반 접근 방식을 사용하여 캐시 데이터를 동기화할 수 있다. 예를 들어 데이터베이스 업데이트 이벤트가 발생하면 해당 이벤트가 캐시를 트리거하여 영향을 받는 항목을 업데이트하거나 무효화하여 캐시를 동기화 상태로 유지할 수 있다.</li>
+<li><strong>Leasing:</strong> 분산 캐시 환경에서는 여러 노드가 동시에 동일한 데이터를 수정하려고 시도할 수 있다. 임대를 사용하면 한 번에 하나의 작업만 캐시 항목을 업데이트할 수 있으므로 충동을 방지하고 노드 간에 데이터 일관성을 유지할 수 있다.</li>
+</ul>
+<h2 id="Challenges-with-Distributed-Caching"><a href="#Challenges-with-Distributed-Caching" class="headerlink" title="Challenges with Distributed Caching"></a>Challenges with Distributed Caching</h2><p>분산 캐싱에는 여러 가지 어려움이 있다. 다음은 몇 가지 주요 과제와 이를 완화할 수 있는 전략이다.</p>
+<h3 id="Data-Consistency-Issues"><a href="#Data-Consistency-Issues" class="headerlink" title="Data Consistency Issues"></a>Data Consistency Issues</h3><p>분산 캐싱에서는 특히 캐시된 데이터를 자주 업데이트해야 하는 경우 데이터 일관성이 중요한 과제가 된다. 쓰기 빈도가 높은 애플리케이션에서는 모든 캐시 노드가 가장 최신 데이터를 보유하도록 하는 것이 복잡하다. 한 노드가 오래된 데이터를 보유하고 있는 반면 다른 노드는 업데이트된 값을 가지고 있으면 일관성 없는 애플리케이션 동작과 오류가 발생할 수 있다.</p>
+<p>이런 상황에 대한 완화 전략은 다음과 같다.</p>
+<ul>
+<li><strong>Write-Through Caching:</strong> 캐시와 기본 데이터 저장소를 동시에 업데이트하여 데이터를 동기화 상태로 유지</li>
+<li><strong>Event-Based Triggers:</strong> 이벤트를 사용하여 데이터가 변경될 때 관련 캐시 항목을 무효화하거나 업데이트하여 캐시 및 데이터베이스 업데이트를 동기화</li>
+<li><strong>Leasing:</strong> 한 번에 하나의 노드만 캐시 항목을 수정할 수 있도록 하여 쓰기 작업이 많은 환경에서 충돌 방지</li>
+</ul>
+<h3 id="Network-Partitioning"><a href="#Network-Partitioning" class="headerlink" title="Network Partitioning"></a>Network Partitioning</h3><p>네트워크 파티셔닝 또는 일시적인 네트워크 장애로 인해 캐시 노드간의 통신이 중단되어 캐시의 일부가 시스템의 나머지 부분과 격리될 수 있다. 이런 split brain 시나리오는 노드가 오래되거나 일관되지 않은 데이터로 독립적으로 작동하는 결과를 초래할 수 있다.</p>
+<p>파티션 중에 노드는 읽기 / 쓰기 요청을 독립적으로 처리하여 네트워크가 복원될 때 조정하기 어려운 서로 다른 캐시 상태를 초래할 수 있다.</p>
+<p>이 문제에 대한 완화 전략은 다음과 같다.</p>
+<ul>
+<li><strong>Partition-Aware Architectures:</strong> 파티셔닝 시 부분적인 데이터 액세스를 원활하게 처리하도록 시스템 설계</li>
+<li><strong>Quorum-Based Consensus:</strong> 데이터 상태의 충돌을 피하기 위해 파티션 중에 노드의 하위 집합만 작동할 수 있도록 하여 업데이트에 대한 합의가 필요하도록 설정</li>
+</ul>
+<h3 id="Cache-Invalidation-and-Expiration-Strategies"><a href="#Cache-Invalidation-and-Expiration-Strategies" class="headerlink" title="Cache Invalidation and Expiration Strategies"></a>Cache Invalidation and Expiration Strategies</h3><p>무효화 및 만료 전략은 특히 데이터가 자주 변경되는 애플리케이션에서 캐시된 데이터를 최신 상태로 유지하는데 필수적이다. TTL 설정은 지정된 기간이 지나면 캐시에서 데이터를 자동으로 만료하여 오래된 데이터가 무기한 지속되지 않도록 한다. 그러나 TTL이 너무 짧으면 과도한 캐시 누락이 발생할 수 있고, 너무 길면 오래된 데이터를 제공할 위험이 있으므로 적절한 TTL을 설정하는 것은 복잡할 수 있다.</p>
+<p>주요 과제는 다음과 같다.</p>
+<ul>
+<li><strong>Overhead of Frequent Invalidations:</strong> 특히 매우 동적인 시스템에서 잦은 무효화는 캐시 성능을 저하시키고 기본 데이터 저장소의 부하를 증가시킬 수 있다.</li>
+<li><strong>Complexity of Implementing Event-Based Invalidation:</strong> 특정 이벤트에 따라 정확하게 트리거되도록 무효화를 구성하면 캐시 관리 프로세스가 복잡해진다.</li>
+</ul>
+<p>복잡한 애플리케이션의 경우 수동 또는 이벤트 트리거 무효화를 사용하면 변경 사항이 발생할 때 캐시 항목이 정확하게 지워지거나 업데이트 되도록 할 수 있다.</p>
+<h3 id="Load-Balancing-and-Latency"><a href="#Load-Balancing-and-Latency" class="headerlink" title="Load Balancing and Latency"></a>Load Balancing and Latency</h3><p>분산 캐싱에서는 단일 노드에 과부하가 걸리지 않도록 여러 캐시 노드에 걸쳐 부하를 분산하는 것이 필수적이다. 특히 실시간 애플리케이션에서 노드 간에 데이터를 복제하면 지연 시간이 발생할 수 있다. 데이터 최신성을 유지하고 부하가 많은 기간 동안 지연을 방지하려면 노드 간 데이터 동기화가 빨라야 한다.</p>
+<p>특히 쓰기 작업이 많은 시스템에서 데이터 복제는 노드가 복제본을 지속적으로 업데이트하기 때문에 성능이 느려질 수 있다.</p>
+<p>이런 상황에 대한 몇 가지 완화 전략은 다음과 같다.</p>
+<ul>
+<li><strong>Consistent Hashing:</strong> 노드를 추가하거나 제거할 때 균일한 데이터 배포를 보장하고 재할당을 최소화하여 로드 밸런싱을 개선</li>
+<li><strong>Replication with Selective Sharding:</strong> 데이터를 샤드로 나누고 우선순위가 높은 데이터만 복제하면 복제 관련 지연 시간과 리소스 소비를 줄일 수 있음</li>
+<li><strong>Monitoring and Adaptive Scaling:</strong> 시스템 부하를 실시간으로 모니터링하고 캐시 노드 할당을 동적으로 조정하면 트래픽 균형을 맞추고 지연 시간을 최소화할 수 있음</li>
+</ul>
+<!-- flag of hidden posts --></div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined">Song Hayoung</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="https://songhayoung.github.io/2024/11/22/System%20Design/ByteByteGo/private/distributed-caching-the-secret-to-high-performance-applications/">https://songhayoung.github.io/2024/11/22/System%20Design/ByteByteGo/private/distributed-caching-the-secret-to-high-performance-applications/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/System-Design/">System Design</a></div><nav id="pagination"></nav><div id="gitalk-container"></div><script>var gitalk = new Gitalk({
+  clientID: '3604b61642355579f55e',
+  clientSecret: 'f552120f18ac5aee3f6297e05e97d94c0a25cd4b',
+  repo: 'SongHayoung.github.io',
+  owner: 'SongHayoung',
+  admin: 'SongHayoung',
+  id: md5(decodeURI(location.pathname)),
+  language: 'en'
+})
+gitalk.render('gitalk-container')</script></div></div><footer class="footer-bg" style="background-image: url(https://xxxx.jpg)"><div class="layout" id="footer"><div class="copyright">&copy;2020 - 2024 By Song Hayoung</div><div class="framework-info"><span>Driven - </span><a target="_blank" rel="noopener" href="http://hexo.io"><span>Hexo</span></a><span class="footer-separator">|</span><span>Theme - </span><a target="_blank" rel="noopener" href="https://github.com/Molunerfinn/hexo-theme-melody"><span>Melody</span></a></div><div class="footer_custom_text">Learning how to walk slowly to not miss important things</div><div class="busuanzi"><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><span id="busuanzi_container_page_pv"><i class="fa fa-file"></i><span id="busuanzi_value_page_pv"></span><span></span></span></div></div></footer><i class="fa fa-arrow-up" id="go-up" aria-hidden="true"></i><script src="https://cdn.jsdelivr.net/npm/animejs@latest/anime.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@latest/velocity.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-ui-pack@latest/velocity.ui.min.js"></script><script src="/js/utils.js?version=1.7.0"></script><script src="/js/fancybox.js?version=1.7.0"></script><script src="/js/sidebar.js?version=1.7.0"></script><script src="/js/copy.js?version=1.7.0"></script><script src="/js/fireworks.js?version=1.7.0"></script><script src="/js/transition.js?version=1.7.0"></script><script src="/js/scroll.js?version=1.7.0"></script><script src="/js/head.js?version=1.7.0"></script><script src="/js/search/algolia.js"></script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+    processEscapes: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  },
+  CommonHTML: {
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "HTML-CSS": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "SVG": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  }
+});
+</script><script type="text/x-mathjax-config">MathJax.Hub.Queue(function() {
+  var all = MathJax.Hub.getAllJax(), i;
+  for (i=0; i < all.length; i += 1) {
+    all[i].SourceElement().parentNode.className += ' has-jax';
+  }
+});
+</script><script src="https://cdn.jsdelivr.net/npm/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><script>if(/Android|webOS|iPhone|iPod|iPad|BlackBerry/i.test(navigator.userAgent)) {
+  $('#nav').addClass('is-mobile')
+  $('footer').addClass('is-mobile')
+  $('#top-container').addClass('is-mobile')
+}</script><div class="search-dialog" id="algolia-search"><div class="search-dialog__title" id="algolia-search-title">Algolia</div><div id="algolia-input-panel"><div id="algolia-search-input"></div></div><hr><div id="algolia-search-results"><div id="algolia-hits"></div><div id="algolia-pagination"></div><div id="algolia-stats"></div></div><span class="search-close-button"><i class="fa fa-times"></i></span></div><div class="search-mask"></div></body></html>
