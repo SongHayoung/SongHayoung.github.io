@@ -9,6 +9,14 @@
 
 
     <url>
+        <loc>https://songhayoung.github.io/2024/11/26/DayLife/hacker-cup-2024/</loc>
+        <lastmod>2024-11-25T23:53:05.000Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+
+    </url>
+
+    <url>
         <loc>https://songhayoung.github.io/2024/11/25/PS/AtCoder/abc354-e/</loc>
         <lastmod>2024-11-25T08:10:09.000Z</lastmod>
         <changefreq>weekly</changefreq>
@@ -601,7 +609,7 @@
     </url>
 
     <url>
-        <loc>https://songhayoung.github.io/2024/10/22/PS/Codeforces/div2-977-c1/</loc>
+        <loc>https://songhayoung.github.io/2024/10/22/PS/Codeforces/div2-977-c2/</loc>
         <lastmod>2024-10-22T09:09:28.000Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.6</priority>
@@ -609,7 +617,7 @@
     </url>
 
     <url>
-        <loc>https://songhayoung.github.io/2024/10/22/PS/Codeforces/div2-977-c2/</loc>
+        <loc>https://songhayoung.github.io/2024/10/22/PS/Codeforces/div2-977-c1/</loc>
         <lastmod>2024-10-22T09:09:28.000Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.6</priority>

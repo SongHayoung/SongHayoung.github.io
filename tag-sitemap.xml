@@ -3,6 +3,13 @@
 
 
     <url>
+        <loc>https://songhayoung.github.io/tags/SUMFI%E3%81%AE%E4%B8%80%E6%97%A5/</loc>
+        <lastmod>2024-11-25T23:53:05.000Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.2</priority>
+    </url>
+
+    <url>
         <loc>https://songhayoung.github.io/tags/Game-Theory/</loc>
         <lastmod>2024-11-25T08:10:09.000Z</lastmod>
         <changefreq>weekly</changefreq>
@@ -250,13 +257,6 @@
     <url>
         <loc>https://songhayoung.github.io/tags/Sieve-of-Eratosthenes/</loc>
         <lastmod>2024-10-20T05:29:04.000Z</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.2</priority>
-    </url>
-
-    <url>
-        <loc>https://songhayoung.github.io/tags/SUMFI%E3%81%AE%E4%B8%80%E6%97%A5/</loc>
-        <lastmod>2024-10-19T06:56:10.000Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
@@ -1172,14 +1172,14 @@
     </url>
 
     <url>
-        <loc>https://songhayoung.github.io/tags/Algorithm/</loc>
+        <loc>https://songhayoung.github.io/tags/CS/</loc>
         <lastmod>2022-03-04T14:18:21.000Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
     </url>
 
     <url>
-        <loc>https://songhayoung.github.io/tags/CS/</loc>
+        <loc>https://songhayoung.github.io/tags/Algorithm/</loc>
         <lastmod>2022-03-04T14:18:21.000Z</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.2</priority>
