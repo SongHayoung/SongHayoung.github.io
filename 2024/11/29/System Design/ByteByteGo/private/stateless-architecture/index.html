@@ -1,0 +1,230 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="description" content="[ByteByteGo] Stateless Architecture: The Key to Building Scalable and Resilient Systems"><meta name="keywords" content="System Design"><meta name="author" content="Song Hayoung"><meta name="copyright" content="Song Hayoung"><title>[ByteByteGo] Stateless Architecture: The Key to Building Scalable and Resilient Systems | SUMFIのBlog</title><meta name="robots" content="noindex"><link rel="shortcut icon" href="/songcon.ico"><link rel="stylesheet" href="/css/index.css?version=1.7.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@latest/css/font-awesome.min.css?version=1.7.0"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css?version=1.7.0"><meta name="format-detection" content="telephone=no"><meta http-equiv="x-dns-prefetch-control" content="on"><link rel="dns-prefetch" href="https://cdn.jsdelivr.net"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.css"><script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.js" defer></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@latest/dist/gitalk.min.js"></script><script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.10.0/js/md5.min.js"></script><link rel="dns-prefetch" href="https://www.google-analytics.com"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-169368422-1', 'auto');
+ga('send', 'pageview');</script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: {"appId":"7LZ6OJ4D6C","apiKey":"9a84e13f74ea78c3fd54512c10139c56","indexName":"git blog","hits":{"per_page":10},"languages":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}.","hits_stats":"${hits} results found in ${time} ms"}},
+  localSearch: undefined,
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  }
+} </script><meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/rss2.xml" title="SUMFIのBlog" type="application/rss+xml">
+</head><body><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar" data-display="true"><div class="toggle-sidebar-info text-center"><span data-toggle="Toggle article">Toggle site</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">Catalog</div><div class="sidebar-toc__progress"><span class="progress-notice">You've read</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Stateless-Architecture-The-Key-to-Building-Scalable-and-Resilient-Systems"><span class="toc-number">1.</span> <span class="toc-text">Stateless Architecture: The Key to Building Scalable and Resilient Systems</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#What-is-Stateless-Architecture"><span class="toc-number">2.</span> <span class="toc-text">What is Stateless Architecture</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Stateful-vs-Stateless-Approach"><span class="toc-number">2.1.</span> <span class="toc-text">Stateful vs Stateless Approach</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Core-Principles-of-Stateless-Design"><span class="toc-number">2.2.</span> <span class="toc-text">Core Principles of Stateless Design</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#The-Advantages-of-Stateless-Architecture"><span class="toc-number">3.</span> <span class="toc-text">The Advantages of Stateless Architecture</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Horizontal-Scalability"><span class="toc-number">3.1.</span> <span class="toc-text">Horizontal Scalability</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Fault-Tolerance-and-Reliability"><span class="toc-number">3.2.</span> <span class="toc-text">Fault Tolerance and Reliability</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Deployment-Flexibility"><span class="toc-number">3.3.</span> <span class="toc-text">Deployment Flexibility</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Maintenance-and-Operations"><span class="toc-number">3.4.</span> <span class="toc-text">Maintenance and Operations</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Architectural-Components-of-Stateless-Design"><span class="toc-number">4.</span> <span class="toc-text">Architectural Components of Stateless Design</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#State-Management"><span class="toc-number">4.1.</span> <span class="toc-text">State Management</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Communication-Patterns"><span class="toc-number">4.2.</span> <span class="toc-text">Communication Patterns</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Authentication-Flow"><span class="toc-number">4.3.</span> <span class="toc-text">Authentication Flow</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Migration-Strategies-Transitioning-to-Stateless-Architecture"><span class="toc-number">5.</span> <span class="toc-text">Migration Strategies: Transitioning to Stateless Architecture</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Incremental-Transition"><span class="toc-number">5.1.</span> <span class="toc-text">Incremental Transition</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Legacy-System-Integration"><span class="toc-number">5.2.</span> <span class="toc-text">Legacy System Integration</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Risk-Mitigation"><span class="toc-number">5.3.</span> <span class="toc-text">Risk Mitigation</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Challenges-with-Stateless-Services"><span class="toc-number">6.</span> <span class="toc-text">Challenges with Stateless Services</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Increased-Network-Overhead"><span class="toc-number">6.1.</span> <span class="toc-text">Increased Network Overhead</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Data-Distribution-and-Consistency"><span class="toc-number">6.2.</span> <span class="toc-text">Data Distribution and Consistency</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Operational-Complexity"><span class="toc-number">6.3.</span> <span class="toc-text">Operational Complexity</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Security-Considerations"><span class="toc-number">6.4.</span> <span class="toc-text">Security Considerations</span></a></li></ol></li></ol></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="https://avatars3.githubusercontent.com/u/37806785?s=460&amp;u=8c68d685faf7c5280cfbd736a6b1730b55fb4203&amp;v=4"></div><div class="author-info__name text-center">Song Hayoung</div><div class="author-info__description text-center"></div><div class="follow-button"><a target="_blank" rel="noopener" href="https://www.linkedin.com/in/hayoung-song-9523b61bb/">Follow Me</a></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="/archives"><span class="pull-left">Articles</span><span class="pull-right">11148</span></a><a class="author-info-articles__tags article-meta" href="/tags"><span class="pull-left">Tags</span><span class="pull-right">196</span></a><a class="author-info-articles__categories article-meta" href="/categories"><span class="pull-left">Categories</span><span class="pull-right">62</span></a></div><hr><div class="author-info-links"><div class="author-info-links__title text-center">VISITED</div><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Seoul Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Jeju Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">British Columbia Canada</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Boracay Philippines</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">三重　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">大阪　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">名古屋　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">静岡　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">札幌　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">京都　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Bangkok Thailand</a></div></div></div><div id="content-outer"><div id="top-container" style="background-image: url(https://xxxx.jpg)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="/">SUMFIのBlog</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus">   <a class="site-page" href="/">Home</a><a class="site-page" href="/archives">Archives</a><a class="site-page" href="/tags">Tags</a><a class="site-page" href="/categories">Categories</a><a class="site-page" href="/about">About</a></span><span class="pull-right"><a class="site-page social-icon search"><i class="fa fa-search"></i><span> Search</span></a></span></div><div id="post-info"><div id="post-title">[ByteByteGo] Stateless Architecture: The Key to Building Scalable and Resilient Systems</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2024-11-29</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/">System Design</a><i class="fa fa-angle-right" aria-hidden="true"></i><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/Byte-Byte-Go/">Byte Byte Go</a><div class="post-meta-wordcount"><span>Word count: </span><span class="word-count">1.5k</span><span class="post-meta__separator">|</span><span>Reading time: 9 min</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div class="article-container" id="post-content"><h2 id="Stateless-Architecture-The-Key-to-Building-Scalable-and-Resilient-Systems"><a href="#Stateless-Architecture-The-Key-to-Building-Scalable-and-Resilient-Systems" class="headerlink" title="Stateless Architecture: The Key to Building Scalable and Resilient Systems"></a>Stateless Architecture: The Key to Building Scalable and Resilient Systems</h2><span id="more"></span>
+<p>빠르게 진화하는 오늘날의 디지털 환경에서 개발자는 견고하고 안전할 뿐만 아니라 무한히 확장 가능한 애플리케이션을 구축해야 하는 끊임없는 과제에 직면해 있다. 이 과제의 핵심에는 애플리케이션 상태를 처리하는 방법이라는 근본적인 아키텍처 결정이 있다. 상태는 개인화된 디지털 경험을 가능하게 하는 모든 사용자 세션, 쇼핑 카트, 인증 토큰 등 애플리케이션의 메모리다.</p>
+<p>Stateful 아키텍처에서 Stateless 아키텍처로의 전환은 최신 시스템 설계에서 가장 중요한 변화 중 하나다. 기존의 Stateful 애플리케이션은 2000년대 초반을 지배했으며 애플리케이션 서버에서 사용자 세션과 데이터를 직접 유지 관리했다. 모든 것을 한 곳에 보관하는 이 접근 방식은 처음에는 논리적으로 보였지만 애플리케이션이 전 새계 수백만 명의 사용자에게 서비스를 제공하도록 확장되면서 상당한 문제를 야기했다.</p>
+<p>Stateful 아키텍처는 각 서버가 수천 명의 사용자에 대한 세션 정보를 유지해야 하므로 부하 분산 요구 사항이 복잡하고 서버에 장애가 발생할 경우 세션 손실 가능성이 있다. 그러나 현대의 Stateless 아키텍처는 이런 상태를 외부화하여 모든 서버가 모든 요청을 처리할 수 있으므로 확장이 획기적으로 간소화되고 안정성이 향상된다.</p>
+<p>여러 가지 복합적인 요인으로 인해 업계에서 상태 비저장 아키텍처를 채택하게 되었다.</p>
+<ul>
+<li>클라우트 컴퓨팅의 등장으로 수평적 확장이 가능해졌을 뿐만 아니라 경제적으로도 유리해졌다</li>
+<li>SOAP 기반 서비스에서 본질적으로 상태가 저장되지 않는 REST 및 GraphQL API로의 전환</li>
+<li>모놀리식 애플리케이션을 더 작고 독립적인 서비스로 분해하는 마이크로서비스 아키텍처는 이제 예외가 아닌 표준이 되었다. 이런 서비스는 독립성과 확장성을 유지하려면 상태 저장소가 없어야 한다.</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20241129213051825.png" alt=""></p>
+<h2 id="What-is-Stateless-Architecture"><a href="#What-is-Stateless-Architecture" class="headerlink" title="What is Stateless Architecture"></a>What is Stateless Architecture</h2><p>Stateless 아키텍처는 최신 애플리케이션이 데이터와 사용자 상호 작용을 처리하는 방식에 근본적인 변화를 의미한다. 기존의 상태 저장 시스템과 달리 상태 비저장 서비스는 요청 사이에 서버 측 상태를 유지하지 않으므로 보다 유연하고 확장 가능한 애플리케이션을 만들 수 있다.</p>
+<p>상태 비저장 아키텍처를 이해하기 위해 레스토랑 시나리오를 예로 들어보자.</p>
+<h3 id="Stateful-vs-Stateless-Approach"><a href="#Stateful-vs-Stateless-Approach" class="headerlink" title="Stateful vs Stateless Approach"></a>Stateful vs Stateless Approach</h3><p>상태 저장 접근 방식에서는 전체 주문 정보를 메모장에 보관하는 전담 웨이터가 한명 있다. 이 웨이터를 사용할 수 없게 되면 다른 웨이터는 특정 사용자 세션을 유지하는 서버와 마찬가지로 주문에 대한 컨텍스트가 없다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20241129213248876.png" alt=""></p>
+<p>반면 상태 비저장 접근 방식은 모든 웨이터가 주문 정보를 중앙 집중식 시스템에서 공유하고 모든 웨이터가 중앙 시스템에 액세스하여 요청을 처리하는 방식이다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20241129213326625.png" alt=""></p>
+<p>상태 비저장 아키텍처의 기술적 구현을 위해서는 각 요청이 자체적으로 포함되어야 하며 처리에 필요한 모든 정보를 포함해야 한다. 상태 비저장 시스템은 세션 데이터를 서버 메모리에 저장하는 대신 외부 데이터베이스나 캐시를 활용한다.</p>
+<p>사용자 인증은 서버 세션이 아닌 토큰을 통해 처리되며 장바구니 콘텐츠와 같은 중요한 데이터는 모든 서버에서 액세스할 수 있는 분산 데이터베이스에 저장된다.</p>
+<h3 id="Core-Principles-of-Stateless-Design"><a href="#Core-Principles-of-Stateless-Design" class="headerlink" title="Core Principles of Stateless Design"></a>Core Principles of Stateless Design</h3><p>상태 비저장 아키텍처의 기반은 최신 분산 시스템의 확장성, 안정성, 유지보수성을 보장하는 몇 가지 핵심 원칙에 있다.</p>
+<ul>
+<li><strong>Separation of State from Application Logic:</strong> 상태 비저장 설계에서 애플리케이션 서버는 클라이언트 컨텍스트를 유지하지 않고 요청을 처리하는 순수한 계산 단위로 가능하다.</li>
+<li><strong>Request Independency and Idempotency:</strong> 상태 비저장 시스템의 각 요청은 독립적으로 처리될 수 있어야 한다. 여러 개의 동일한 요청이 동일한 결과를 생성하도록 멱등한 API를 설계하는 것이 중요하다.</li>
+<li><strong>Data Consistency Models:</strong> 상태 비저장 아키텍처는 데이터 일관성 패턴을 신중하게 고려해야 한다. 예를 들어, 분산 상태 저장소에 대한 최종 일관성 모델을 구현하는 것이다. 또한 모든 서비스 인스턴스에서 액세스할 수 있는 중앙 집중식 스토리지 시스템이 필요하다.</li>
+</ul>
+<h2 id="The-Advantages-of-Stateless-Architecture"><a href="#The-Advantages-of-Stateless-Architecture" class="headerlink" title="The Advantages of Stateless Architecture"></a>The Advantages of Stateless Architecture</h2><h3 id="Horizontal-Scalability"><a href="#Horizontal-Scalability" class="headerlink" title="Horizontal Scalability"></a>Horizontal Scalability</h3><p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20241129213651972.png" alt=""></p>
+<ul>
+<li><p><strong>Traditional Stateful Approach:</strong></p>
+<ul>
+<li>각 서버는 특정 사용자 세션을 유지한다.</li>
+<li>부하 분산 장치는 특정 사용자의 모든 요청을 동일한 서버로 라우팅하기 위해 고정 세션을 사용해야 한다.</li>
+<li>사용자가 특정 서버에 묶여 있기 때문에 새 서버는 부하를 효과적으로 공유할 수 없다.</li>
+</ul>
+</li>
+<li><p><strong>Stateless Solution:</strong></p>
+<ul>
+<li>모든 서버가 모든 요청을 처리할 수 있다.</li>
+<li>상태 정보는 분산 데이터베이스나 Redis와 같은 캐시에 저장된다.</li>
+<li>새로운 서버를 원활하게 추가하여 트래픽 증가를 처리할 수 있다.</li>
+</ul>
+</li>
+</ul>
+<p>상태 비저장 접근 방식을 사용하면 사용자 세션 선호도의 제약 없이 수요에 따라 서버를 추가하거나 제거하여 시스템을 동적으로 확장할 수 있다.</p>
+<h3 id="Fault-Tolerance-and-Reliability"><a href="#Fault-Tolerance-and-Reliability" class="headerlink" title="Fault Tolerance and Reliability"></a>Fault Tolerance and Reliability</h3><p>상태 비저장 아키텍처는 시스템 안정성을 크게 향상시킨다. 상태 저장 애플리케이션에서는 서버에 장애가 발생하면 해당 서버의 모든 사용자 세션이 손실된다. 사용자가 갑자기 로그아웃되거나 장바구니 데이터가 손실될 수 있다. 이와는 대조적으로 상태 비저장 설계는 이를 보장한다.</p>
+<ul>
+<li>사용자 세션에 대한 단일 장애 지점 없음</li>
+<li>다른 서버로의 원활한 fail over</li>
+<li>부분적인 시스템 장애 시에도 일관된 사용자 경험 제공</li>
+</ul>
+<p>상태 비저장 아키텍처는 개별 서버에서 상태를 분리함으로써 내결함성을 향상시키고 서버 장애 발생 시에도 중단 없는 서비스를 보장한다.</p>
+<h3 id="Deployment-Flexibility"><a href="#Deployment-Flexibility" class="headerlink" title="Deployment Flexibility"></a>Deployment Flexibility</h3><ul>
+<li><strong>Rolling Updates:</strong> 새 버전을 서버 제품군 전체에 점진적으로 배포할 수 있으므로 서비스 중단 없이 상태 비저장 서비스를 업데이트 할 수 있다.</li>
+<li><strong>Container Orchestration:</strong> 상태 비저장 아키텍처는 최신 클라우드 인프라와 잘 어울리므로 클라우드 네이티브 서비스 및 자동 확장 기능과 원활하게 통합할 수 있다.</li>
+<li><strong>Cloud Compatibility:</strong> 상태 비저장 아키텍처는 최신 클라우드 인프라와 잘 어울리므로 클라우드 네이티브 서비스 및 자동 확장 기능과 원활하게 통합할 수 있다.</li>
+</ul>
+<p>상태 비저장 서비스의 배포 유연성은 새로운 기능 출시, 패치 적용, 애플리케이션 수명 주기 관리 프로세스를 간소화한다.</p>
+<h3 id="Maintenance-and-Operations"><a href="#Maintenance-and-Operations" class="headerlink" title="Maintenance and Operations"></a>Maintenance and Operations</h3><ul>
+<li><strong>Debugging and Troubleshooting:</strong> 상태 비저장 서비스는 복잡한 상태 상호 작용을 추적할 필요 없이 각 요청을 독립적으로 처리할 수 있으므로 디버깅 및 문제 해결이 더 쉽다.</li>
+<li><strong>Server Maintenance:</strong> 상태 비저장 서버는 중요한 상태 정보를 보유하지 않기 대문에 전체 시스템에 영향을 주지 않고 쉽게 교체하거나 업그레이드 할 수 있다.</li>
+<li><strong>Predictable Scaling:</strong> 상태 비저장 아키텍처는 잘 정의된 메트릭과 리소스 사용 패턴에 따라 시스템을 확장할 수 있으므로 보다 예측 가능한 확장 동작을 지원한다.</li>
+<li><strong>Resource Utilization:</strong> 상태 비저장 서비스를 사용 가능한 리소스에 효율적으로 분산할 수 있어 전반적인 시스템 활용도와 비용 최적화를 개선할 수 있다.</li>
+</ul>
+<h2 id="Architectural-Components-of-Stateless-Design"><a href="#Architectural-Components-of-Stateless-Design" class="headerlink" title="Architectural Components of Stateless Design"></a>Architectural Components of Stateless Design</h2><h3 id="State-Management"><a href="#State-Management" class="headerlink" title="State Management"></a>State Management</h3><p>상태 비저장 아키텍처에서는 상태 관리가 애플리케이션 서버에서 분산되므로 스토리지 및 액세스 패턴에 대한 신중한 접근 방식이 필요하다.</p>
+<ul>
+<li><strong>External State Storage:</strong><ul>
+<li>정형 데이터는 ACID 호환 트랜잭션을 위해 관계형 데이터베이스에 저장된다.</li>
+<li>비정형 데이터는 유연성을 위해 NoSQL 데이터베이스와 키-값 저장소를 활용한다.</li>
+<li>대용량 개체와 파일은 S3와 같은 full-text 스토리지 솔루션을 통해 관리된다.</li>
+</ul>
+</li>
+<li><strong>Caching Strategies:</strong><ul>
+<li>Redis와 같은 분산 캐시는 고성능 상태 저장소 역할을 한다.</li>
+<li>세션 데이터와 인증 토큰은 빠른 액세스를 위해 캐시된다.</li>
+<li>다계층 캐싱은 로컬 및 분산 캐싱 패턴을 모두 구현한다.</li>
+</ul>
+</li>
+<li><strong>Data Synchronization:</strong><ul>
+<li>상태 변경 사항은 여러 스토리지 인스턴스에 걸쳐 복제된다.</li>
+<li>최종 일관성 모델은 분산 상태 업데이트를 처리한다.</li>
+<li>충돌 해결 메커니즘은 동시 수정을 관리한다.</li>
+</ul>
+</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20241129215332027.png" alt=""></p>
+<h3 id="Communication-Patterns"><a href="#Communication-Patterns" class="headerlink" title="Communication Patterns"></a>Communication Patterns</h3><ul>
+<li><strong>RESTful Implementation:</strong><ul>
+<li>API는 무권련적이고 상태 비저장형으로 설계되었다.</li>
+<li>각 요청에는 처리에 필요한 모든 컨텍스트가 포함되어 있다.</li>
+<li>리소스는 표준 HTTP 메서드를 통해 조작된다.</li>
+</ul>
+</li>
+<li><strong>Event-Driven Architecture:</strong><ul>
+<li>서비스는 직접 호출이 아닌 이벤트를 통해 통신한다.</li>
+<li>메세지 큐는 비동기 상태 업데이트를 처리한다.</li>
+<li>Pub / Sub 패턴은 컴포넌트 간의 느슨한 결합을 가능하게 한다.</li>
+</ul>
+</li>
+</ul>
+<p>이런 통신 패턴은 상태 비저장 아키텍처에서 느슨한 결합, 확장성 및 내결함성을 촉진한다.</p>
+<h3 id="Authentication-Flow"><a href="#Authentication-Flow" class="headerlink" title="Authentication Flow"></a>Authentication Flow</h3><ul>
+<li><strong>Token-Based Authentication:</strong><ul>
+<li>JWT는 서비스 간에 사용자 컨텍스트와 클레임을 전달한다.</li>
+<li>암호로 서명된 토큰은 보안과 무결성을 보장한다.</li>
+<li>토큰은 상태가 저장되지 않으며 모든 서비스에서 유효성을 검사할 수 있다.</li>
+</ul>
+</li>
+<li><strong>Stateless Sessions:</strong><ul>
+<li>세션 데이터는 분산 캐시 또는 데이터베이스에 저장된다.</li>
+<li>서비스는 필요에 따라 공유 스토리지에서 세션 정보를 검색한다.</li>
+<li>상태 비저장 세션은 수평적으로 확장성과 내결함성을 지원한다.</li>
+</ul>
+</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20241129215617183.png" alt=""></p>
+<h2 id="Migration-Strategies-Transitioning-to-Stateless-Architecture"><a href="#Migration-Strategies-Transitioning-to-Stateless-Architecture" class="headerlink" title="Migration Strategies: Transitioning to Stateless Architecture"></a>Migration Strategies: Transitioning to Stateless Architecture</h2><h3 id="Incremental-Transition"><a href="#Incremental-Transition" class="headerlink" title="Incremental Transition"></a>Incremental Transition</h3><ul>
+<li><strong>Phase-Based Migration:</strong><ul>
+<li>최소한의 종속성이 있는 중요하지 않은 서비스부터 시작하라</li>
+<li>이전 버전과의 호환성을 유지하면서 사용자 대면 구성 요소를 점진적으로 이동하라</li>
+<li>기존의 상태 저장 시스템을 유지하면서 상태 저장 없는 패턴을 사용하여 새로운 기능을 구현하라</li>
+</ul>
+</li>
+<li><strong>Hybrid Architecture Patterns:</strong><ul>
+<li>전환 과정에서 조직은 상태 저장 및 상태 비저장 구성 요소를 유지해야 하는 경우가 많다</li>
+<li>API 게이트웨이를 사용해 기존 시스템과 새 시스템 간에 트래픽을 라우팅하라</li>
+<li>두 아키텍처를 모두 처리하는 데 따르는 복잡성을 추상화하는 파사드 서비스를 구현하라</li>
+<li>상태 저장 서비스와 비저장 서비스 모두 액세스할 수 있는 공유 상태 저장소를 유지하라</li>
+</ul>
+</li>
+</ul>
+<p>이런 점진적 접근 방식을 통해 제어 및 관리가 가능한 전환이 가능하므로 기존 시스템에 대한 중단을 최소화할 수 있다.</p>
+<h3 id="Legacy-System-Integration"><a href="#Legacy-System-Integration" class="headerlink" title="Legacy System Integration"></a>Legacy System Integration</h3><ul>
+<li><strong>Integration Strategies:</strong><ul>
+<li>어댑터 서비스를 구현하여 상태 저장 및 상태 비저장 구성 요소 간에 전환 진행</li>
+<li>이벤트 중심 패턴을 사용해 레거시 시스템과 새로운 서비스를 분리</li>
+<li>전환 기간 동안 임시 데이터 동기화 메커니즘 유지</li>
+</ul>
+</li>
+<li><strong>Backward Compatibility:</strong><ul>
+<li>새로운 상태 비저장 서비스가 기존 상태 저장 구성 요소와 원활하게 상호작용 할 수 있는지 확인</li>
+<li>종속 시스템에 미치는 영향을 최소화하기 위해 이전 버전과 호환되는 API와 데이터 계약을 제공</li>
+</ul>
+</li>
+</ul>
+<h3 id="Risk-Mitigation"><a href="#Risk-Mitigation" class="headerlink" title="Risk Mitigation"></a>Risk Mitigation</h3><ul>
+<li><strong>Feature Flags:</strong><ul>
+<li>기능 플래그를 구현해 새로운 상태 비저장 구성 요소의 롤아웃을 제어</li>
+<li>프로덕션 환경에서 상태 비저장 서비스를 점진적으로 배포하고 테스트할 수 있도록 함</li>
+<li>문제가 발생하면 상태 저장 시스템으로 신속하게 롤백할 수 있음</li>
+</ul>
+</li>
+<li><strong>Fallback Mechanisms:</strong><ul>
+<li>심각한 장애 발생 시 상태 저장 시스템으로 되돌아갈 수 있는 폴백 메커니즘 유지</li>
+<li>시스템이 장애를 원활하게 처리하고 전환 중에 데이터 일관성을 유지할 수 있는지 확인</li>
+</ul>
+</li>
+</ul>
+<h2 id="Challenges-with-Stateless-Services"><a href="#Challenges-with-Stateless-Services" class="headerlink" title="Challenges with Stateless Services"></a>Challenges with Stateless Services</h2><h3 id="Increased-Network-Overhead"><a href="#Increased-Network-Overhead" class="headerlink" title="Increased Network Overhead"></a>Increased Network Overhead</h3><ul>
+<li><strong>Context Inclusion:</strong> 상태 비저장 시스템의 각 요청에는 필요한 모든 데이터와 컨텍스트가 포함되어야 하므로 페이로드 크기가 커짐</li>
+<li><strong>Frequent Data Retrieval:</strong> 로컬 상태가 없으면 서비스가 외부 스토리지에서 데이터를 자주 검색해야 하므로 네트워크 트래픽이 증가</li>
+</ul>
+<p>이런 네트워크 오버헤드 증가는 특히 트래픽이 많은 시나리오에서 성능과 지연 시간에 영향을 미칠 수 있다.</p>
+<h3 id="Data-Distribution-and-Consistency"><a href="#Data-Distribution-and-Consistency" class="headerlink" title="Data Distribution and Consistency"></a>Data Distribution and Consistency</h3><ul>
+<li><strong>Data Replication:</strong> 복제된 스토리지 시스템에서 데이터 일관성을 보장하는 것은 복잡할 수 있음</li>
+<li><strong>Partitioning:</strong> 성능을 유지하면서 분산 스토리지 간에 데이터를 효율적으로 파티셔닝 하는 것은 어려움</li>
+<li><strong>Eventual Consistency:</strong> 분산 시스템에서 최종 일관성 모델을 처리하려면 신중한 설계와 오류 처리가 필요</li>
+<li><strong>Latency:</strong> 외부 스토리지에 액세스하면 로컬 상태 액세스에 비해 지연 시간이 추가로 발생</li>
+</ul>
+<h3 id="Operational-Complexity"><a href="#Operational-Complexity" class="headerlink" title="Operational Complexity"></a>Operational Complexity</h3><ul>
+<li><strong>Monitoring:</strong> 구성 요소와 상호 작용이 많아질수록 더 나은 모니터링 솔루션이 필요</li>
+<li><strong>Debugging:</strong> 분산된 서비스 및 스토리지 시스템 전반에서 문제를 추적하기가 더 어려워질 수 있음</li>
+<li><strong>Infrastructure Costs:</strong> 상태 비저장 아키텍처는 분산 스토리지 및 캐싱을 처리하기 위해 추가 인프라가 필요할 수 있음</li>
+<li><strong>Data Storage Costs:</strong>  외부 시스템에 상태를 저장하면 데이터 저장 비용이 높아질 수 있음</li>
+</ul>
+<h3 id="Security-Considerations"><a href="#Security-Considerations" class="headerlink" title="Security Considerations"></a>Security Considerations</h3><ul>
+<li><strong>Token Integrity:</strong> 상태 비저장 시스템에서는 인증 토큰의 무결성을 유지하는 것이 매우 중요</li>
+<li><strong>Secure Communication:</strong> 서비스와 스토리지 시스템 간의 안전한 통신 채널을 확보하는 것이 필수</li>
+<li><strong>Data Protection:</strong> 분산 스토리지에서 전송 중이거나 미사용 중인 민감한 데이터를 보호하려면 신중한 보안 조치 필요</li>
+</ul>
+<!-- flag of hidden posts --></div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined">Song Hayoung</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="https://songhayoung.github.io/2024/11/29/System%20Design/ByteByteGo/private/stateless-architecture/">https://songhayoung.github.io/2024/11/29/System%20Design/ByteByteGo/private/stateless-architecture/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/System-Design/">System Design</a></div><nav id="pagination"></nav><div id="gitalk-container"></div><script>var gitalk = new Gitalk({
+  clientID: '3604b61642355579f55e',
+  clientSecret: 'f552120f18ac5aee3f6297e05e97d94c0a25cd4b',
+  repo: 'SongHayoung.github.io',
+  owner: 'SongHayoung',
+  admin: 'SongHayoung',
+  id: md5(decodeURI(location.pathname)),
+  language: 'en'
+})
+gitalk.render('gitalk-container')</script></div></div><footer class="footer-bg" style="background-image: url(https://xxxx.jpg)"><div class="layout" id="footer"><div class="copyright">&copy;2020 - 2024 By Song Hayoung</div><div class="framework-info"><span>Driven - </span><a target="_blank" rel="noopener" href="http://hexo.io"><span>Hexo</span></a><span class="footer-separator">|</span><span>Theme - </span><a target="_blank" rel="noopener" href="https://github.com/Molunerfinn/hexo-theme-melody"><span>Melody</span></a></div><div class="footer_custom_text">Learning how to walk slowly to not miss important things</div><div class="busuanzi"><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><span id="busuanzi_container_page_pv"><i class="fa fa-file"></i><span id="busuanzi_value_page_pv"></span><span></span></span></div></div></footer><i class="fa fa-arrow-up" id="go-up" aria-hidden="true"></i><script src="https://cdn.jsdelivr.net/npm/animejs@latest/anime.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@latest/velocity.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-ui-pack@latest/velocity.ui.min.js"></script><script src="/js/utils.js?version=1.7.0"></script><script src="/js/fancybox.js?version=1.7.0"></script><script src="/js/sidebar.js?version=1.7.0"></script><script src="/js/copy.js?version=1.7.0"></script><script src="/js/fireworks.js?version=1.7.0"></script><script src="/js/transition.js?version=1.7.0"></script><script src="/js/scroll.js?version=1.7.0"></script><script src="/js/head.js?version=1.7.0"></script><script src="/js/search/algolia.js"></script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+    processEscapes: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  },
+  CommonHTML: {
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "HTML-CSS": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "SVG": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  }
+});
+</script><script type="text/x-mathjax-config">MathJax.Hub.Queue(function() {
+  var all = MathJax.Hub.getAllJax(), i;
+  for (i=0; i < all.length; i += 1) {
+    all[i].SourceElement().parentNode.className += ' has-jax';
+  }
+});
+</script><script src="https://cdn.jsdelivr.net/npm/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><script>if(/Android|webOS|iPhone|iPod|iPad|BlackBerry/i.test(navigator.userAgent)) {
+  $('#nav').addClass('is-mobile')
+  $('footer').addClass('is-mobile')
+  $('#top-container').addClass('is-mobile')
+}</script><div class="search-dialog" id="algolia-search"><div class="search-dialog__title" id="algolia-search-title">Algolia</div><div id="algolia-input-panel"><div id="algolia-search-input"></div></div><hr><div id="algolia-search-results"><div id="algolia-hits"></div><div id="algolia-pagination"></div><div id="algolia-stats"></div></div><span class="search-close-button"><i class="fa fa-times"></i></span></div><div class="search-mask"></div></body></html>
