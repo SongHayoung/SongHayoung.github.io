@@ -1,0 +1,293 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="description" content="[ByteByteGo] Mastering Modern Authentication: Cookies, Sessions, JWT, and PASETO"><meta name="keywords" content="System Design"><meta name="author" content="Song Hayoung"><meta name="copyright" content="Song Hayoung"><title>[ByteByteGo] Mastering Modern Authentication: Cookies, Sessions, JWT, and PASETO | SUMFIのBlog</title><meta name="robots" content="noindex"><link rel="shortcut icon" href="/songcon.ico"><link rel="stylesheet" href="/css/index.css?version=1.7.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@latest/css/font-awesome.min.css?version=1.7.0"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css?version=1.7.0"><meta name="format-detection" content="telephone=no"><meta http-equiv="x-dns-prefetch-control" content="on"><link rel="dns-prefetch" href="https://cdn.jsdelivr.net"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.css"><script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.js" defer></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@latest/dist/gitalk.min.js"></script><script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.10.0/js/md5.min.js"></script><link rel="dns-prefetch" href="https://www.google-analytics.com"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-169368422-1', 'auto');
+ga('send', 'pageview');</script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: {"appId":"7LZ6OJ4D6C","apiKey":"9a84e13f74ea78c3fd54512c10139c56","indexName":"git blog","hits":{"per_page":10},"languages":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}.","hits_stats":"${hits} results found in ${time} ms"}},
+  localSearch: undefined,
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  }
+} </script><meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/rss2.xml" title="SUMFIのBlog" type="application/rss+xml">
+</head><body><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar" data-display="true"><div class="toggle-sidebar-info text-center"><span data-toggle="Toggle article">Toggle site</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">Catalog</div><div class="sidebar-toc__progress"><span class="progress-notice">You've read</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Mastering-Modern-Authentication-Cookies-Sessions-JWT-and-PASETO"><span class="toc-number">1.</span> <span class="toc-text">Mastering Modern Authentication: Cookies, Sessions, JWT, and PASETO</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Fundamentals-of-Authentication"><span class="toc-number">2.</span> <span class="toc-text">Fundamentals of Authentication</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Authentication-vs-Authorization"><span class="toc-number">2.1.</span> <span class="toc-text">Authentication vs Authorization</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Authentication-with-Cookies-and-Sessions"><span class="toc-number">3.</span> <span class="toc-text">Authentication with Cookies and Sessions</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Cookies"><span class="toc-number">3.1.</span> <span class="toc-text">Cookies</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Advantages-of-Using-Cookies"><span class="toc-number">3.1.1.</span> <span class="toc-text">Advantages of Using Cookies</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Challenges-of-Using-Cookies"><span class="toc-number">3.1.2.</span> <span class="toc-text">Challenges of Using Cookies</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Best-Practices-for-Secure-Cookie-Handling"><span class="toc-number">3.1.3.</span> <span class="toc-text">Best Practices for Secure Cookie Handling</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Sessions"><span class="toc-number">3.2.</span> <span class="toc-text">Sessions</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#How-Sessions-Work-in-Server-Side-Authentication"><span class="toc-number">3.2.1.</span> <span class="toc-text">How Sessions Work in Server-Side Authentication?</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Relationship-Between-Sessions-and-Cookies"><span class="toc-number">3.2.2.</span> <span class="toc-text">Relationship Between Sessions and Cookies</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Advantages-of-Using-Sessions"><span class="toc-number">3.2.3.</span> <span class="toc-text">Advantages of Using Sessions</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Challenges-of-Using-Sessions"><span class="toc-number">3.2.4.</span> <span class="toc-text">Challenges of Using Sessions</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Authentication-with-JWTs"><span class="toc-number">4.</span> <span class="toc-text">Authentication with JWTs</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Structure-of-a-JWT"><span class="toc-number">4.1.</span> <span class="toc-text">Structure of a JWT</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#How-JWT-Works-In-Authentication"><span class="toc-number">4.2.</span> <span class="toc-text">How JWT Works In Authentication</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#The-Stateless-Nature-of-JWT"><span class="toc-number">4.3.</span> <span class="toc-text">The Stateless Nature of JWT</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Advantages-of-JWT"><span class="toc-number">4.4.</span> <span class="toc-text">Advantages of JWT</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Disadvantages-of-JWT"><span class="toc-number">4.5.</span> <span class="toc-text">Disadvantages of JWT</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#PASETO-A-Secure-Alternative-to-JWT"><span class="toc-number">5.</span> <span class="toc-text">PASETO: A Secure Alternative to JWT</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#How-PASETO-Differs-from-JWT"><span class="toc-number">5.1.</span> <span class="toc-text">How PASETO Differs from JWT?</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Structure-of-a-PASETO"><span class="toc-number">5.2.</span> <span class="toc-text">Structure of a PASETO</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Local-PASETO-vs-Public-PASETO"><span class="toc-number">5.3.</span> <span class="toc-text">Local PASETO vs Public PASETO</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Advantages-of-PASETO"><span class="toc-number">5.4.</span> <span class="toc-text">Advantages of PASETO</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Challenges-of-PASETO"><span class="toc-number">5.5.</span> <span class="toc-text">Challenges of PASETO</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Comparative-Analysis"><span class="toc-number">6.</span> <span class="toc-text">Comparative Analysis</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Best-Practices-for-Implementing-Secure-Authentication"><span class="toc-number">7.</span> <span class="toc-text">Best Practices for Implementing Secure Authentication</span></a></li></ol></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="https://avatars3.githubusercontent.com/u/37806785?s=460&amp;u=8c68d685faf7c5280cfbd736a6b1730b55fb4203&amp;v=4"></div><div class="author-info__name text-center">Song Hayoung</div><div class="author-info__description text-center"></div><div class="follow-button"><a target="_blank" rel="noopener" href="https://www.linkedin.com/in/hayoung-song-9523b61bb/">Follow Me</a></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="/archives"><span class="pull-left">Articles</span><span class="pull-right">11203</span></a><a class="author-info-articles__tags article-meta" href="/tags"><span class="pull-left">Tags</span><span class="pull-right">196</span></a><a class="author-info-articles__categories article-meta" href="/categories"><span class="pull-left">Categories</span><span class="pull-right">62</span></a></div><hr><div class="author-info-links"><div class="author-info-links__title text-center">VISITED</div><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Seoul Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Jeju Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">British Columbia Canada</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Boracay Philippines</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">三重　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">大阪　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">名古屋　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">静岡　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">札幌　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">京都　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Bangkok Thailand</a></div></div></div><div id="content-outer"><div id="top-container" style="background-image: url(https://xxxx.jpg)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="/">SUMFIのBlog</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus">   <a class="site-page" href="/">Home</a><a class="site-page" href="/archives">Archives</a><a class="site-page" href="/tags">Tags</a><a class="site-page" href="/categories">Categories</a><a class="site-page" href="/about">About</a></span><span class="pull-right"><a class="site-page social-icon search"><i class="fa fa-search"></i><span> Search</span></a></span></div><div id="post-info"><div id="post-title">[ByteByteGo] Mastering Modern Authentication: Cookies, Sessions, JWT, and PASETO</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2024-12-06</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/">System Design</a><i class="fa fa-angle-right" aria-hidden="true"></i><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/Byte-Byte-Go/">Byte Byte Go</a><div class="post-meta-wordcount"><span>Word count: </span><span class="word-count">2.3k</span><span class="post-meta__separator">|</span><span>Reading time: 14 min</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div class="article-container" id="post-content"><h2 id="Mastering-Modern-Authentication-Cookies-Sessions-JWT-and-PASETO"><a href="#Mastering-Modern-Authentication-Cookies-Sessions-JWT-and-PASETO" class="headerlink" title="Mastering Modern Authentication: Cookies, Sessions, JWT, and PASETO"></a>Mastering Modern Authentication: Cookies, Sessions, JWT, and PASETO</h2><span id="more"></span>
+<p>인증은 애플리케이션과 애플리케이션이 처리하는 민감한 데이터의 보안을 보장하는 첫 번째 방어선 역할을 한다. 사용자의 신원을 확인하고 리소스에 대한 액세스를 보호하려면 효과적인 인증 메커니즘이 필요하다. 인증은 권한이 부여된 사용자만 애플리케이션 내의 특정 데이터나 작업에 액세스할 수 있도로 한다. 적절한 인증이 없으면 애플리케이션은 무단 액세스, 데이터 유출, 악의적인 공격에 취약해져 심각한 금전적 손실, 평판 손상, 개인정보 침해가 발생할 수 있다.</p>
+<p>인증은 보안 외에도 사용자 경험에서 중요한 역할을 한다. 애플리케이션은 사용자를 효과적으로 식별함으로써 개인화된 서비스를 제공하고, 사용자 선호도를 기억하며, 여러 플랫폼에서 SSO와 같은 기능을 사용할 수 있다. 위협이 진화함에 따라 안전하고 효율적인 인증을 구현하는 것은 그 어느 때보다 어려운 과제다. 개발자는 다음과 같은 상충되는 우선순위 사이에서 고민해야 한다.</p>
+<ul>
+<li><strong>Security:</strong> 세션 하이재킹, 토큰 도용, 리플레이 공격과 같은 다양한 공격 유형으로부터 보호한다.</li>
+<li><strong>Scalability:</strong> 성능 저하 없이 수백만 명의 사용자를 지원한다.</li>
+<li><strong>User Experience:</strong> 강력한 보안 조치를 적용하면서 사용 편의성을 유지해야 한다.</li>
+</ul>
+<p>이런 과제를 해결하기 위해 개발자는 다양한 인증 메커니즘에 의존한다. 이 글에서는 최신 애플리케이션에서 사용되는 여러 인증 메커니즘을 살펴보고 각 메커니즘의 장단점에 대해 알아본다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20241206223002370.png" alt=""></p>
+<h2 id="Fundamentals-of-Authentication"><a href="#Fundamentals-of-Authentication" class="headerlink" title="Fundamentals of Authentication"></a>Fundamentals of Authentication</h2><p>인증은 애플리케이션에 액세스하려는 사용자, 디바이스 또는 시스템의 신원을 확인하는 프로세스다. 간단히 말해, 애플리케이션이 사람이나 시스템이 자신이 주장하는 사람인지 확인하는 방법이다. 여기에는 사용자 이름, 비밀번호, 생체 인식 데이터 또는 토큰과 같은 자격 증명의 유효성 검사가 포함되는 경우가 많다. 예를 들어:</p>
+<ul>
+<li>비밀번호를 사용해 웹사이트에 로그인하면 애플리케이션이 입력한 정보를 저장된 자격 증명과 비교하여 신원을 확인한다.</li>
+<li>API 기반 시스템에서는 애플리케이션이 토큰을 사용하여 호출하는 서비스가 백엔드와 상호 작용할 수 있는 권한이 있는지 확인할 수 있다.</li>
+</ul>
+<h3 id="Authentication-vs-Authorization"><a href="#Authentication-vs-Authorization" class="headerlink" title="Authentication vs Authorization"></a>Authentication vs Authorization</h3><ul>
+<li><strong>Authentication:</strong> “당신은 누구입니까” 라는 질문에 답하고 신원을 확인하는데 중점을 둔다.</li>
+<li><strong>Authorization:</strong> 인증된 사용자에게 부여된 권한 또는 액세스 수준을 결정하여 “무엇을 할 수 있나요”라는 질문에 답한다.</li>
+</ul>
+<p>예를 들어 인증은 사용자가 전자상거래 플랫폼에 등록된 사용자임을 확인한다. 권한에 따라 주문 내역을 보거나 관리자로서 재고를 확인할 수 있는지 여부가 결정된다.</p>
+<p>즉, 인증이 신원을 설정하는 반면 권한 부여는 해당 신원을 기반으로 액세스 제어를 시행한다.</p>
+<h2 id="Authentication-with-Cookies-and-Sessions"><a href="#Authentication-with-Cookies-and-Sessions" class="headerlink" title="Authentication with Cookies and Sessions"></a>Authentication with Cookies and Sessions</h2><h3 id="Cookies"><a href="#Cookies" class="headerlink" title="Cookies"></a>Cookies</h3><p>쿠키는 웹 서버가 클라이언트의 브라우저에 저장하는 작은 데이터 조각이다. 쿠키는 웹 애플리케이션이 여러 요청에 걸쳐 정보를 기억할 수 있게 함으로써 상태가 없는 HTTP 통신에서 상태를 유지하는데 핵심적인 역할을 한다.</p>
+<p>쿠키는 웹 서버가 요청 사이에 지속되는 데이터를 저장할 수 있게 해주므로 다음과 같은 다양한 용도로 유용하게 사용된다.</p>
+<ul>
+<li><strong>Session Management:</strong> 세션 ID로 로그인한 사용자를 추적</li>
+<li><strong>Personalization:</strong> 사용자 기본 설정 또는 설정 저장</li>
+<li><strong>Analytics and Tracking:</strong> 분석 또는 타겟 광고를 위한 사용자 행동 기록</li>
+</ul>
+<p>인증에서는 쿠키는 일반적으로 사용자의 신원을 확인하는 세션 토큰 또는 식별자를 저장하는데 사용된다. 이 과정은 일반적으로 두 부분으로 나뉜다.</p>
+<ul>
+<li><strong>User Login:</strong><ul>
+<li>사용자가 자격 증명을 제공한다.</li>
+<li>서버가 자격 증명을 인증하고 세션 ID 또는 토큰을 생성한다.</li>
+<li>이 세션 ID는 브라우저로 전송되어 쿠키에 저장된다.</li>
+</ul>
+</li>
+<li><strong>Subsequent Requests:</strong><ul>
+<li>브라우저는 각 HTTP 요청의 쿠키 헤더에 쿠키를 자동으로 포함한다.</li>
+<li>서버는 쿠키에서 세션 ID를 읽고 이를 확인한 후 사용자를 식별한다.</li>
+</ul>
+</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20241206223659949.png" alt=""></p>
+<h4 id="Advantages-of-Using-Cookies"><a href="#Advantages-of-Using-Cookies" class="headerlink" title="Advantages of Using Cookies"></a>Advantages of Using Cookies</h4><ul>
+<li><strong>Widely Supported</strong>: 모든 주요 브라우저에서 기본적으로 지원된다.</li>
+<li><strong>Persistent Storage</strong>: 쿠키는 특정 시간 후에 만료되거나 사용자가 수동으로 삭제할 때까지 유지되도록 설정할 수 있다.</li>
+<li><strong>Automatic Transmission</strong>: 브라우저는 모든 요청과 함께 쿠키를 원본 도메인으로 자동 전송하므로 개발자는 쿠키 전송을 처리하기 위해 추가 코드를 작성할 필요가 없다.</li>
+<li><strong>Customizable</strong>: HttpOnly, 보안, SameSite 등의 속성을 통해 보안을 강화하고 동작을 제어할 수 있다.</li>
+</ul>
+<h4 id="Challenges-of-Using-Cookies"><a href="#Challenges-of-Using-Cookies" class="headerlink" title="Challenges of Using Cookies"></a>Challenges of Using Cookies</h4><ul>
+<li><strong>Vulnerability to Cross-Site Scripting (XSS)</strong>: 악성 스크립트가 웹사이트에 삽입되면 민감한 데이터가 포함된 쿠키에 액세스할 수 있다. 자바 스크립트 액세스를 방지하기 위해 HttpOnly 플래그를 설정할 수 있다.</li>
+<li><strong>Man-in-the-Middle (MITM) Attacks</strong>: 쿠키가 암호화되지 않은 HTTP를 통해 전송되는 경우 쿠키를 가로채서 도용할 수 있다. 보안 플래그를 설정하면 쿠키가 HTTPS를 통해서만 전송되도록 한다.</li>
+<li><strong>Cross-Site Request Forgery (CSRF)</strong>: 요청과 함께 자동으로 전송되는 쿠키는 무단 작업을 수행하는데 악용될 수 있다. 이를 완화하기 위해 CSRF 토큰을 구현하고 SameSite 속성을 사용할 수 있다.</li>
+<li><strong>Storage Limits</strong>: 브라우저는 크기 제한(일반적으로 쿠키당 4KB)과 도메인당 수량 제한을 적용한다. 따라서 쿠키에는 필수 데이터만 저장하는 것이 중요하다.</li>
+<li><strong>Cookie Overflow</strong>: 쿠키가 너무 많으면 성능 문제가 발생하거나 요청이 거부될 수 있다. 따라서 쿠키를 신중하게 사용하는 것이 중요하다.</li>
+</ul>
+<h4 id="Best-Practices-for-Secure-Cookie-Handling"><a href="#Best-Practices-for-Secure-Cookie-Handling" class="headerlink" title="Best Practices for Secure Cookie Handling"></a>Best Practices for Secure Cookie Handling</h4><ul>
+<li><strong>Set HttpOnly Flag</strong>: JavaScript를 통한 쿠키 액세스를 방지하여 XSS 위험을 완화한다.</li>
+<li><strong>Set Secure Flag</strong>: HTTPS를 통해서만 쿠키가 전송되도록 한다.</li>
+<li><strong>Use SameSite Attribute</strong>: 사이트간 요청을 제한해 CSRF 위험을 줄인다. 예를 들어 <code>SameSite=LAX or SameSite=Strict</code> 같은 설정을 한다.</li>
+<li><strong>Limit Expiry</strong>: 민감한 데이터에는 짧은 만료 시간을 사용한다.</li>
+<li><strong>Avoid Storing Sensitive Information</strong>: 원시 자격 증명이나 민감한 데이터가 아닌 토큰 또는 식별자를 저장한다.</li>
+</ul>
+<h3 id="Sessions"><a href="#Sessions" class="headerlink" title="Sessions"></a>Sessions</h3><p>세션은 애플리케이션과의 활발한 상호 작용 중에 사용자 인증 데이터를 저장하고 관리하는데 사용되는 서버 측 메커니즘이다. 클라이언트 측에 데이터를 저장하는 쿠키와 달리 세션은 데이터를 서버에 안전하게 보관하며 클라이언트는 참조만 보관한다.</p>
+<h4 id="How-Sessions-Work-in-Server-Side-Authentication"><a href="#How-Sessions-Work-in-Server-Side-Authentication" class="headerlink" title="How Sessions Work in Server-Side Authentication?"></a>How Sessions Work in Server-Side Authentication?</h4><ul>
+<li><strong>User Login</strong>:<ul>
+<li>사용자가 로그인하기 위해 자격 증명을 제출한다.</li>
+<li>서버는 자격 증명을 인증하고 일반적으로 고유한 세션 ID로 표시되는 사용자 세션을 만든다.</li>
+</ul>
+</li>
+<li><strong>Session ID Generation</strong>:<ul>
+<li>세션 ID는 서버에 저장된 사용자의 세션 데이터에 연결된 임의의 고유 식별자다.</li>
+<li>이 세션 ID는 쿠키 또는 다른 전송 메커니즘을 통해 클라이언트로 전송된다.</li>
+</ul>
+</li>
+<li><strong>Storing Session Data</strong>:<ul>
+<li>서버는 세션 데이터를 메모리, 데이터베이스 또는 다른 저장 시스템에 저장한다.</li>
+<li>세션 ID는 이 데이터를 검색하기 위한 키 역할을 한다.</li>
+</ul>
+</li>
+<li><strong>Maintaining the Session</strong>:<ul>
+<li>이후의 각 요청에 대해 클라이언트는 세션ID를 전송한다. (일반적으로 쿠키를 통해)</li>
+<li>서버는 세션 ID의 유효성을 검사하고 관련 데이터를 검색한 후 이를  사용하여 요청을 처리한다.</li>
+</ul>
+</li>
+<li><strong>Session Expiration</strong>:<ul>
+<li>세션은 일정 기간 동안 활동이 없거나 최대 기간이 지나면 자동으로 만료되도록 TTL을 설정할 수 있다.</li>
+</ul>
+</li>
+<li><strong>Session Invalidation</strong>:<ul>
+<li>사용자가 로그아웃하거나 세션이 해지되면 세션 데이터가 서버에서 삭제되고 세션 ID가 무효화된다.</li>
+</ul>
+</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20241206233958607.png" alt=""></p>
+<h4 id="Relationship-Between-Sessions-and-Cookies"><a href="#Relationship-Between-Sessions-and-Cookies" class="headerlink" title="Relationship Between Sessions and Cookies"></a>Relationship Between Sessions and Cookies</h4><p>쿠키와 세션은 종종 함께 작동한다. 쿠키는 클라이언트 측에서 세션 ID를 보관하는데 사용할 수 있다. 각 요청에 대해 브라우저는 쿠키를 서버로 전송하여 서버가 사용자의 세션을 식별할 수 있도록 한다. </p>
+<h4 id="Advantages-of-Using-Sessions"><a href="#Advantages-of-Using-Sessions" class="headerlink" title="Advantages of Using Sessions"></a>Advantages of Using Sessions</h4><ul>
+<li><strong>Secure Storage</strong>: 세션 데이터가 서버에 상주하므로 XSS와 같은 클라이언트 측 취약성에 노출될 위험이 줄어든다.</li>
+<li><strong>Flexibility</strong>: 세션은 역할, 권한, 환경설정 등 복잡한 사용자 데이터를 저장할 수 있어 클라이언트 측 저장 공간을 늘리지 않아도 된다.</li>
+<li><strong>Revocability</strong>: 서버에서 세션을 무효화할 수 있으므로 사용자 액세스를 즉시 종료할 수 있다.</li>
+<li><strong>Compatibility</strong>: 요청이 동일한 서ㅓ로 자주 리턴되는 기존 웹 애플리케이션에 적합하다.</li>
+</ul>
+<h4 id="Challenges-of-Using-Sessions"><a href="#Challenges-of-Using-Sessions" class="headerlink" title="Challenges of Using Sessions"></a>Challenges of Using Sessions</h4><ul>
+<li><strong>Scalability</strong>: 분산 시스템에서는 세션 데이터를 서버 간에 공유해야 하므로 중앙 집중식 데이터베이스나 고정 세션과 같은 추가 인프라가 필요하다. 이런 솔루션은 복잡성과 잠재적인 병목 현상을 가중시킨다.</li>
+<li><strong>Session Hijacking</strong>: 공격자가 세션 ID를 도용하면 사용자를 사칭할 수 있다. 전송 중인 데이터를 암호화하고 세션 타임아웃을 구현해 HTTPS를 사용하면 이런 문제를 완화할 수 있다.</li>
+<li><strong>Storage Overhead</strong>: 많은 수의 활성 세션은 상당한 서버 리소스를 소모할 수 있다. 효율적인 세션 스토리지를 사용하면 이 문제를 완화할 수 있다.</li>
+</ul>
+<h2 id="Authentication-with-JWTs"><a href="#Authentication-with-JWTs" class="headerlink" title="Authentication with JWTs"></a>Authentication with JWTs</h2><p>JWT는 당사자 간에 정보를 안전하게 전송하는데 사용되는 컴팩트하고 URL safe한 독립형 토큰 형식이다. JWT는 상태 비저장 및 확장 가능한 시스템을 구현하기 위해 인증 및 권한 부여에 자주 사용된다. 토큰에는 사용자의 신원을 확인하는데 필요한 모든 데이터가 포함되어 있으므로 서버 측 세션 저장소가 필요하지 않다.</p>
+<h3 id="Structure-of-a-JWT"><a href="#Structure-of-a-JWT" class="headerlink" title="Structure of a JWT"></a>Structure of a JWT</h3><p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20241206234607137.png" alt=""></p>
+<p>JWT는 Base64로 인코딩된 세 부분으로 구성된다.</p>
+<ul>
+<li><strong>Header</strong>: 유형(JWT) 및 서명 알고리즘 (e.g. HS256, RS256)을 포함하여 토큰에 대한 메타데이터를 포함한다.</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    &quot;alg&quot;: &quot;HS256&quot;,</span><br><span class="line">    &quot;typ&quot;: &quot;JWT&quot;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li><strong>Payload</strong>: 사용자 또는 토큰에 대한 설명인 클레임을 포함한다.<ul>
+<li><strong>Registered Claims</strong>: iss(발행자), exp(만료 시간), sub(주체)와 같은 사전 정의된 클레임</li>
+<li><strong>Public Claims</strong>: 애플리케이션에서 정의한 사용자 지정 클레임</li>
+<li><strong>Private Claims</strong>: 발급자와 소비자 간에 공유되는 사용자 지정 클레임</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    &quot;sub&quot;: &quot;1234567890&quot;,</span><br><span class="line">    &quot;name&quot;: &quot;John Doe&quot;,</span><br><span class="line">    &quot;admin&quot;: true,</span><br><span class="line">    &quot;iat&quot;: 1516239022</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li><strong>Signature</strong>: 토큰의 무결성을 보장하고 발신자의 진위 여부를 확인한다. 헤더와 페이로드를 인코딩하고 비밀 키 또는 개인 키로 서명하여 생성된다.</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">HMACSHA256(</span><br><span class="line">    base64UrlEncode(header) + &quot;.&quot; + base64UrlEncode(payload),</span><br><span class="line">    secret</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+<h3 id="How-JWT-Works-In-Authentication"><a href="#How-JWT-Works-In-Authentication" class="headerlink" title="How JWT Works In Authentication"></a>How JWT Works In Authentication</h3><ul>
+<li><strong>Token Issuance</strong>:<ul>
+<li>사용자가 로그인하면 서버가 자격 증명을 인증하고 사용자에 대한 클레임이 포함된 JWT를 생성한다.</li>
+<li>JWT는 비밀 키(대칭 서명) 또는 비공개 키(비대칭 서명)을 사용하여 서명된다.</li>
+<li>서명된 토큰은 일반적으로 응답 본문 또는 쿠키로 클라이언트에 전송된다.</li>
+</ul>
+</li>
+<li><strong>Including JWT in Requests</strong>: 후속 요청의 경우 클라이언트는 권한 헤더에 JWT를 Bearer 토큰으로 포함한다.</li>
+<li><strong>Token Validation</strong>: 서버는 서명을 확인하고 만료(exp) 또는 대상(aud)와 같은 클레임을 확인해 토큰의 유효성을 검사한다. 토큰이 유효하면 서버는 요청된 리소스에 대한 액세스를 허용한다.</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20241206235007823.png" alt=""></p>
+<h3 id="The-Stateless-Nature-of-JWT"><a href="#The-Stateless-Nature-of-JWT" class="headerlink" title="The Stateless Nature of JWT"></a>The Stateless Nature of JWT</h3><ul>
+<li>서버는 세션 데이터를 저장할 필요가 없다. 모든 사용자 관련 정보는 토큰에 포함되어 있다.</li>
+<li>서버는 토큰의 유효성을 검사하는데 서명 키만 필요하므로 여러 서비스가 상호 작용하면 분산 시스템에 이상적이다.</li>
+</ul>
+<h3 id="Advantages-of-JWT"><a href="#Advantages-of-JWT" class="headerlink" title="Advantages of JWT"></a>Advantages of JWT</h3><ul>
+<li><strong>Scalability</strong>: 상태 저장소 없는 토큰은 중앙 집중식 세션 스토리지가 필요하지 않으므로 마이크로 서비스나 분산 아키텍처에 적합한 JWT다.</li>
+<li><strong>Compact and Portable</strong>: Base64로 인코딩된 형식 덕분에 JWT를 HTTP 헤더로 쉽게 전송하거나 쿠키에 저장할 수 있다.</li>
+<li><strong>Cross-Domain Authentication</strong>: JWT는 여러 도메인 또는 서비스에서 인증을 허용하는 통합 인증(SSO)에 유용하다.</li>
+<li><strong>Security</strong>: JWT는 서명되어 데이터 무결성과 신뢰성을 보장한다.</li>
+</ul>
+<h3 id="Disadvantages-of-JWT"><a href="#Disadvantages-of-JWT" class="headerlink" title="Disadvantages of JWT"></a>Disadvantages of JWT</h3><ul>
+<li><strong>Token Theft</strong>: JWT를 도난당한 경우 (e.g., through XSS), 토큰이 만료될 때 까지 사용할 수 있다. HTTPS를 사용하여 통신을 암호화하면 이를 완화할 수 있다. 또한 토큰은 HttpOnly 쿠키를 사용하여 안전하게 저장해야 한다.</li>
+<li><strong>Expiration Management</strong>: JWT는 일반적으로 수명이 짧다. 일단 발급되면 추가 조치를 구현하지 않는 한 취소할 수 없다. 이 문제는 새로 고침 토큰을 구현해 재로그인할 필요 없이 새 JWT를 발급함으로써 완화할 수 있다.</li>
+<li><strong>Token Size</strong>: 페이로드에 너무 많은 데이터를 포함하면 토큰 크기가 증가하여 성능에 영향을 줄 수 있다.</li>
+<li><strong>Revoking Access:</strong> 세션과 달리 특정 사용자에 대한 JWT는 취소할 수 없다. 이 기능을 지원하려면 해지된 토큰 목록을 별도로 저장하고 수신된 토큰ㅇ이 이 목록에 포함되는지 확인해야 한다.</li>
+</ul>
+<h2 id="PASETO-A-Secure-Alternative-to-JWT"><a href="#PASETO-A-Secure-Alternative-to-JWT" class="headerlink" title="PASETO: A Secure Alternative to JWT"></a>PASETO: A Secure Alternative to JWT</h2><p>Platform-Agnostic Security Tokens의 줄임말인 PASETO는 JWT의 최신 대안이다. 보안, 단순성, 암호화 모범 사례에 중점을 두고 설계되었다. PASETO는 다양한 인증 및 권한 부여 시나리오에 필요한 유연성을 유지하면서 JWT와 관련된 몇 가지 일반적인 취약성 및 오용 문제를 해결한다.</p>
+<p>알고리즘 선택의 유연성을 허용하는(때로는 안전하지 않은 구성으로 이어지는) JWT와 달리 PASETO는 강력하고 암호학적으로 안전한 알고리즘을 사용하도록 강제하여 잘못된 구성으로 인한 취약성 위험을 줄인다.</p>
+<h3 id="How-PASETO-Differs-from-JWT"><a href="#How-PASETO-Differs-from-JWT" class="headerlink" title="How PASETO Differs from JWT?"></a>How PASETO Differs from JWT?</h3><ul>
+<li><strong>Stronger Cryptographic Guarantees:</strong><ul>
+<li>PASETO는 강력하고 현대적인 암호화 알고리즘을 사용하도록 강제하여 안전하지 않거나 오래된 알고리즘의 위험을 제거한다. </li>
+<li>예를 들어, JWT에서는 개발자가 취약한 알고리즘 (e.g., HS256 or even the infamous none algorithm)을 사용할 수 있지만, PASETO에서는 다음과 같은 강력한 알고리즘으로 선택의 폭을 제한한다.<ul>
+<li>AES-GCM for encryption (symmetric).</li>
+<li>Ed25519 for signing (asymmetric).</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><strong>Simplified Design:</strong><ul>
+<li>PASETO는 JWT의 취약점인 알고리즘 협상을 피함으로써 불필요한 복잡성을 제거한다.</li>
+<li>JWT와 달리 각 버전과 목적에 따라 어떤 암호화 알고리즘을 사용해야 하는지 명시적으로 지정하여 알고리즘 혼동의 위험을 제거한다.</li>
+</ul>
+</li>
+<li><strong>Readable and Secure:</strong><ul>
+<li>PASETO 토큰은 로컬(encrypted) 또는 공개(signed) 토큰으로, 민감한 데이터를 안전하게 암호화하거나 진위 ㅇ여부를 확인하기 위해 서명한다.</li>
+<li>JWT 토큰은 서명된 경우에도 항상 일반 텍스트로 표시되므로 의도하지 않은 정보 유출이 발생할 가능성이 높다..</li>
+</ul>
+</li>
+<li><strong>Built-in Mitigations Against Common Vulnerabilities:</strong> PASETO는 설계상 JWT의 일반적인 문제인 알고리즘 변조와 같은 위험을 완화한다.</li>
+</ul>
+<h3 id="Structure-of-a-PASETO"><a href="#Structure-of-a-PASETO" class="headerlink" title="Structure of a PASETO"></a>Structure of a PASETO</h3><p>PASETO 토큰은 로컬 토큰인지 공개 토큰인지에 따라 3~4개의 주요 구성 요소로 이루어진다. JWT와 마찬가지로 이런 구성 요소는 점으로 구분되며 다음과 같다.</p>
+<ul>
+<li><strong>Version:</strong> 사용중인 PASETO 프로토콜의 버전을 나타낸다. 예를 들어 버전 v1은 이전 암호화 표준을 사용하는 반면 버전 v2는 최신의 안전한 암호화 표준을 사용한다.</li>
+<li><strong>Purpose:</strong> 토큰의 유형(암호화 또는 서명)을 지정한다. 옵션은 로컬(암호화된 토큰)과 공개된 토큰(서명된 토큰)이다.</li>
+<li><strong>Payload:</strong> 토큰 내 실제 데이터 또는 클레임을 포함한다. 로컬 토큰의 경우 페이로드는 암호화되며 불투명한 Base64Url로 인코딩된 문자열로 표시된다. 퍼블릭 토큰의 경우 페이로드는 일반 텍스트이며 Base64Url로 인코딩된다.</li>
+<li><strong>Footer:</strong> 대상(aud) 또는 발급자(iss)와 같이 페이로드에 포함되지 않은 선택적 메타데이터를 포함한다.</li>
+</ul>
+<h3 id="Local-PASETO-vs-Public-PASETO"><a href="#Local-PASETO-vs-Public-PASETO" class="headerlink" title="Local PASETO vs Public PASETO"></a>Local PASETO vs Public PASETO</h3><p>로컬 PASETO 토큰은 암호화되어 토큰에 포함된 데이터의 기밀성을 보장한다. 민감한 정보를 권한이 없는 당ㅇ사자로부터 숨겨야 하는 시나리오를 위한 것이다. 대칭 암호화 알고리즘을 사용해 페이로드의 기밀성을 보장한다. 공유된 비밀 키를 가진 당사자만 토큰의 콘텐츠를 해독하고 액세스할 수 있다. </p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20241207000237371.png" alt=""></p>
+<p>반면 공개 PASETO 토큰은 서명이 되어 있다. 데이터의 묵결성은 보장하지만 기밀성은 보장하지 않는다. 이런 토큰은 투명하며 누구나 읽을 수 있지만 서명 키 소유자만 확인할 수 있다. 즉, 서명을 무효화하지 않고는 토큰을 변경할 수 없다. 토큰에 서명할 때는 비대칭 암호화(e.g., ED25519)를 사용한다. 공개 키는 토큰을 확인하는데 사용되며 개인 키는 토큰을 서명하는데 사용된다. 클라이언트가 페이로드를 읽어야 하지만 변조 방지 기능을 유지해야 하는 시나리오에 적합하다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20241207000413989.png" alt=""></p>
+<h3 id="Advantages-of-PASETO"><a href="#Advantages-of-PASETO" class="headerlink" title="Advantages of PASETO"></a>Advantages of PASETO</h3><ul>
+<li><strong>Security by Design</strong>: 안전하지 않거나 더 이상 사용되지 않는 알고리즘을 사용하지 않아 개발자가 위험한 암호화 선택을 할 수 없다. JWT의 알고리즘 없음 또는 안전하지 않은 HS256 사용와 같은 함정을 피할 수 있다.</li>
+<li><strong>Ease of Use</strong>: 알고리즘 협상이 없으므로 구현이 단순화되어 잘못된 구성의 위험이 줄어든다.</li>
+<li><strong>Encryption Support</strong>: 암호화된 토큰(로컬 토큰)을 지원하여 기밀성과 무결성을 모두 제공하는 반면, JWT 토큰은 서명만 되어 있고 항상 공개된다.</li>
+<li><strong>Forward Compatibility</strong>: PASETO는 버전별 (e.g., v1, v2)로 제공되므로 이전 버전과의 호환성을 유지하면서 암호화 관행의 개선 사항을 통합할 수 있다.</li>
+<li><strong>Cross-Platform</strong>: PASETO는 크로스 플랫폼에서 동작하도록 다양한 프로그래밍 언어와 시스템에서 원활하게 동작한다.</li>
+</ul>
+<h3 id="Challenges-of-PASETO"><a href="#Challenges-of-PASETO" class="headerlink" title="Challenges of PASETO"></a>Challenges of PASETO</h3><ul>
+<li><strong>Limited Adoption</strong>: JWT에 비해 PASETO는 상대적으로 새롭고 덜 널리 채택되었다. 즉, 사용 가능한 라이브러리, 도구 및 커뮤니티 지원이 더 적다.</li>
+<li><strong>Learning Curve</strong>: JWT에 익숙한 개발자는 PASETO의 원칙과 기능을 이해하고 적응하는데 시간이 필요할 수 있다.</li>
+<li><strong>Ecosystem Maturity</strong>: PASETO 표준은 잘 정의되어 있지만 생태계에는 JWT만큼 사용할 수 있는 광범위한 미들웨어 및 프레임워크 통합이 부족하다.</li>
+</ul>
+<h2 id="Comparative-Analysis"><a href="#Comparative-Analysis" class="headerlink" title="Comparative Analysis"></a>Comparative Analysis</h2><p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20241207000809565.png" alt=""></p>
+<h2 id="Best-Practices-for-Implementing-Secure-Authentication"><a href="#Best-Practices-for-Implementing-Secure-Authentication" class="headerlink" title="Best Practices for Implementing Secure Authentication"></a>Best Practices for Implementing Secure Authentication</h2><ul>
+<li><strong>Use HTTPS:</strong> 클라이언트와 서버 간에 교환되는 모든 데이터를 암호화하여 중간자 공격으로부터 보호한다.<ul>
+<li>모든 환경(development, staging, and production)에 대해 HTTPS 구성</li>
+<li>모든 HTTP 요청을 HTTPS로 리디렉션</li>
+<li>강력한 TLS 버전 사용 (for example, TLS 1.2 or 1.3)</li>
+</ul>
+</li>
+<li><strong>Enforce Strong Password Policies:</strong> 취약한 비밀번호는 무차별 대입 공격이나 크리덴셜 스터핑 공격의 쉬운 표적이 된다.<ul>
+<li>최소 길이 요구 (e.g., 12+ characters)</li>
+<li>복잡성 규칙 (uppercase, lowercase, numbers, special characters) 포함</li>
+<li>알려진 유출된 비밀번호 목록과 대조하여 비밀번호 확인</li>
+</ul>
+</li>
+<li><strong>Implement Multi-Factor Authentication (MFA):</strong> 비밀번호 외에 추가적인 인증ㅇ 방법을 요구해 보안을 더 강화한다.<ul>
+<li>Google Authenticator와 같은 Time-based one-time passwords (TOTP) 사용</li>
+<li>앱 기반 방법보다 보안성이 떨어지지만 SMS-based OTPs 를 대체제로 사용</li>
+<li>보안 모바일 앱을 통한 MFA 푸시 알림</li>
+</ul>
+</li>
+<li><strong>Secure Token Management:</strong> 토큰은 최신 인증의 중요한 구성 요소이며 토큰이 유출되면 무단 액세스로 이어질 수 있다.<ul>
+<li>만료(exp) 클레임이 정의된 수명이 짧은 토큰 사용</li>
+<li>기본 자격 증명을 노출하지 않고 재인증을 위해 refresh 토큰을 구현</li>
+<li>토큰을 안전히 저장</li>
+<li>자바스크립트에 의한 액세스를 방지하려면 HttpOnly 쿠키 사용</li>
+<li>로컬 스토리지 또는 세션 스토리지에 토큰을 저장하지 않음</li>
+<li>필요한 경우(for example: on password reset or logout) 토큰을 회전 및 해지</li>
+</ul>
+</li>
+<li><strong>Use Secure Cookie Settings:</strong> 쿠키는 세션 또는 인증 데이터를 저장하는데 자주 사용되며 도난에 취약하다.<ul>
+<li>자바스크립트에 의한 액세스를 방지하려면 HttpOnly 플레그 설정</li>
+<li>쿠키가 HTTPS를 통해서만 전송되려면 보안 플레그 사용</li>
+<li>SameSite 속성을 구현하여 CSRF 공격 완화<ul>
+<li>보안 수준이 높은 애플리케이션의 경우 <code>SameSite=Strict</code></li>
+<li>3rd 파티 쿠키 사용을 제한해야 하는 애플리케이션의 경우 <code>SameSite=Lax</code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<!-- flag of hidden posts --></div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined">Song Hayoung</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="https://songhayoung.github.io/2024/12/06/System%20Design/ByteByteGo/private/mastering-modern-authentication/">https://songhayoung.github.io/2024/12/06/System%20Design/ByteByteGo/private/mastering-modern-authentication/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/System-Design/">System Design</a></div><nav id="pagination"></nav><div id="gitalk-container"></div><script>var gitalk = new Gitalk({
+  clientID: '3604b61642355579f55e',
+  clientSecret: 'f552120f18ac5aee3f6297e05e97d94c0a25cd4b',
+  repo: 'SongHayoung.github.io',
+  owner: 'SongHayoung',
+  admin: 'SongHayoung',
+  id: md5(decodeURI(location.pathname)),
+  language: 'en'
+})
+gitalk.render('gitalk-container')</script></div></div><footer class="footer-bg" style="background-image: url(https://xxxx.jpg)"><div class="layout" id="footer"><div class="copyright">&copy;2020 - 2025 By Song Hayoung</div><div class="framework-info"><span>Driven - </span><a target="_blank" rel="noopener" href="http://hexo.io"><span>Hexo</span></a><span class="footer-separator">|</span><span>Theme - </span><a target="_blank" rel="noopener" href="https://github.com/Molunerfinn/hexo-theme-melody"><span>Melody</span></a></div><div class="footer_custom_text">Learning how to walk slowly to not miss important things</div><div class="busuanzi"><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><span id="busuanzi_container_page_pv"><i class="fa fa-file"></i><span id="busuanzi_value_page_pv"></span><span></span></span></div></div></footer><i class="fa fa-arrow-up" id="go-up" aria-hidden="true"></i><script src="https://cdn.jsdelivr.net/npm/animejs@latest/anime.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@latest/velocity.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-ui-pack@latest/velocity.ui.min.js"></script><script src="/js/utils.js?version=1.7.0"></script><script src="/js/fancybox.js?version=1.7.0"></script><script src="/js/sidebar.js?version=1.7.0"></script><script src="/js/copy.js?version=1.7.0"></script><script src="/js/fireworks.js?version=1.7.0"></script><script src="/js/transition.js?version=1.7.0"></script><script src="/js/scroll.js?version=1.7.0"></script><script src="/js/head.js?version=1.7.0"></script><script src="/js/search/algolia.js"></script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+    processEscapes: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  },
+  CommonHTML: {
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "HTML-CSS": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "SVG": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  }
+});
+</script><script type="text/x-mathjax-config">MathJax.Hub.Queue(function() {
+  var all = MathJax.Hub.getAllJax(), i;
+  for (i=0; i < all.length; i += 1) {
+    all[i].SourceElement().parentNode.className += ' has-jax';
+  }
+});
+</script><script src="https://cdn.jsdelivr.net/npm/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><script>if(/Android|webOS|iPhone|iPod|iPad|BlackBerry/i.test(navigator.userAgent)) {
+  $('#nav').addClass('is-mobile')
+  $('footer').addClass('is-mobile')
+  $('#top-container').addClass('is-mobile')
+}</script><div class="search-dialog" id="algolia-search"><div class="search-dialog__title" id="algolia-search-title">Algolia</div><div id="algolia-input-panel"><div id="algolia-search-input"></div></div><hr><div id="algolia-search-results"><div id="algolia-hits"></div><div id="algolia-pagination"></div><div id="algolia-stats"></div></div><span class="search-close-button"><i class="fa fa-times"></i></span></div><div class="search-mask"></div></body></html>
