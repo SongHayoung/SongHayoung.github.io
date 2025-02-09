@@ -1,0 +1,139 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="description" content="[ByteByteGo] From Monolith to Microservices: Key Transition Patterns"><meta name="keywords" content="System Design"><meta name="author" content="Song Hayoung"><meta name="copyright" content="Song Hayoung"><title>[ByteByteGo] From Monolith to Microservices: Key Transition Patterns | SUMFIのBlog</title><meta name="robots" content="noindex"><link rel="shortcut icon" href="/songcon.ico"><link rel="stylesheet" href="/css/index.css?version=1.7.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@latest/css/font-awesome.min.css?version=1.7.0"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css?version=1.7.0"><meta name="format-detection" content="telephone=no"><meta http-equiv="x-dns-prefetch-control" content="on"><link rel="dns-prefetch" href="https://cdn.jsdelivr.net"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.css"><script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.js" defer></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@latest/dist/gitalk.min.js"></script><script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.10.0/js/md5.min.js"></script><link rel="dns-prefetch" href="https://www.google-analytics.com"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-169368422-1', 'auto');
+ga('send', 'pageview');</script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: {"appId":"7LZ6OJ4D6C","apiKey":"9a84e13f74ea78c3fd54512c10139c56","indexName":"git blog","hits":{"per_page":10},"languages":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}.","hits_stats":"${hits} results found in ${time} ms"}},
+  localSearch: undefined,
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  }
+} </script><meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/rss2.xml" title="SUMFIのBlog" type="application/rss+xml">
+</head><body><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar" data-display="true"><div class="toggle-sidebar-info text-center"><span data-toggle="Toggle article">Toggle site</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">Catalog</div><div class="sidebar-toc__progress"><span class="progress-notice">You've read</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#From-Monolith-to-Microservices-Key-Transition-Patterns"><span class="toc-number">1.</span> <span class="toc-text">From Monolith to Microservices: Key Transition Patterns</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Strangler-Fig-Pattern"><span class="toc-number">2.</span> <span class="toc-text">Strangler Fig Pattern</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Implementing-the-Strangler-Fig-Pattern"><span class="toc-number">2.1.</span> <span class="toc-text">Implementing the Strangler Fig Pattern</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-Identify-Candidate-Functionalities"><span class="toc-number">2.1.1.</span> <span class="toc-text">1 - Identify Candidate Functionalities</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-Design-the-Microservice"><span class="toc-number">2.1.2.</span> <span class="toc-text">2 - Design the Microservice</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-Implement-and-Test-the-Microservice"><span class="toc-number">2.1.3.</span> <span class="toc-text">3 - Implement and Test the Microservice</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4-Set-Up-an-API-Gateway-or-Proxy-for-Routing"><span class="toc-number">2.1.4.</span> <span class="toc-text">4 - Set Up an API Gateway or Proxy for Routing</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#5-Redirect-Traffic"><span class="toc-number">2.1.5.</span> <span class="toc-text">5 - Redirect Traffic</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#6-Decommission-Monolithic-Components"><span class="toc-number">2.1.6.</span> <span class="toc-text">6 - Decommission Monolithic Components</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Best-Practices-for-Strangler-Fig-Pattern"><span class="toc-number">2.2.</span> <span class="toc-text">Best Practices for Strangler Fig Pattern</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#The-Parallel-Run-Pattern"><span class="toc-number">3.</span> <span class="toc-text">The Parallel Run Pattern</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Change-Data-Capture"><span class="toc-number">4.</span> <span class="toc-text">Change Data Capture</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#CDC-Pattern-Step-by-step"><span class="toc-number">4.1.</span> <span class="toc-text">CDC Pattern Step-by-step</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Capture-Changes"><span class="toc-number">4.1.1.</span> <span class="toc-text">Capture Changes</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Using-a-CDC-Tool-Debezium"><span class="toc-number">4.1.2.</span> <span class="toc-text">Using a CDC Tool (Debezium)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Use-Kafka-for-Event-Streaming"><span class="toc-number">4.1.3.</span> <span class="toc-text">Use Kafka for Event Streaming</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Microservice-Consumes-the-Events"><span class="toc-number">4.1.4.</span> <span class="toc-text">Microservice Consumes the Events</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Ensure-Data-Consistency"><span class="toc-number">4.1.5.</span> <span class="toc-text">Ensure Data Consistency</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#The-Decorating-Collaborator-Pattern"><span class="toc-number">5.</span> <span class="toc-text">The Decorating Collaborator Pattern</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#The-Bulkhead-Pattern"><span class="toc-number">6.</span> <span class="toc-text">The Bulkhead Pattern</span></a></li></ol></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="https://avatars3.githubusercontent.com/u/37806785?s=460&amp;u=8c68d685faf7c5280cfbd736a6b1730b55fb4203&amp;v=4"></div><div class="author-info__name text-center">Song Hayoung</div><div class="author-info__description text-center"></div><div class="follow-button"><a target="_blank" rel="noopener" href="https://www.linkedin.com/in/hayoung-song-9523b61bb/">Follow Me</a></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="/archives"><span class="pull-left">Articles</span><span class="pull-right">11266</span></a><a class="author-info-articles__tags article-meta" href="/tags"><span class="pull-left">Tags</span><span class="pull-right">197</span></a><a class="author-info-articles__categories article-meta" href="/categories"><span class="pull-left">Categories</span><span class="pull-right">62</span></a></div><hr><div class="author-info-links"><div class="author-info-links__title text-center">VISITED</div><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Seoul Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Jeju Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">British Columbia Canada</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Boracay Philippines</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">三重　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">大阪　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">名古屋　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">静岡　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">札幌　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">京都　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Bangkok Thailand</a></div></div></div><div id="content-outer"><div id="top-container" style="background-image: url(https://xxxx.jpg)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="/">SUMFIのBlog</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus">   <a class="site-page" href="/">Home</a><a class="site-page" href="/archives">Archives</a><a class="site-page" href="/tags">Tags</a><a class="site-page" href="/categories">Categories</a><a class="site-page" href="/about">About</a></span><span class="pull-right"><a class="site-page social-icon search"><i class="fa fa-search"></i><span> Search</span></a></span></div><div id="post-info"><div id="post-title">[ByteByteGo] From Monolith to Microservices: Key Transition Patterns</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2025-01-28</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/">System Design</a><i class="fa fa-angle-right" aria-hidden="true"></i><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/Byte-Byte-Go/">Byte Byte Go</a><div class="post-meta-wordcount"><span>Word count: </span><span class="word-count">1.3k</span><span class="post-meta__separator">|</span><span>Reading time: 7 min</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div class="article-container" id="post-content"><h2 id="From-Monolith-to-Microservices-Key-Transition-Patterns"><a href="#From-Monolith-to-Microservices-Key-Transition-Patterns" class="headerlink" title="From Monolith to Microservices: Key Transition Patterns"></a>From Monolith to Microservices: Key Transition Patterns</h2><span id="more"></span>
+<p>모놀리식 아키텍처는 전체 애플리케이션이 하나의 통합된 코드베이스로 구축되는 소프트웨어 개발 방식이다. 소프트웨어를 개발하고 배포하는 가장 간단한 방법중 하나다. 소규모 팀이나 프로젝트에서는 단순성, 빠른 개발, 쉬운 배포 등을 이유로 모놀리스를 선택하지만 애플리케이션이 성장함에 따라 이는 몇 가지 문제를 야기한다.</p>
+<ul>
+<li><strong>Scalability Bottlenecks</strong>: 전체 애플리케이션이 하나의 모놀리스에서 단일 단위로 확장된다. 애플리케이션의 한 부분에만 높은 수요가 발생하면 전체 애플리케이션을 확장해야 하므로 수요가 적은 구성 요소에 리소스가 낭비된다.</li>
+<li><strong>Maintenance Issues:</strong> 코드베이스가 커질수록 모놀리스는 유지 관리가 더 어려워진다. 애플리케이션의 여러 부분 간의 종속성이 증가하고 각 변경 사항이 미치는 영향 반경이 더 커진다.</li>
+<li><strong>Deployment Complexity:</strong> 모놀리식 시스템에서는 시스템의 나머지 부분이 변경되지 않더라도 한 모듈의 작은 변경으로 인해 전체 애플리케이션의 재배포가 필요하다.</li>
+<li><strong>Limited Technology Choices:</strong> 모놀리스의 모든 부분은 일반적으로 동일한 기술 스택을 사용해야 한다.</li>
+<li><strong>Resiliency Challenges:</strong> 모놀리스의 한 부분에서 장애가 발생하면 전체 애플리케이션이 다운될 수 있다.</li>
+</ul>
+<p>마이크로서비스 아키텍처는 애플리케이션을 더 작고 독립적인 서비스로 분할하여 모놀리스의 문제를 해결한다. 각 서비스는 특정 기능을 담당하며 독립적으로 개발, 배포 및 확장할 수 있다. 그러나 모놀리식 아키텍처에서 마이크로서비스로 전환하는 것은 복잡한 과정이다. 이 포스트는 전환을 보다 쉽게 하는 데 도움이 되는 몇 가지 패턴을 살펴본다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20250128104415822.png" alt=""></p>
+<h2 id="Strangler-Fig-Pattern"><a href="#Strangler-Fig-Pattern" class="headerlink" title="Strangler Fig Pattern"></a>Strangler Fig Pattern</h2><p>Strangler Fig 패턴은 기존 구조를 감싸고 서서히 원래 구조를 대체하는 패턴이나. 시간이 지남에 따라 대체된 구조는 견고해지며 원래 구조를 더 이상 필요하지 않게 되어 자급자족하는 시스템을 만든다. 모놀리식 애플리케이션의 일부를 마이크로 서비스로 점진적으로 대체하면서 기존 시스템을 안전하게 폐기할 수 있을 때 까지 유지한다.</p>
+<h3 id="Implementing-the-Strangler-Fig-Pattern"><a href="#Implementing-the-Strangler-Fig-Pattern" class="headerlink" title="Implementing the Strangler Fig Pattern"></a>Implementing the Strangler Fig Pattern</h3><p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20250128104703700.png" alt=""></p>
+<h4 id="1-Identify-Candidate-Functionalities"><a href="#1-Identify-Candidate-Functionalities" class="headerlink" title="1 - Identify Candidate Functionalities"></a>1 - Identify Candidate Functionalities</h4><p>모놀리스를 분석해 독립적이고 영향력이 크거나 자주 변경되는 기능을 식별한다. 변경 빈도, 종속성 분석 또는 오류율과 같은 메트릭을 사용해 구성 요소의 우선 순위를 정할 수 있다.</p>
+<h4 id="2-Design-the-Microservice"><a href="#2-Design-the-Microservice" class="headerlink" title="2 - Design the Microservice"></a>2 - Design the Microservice</h4><p>새 마이크로서비스의 범위를 정의해 특정 도메인이나 기능에 부합하도록 한다. 또한 다른 컴포넌트와 통신할 수 있도록 잘 문서화된 API가 필요하다.</p>
+<h4 id="3-Implement-and-Test-the-Microservice"><a href="#3-Implement-and-Test-the-Microservice" class="headerlink" title="3 - Implement and Test the Microservice"></a>3 - Implement and Test the Microservice</h4><p>마이크로서비스를 독립적으로 구현하여 모놀리스의 기능을 미러링하는지 확인한다. 그런 뒤 자동화된 테스트와 시뮬레이션된 트래픽으로 철저하게 테스트하여 정확성과 성능을 검증한다.</p>
+<h4 id="4-Set-Up-an-API-Gateway-or-Proxy-for-Routing"><a href="#4-Set-Up-an-API-Gateway-or-Proxy-for-Routing" class="headerlink" title="4 - Set Up an API Gateway or Proxy for Routing"></a>4 - Set Up an API Gateway or Proxy for Routing</h4><p>클라이언트 요청에 대한 단일 진입점으로 Nginx와 같은 API 게이트웨이 또는 프록시를 도입한다. 추출된 기능에 대해서는 마이크로서비스로 트래픽을 라우팅하고 나머지 요청은 모놀리스로 보내도록 게이트웨이를 구성한다.</p>
+<h4 id="5-Redirect-Traffic"><a href="#5-Redirect-Traffic" class="headerlink" title="5 - Redirect Traffic"></a>5 - Redirect Traffic</h4><p>모놀리스를 폴백으로 유지하면서 트래픽의 일부만 마이크로서비스로 라우팅하는 것으로 시작한다. 기능 토글 또는 카나리아 배포를 사용해 이 리디렉션을 제어하고 모니터링한다. 대부분의 경우 읽기 기능을 먼저 서비스로 보낸 뒤 쓰기 기능을 수행한다.</p>
+<p>모니터링 도구를 사용해 서비스로 라우팅되는 트래픽을 관찰하고 응답 시간, 오류율, 리소스 사용과 같은 메트릭을 추적한다. 마이크로 서비스가 안정적인 것으로 확인되면 모든 관련 트래픽을 마이크로서비스로 라우팅한다.</p>
+<h4 id="6-Decommission-Monolithic-Components"><a href="#6-Decommission-Monolithic-Components" class="headerlink" title="6 - Decommission Monolithic Components"></a>6 - Decommission Monolithic Components</h4><p>마이크로서비스가 특정 기능에 대한 모든 트래픽을 처리하면 해당 코드와 종속성을 모놀리스에서 제거한다.</p>
+<h3 id="Best-Practices-for-Strangler-Fig-Pattern"><a href="#Best-Practices-for-Strangler-Fig-Pattern" class="headerlink" title="Best Practices for Strangler Fig Pattern"></a>Best Practices for Strangler Fig Pattern</h3><p>Strangler Fig 패턴은 모놀리식 아키텍처에서 마이크로서비스로 전환하는 가장 안전한 접근 방식 중 하나다. 그러나 이 패턴을 사용할 때 염두에 두어야 할 몇 가지 모범 사례는 다음과 같다.</p>
+<ul>
+<li>전환 프로세스에 대한 확신을 얻기 위해 위험이 낮고 잘 정의된 기능부터 시작</li>
+<li>전환하는 동안 마이크로서비스에 대해 모놀리스와 동일한 인터페이스를 유지해 기존 클라이언트의 중단을 방지</li>
+<li>빅뱅식 재시작을 회피하고 한 번에 하나의 기능씩 마이그레이션하여 위험과 중단 최소화</li>
+<li>분산 추적 및 로깅을 구현하여 모놀리스와 마이크로서비스 간의 상호 작용을 모니터링</li>
+<li>각 마이크로서비스가 안정화되면 더 이상 사용되지 않는 구성 요소를 제거해 모놀리스를 정리하여 좀비 코드 방지</li>
+</ul>
+<h2 id="The-Parallel-Run-Pattern"><a href="#The-Parallel-Run-Pattern" class="headerlink" title="The Parallel Run Pattern"></a>The Parallel Run Pattern</h2><p>병렬 실행 패턴은 모놀리식 애플리케이션과 새로 구현된 마이크로서비스가 특정 기능에 대해 나란히 작동하는 전환 전략이다. 이를 통해 팀은 모놀리스를 즉시 폐기하지 않고도 새 서비스의 성능과 정확성을 검증할 수 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20250128105547206.png" alt=""></p>
+<p>병렬 실행 패턴을 실행하는 주요 단계는 다음과 같다.</p>
+<ul>
+<li>모놀리스에서 새 마이크로서비스로 전환해야 하는 기능을 구현한다. 두 시스템이 동일한 입 출력을 지원하는지 확인한다.</li>
+<li>들어오는 요청을 복제해 모놀리스와 마이크로서비스 모두에 보낸다. 마이크로서비스가 백그라운드에서 작동하면서 섀도우 응답을 제공하는 동안 모놀리스는 계속해서 기본 데이터 소스 역할을 한다.</li>
+<li>모놀리스와 마이크로서비스의 출력을 기록하고 비교한다. 이를 통해 불일치를 식별하고 마이크로서비스가 예상대로 작동하는지 확인할 수 있다.</li>
+<li>트래픽의 일부를 마이크로서비스로 라우팅하고 그 동작을 모니터링하는 것으로 시작한다.</li>
+<li>마이크로서비스에 장애가 발생하면 요청이 자동으로 모놀리스로 리디렉션 되도록 폴백을 지원한다.</li>
+<li>마이크로서비스가 문제 없이 트래픽의 100%를 지속적으로 처리하면 모놀리식 시스템에서 해당 기능을 제거할 수 있다.</li>
+</ul>
+<p>이 패턴을 구현하기 위한 몇 가지 주요 테크닉은 다음과 같다.</p>
+<ul>
+<li><strong>Traffic Splitting:</strong> 트래픽의 일정 비율을 마이크로서비스로 라우팅하고 나머지는 모놀리스로 라우팅한다. Envoy, Istio, Nginx와 같은 도구를 사용하면 트래픽 라우팅을 세밀하게 제어할 수 있다.</li>
+<li><strong>A/B Testing:</strong> 사용자를 그룹으로 나누어 실제 시나리오에서 마이크로서비스의 동작을 테스트할 수 있다.</li>
+<li><strong>Request Duplication:</strong> 게이트웨이 수준에서 요청을 복제해 모놀리스와 마이크로서비스 모두에 전송한다. 최종 사용자에게 영향을 주지 않고 결과를 비교할 수 있다.</li>
+<li><strong>Output Comparison:</strong> Diffy와 같은 도구를 통해 모놀리스와 마이크로서비스의 응답을 비교해 불일치 여부를 확인한다.</li>
+</ul>
+<h2 id="Change-Data-Capture"><a href="#Change-Data-Capture" class="headerlink" title="Change Data Capture"></a>Change Data Capture</h2><p>CDC는 데이터베이스의 변경 사항을 실시간으로 모니터링하고 캡쳐하는 전략이다. 모놀리식 아키텍처에서 마이크로서비스로 전환하는 상황에서 CDC는 데이터 일관성을 유지하고 디커플링을 가능하게 하는 데 중요한 역할을 한다. CDC는 데이터베이스 변경 사항을 캡처하고 스트리밍함으로써 아키텍처가 진화하더라도 마이크로서비스가 모놀리스와 동기화된 상태를 유지할 수 있도록 한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20250128110127070.png" alt=""></p>
+<h3 id="CDC-Pattern-Step-by-step"><a href="#CDC-Pattern-Step-by-step" class="headerlink" title="CDC Pattern Step-by-step"></a>CDC Pattern Step-by-step</h3><h4 id="Capture-Changes"><a href="#Capture-Changes" class="headerlink" title="Capture Changes"></a>Capture Changes</h4><p>CDC 도구는 모놀리스 데이터베이스의 변경 사항을 모니터링한다. CDC를 사용하려면 데이터베이스에 변경 사항 로깅 메커니즘이 있어야 한다. 예를 들어 MySQL은 바이너리 로그를 사용해 모든 변경 사항을 기록한다. 데이터베이스 변경 로그는 데이터에 대한 모든 수정 사항을 캡처하여 CDC 프로세스의 진실의 원천이 된다.</p>
+<h4 id="Using-a-CDC-Tool-Debezium"><a href="#Using-a-CDC-Tool-Debezium" class="headerlink" title="Using a CDC Tool (Debezium)"></a>Using a CDC Tool (Debezium)</h4><p>Debezium은 모놀리스의 데이터베이스와 마이크로서비스 아키텍처 사이에 가교 역할을 한다.</p>
+<ul>
+<li>데이터베이스에 연결해 실시간으로 변경 로그 읽기</li>
+<li>이런 변경 사항을 표준화된 이벤트로 변환</li>
+<li>이런 이벤트를 Kafka와 같은 메시징 플랫폼으로 스트리밍</li>
+</ul>
+<h4 id="Use-Kafka-for-Event-Streaming"><a href="#Use-Kafka-for-Event-Streaming" class="headerlink" title="Use Kafka for Event Streaming"></a>Use Kafka for Event Streaming</h4><p>Kafka는 데이터베이스 변경 사항을 스트리밍하기 위한 백본 역할을 한다. 생산자와 소비자를 분리하고 비동기적이고 독립적인 처리를 가능하게 한다. Kafka를 선택한 이유는 안정성과 확장성이 뛰어나고 리플레이를 위한 이벤트 보존이 가능하기 때문이다. 각 테이블 또는 도메인은 Kafka 토픽에 해당시킨다. </p>
+<h4 id="Microservice-Consumes-the-Events"><a href="#Microservice-Consumes-the-Events" class="headerlink" title="Microservice Consumes the Events"></a>Microservice Consumes the Events</h4><p>마이크로서비스는 Kafka 토픽을 구독해 관심 있는 이벤트를 처리한다. 서비스는 이런 이벤트를 처리하고 데이터 저장소를 업데이트하거나 이벤트 유형에 따라 작업을 트리거할 책임이 있다. </p>
+<h4 id="Ensure-Data-Consistency"><a href="#Ensure-Data-Consistency" class="headerlink" title="Ensure Data Consistency"></a>Ensure Data Consistency</h4><p>전환 단계에서는 마이크로서비스와 모놀리스가 일관성을 유지하는지 검증하는 것이 필수적이다. </p>
+<ul>
+<li>마이크로서비스에서 파생된 데이터를 모놀리스의 데이터베이스와 주기적으로 비교한다. </li>
+<li>마이크로서비스에서 멱등적 처리를 통해 중복 이벤트를 우아하게 처리한다.</li>
+</ul>
+<p>처음에는 모놀리식 데이터베이스가 기본 데이터 소스로 남아있겠지만, 시간이 지나면서 마이크로서비스가 특정 도메인의 소유권을 갖게 되고 모놀리스는 마이크로서비스에 더 많은 책임을 위임한다. 결국 모놀리스의 데이터베이스에 대한 의존도가 감소하고 마이크로서비스가 독립적인 데이터 저장소를 관리하게 된다.</p>
+<h2 id="The-Decorating-Collaborator-Pattern"><a href="#The-Decorating-Collaborator-Pattern" class="headerlink" title="The Decorating Collaborator Pattern"></a>The Decorating Collaborator Pattern</h2><p>Decorating Collaborator 패턴은 새로운 마이크로서비스가 기존 모놀리식 구성 요소의 기능을 꾸미거나 보강하는 전환 전략이다. 마이크로서비스는 모놀리스의 기능을 즉시 대체하는 대신 모놀리스와 협업하여 모놀리스의 동작을 개선하거나 수정한다. 이 접근 방식의 주요 단계는 다음과 같다.</p>
+<ul>
+<li><strong>Identify Augmentable Features:</strong> 모놀리스 내에서 모놀리스를 변경하지 않고도 증강 또는 추가 처리를 통해 이점을 얻을 수 있는 기능을 결정한다.</li>
+<li><strong>Set Up Collaboration Points:</strong> 모놀리스와 마이크로서비스 간의 상호 작용 지점을 정의한다. 예를 들어, 특정 작업을 실행하기 전, 작업 완료 후 또는 추가 확인을 위해 실행 중일 수 있다.</li>
+<li><strong>Controlled Interaction:</strong> 모놀리스를 기본 처리기로 유지하면서 특정 호출을 마이크로서비스를 통해 라우팅한다.</li>
+</ul>
+<p>이 패턴의 이해를 위해 실시간 재고 확인을 통한 모놀리스 주문 처리 시스템을 보강하는 시나리오를 생각해보자.</p>
+<ul>
+<li>처음에는 모놀리스가 주문 처리를 하지만 실시간 재고 가용성을 확인하지는 않는다고 가정하자.</li>
+<li>주문 처리 프로세스 중에 재고 가용성을 확인하기 위해 새로운 재고 마이크로서비스가 도입된다.</li>
+<li>모놀리스는 처리를 진행하기 전에 유효성 검사를 위해 주문 데이터를 재고 서비스로 전송한다.</li>
+<li>재고 서비스는 재고 가용성을 확인하고 응답을 반환한다.</li>
+<li>모놀리스는 인벤토리 서비스의 응답에 따라 주문 처리를 진행한다.</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20250128111358517.png" alt=""></p>
+<p>구현 관점에서 보면 처음에는 재고 서비스가 유효성 검사 시도를 섀도잉하고 기록하는 동안 모놀리스가 모든 주문을 처리할 수 있다. 신뢰가 쌓이면 모놀리스는 재고 확인을 위해 재고 서비스에 전적으로 의존한다.</p>
+<h2 id="The-Bulkhead-Pattern"><a href="#The-Bulkhead-Pattern" class="headerlink" title="The Bulkhead Pattern"></a>The Bulkhead Pattern</h2><p>Bulkhead 패턴은 시스템 구성 요소를 분리해 한 부분의 장애가 다른 부분으로 연쇄적 확산하지 않도록 하는 것을 포함한다. 이는 격리가 복원력과 안정성을 보장하는 마이크로서비스와 같은 분산 시스템에서 특히 중요하다. Bulkhead 패턴은 모놀리스에서 마이크로서비스로 전환하는 과정에서 더욱 중요한 역할을 한다. 여기에는 모놀리스 내에서 기능적 경계를 식별하고 이를 별도의 마이크로서비스로 분리하는 것이 포함된다. 각 서비스는 독립적으로 작동하며 장애는 해당 범위 내에 포함된다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20250128111609827.png" alt=""></p>
+<p>핵심 작업은 모놀리스에서 경계를 식별하는 것이다. 이를 위한 몇 가지 단계는 다음과 같다.</p>
+<ul>
+<li>기능 도메인을 분석하고 모놀리스를 별개의 비즈니스 도메인으로 세분화 한다. DDD 원칙을 사용해 마이크로서비스의 후보가 될 수 있는 바운디드 컨텍스트를 식별한다.</li>
+<li>구성 요소 간의 종속성을 매핑한다. 격리를 통해 이점을 얻을 수 있는 긴밀하게 결합된 모듈을 추출하는데 집중한다.</li>
+<li>변경이 잦거나 트래픽이 많거나 독립적인 확장이 필요한 구성 요소를 대상으로 한다.</li>
+</ul>
+<!-- flag of hidden posts --></div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined">Song Hayoung</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="https://songhayoung.github.io/2025/01/28/System%20Design/ByteByteGo/private/from-monolith-to-microservices/">https://songhayoung.github.io/2025/01/28/System%20Design/ByteByteGo/private/from-monolith-to-microservices/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/System-Design/">System Design</a></div><nav id="pagination"></nav><div id="gitalk-container"></div><script>var gitalk = new Gitalk({
+  clientID: '3604b61642355579f55e',
+  clientSecret: 'f552120f18ac5aee3f6297e05e97d94c0a25cd4b',
+  repo: 'SongHayoung.github.io',
+  owner: 'SongHayoung',
+  admin: 'SongHayoung',
+  id: md5(decodeURI(location.pathname)),
+  language: 'en'
+})
+gitalk.render('gitalk-container')</script></div></div><footer class="footer-bg" style="background-image: url(https://xxxx.jpg)"><div class="layout" id="footer"><div class="copyright">&copy;2020 - 2025 By Song Hayoung</div><div class="framework-info"><span>Driven - </span><a target="_blank" rel="noopener" href="http://hexo.io"><span>Hexo</span></a><span class="footer-separator">|</span><span>Theme - </span><a target="_blank" rel="noopener" href="https://github.com/Molunerfinn/hexo-theme-melody"><span>Melody</span></a></div><div class="footer_custom_text">Learning how to walk slowly to not miss important things</div><div class="busuanzi"><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><span id="busuanzi_container_page_pv"><i class="fa fa-file"></i><span id="busuanzi_value_page_pv"></span><span></span></span></div></div></footer><i class="fa fa-arrow-up" id="go-up" aria-hidden="true"></i><script src="https://cdn.jsdelivr.net/npm/animejs@latest/anime.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@latest/velocity.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-ui-pack@latest/velocity.ui.min.js"></script><script src="/js/utils.js?version=1.7.0"></script><script src="/js/fancybox.js?version=1.7.0"></script><script src="/js/sidebar.js?version=1.7.0"></script><script src="/js/copy.js?version=1.7.0"></script><script src="/js/fireworks.js?version=1.7.0"></script><script src="/js/transition.js?version=1.7.0"></script><script src="/js/scroll.js?version=1.7.0"></script><script src="/js/head.js?version=1.7.0"></script><script src="/js/search/algolia.js"></script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+    processEscapes: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  },
+  CommonHTML: {
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "HTML-CSS": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "SVG": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  }
+});
+</script><script type="text/x-mathjax-config">MathJax.Hub.Queue(function() {
+  var all = MathJax.Hub.getAllJax(), i;
+  for (i=0; i < all.length; i += 1) {
+    all[i].SourceElement().parentNode.className += ' has-jax';
+  }
+});
+</script><script src="https://cdn.jsdelivr.net/npm/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><script>if(/Android|webOS|iPhone|iPod|iPad|BlackBerry/i.test(navigator.userAgent)) {
+  $('#nav').addClass('is-mobile')
+  $('footer').addClass('is-mobile')
+  $('#top-container').addClass('is-mobile')
+}</script><div class="search-dialog" id="algolia-search"><div class="search-dialog__title" id="algolia-search-title">Algolia</div><div id="algolia-input-panel"><div id="algolia-search-input"></div></div><hr><div id="algolia-search-results"><div id="algolia-hits"></div><div id="algolia-pagination"></div><div id="algolia-stats"></div></div><span class="search-close-button"><i class="fa fa-times"></i></span></div><div class="search-mask"></div></body></html>

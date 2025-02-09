@@ -1,0 +1,211 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="description" content="[ByteByteGo] Mastering Idempotency: Building Reliable APIs"><meta name="keywords" content="System Design"><meta name="author" content="Song Hayoung"><meta name="copyright" content="Song Hayoung"><title>[ByteByteGo] Mastering Idempotency: Building Reliable APIs | SUMFIのBlog</title><meta name="robots" content="noindex"><link rel="shortcut icon" href="/songcon.ico"><link rel="stylesheet" href="/css/index.css?version=1.7.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@latest/css/font-awesome.min.css?version=1.7.0"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css?version=1.7.0"><meta name="format-detection" content="telephone=no"><meta http-equiv="x-dns-prefetch-control" content="on"><link rel="dns-prefetch" href="https://cdn.jsdelivr.net"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.css"><script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.js" defer></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@latest/dist/gitalk.min.js"></script><script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.10.0/js/md5.min.js"></script><link rel="dns-prefetch" href="https://www.google-analytics.com"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-169368422-1', 'auto');
+ga('send', 'pageview');</script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: {"appId":"7LZ6OJ4D6C","apiKey":"9a84e13f74ea78c3fd54512c10139c56","indexName":"git blog","hits":{"per_page":10},"languages":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}.","hits_stats":"${hits} results found in ${time} ms"}},
+  localSearch: undefined,
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  }
+} </script><meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/rss2.xml" title="SUMFIのBlog" type="application/rss+xml">
+</head><body><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar" data-display="true"><div class="toggle-sidebar-info text-center"><span data-toggle="Toggle article">Toggle site</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">Catalog</div><div class="sidebar-toc__progress"><span class="progress-notice">You've read</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Mastering-Idempotency-Building-Reliable-APIs"><span class="toc-number">1.</span> <span class="toc-text">Mastering Idempotency: Building Reliable APIs</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Idempotency-in-API-Design"><span class="toc-number">2.</span> <span class="toc-text">Idempotency in API Design</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Idempotency-vs-Retries"><span class="toc-number">2.1.</span> <span class="toc-text">Idempotency vs Retries</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Challenges-in-Ensuring-Idempotent-Operations"><span class="toc-number">2.2.</span> <span class="toc-text">Challenges in Ensuring Idempotent Operations</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Strategies-to-Implement-Idempotency"><span class="toc-number">3.</span> <span class="toc-text">Strategies to Implement Idempotency</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-Database-Unique-Constraints"><span class="toc-number">3.1.</span> <span class="toc-text">1 - Database Unique Constraints</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-In-Memory-Tracking"><span class="toc-number">3.2.</span> <span class="toc-text">2 - In-Memory Tracking</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-Using-a-Distributed-Cache-Like-Redis"><span class="toc-number">3.3.</span> <span class="toc-text">3 - Using a Distributed Cache Like Redis</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-Using-Message-Duplicate-Detection"><span class="toc-number">3.4.</span> <span class="toc-text">4 - Using Message Duplicate Detection</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Best-Practices-for-Designing-Idempotent-APIs"><span class="toc-number">3.5.</span> <span class="toc-text">Best Practices for Designing Idempotent APIs</span></a></li></ol></li></ol></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="https://avatars3.githubusercontent.com/u/37806785?s=460&amp;u=8c68d685faf7c5280cfbd736a6b1730b55fb4203&amp;v=4"></div><div class="author-info__name text-center">Song Hayoung</div><div class="author-info__description text-center"></div><div class="follow-button"><a target="_blank" rel="noopener" href="https://www.linkedin.com/in/hayoung-song-9523b61bb/">Follow Me</a></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="/archives"><span class="pull-left">Articles</span><span class="pull-right">11266</span></a><a class="author-info-articles__tags article-meta" href="/tags"><span class="pull-left">Tags</span><span class="pull-right">197</span></a><a class="author-info-articles__categories article-meta" href="/categories"><span class="pull-left">Categories</span><span class="pull-right">62</span></a></div><hr><div class="author-info-links"><div class="author-info-links__title text-center">VISITED</div><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Seoul Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Jeju Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">British Columbia Canada</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Boracay Philippines</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">三重　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">大阪　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">名古屋　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">静岡　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">札幌　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">京都　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Bangkok Thailand</a></div></div></div><div id="content-outer"><div id="top-container" style="background-image: url(https://xxxx.jpg)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="/">SUMFIのBlog</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus">   <a class="site-page" href="/">Home</a><a class="site-page" href="/archives">Archives</a><a class="site-page" href="/tags">Tags</a><a class="site-page" href="/categories">Categories</a><a class="site-page" href="/about">About</a></span><span class="pull-right"><a class="site-page social-icon search"><i class="fa fa-search"></i><span> Search</span></a></span></div><div id="post-info"><div id="post-title">[ByteByteGo] Mastering Idempotency: Building Reliable APIs</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2025-02-07</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/">System Design</a><i class="fa fa-angle-right" aria-hidden="true"></i><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/Byte-Byte-Go/">Byte Byte Go</a><div class="post-meta-wordcount"><span>Word count: </span><span class="word-count">2k</span><span class="post-meta__separator">|</span><span>Reading time: 12 min</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div class="article-container" id="post-content"><h2 id="Mastering-Idempotency-Building-Reliable-APIs"><a href="#Mastering-Idempotency-Building-Reliable-APIs" class="headerlink" title="Mastering Idempotency: Building Reliable APIs"></a>Mastering Idempotency: Building Reliable APIs</h2><span id="more"></span>
+<p>멱등성은 동일한 작업을 여러 번 수행해도 한 번 수행한 것과 동일한 결과가 나오도록 하는 작업의 속성이다. API의 맥락에서 이는 클라이언트가 중복 입력이나 반복되는 부작용과 같은 의도하지 않은 결과를 초래하지 않고 동일한 요청을 여러 번 보낼 수 있음을 의미한다.</p>
+<ul>
+<li>사용자가 온라인 결제를 시작했지만 네트워크 문제로 인해 시간 초과가 발생하면 재시도 메커니즘의 일부로 결제 API가 다시 호출된다. 시간 초과가 발생하지 않으면 동일한 거래에 대해 사용자에게 여러 번 요금이 청구될 수 있다.</li>
+<li>고객이 장바구니에 상품을 추가하고 주문을 한다. 하지만 인터넷 연결이 느려서 “주문하기” 버튼을 반복해서 누른다. 이 경우 동일한 주문이 여러 번 생성되어 중복 배송 및 재고 관리가 잘못될 수 있다.</li>
+<li>사용자가 서비스에 등록했지만 확인 페이지가 제대로 로드되지 않으면 등록 양식을 다시 제출하라는 메세지가 표시된다. 멱등성이 없으면 중복 사용자 계정이 생성될 수 있다.</li>
+</ul>
+<p>멱등성은 다음과 같은 이유로 안정성과 일관성을 위해 매우 중요하다.</p>
+<ul>
+<li>네트워크 문제로 인해 API 요청이 실패하거나 시간이 초과될 수 있다. 이런 경우 클라이언트는 작업이 성공하는지 확인하기 위해 요청을 재시도하는 경우가 많다. 멱등하지 않으면 재시도로 인해 원치 않는 중복이나 데이터 손상이 발생할 수 있다.</li>
+<li>멱등적 작업은 여러 요청이 처리될 수 있는 경쟁 조건을 관리하는데 도움이 된다.</li>
+<li>멱등성은 예측 가능성과 안정성을 제공해 사용자가 일관되지 않거나 잘못된 결과를 경험하지 않도록 보장한다.</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20250207135039225.png" alt=""></p>
+<h2 id="Idempotency-in-API-Design"><a href="#Idempotency-in-API-Design" class="headerlink" title="Idempotency in API Design"></a>Idempotency in API Design</h2><p>멱등성 개념은 본질적으로 HTTP 메소드와 연관되어 있으며 멱등적 속성에 따라 분류할 수 있다.</p>
+<ul>
+<li><strong>Idempotent Methods</strong><ul>
+<li>GET은 서버 상태를 수정하지 않고 정보를 검색한다. 리소스 상태가 변경되지 않는 한 GET 요청은 횟수에 상관 없이 응답이 동일하게 유지된다.</li>
+<li>PUT은 리소스를 업데이트하거나 만든다. 동일한 데이터에 대한 여러 PUT 요청은 동일한 결과를 생성한다.</li>
+<li>DELETE는 리소스를 삭제한다. 리소스가 삭제되면 후속 DELETE 요청은 더 이상 효과가 없으므로 멱등하다.</li>
+<li>HEAD는 GET과 유사하지만 헤더만 검색한다. 이 메서드 역시 서버 상태를 수정하지 않으므로 멱등적이다.</li>
+</ul>
+</li>
+<li><strong>Non-Idempotent Method</strong><ul>
+<li>POST는 일반적으로 새 리소스를 만들거나 부수효과가 있는 작업을 수행하는데 사용된다. 일반적으로 요청을 반복하면 여러 개의 새 리소스가 생성되거나 다른 부수효과가 발생할 수 있으므로 POST는 명등적이지 않다.</li>
+</ul>
+</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20250207135648892.png" alt=""></p>
+<h3 id="Idempotency-vs-Retries"><a href="#Idempotency-vs-Retries" class="headerlink" title="Idempotency vs Retries"></a>Idempotency vs Retries</h3><p>멱등성과 재시도는 비슷한 개념이지만 서로 다른 개념이다.</p>
+<ul>
+<li>멱등성은 의도적으로 작업을 다시 시도하든 실패로 인해 작업을 다시 시도하든 상관 없이 동일한 작업을 반복해도 동일한 결과가 나오도록 한다.</li>
+<li>재시도는 요청을 다시 전송해 일시적인 오류를 처리하는 메커니즘이다. 재시도가 구현되면 반복되는 작업으로 인한 의도하지 않은 부작용을 피하기 위해 멱등성이 중요해진다.</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20250207135916820.png" alt=""></p>
+<h3 id="Challenges-in-Ensuring-Idempotent-Operations"><a href="#Challenges-in-Ensuring-Idempotent-Operations" class="headerlink" title="Challenges in Ensuring Idempotent Operations"></a>Challenges in Ensuring Idempotent Operations</h3><p>멱등성은 매우 중요하지만 구현하기 어려운 문제이기도 하다. 멱등성을 지원하기 위한 몇 가지 챌린지는 다음과 같다.</p>
+<ul>
+<li><strong>Uniqueness</strong> <strong>of</strong> <strong>Identifiers</strong>: 멱등성은 종종 트랜잭션 ID 또는 요청 ID와 같은 고유 식별자에 의존한ㄴ다. 분산 시스템에서 이런 식별자를 일관되게 생성하고 관리하는 것은 어려울 수 있다.</li>
+<li><strong>Concurrent Requests</strong>: 동일한 ID를 가진 요청이 동시에 발생하면 경쟁 상태가 발생할 수 있다. 동시 작업 전반에서 스레드 세이프와 일관된 동작을 보장하려면 신중한 설계가 필요하다.</li>
+<li><strong>Partial Failures</strong>: 여러 단계를 포함하는 작업(e.g. 데이터베이스 업데이트 및 알림 전송)은 중간에 실패할 수 있다. 롤백 메커니즘을 설계하거나 최종적인 일관성을 보장하는 것은 멱등적 상태를 유지하는데 매우 중요하다.</li>
+<li><strong>State Management</strong>: 처리된 요청이나 리소스 상태(e.g. 데이터베이스 또는 캐시 사용)를 추적하는 것은 멱등성에 필요하지만 성능 오버헤드가 발생하거나 추가 인프라가 필요할 수 있다.</li>
+<li><strong>Cache Expiry</strong>: 분산 캐시를 사용해 멱등키를 추적하는 경우 캐시 만료 관리가 매우 중요하다. 만료된 키는 클라이언트가 키를 퇴거한 후 요청을 다시 시도하는 경우 중복 처리로 이어질 수 있다.</li>
+</ul>
+<h2 id="Strategies-to-Implement-Idempotency"><a href="#Strategies-to-Implement-Idempotency" class="headerlink" title="Strategies to Implement Idempotency"></a>Strategies to Implement Idempotency</h2><h3 id="1-Database-Unique-Constraints"><a href="#1-Database-Unique-Constraints" class="headerlink" title="1 - Database Unique Constraints"></a>1 - Database Unique Constraints</h3><p>데이터베이스 고유 제약 조건은 API에서 멱등성을 구현하는 가장 간단하고 신뢰할 수 있는 방법 중 하나다. 트랜잭션 ID, 요청 ID와 같은 특정 필드에 고유성을 적용함으로써 데이터베이스 수준에서 중복 작업을 방지할 수 있다. </p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20250207140635062.png" alt=""></p>
+<ul>
+<li><strong>Design the Schema:</strong> 데이터베이스 테이블에 필드를 추가해 각 작업에 대한 고유 식별자(unique key)를 저장한다. </li>
+<li><strong>Generate Unique Identifiers:</strong> 클라이언트 또는 서버는 각 API 요청에 대해 고유 식별자(e.g. UUID or hashvalue of payload)를 생성한다. 이 식별자는 요청 페이로드에 포함되며 작업 중에 데이터베이스에 저장된다.</li>
+<li><strong>Database Validation:</strong> API가 요청을 받으면 멱등키와 함께 데이터를 삽입하려 시도한다. 테이블의 고유 식별자는 멱등성 키의 중복성을 위반하는지 확인한다.</li>
+<li><strong>API Response:</strong> 정상적으로 처리된 API는 성공 응답을 반환하고, 작업이 중복된 경우에는 원래 요청과 동일한 응답을 반환한다.</li>
+</ul>
+<p>데이터베이스 제약 조건을 사용한 접근 방식의 장점은 다음과 같다.</p>
+<ul>
+<li><strong>Simplicity:</strong> 대부분의 개발자에게 익숙한 데이터베이스 기능을 사용하며 추가 인프라가 필요 없다.</li>
+<li><strong>Reliability:</strong> 데이터베이스는 고유한 제약 조건을 통해 일관성을 보장하고 중복을 방지한다.</li>
+<li><strong>Strong Consistency:</strong> 데이터베이스가 고유성을 강제하기 때문에 API는 중복 제거를 위해 상태를 유지할 필요가 없다.</li>
+<li><strong>Ease of Implementation:</strong> 고유 키를 추가하고 제약 조건 위반 오류를 처리하는 것 외에 최소한의 추가 코딩이 필요하다.</li>
+</ul>
+<p>이 접근 방식의 한계는 다음과 같다.</p>
+<ul>
+<li><strong>Performance Bottlenecks</strong>: 최신 데이터베이스는 고유 제약 조건을 처리하는데 고도로 최적화 되어있다. 하지만 쓰기 트래픽이 높은 시스템에서는 고유 제약 조건으로 인한 성능 문제가 발생할 수 있다.</li>
+<li><strong>Scalability Challenges</strong>: 분산 데이터베이스에서 노드 전체에 고유성을 적용하면 지연 시간이 늘어나거나 글로벌 조정이 필요할 수 있다.</li>
+<li><strong>Complex Error Handling</strong>: API는 데이터베이스 제약 조건 위반을 정상적으로 처리하고 의미 있는 응답을 클라이언트에 반환해야 한다.</li>
+</ul>
+<h3 id="2-In-Memory-Tracking"><a href="#2-In-Memory-Tracking" class="headerlink" title="2 - In-Memory Tracking"></a>2 - In-Memory Tracking</h3><p>인메모리 추적은 가볍고 간단한 방법으로 멱등성을 구현할 수 있다. 여기에는 처리된 요청에 대한 고유 식별자를 저장하는 데이터 구조를 메모리에 유지하는 것이 포함된다. 새 요청을 처리하기 전에 시스템은 이 인메모리 저장소를 확인해 요청이 이미 처리되었는지 여부를 확인한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20250207141409323.png" alt=""></p>
+<ul>
+<li><strong>Generate a Unique Identifier:</strong> 클라이언트 또는 서버는 각 API 요청에 대해 고유 식별자를 생성한다.</li>
+<li><strong>Initialize the In-Memory Store:</strong> Hash map과 같은 데이터 구조를 사용해 처리된 요청 ID를 저장한다.</li>
+<li><strong>Check the In-Memory Store:</strong> API가 새 요청을 받으면 먼저 인메모리 저장소에 멱등키가 존재하는지 확인한다. 키가 발견되면 요청이 이미 처리된 것으로 시스템은 재처리를 건너 뛰고 이전과 동일한 응답을 반환한다.</li>
+<li><strong>Process the Request:</strong> 키를 찾을 수 없는 경우 요청을 정상적으로 처리하고 성공적으로 완료된 후 멱등키를 인메모리 저장소에 추가한다.</li>
+<li><strong>Return the Response:</strong> 클라이언트에 응답을 반환해 동일한 요청이 다시 수신될 경우 시스템이 재처리 없이 일관되게 응답할 수 있도록 한다.</li>
+</ul>
+<p>인메모리 스토어를 통한 멱등성 테크닉은 다음에 가장 적합하다.</p>
+<ul>
+<li><strong>Short-lived Services</strong>: 요청 기록이 서비스 런타임 이후에도 유지될 필요가 없는 수명이 제한된 API</li>
+<li><strong>Single-Node Environments</strong>: 상태 공유가 필요하지 않은 단일 인스턴스에 배포된 서비스</li>
+<li><strong>Low-Traffic APIs</strong>: 고유 요청의 수가 메모리에 편안하게 들어갈 수 있을 만큼 적은 시스템</li>
+</ul>
+<p>인메모리 추적 접근 방식의 장점은 다음과 같다.</p>
+<ul>
+<li><strong>Simplicity:</strong> 표준 데이터 구조를 사용해 쉽게 구현 가능하고 외부 종송성이나 인프라가 필요하지 않다.</li>
+<li><strong>Performance:</strong> 인메모리 데이터 구조의 조회 및 삽입이 빠르기 때문에 지연 시간이 짧은 애플리케이션에 매우 효율적이다.</li>
+<li><strong>No Additional Infrastructure:</strong> 데이터베이스나 분산 캐시와 같은 복잡한 외부 시스템이 필요하지 않은 소규모 또는 수명이 짧은 서비스에 적합하다.</li>
+<li><strong>Ideal for Single-Node Services:</strong> 서비스가 단일 노드에 배포되고 다른 인스턴스와 상태를 공유할 필요가 없는 환경에서 잘 동작한다.</li>
+</ul>
+<p>인메모리 추적 접근 방식의 한계는 다음과 같다.</p>
+<ul>
+<li><strong>Volatility</strong>: 데이터는 메모리에 저장되므로 서비스가 다시 시작되거나 충돌이 발생하면 손실된다. 이런 시나리오에서는 중복 처리가 발생할 수 있다.</li>
+<li><strong>Limited Scalability</strong>: 인메모리 추적은 여러 서비스 인스턴스가 실행되는 분산 시스템에서는 적합하지 않다. 노드 간에 상태를 동기화하려면 추가적인 조정 메커니즘이 필요하다.</li>
+<li><strong>Memory Constraints</strong>: 인메모리 저장소의 크기는 시스템의 사용 가능한 메모리에 의해 제한된다. 트래픽이 많거나 수명이 긴 서비스에는 메모리가 제공할 수 있는 것보다 더 많은 저장 공간이 필요할 수 있다.</li>
+<li><strong>Concurrency Challenges</strong>: 멀티스레드 환경에서는 인메모리 저장소에 액세스할 때 경쟁 조건을 방지하기 위해 적절한 동기화가 필요하다.</li>
+<li><strong>TTL Management</strong>: 오래된 항목을 만료하는 메커니즘이 없으면 인메모리 저장소가 무한정 증가해 메모리가 고갈될 수 있다. 각 항목에 대해 TTL을 구현하면 복잡성이 증가한다.</li>
+</ul>
+<h3 id="3-Using-a-Distributed-Cache-Like-Redis"><a href="#3-Using-a-Distributed-Cache-Like-Redis" class="headerlink" title="3 - Using a Distributed Cache Like Redis"></a>3 - Using a Distributed Cache Like Redis</h3><p>고성능 인메모리 데이터 저장소인 Redis를 사용하면 처리된 멱등키를 추적해 API에서 멱등성을 구현할 수 있다. 각 API 요청에 대해 고유 식별자를 Redis에 저장하면 요청을 처리하기 전에 중복 여부를 알 수 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20250207142359654.png" alt=""></p>
+<ul>
+<li><strong>Generate a Unique Identifier:</strong> 클라이언트 또는 서버는 각 API 요청에 대해 고유 식별자를 생성한다.</li>
+<li><strong>Store the Request ID in Redis:</strong> API가 요청을 받으면 먼저 Redis에 멱등키가 존재하는지 확인한다. ID가 존재하지 않으면 서버는 요청을 처리하고 TTL과 함께 멱등키를 저장한다. 이 연산을 Redis에서 원자적으로 구현하기 위해 SETNX와 같은 연산을 사용한다.</li>
+</ul>
+<p>Redis를 사용해 멱등성을 처리하는 것은 아래 시나리오에서 효과적이다.</p>
+<ul>
+<li><strong>Stateless Microservices</strong>: 분산 시스템에서 상태 비저장 서비스는 여러 노드에서 상태를 유지하기 위해 Redis와 같은 외부 시스템에 의존한다.</li>
+<li><strong>High-Traffic APIs</strong>: Redis의 짧은 지연 시간은 대량의 요청을 처리하는 API의 경우에도 최소한의 성능 오버헤드를 보장한다.</li>
+<li><strong>Distributed Systems</strong>: Redis는 서비스의 모든 인스턴스에서 액세스할 수 있는 중앙 집중식 저장소로 운영되므로 분산 환경 전반에서 멱등성을 보장하는데 이상적이다.</li>
+<li><strong>Temporary Operations</strong>: 제한된 시간 동안만 멱등성이 필요한 작업의 경우, Redis의 TTL 기능은 자동 정리에 적합하다.</li>
+</ul>
+<p>Redis를 사용하는 것의 장점은 다음과 같다.</p>
+<ul>
+<li><strong>High Performance</strong>: Redis는 고속 읽기 및 쓰기 작업을 제공해 API 요청에 대한 지연 시간을 최소화한다.</li>
+<li><strong>Atomic Operations</strong>: SETNX 및 EXPIRE와 같은 명령은 원자적이기 때문에 스레드 안전성과 경쟁 조건 없는 동작을 보장한ㄴ다.</li>
+<li><strong>Scalability</strong>: Redis는 클러스터링을 지원하므로 분산 시스템과 트래픽이 많은 환경에 적합하다.</li>
+<li><strong>TTL Management</strong>: 키의 자동 만료로 메모리 낭비를 방지하고 수동 정리가 필요 없다.</li>
+<li><strong>Simplicity</strong>: Redis의 간단한 API로 애플리케이션과 쉽게 통합할 수 있다.</li>
+</ul>
+<p>Redis를 사용하는 것의 단점은 다음과 같다.</p>
+<ul>
+<li><strong>Dependency on External Infrastructure</strong>: Redis 인스턴스 또는 클러스터를 설정하고 관리해야 하므로 운영 복잡성이 증가한다.</li>
+<li><strong>Memory Constraints</strong>:  Redis는 메모리에 데이터를 저장하므로 사용 가능한 메모리에 따라 멱등키 저장소의 크기가 제한된다. 트래픽이 많은 시스템에는 상당한 리소스가 필요할 수 있다.</li>
+<li><strong>Key Expiry Trade-Off</strong>: TTL을 너무 짧게 설정하면 키가 만료된 후 재시도가 발생하면 중복 요청이 처리될 수 있다. 너무 길게 설정하면 메모리가 낭비될 수 있다.</li>
+<li><strong>Failure Scenarios</strong>: Redis 인스턴스가 충돌하거나 사용할 수 없게 되면 추가적인 이중화 메커니즘이 존재하지 않는 한 멱등성 추적이 실패할 수 있다.</li>
+</ul>
+<h3 id="4-Using-Message-Duplicate-Detection"><a href="#4-Using-Message-Duplicate-Detection" class="headerlink" title="4 - Using Message Duplicate Detection"></a>4 - Using Message Duplicate Detection</h3><p>이벤트 드리븐 시스템에서는 특히 재시도가 수반되는 경우 동일한 메시지를 여러 번 처리하는 것을 방지하기 위해 멱등성을 보장하는 것이 필수적이다. Azure Service Bus, RabbitMQ 등의 메시지 브로커는 고유 메시지 식별자(MessageId)와 타임 윈도우에 의존하여 중복을 자동으로 삭제하는 기본 제공 중복 감지 메커니즘을 제공한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20250207143202473.png" alt=""></p>
+<ul>
+<li><strong>Unique Message Identifiers:</strong> 브로커로 전송되는 각 메시지에는 고유한 MessageId가 할당된다. 지정된 시간 내에 동일한 MessageId를 가진 메시지가 수신되면 브로커는 이를 중복 메시지로 식별하여 삭제한다.</li>
+<li><strong>Time Windows:</strong> 브로커는 구성 가능한 타임 윈도우(e.g. 15sec, 5min etc) 동안 처리된 MessageId의 기록을 유지한다.</li>
+<li><strong>Deduplication:</strong> 브로커는 메시지를 수신하면 해당 MessageId를 기록과 대조하여 확인한다. 해당 ID가 기간 내에 존재하면 브로커는 메시지를 삭제한다. 그러나 ID가 새로운 것이면 메시지를 처리하고 해당 ID를 기록에 추가한다.</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20250207143319347.png" alt=""></p>
+<ul>
+<li><strong>Event-Driven Systems</strong>: 분산형 비동기 아키텍처에서 이벤트의 일관된 처리를 보장</li>
+<li><strong>High-Throughput Environments</strong>: 성능과 확장성이 중요한 대용량 메시지 처리</li>
+<li><strong>Distributed Consumers</strong>: 대기열 또는 토픽의 여러 소비자에 걸쳐 멱등성 상태를 관리</li>
+<li><strong>Stateless Microservices</strong>: 메시지 추적을 위해 브로커에 의존하는 상태 비저장 시스템에 이상적</li>
+</ul>
+<p>이 접근법의 장점은 다음과 같다.</p>
+<ul>
+<li><strong>Simplified Application Logic</strong>: 멱등성 상태 관리를 브로커로 오프로드해 애플리케이션 코드의 복잡성을 줄인다.</li>
+<li><strong>Scalability</strong>: 처리량이 많은 시스템을 위해 설계되어 대량의 메시지에서도 일관된 동작을 보장한다.</li>
+<li><strong>Performance</strong>: 메시징 레이어에서의 중복 제거가 빨라 다운스트림 소비자의 대기 시간을 최소화한다.</li>
+<li><strong>Distributed Support</strong>: Azure Service Bus 및 RabbitMQ와 같은 브로커는 분산 환경을 지원하여 여러 소비자에 걸쳐 일관성을 보장한다.</li>
+</ul>
+<p>이 접근법의 단점은 다음과 같다.</p>
+<ul>
+<li><strong>Managing Time Window</strong>: 중복 제거는 지정된 시간 범위 내에서만 보장된다. 기간이 만료된 후 재시도가 발생하면 중복이 처리될 수 있다.</li>
+<li><strong>Infrastructure Dependency</strong>: 애플리케이션이 메시징 시스템에 의존하게 되어 브로커의 가용성 및 구성에 대한 의존도가 높아질 수 있다.</li>
+<li><strong>Configuration Overhead</strong>: 성능과 메모리 사용량의 균형을 맞추려면 적절한 설정과 튜닝(e.g. 타임 윈도우 크기, 기록 크기 제한 등)이 필요하다.</li>
+<li><strong>Broker-Specific Features</strong>: 중복 제거 동작과 기능은 브로커마다 다르므로 코드 변경 없이 시스템 간에 전환하기가 어렵다.</li>
+<li><strong>Cost</strong>: 중복 감지와 같은 고급 브로커 기능을 사용하면 추가 비용이 발생할 수 있으며, 특히 Azure Service Bus와 같은 클라우드 기반 솔루션에서는 더욱 그렇다.</li>
+</ul>
+<h3 id="Best-Practices-for-Designing-Idempotent-APIs"><a href="#Best-Practices-for-Designing-Idempotent-APIs" class="headerlink" title="Best Practices for Designing Idempotent APIs"></a>Best Practices for Designing Idempotent APIs</h3><p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20250207143706612.png" alt=""></p>
+<ul>
+<li><strong>Choose Appropriate Identifiers:</strong> 고유하고 결정적인 식별자를 사용하여 요청을 추적하라. 일반적으로 UUID와 해시 페이로드가 사용된다. 고유 식별자는 중복 처리를 방지하고 여러 번의 재시도에 걸쳐 요청을 추적하는 데 도움이 된다.</li>
+<li><strong>Document Idempotency Policies:</strong> 어떤 API 엔드포인트가 멱등적 상태인지 명확하게 문서화하고 예상되는 동작을 설명하라. 예를 들어, 모든 PUT, DELETE 및 일부 POST 요청이 멱등적이라고 명시하라. 이렇게 하면 개발자가 API와 상호 작용하는 방법을 이해하고 오용을 방지할 수 있다.</li>
+<li><strong>Set Appropriate TTL for Idempotency Records:</strong> 저장된 멱등성 레코드에 TTL을 사용하여 리소스 사용량과 기능의 균형을 맞출 수 있다. 임시 데이터 제출과 같이 일시적인 작업에는 짧은 TTL이 적합하다. 상당한 지연 후 재시도가 필요할 수 있는 작업에는 더 긴 TTL이 필요하다.</li>
+<li><strong>Implement Logging:</strong> 요청 식별자 및 타임스탬프를 포함한 모든 멱등성 관련 이벤트를 기록해라. 또한 처리 또는 중복 제거 중에 발생한 멱등성 상태 확인 결과와 오류를 기록해라.</li>
+<li><strong>Handle Partial Failures:</strong> 네트워크 시간 초과 또는 서비스 충돌과 같은 부분 장애가 발생해도 시스템이 멱등성 상태를 유지하면서 복구할 수 있는지 확인해라. 트랜잭션 시스템 또는 롤백 메커니즘을 사용하여 일관성을 유지해라. 예를 들어, 결제 시스템은 재시도 시에도 자금이 완전히 이체되거나 전혀 이체되지 않도록 보장한다.</li>
+</ul>
+<!-- flag of hidden posts --></div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined">Song Hayoung</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="https://songhayoung.github.io/2025/02/07/System%20Design/ByteByteGo/private/mastering-idempotency-building-reliable-apis/">https://songhayoung.github.io/2025/02/07/System%20Design/ByteByteGo/private/mastering-idempotency-building-reliable-apis/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/System-Design/">System Design</a></div><nav id="pagination"></nav><div id="gitalk-container"></div><script>var gitalk = new Gitalk({
+  clientID: '3604b61642355579f55e',
+  clientSecret: 'f552120f18ac5aee3f6297e05e97d94c0a25cd4b',
+  repo: 'SongHayoung.github.io',
+  owner: 'SongHayoung',
+  admin: 'SongHayoung',
+  id: md5(decodeURI(location.pathname)),
+  language: 'en'
+})
+gitalk.render('gitalk-container')</script></div></div><footer class="footer-bg" style="background-image: url(https://xxxx.jpg)"><div class="layout" id="footer"><div class="copyright">&copy;2020 - 2025 By Song Hayoung</div><div class="framework-info"><span>Driven - </span><a target="_blank" rel="noopener" href="http://hexo.io"><span>Hexo</span></a><span class="footer-separator">|</span><span>Theme - </span><a target="_blank" rel="noopener" href="https://github.com/Molunerfinn/hexo-theme-melody"><span>Melody</span></a></div><div class="footer_custom_text">Learning how to walk slowly to not miss important things</div><div class="busuanzi"><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><span id="busuanzi_container_page_pv"><i class="fa fa-file"></i><span id="busuanzi_value_page_pv"></span><span></span></span></div></div></footer><i class="fa fa-arrow-up" id="go-up" aria-hidden="true"></i><script src="https://cdn.jsdelivr.net/npm/animejs@latest/anime.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@latest/velocity.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-ui-pack@latest/velocity.ui.min.js"></script><script src="/js/utils.js?version=1.7.0"></script><script src="/js/fancybox.js?version=1.7.0"></script><script src="/js/sidebar.js?version=1.7.0"></script><script src="/js/copy.js?version=1.7.0"></script><script src="/js/fireworks.js?version=1.7.0"></script><script src="/js/transition.js?version=1.7.0"></script><script src="/js/scroll.js?version=1.7.0"></script><script src="/js/head.js?version=1.7.0"></script><script src="/js/search/algolia.js"></script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+    processEscapes: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  },
+  CommonHTML: {
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "HTML-CSS": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "SVG": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  }
+});
+</script><script type="text/x-mathjax-config">MathJax.Hub.Queue(function() {
+  var all = MathJax.Hub.getAllJax(), i;
+  for (i=0; i < all.length; i += 1) {
+    all[i].SourceElement().parentNode.className += ' has-jax';
+  }
+});
+</script><script src="https://cdn.jsdelivr.net/npm/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><script>if(/Android|webOS|iPhone|iPod|iPad|BlackBerry/i.test(navigator.userAgent)) {
+  $('#nav').addClass('is-mobile')
+  $('footer').addClass('is-mobile')
+  $('#top-container').addClass('is-mobile')
+}</script><div class="search-dialog" id="algolia-search"><div class="search-dialog__title" id="algolia-search-title">Algolia</div><div id="algolia-input-panel"><div id="algolia-search-input"></div></div><hr><div id="algolia-search-results"><div id="algolia-hits"></div><div id="algolia-pagination"></div><div id="algolia-stats"></div></div><span class="search-close-button"><i class="fa fa-times"></i></span></div><div class="search-mask"></div></body></html>
