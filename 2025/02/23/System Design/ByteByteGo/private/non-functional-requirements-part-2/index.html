@@ -1,0 +1,258 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="description" content="[ByteByteGo] Non-Functional Requirements: The Backbone of Great Software - Part 2"><meta name="keywords" content="System Design"><meta name="author" content="Song Hayoung"><meta name="copyright" content="Song Hayoung"><title>[ByteByteGo] Non-Functional Requirements: The Backbone of Great Software - Part 2 | SUMFIのBlog</title><meta name="robots" content="noindex"><link rel="shortcut icon" href="/songcon.ico"><link rel="stylesheet" href="/css/index.css?version=1.7.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@latest/css/font-awesome.min.css?version=1.7.0"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css?version=1.7.0"><meta name="format-detection" content="telephone=no"><meta http-equiv="x-dns-prefetch-control" content="on"><link rel="dns-prefetch" href="https://cdn.jsdelivr.net"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.css"><script src="https://cdn.jsdelivr.net/npm/instantsearch.js@2.1.1/dist/instantsearch.min.js" defer></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.css"><script src="https://cdn.jsdelivr.net/npm/gitalk@latest/dist/gitalk.min.js"></script><script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.10.0/js/md5.min.js"></script><link rel="dns-prefetch" href="https://www.google-analytics.com"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-169368422-1', 'auto');
+ga('send', 'pageview');</script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: {"appId":"7LZ6OJ4D6C","apiKey":"9a84e13f74ea78c3fd54512c10139c56","indexName":"git blog","hits":{"per_page":10},"languages":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}.","hits_stats":"${hits} results found in ${time} ms"}},
+  localSearch: undefined,
+  copy: {
+    success: 'Copy successfully',
+    error: 'Copy error',
+    noSupport: 'The browser does not support'
+  }
+} </script><meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/rss2.xml" title="SUMFIのBlog" type="application/rss+xml">
+</head><body><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar" data-display="true"><div class="toggle-sidebar-info text-center"><span data-toggle="Toggle article">Toggle site</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">Catalog</div><div class="sidebar-toc__progress"><span class="progress-notice">You've read</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Non-Functional-Requirements-The-Backbone-of-Great-Software-Part-2"><span class="toc-number">1.</span> <span class="toc-text">Non-Functional Requirements: The Backbone of Great Software - Part 2</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Key-NFRs-to-Consider"><span class="toc-number">2.</span> <span class="toc-text">Key NFRs to Consider</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Response-Time-Latency"><span class="toc-number">2.1.</span> <span class="toc-text">Response Time&#x2F;Latency</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Throughput"><span class="toc-number">2.2.</span> <span class="toc-text">Throughput</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Resource-Utilization"><span class="toc-number">2.3.</span> <span class="toc-text">Resource Utilization</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Scalability"><span class="toc-number">2.4.</span> <span class="toc-text">Scalability</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Capacity"><span class="toc-number">2.5.</span> <span class="toc-text">Capacity</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Availability"><span class="toc-number">2.6.</span> <span class="toc-text">Availability</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Resiliency-and-Fault-Tolerance"><span class="toc-number">2.7.</span> <span class="toc-text">Resiliency and Fault Tolerance</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Disaster-Recovery"><span class="toc-number">2.8.</span> <span class="toc-text">Disaster Recovery</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Durability"><span class="toc-number">2.9.</span> <span class="toc-text">Durability</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Consistency"><span class="toc-number">2.10.</span> <span class="toc-text">Consistency</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Modularity"><span class="toc-number">2.11.</span> <span class="toc-text">Modularity</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Testability"><span class="toc-number">2.12.</span> <span class="toc-text">Testability</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Code-Quality"><span class="toc-number">2.13.</span> <span class="toc-text">Code Quality</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Configurability"><span class="toc-number">2.14.</span> <span class="toc-text">Configurability</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Security"><span class="toc-number">2.15.</span> <span class="toc-text">Security</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Usability"><span class="toc-number">2.16.</span> <span class="toc-text">Usability</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Interoperability"><span class="toc-number">2.17.</span> <span class="toc-text">Interoperability</span></a></li></ol></li></ol></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="https://avatars3.githubusercontent.com/u/37806785?s=460&amp;u=8c68d685faf7c5280cfbd736a6b1730b55fb4203&amp;v=4"></div><div class="author-info__name text-center">Song Hayoung</div><div class="author-info__description text-center"></div><div class="follow-button"><a target="_blank" rel="noopener" href="https://www.linkedin.com/in/hayoung-song-9523b61bb/">Follow Me</a></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="/archives"><span class="pull-left">Articles</span><span class="pull-right">11304</span></a><a class="author-info-articles__tags article-meta" href="/tags"><span class="pull-left">Tags</span><span class="pull-right">196</span></a><a class="author-info-articles__categories article-meta" href="/categories"><span class="pull-left">Categories</span><span class="pull-right">62</span></a></div><hr><div class="author-info-links"><div class="author-info-links__title text-center">VISITED</div><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Seoul Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Jeju Korea</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">British Columbia Canada</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Boracay Philippines</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">三重　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">大阪　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">名古屋　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">静岡　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">札幌　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">京都　日本</a><a class="author-info-links__name text-center" href="https://songhayoung.github.io/">Bangkok Thailand</a></div></div></div><div id="content-outer"><div id="top-container" style="background-image: url(https://xxxx.jpg)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="/">SUMFIのBlog</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus">   <a class="site-page" href="/">Home</a><a class="site-page" href="/archives">Archives</a><a class="site-page" href="/tags">Tags</a><a class="site-page" href="/categories">Categories</a><a class="site-page" href="/about">About</a></span><span class="pull-right"><a class="site-page social-icon search"><i class="fa fa-search"></i><span> Search</span></a></span></div><div id="post-info"><div id="post-title">[ByteByteGo] Non-Functional Requirements: The Backbone of Great Software - Part 2</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2025-02-23</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/">System Design</a><i class="fa fa-angle-right" aria-hidden="true"></i><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/System-Design/Byte-Byte-Go/">Byte Byte Go</a><div class="post-meta-wordcount"><span>Word count: </span><span class="word-count">2.8k</span><span class="post-meta__separator">|</span><span>Reading time: 17 min</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div class="article-container" id="post-content"><h2 id="Non-Functional-Requirements-The-Backbone-of-Great-Software-Part-2"><a href="#Non-Functional-Requirements-The-Backbone-of-Great-Software-Part-2" class="headerlink" title="Non-Functional Requirements: The Backbone of Great Software - Part 2"></a>Non-Functional Requirements: The Backbone of Great Software - Part 2</h2><span id="more"></span> 
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20250226125902613.png" alt=""></p>
+<h2 id="Key-NFRs-to-Consider"><a href="#Key-NFRs-to-Consider" class="headerlink" title="Key NFRs to Consider"></a>Key NFRs to Consider</h2><h3 id="Response-Time-Latency"><a href="#Response-Time-Latency" class="headerlink" title="Response Time/Latency"></a>Response Time/Latency</h3><p>응답 시간은 사용자 작업과 시스템의 해당 응답 사이의 간격을 말한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20250226125938044.png" alt=""></p>
+<p>즉, 사용자 또는 클라이언트가 시스템이 요청을 처리하고 결과를 제공할 때까지 기다려야 하는 시간이다. 지연 시간을 측정하는 몇 가지 지표는 다음과 같다.</p>
+<ul>
+<li><strong>Average Response Time (Mean):</strong> 시스템이 요청에 응답하는데 걸리는 평균 시간으로 모든 응답 시간을 합산한 후 요청 수로 나누어서 계산한다. 이는 시스템 성능을 전반적으로 파악하는데 유용하지만 극단적인 이상값이 있는 경우 오해의 소지가 있을 수 있다.</li>
+<li><strong>95th or 99th Percentile Response Times:</strong> 요청의 95% 또는 99%가 완료되는 응답 시간을 측정해 최악의 성능 시나리오를 강조한다. 소수이지만 중요한 사용자 하위 집합에 영향을 미치는 이상값과 최대 부하 조건을 식별하는데 도움이 된다.</li>
+<li><strong>Time to First Byte (TTFB):</strong> 클라이언트의 요청과 서버로부터 응답의 첫 바이트가 수신될 때까지의 시간이다. 이 측정 항목은 서버 처리 시간과 네트워크 지연 시간을 반영해 체감 속도와 SEO 순위에 영향을 미치기 때문에 웹 애플리케이션에 매우 중요하다.</li>
+</ul>
+<p>시스템 지연 시간에 큰 영향을 미치는 요인은 다음과 같다.</p>
+<ul>
+<li><strong>Network Overhead:</strong> 바쁜 네트워크는 패킷 지연과 패킷 손실로 인한 재전송 가능성을 유발한다.</li>
+<li><strong>Physical Distance:</strong> 지리적으로 먼 거리를 이동하는 데이터는 왕복 시간이 더 오래 걸린다.</li>
+<li><strong>Protocol Overhead:</strong> 암호화 또는 TLS와 같은 보안 프로토콜은 핸드셰이크와 데이터 인코딩 / 디코딩에 추가 단계를 삽입한다.</li>
+<li><strong>Application Logic:</strong> 복잡한 계산이나 큰 루프는 CPU 사용량을 증가시켜 응답 속도를 느리게 한다. 또한 많은 요청을 동시에 처리하면 스레드 경합 또는 대기열 지연이 발생할 수 있다.</li>
+<li><strong>Query Complexity:</strong> 쿼리가 제대로 최적화되지 않았거나 인덱스가 누락되면 데이터 검색 속도가 느려지고 대기 시간이 늘어날 수 있다.</li>
+<li><strong>Database Locks:</strong> 동일한 행/테이블에 대한 동시 쓰기 또는 업데이트로 인해 차단 또는 교착 상태가 발생할 수 있다.</li>
+<li><strong>Multiple Service Calls:</strong> 여러 개의 내부 서비스 호출은 대기 시간을 누적시킬 수 있다. 또한 시스템이 외부 서비스에 의존하는 경우 응답 시간이 합산될 수 있다.</li>
+</ul>
+<h3 id="Throughput"><a href="#Throughput" class="headerlink" title="Throughput"></a>Throughput</h3><p>처리량은 시스템이 주어진 기간 내에 처리하는 트랜잭션, 요청 또는 작업의 수를 의미한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20250226130500472.png" alt=""></p>
+<p>처리량을 측정하는 주요 지표는 다음과 같다.</p>
+<ul>
+<li><strong>Requests per second (RPS)</strong>: API 또는 서버가 초당 처리하는 요청 수</li>
+<li><strong>Transactions per second (TPS)</strong>: 데이터베이스 및 금융 시스템에서 일반적으로 사용</li>
+<li><strong>Queries per second (QPS)</strong>: 데이터베이스의 읽기/쓰기 쿼리 처리 능력을 측정하는데 사용</li>
+<li><strong>Bandwidth utilization</strong>: 사용중인 네트워크 용량 측정</li>
+</ul>
+<p>처리량은 개별 요청 속도가 아닌 시스템 용량을 측정한다. 응답 시간이 짧다고 해서 항상 처리량이 높은 것은 아니다. 시스템이 요청을 빠르게 처리하지만 CPU, 메모리 또는 데이터베이스 제약으로 인해 한 번에 많은 요청을 처리할 수 없는 경우에도 처리량은 여전히 낮다. 일반적으로 처리량이 높은 시스템은 수용 가능한 응답 시간을 유지하면서 많은 동시 사용자를 처리하도록 설계한ㄴ다.</p>
+<p>처리량에 대한 몇 가지 잠재적인 병목 현상은 다음과 같다.</p>
+<ul>
+<li><strong>CPU</strong> <strong>and</strong> <strong>Memory</strong> <strong>Constraints:</strong> 서버의 CPU 사용량이 100%에 도달하면 추가 요청을 효율적으로 처리할 수 없다. </li>
+<li><strong>Database Performance</strong>: 느린 쿼리, 과도한 잠금 또는 최적화되지 않은 인덱스는 데이터베이스 트랜잭션 처리량을 제한할 수 잇다. </li>
+<li><strong>I/O Bottlenecks (Disk and Network):</strong> 디스크가 느리면 디스크에 쓰기가 병목 현상을 일으킬 수 있다.</li>
+<li><strong>Concurrency Limitations:</strong> 스레드 풀, 커넥션 풀, 또는 백엔스 서비스에는 동시 요청 수를 제한하는 제한이 있을 수 있다.</li>
+<li><strong>Rate Limits and Throttling:</strong> 많은 외부 서비스는 남용을 방지하기 위해 요청 제한을 부과한다. </li>
+</ul>
+<h3 id="Resource-Utilization"><a href="#Resource-Utilization" class="headerlink" title="Resource Utilization"></a>Resource Utilization</h3><p>자원 활용은 시스템이 가용한 하드웨어와 인프라(특히 CPU, 메모리, 입출력, 네트워크 대역폭)를 얼마나 효과적으로 사용하는지를 나타낸다.</p>
+<p>자원 활용이 균형 잡혀 있을 때, 시스템은 과도한 자원 할당(낭비)이나 부족으로 인한 병목 없이 효율적으로 작업을 수행할 수 있다. 클라우드나 가상화 환경에서는 효율적인 자원 활용이 운영 비용 절감(더 적은 혹은 작은 인스턴스 사용)과 성능 향상으로 이어진다.</p>
+<p>동시에, 최적화된 자원 활용은 확장성도 지원한다. 즉, 적절히 사용된 시스템은 추가 오버헤드 없이 자원을 확장하거나 축소할 수 있다. 반대로, 자원 활용이 좋지 않으면 시스템 성능 및 가용성이 저하될 수 있다.</p>
+<ul>
+<li>예를 들어, CPU 사용률이 지속적으로 100%라면 애플리케이션은 느려지거나 응답하지 않을 수 있다.</li>
+<li>메모리가 부족하면 중요 프로세스가 스왑 공간으로 밀려나 심각한 속도 저하나 충돌이 발생할 수 있다.</li>
+<li>I/O 작업이 느리면(예: 포화된 디스크나 저장 네트워크) 요청이 누적되어 응답 시간이 길어진다.</li>
+<li>네트워크 대역폭 제약 또한 데이터 전송을 지연시켜 타임아웃이나 요청 실패로 이어질 수 있다.</li>
+</ul>
+<h3 id="Scalability"><a href="#Scalability" class="headerlink" title="Scalability"></a>Scalability</h3><p>확장성은 증가하는 사용자 수, 데이터 양, 트랜잭션 속도 등 부하가 늘어나도 시스템이 성능이나 신뢰성을 유지하며 용량을 확장할 수 있는 능력이다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20250226132803000.png" alt=""></p>
+<p>개발자가 사용할 수 있는 확장 방식은 두 가지 주요 유형이 있다.</p>
+<ul>
+<li><strong>Horizontal Scaling (Scale Out):</strong> 여러 대의 머신이나 노드를 추가하여 작업 부하를 여러 인스턴스에 분산시킨다. 예를 들어, 클라우드 환경의 자동 확장 그룹(auto-scaling groups)을 사용하거나, 큰 데이터를 여러 데이터베이스 샤드에 분산하여 각 샤드가 전체 부하의 일부를 처리하도록 한다.</li>
+<li><strong>Vertical Scaling (Scale Up):</strong> 기존 머신의 성능(CPU, 메모리, 저장 공간 등)을 증강한다. 예를 들어, 소형 VM 인스턴스에서 코어와 RAM이 더 많은 대형 인스턴스로 이전하는 방식이다.</li>
+</ul>
+<p>수평 확장은 용량을 지속적으로 추가할 수 있으며, 한 노드의 실패가 전체 시스템에 미치는 영향을 줄여 보다 견고한 구조를 제공한다. 그러나 관리 오케스트레이션의 복잡성과 네트워크 오버헤드가 증가할 수 있다. 반면, 수직 확장은 구현이 간단해 기존 애플리케이션이 최소한의 재구성이 필요하지만, 하드웨어 한계로 인해 확장에 한계가 있고, 주요 업그레이드 시 비용이 많이 들 수 있다.</p>
+<h3 id="Capacity"><a href="#Capacity" class="headerlink" title="Capacity"></a>Capacity</h3><p>용량은 시스템이 성능이나 신뢰성이 저하되기 시작하기 전까지 처리할 수 있는 최대 작업량을 의미한다. 이는 동시 사용자 수, 트랜잭션 수, 데이터 저장량 등으로 측정될 수 있다. 시스템이 이 한계를 초과하면 응답 시간이 급증하고 처리량이 감소하며, 사용자는 타임아웃이나 오류를 경험하게 된다.</p>
+<p>용량 계획은 다음과 같은 이유로 매우 중요하다.</p>
+<ul>
+<li><strong>Prevent Service Outages:</strong> 용량 한계를 초과하면 시스템이 충돌하거나 지나치게 느려져 수익 손실과 사용자 신뢰 하락으로 이어질 수 있다.</li>
+<li><strong>Ensure Smooth User Experience:</strong> 일정한 응답 시간과 신뢰성을 보장하여 평상시와 피크 시기 모두 원활하게 동작하게 한다.</li>
+<li><strong>Optimizing Costs:</strong> 과도한 프로비저닝은 자원 낭비를, 부족한 프로비저닝은 성능 저하를 초래하므로 적절한 균형이 필요하다.</li>
+<li><strong>Support Scalability:</strong> 용량 한계를 이해함으로써 자동 확장, 클러스터링, 캐싱 등 확장 기술을 설계할 수 있다.</li>
+</ul>
+<p>용량을 예측하고 계획하기 위한 팁은 다음과 같다.</p>
+<ul>
+<li>일반 사용량, 피크 시기(예: 휴일 세일) 및 일일, 주간, 월간 비즈니스 사이클을 분석하고, 초당 요청 수, 동시 사용자 수, 일일 트랜잭션량 등의 지표를 사용한다.</li>
+<li>점진적으로 증가하는 사용자 트래픽을 시뮬레이션하여 시스템이 스트레스 신호를 보일 때까지 확인한다.</li>
+<li>과거의 트래픽 피크, 판매 기간, 계절 변동을 참고하여 향후 수요를 추정한다.</li>
+</ul>
+<h3 id="Availability"><a href="#Availability" class="headerlink" title="Availability"></a>Availability</h3><p>가용성은 일정 기간 동안 시스템이 정상적으로 운영되어 사용자가 접근할 수 있는 비율을 측정한다. 실제로 높은 가용성을 갖춘 시스템은 예기치 못한 장애나 유지보수 기간에도 다운타임이 최소화되며, 장애가 발생하더라도 신속하게 복구된다. 신뢰성은 시스템이 오랜 시간 동안 의도된 기능을 오류 없이 수행하는 능력과 밀접하다. 가용성을 백분율(예: 99.9%, 99.99%, 99.999%)로 표현하며, 이는 연간 허용되는 다운타임을 의미한다. 일반적인 목표는 다음과 같다.</p>
+<ul>
+<li><strong>99.9% (“Three Nines”)</strong><ul>
+<li><strong>Downtime:</strong> 연간 약 8.76시간의 비가용 시간</li>
+<li><strong>Usage:</strong> 많은 웹 애플리케이션이나 내부 엔터프라이즈 시스템에 일반적으로 허용됨</li>
+</ul>
+</li>
+<li><strong>99.99% (“Four Nines”)</strong><ul>
+<li><strong>Downtime:</strong> 연간 약 52.6분</li>
+<li><strong>Usage:</strong> 미션 크리티컬 서비스, 전자상거래 플랫폼, 금융 애플리케이션 등이 목표로 함</li>
+</ul>
+</li>
+<li><strong>99.999% (“Five Nines”)</strong><ul>
+<li><strong>Downtime:</strong> 연간 약 5.26분</li>
+<li><strong>Usage:</strong> 긴급 대응 시스템이나 대규모 금융 거래 시스템 등 고위험 분야</li>
+</ul>
+</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20250226133229224.png" alt=""></p>
+<p>가용성을 개선하는 방법은 모니터링과 자동 장애 조치 메커니즘에 크게 의존한다.</p>
+<ul>
+<li>Prometheus, Grafana, CloudWatch와 같은 도구로 CPU, 메모리, 디스크 사용량 및 응답 시간을 추적한다.</li>
+<li>서비스 엔드포인트를 주기적으로 점검하여 초기 장애 징후를 탐지한다. Kubernetes와 같은 플랫폼은 컨테이너를 재시작하거나 정상 노드로 작업을 전환하여 다운타임을 최소화한다.</li>
+<li>이메일, SMS, Slack 등 자동 알림을 통해 이상 징후나 장애 발생 시 대응 팀에 즉시 통보한다.</li>
+<li>비정상 노드나 데이터 센터에서 요청을 자동으로 분산시켜 서비스 중단을 방지한다.</li>
+</ul>
+<h3 id="Resiliency-and-Fault-Tolerance"><a href="#Resiliency-and-Fault-Tolerance" class="headerlink" title="Resiliency and Fault Tolerance"></a>Resiliency and Fault Tolerance</h3><p><strong>복원력(Resiliency)</strong>은 서버 크래시, 네트워크 중단, 데이터 센터 장애 등 예기치 못한 상황이 발생한 후 시스템이 회복하는 능력을 의미한다. 복원력이 높은 시스템은 장애가 발생하면 일시적으로 성능이 저하되거나 일부 기능이 중단되더라도, 결국 정상 운영 상태로 복귀한다.</p>
+<p>반면, <strong>내결함성(Fault Tolerance)</strong>은 구성 요소가 실패하더라도 전체 시스템이 눈에 띄는 다운타임이나 성능 저하 없이 지속적으로 작동하는 능력을 말한다.</p>
+<p>즉, 복원력은 장애 후 회복에 초점을 맞추고, 내결함성은 장애가 발생해도 문제 없이 운영되는 것을 목표로 한다. 두 개념은 사용자에게 견고하고 안정적인 경험을 제공하기 위해 서로 보완적인 역할을 한다.</p>
+<p>분산 시스템에서는 네트워크 지연, 프로세스 충돌, 데이터 센터 장애 등 실패가 불가피하다. “모든 것은 항상 실패한다”는 사고방식을 갖는 것은, 서비스, 데이터베이스 샤드, 외부 API 등이 사용할 수 없게 되었을 때 어떻게 대처할지를 미리 고려하게 한다.</p>
+<ul>
+<li>추천 서비스가 다운되면, 시스템은 대체 추천 항목을 제공하거나 해당 섹션을 숨겨 전체 사용자 경험을 방해하지 않는다.</li>
+<li>주 데이터베이스에 접근할 수 없으면, 읽기 전용 복제본이나 캐시된 데이터를 사용하여 부분적인 기능을 유지한다.</li>
+<li>호출하는 서비스가 무한정 대기하지 않도록 하여, 연쇄적인 실패를 예방한다.</li>
+</ul>
+<h3 id="Disaster-Recovery"><a href="#Disaster-Recovery" class="headerlink" title="Disaster Recovery"></a>Disaster Recovery</h3><p>재해 복구(DR)는 하드웨어 장애, 자연재해, 사이버 공격 등 치명적인 사건 발생 후, 조직이 핵심 시스템과 데이터를 복원하여 비즈니스 연속성을 유지하는 전략과 프로세스를 의미한다. DR의 주요 목표는 다운타임과 데이터 손실을 최소화하는 것이다.</p>
+<p>재해 복구 계획에는 두 가지 핵심 지표가 있다.</p>
+<ul>
+<li><strong>Recovery Time Objective (RTO):</strong> 재해 발생 후 시스템 또는 서비스가 오프라인 상태로 있을 수 있는 최대 허용 시간이다. 예를 들어, RTO가 4시간이면, 주요 장애 발생 후 4시간 내에 완전히 복구해야 한다. 짧은 RTO는 보다 정교한 복구 솔루션(예: 자동 장애 조치)을 요구하며, 비용과 복잡성이 증가할 수 있다.</li>
+<li><strong>Recovery Point Objective (RPO):</strong> 재해 발생 시 허용 가능한 최대 데이터 손실 시간이다. 예를 들어, RPO가 1시간이면, 재해 발생 전 최소 1시간 전까지의 데이터는 복구할 수 있어야 한다. RPO가 짧을수록 데이터 복제가 더 빈번하거나 실시간으로 이루어져야 하며, 이는 저장, 대역폭, 인프라 선택에 영향을 준다.</li>
+</ul>
+<h3 id="Durability"><a href="#Durability" class="headerlink" title="Durability"></a>Durability</h3><p>내구성은 데이터가 한 번 커밋 또는 저장되면, 시스템이 크래시, 전원 차단 또는 기타 장애 상황에서도 해당 데이터가 그대로 유지되고 복구 가능한 특성을 의미한다. 특히 트랜잭션 시스템(예: 데이터베이스)에서는, 성공적으로 완료된 트랜잭션이 “롤백”되거나 손실되지 않음을 보장한다. 즉, 시스템이 데이터 저장을 확인하면, 정상적인 장애 상황에서도 데이터는 영구적으로 유지되어야 한다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20250226133539528.png" alt=""></p>
+<p>내구성을 보장하는 몇 가지 일반적인 전략은 다음과 같다.</p>
+<ul>
+<li><strong>Replication:</strong> 동일한 데이터를 여러 서버나 데이터 센터에 저장하여, 한 노드가 실패해도 최신 데이터를 제공할 수 있다. 다중 마스터 복제 구성에서는 각 노드가 거의 실시간으로 데이터를 유지하여 단일 실패 지점을 제거한다.</li>
+<li><strong>Write-Ahead Logging:</strong> 주요 데이터 파일을 변경하기 전에 변경 내용을 로그 또는 저널에 기록한다. 시스템이 작업 도중 실패하더라도 이 로그를 사용해 작업을 재실행하거나 롤백하여 일관성을 유지한다.</li>
+<li><strong>Snapshotting:</strong> 주기적으로 데이터베이스나 스토리지 시스템의 전체 상태를 캡처하여, 나중에 손상이나 실수로 인한 삭제가 발견될 경우 일관된 복구 지점으로 활용한다.</li>
+</ul>
+<p>내구성은 데이터 일관성과도 연관된다. 강한 일관성을 제공하는 시스템에서는 모든 읽기 작업이 최신 쓰기 내용을 반영하여 내구성을 강화한다. 반면, eventual consistency 모델에서는 쓰기 내용이 점진적으로 전파되어, 모든 복제본이 최신 데이터를 공유하기까지 잠깐의 불일치가 발생할 수 있다.</p>
+<h3 id="Consistency"><a href="#Consistency" class="headerlink" title="Consistency"></a>Consistency</h3><p>일관성은 분산 시스템에서 여러 노드나 복제본 간 데이터가 얼마나 동기화되어 있는지를 의미하며, 특정 규칙에 따라 읽기 작업이 최신 쓰기를 반영하는 정도를 나타낸다.</p>
+<p>일관성 모델에는 다음과 같은 유형이 있다.</p>
+<ul>
+<li><strong>Strong Consistency:</strong> 쓰기 작업이 완료된 후, 어떤 노드에서 읽더라도 최신 데이터가 반환된다. 금융 거래, 재고 관리 등 즉각적이고 일관된 데이터가 필요한 경우에 중요하다.</li>
+<li><strong>Eventual Consistency:</strong> 업데이트가 시간이 지나면서 각 노드에 전파된다. 잠시 동안은 각 복제본 간 데이터가 다를 수 있으나, 충분한 시간이 지나면 모든 복제본이 동일한 상태로 수렴한다. 이는 소셜 미디어 피드, 콘텐츠 캐시, 분석 플랫폼 등에서 주로 사용된다.</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20250226133752705.png" alt=""></p>
+<p>Eric Brewer의 CAP 정리에 따르면, 네트워크 분할이 발생할 경우 분산 시스템은 일관성과 가용성 중 하나를 선택해야 한다. 다음과 같은 선택이 가능하다.</p>
+<ul>
+<li><strong>CP Systems:</strong> 가용성보다 일관성과 네트워크 분할 허용을 선택한다. 분할 상황에서는 일관성을 유지할 수 없으면 요청을 거부할 수 있다.</li>
+<li><strong>AP Systems:</strong> 엄격한 일관성보다는 가용성과 네트워크 분할 허용을 선택한다. 분할 상황에서 다소 오래된 데이터를 제공할 수 있다.</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20250226133804163.png" alt=""></p>
+<h3 id="Modularity"><a href="#Modularity" class="headerlink" title="Modularity"></a>Modularity</h3><p>모듈성은 큰 코드베이스를 작은 단위(모듈 또는 컴포넌트)로 분리하는 설계 원칙이다. 모듈화된 시스템은 다음과 같은 이점을 가진다.</p>
+<ul>
+<li><strong>Easier Maintenance and Updates:</strong> 각 모듈이 명확한 책임을 가지므로, 특정 기능을 변경해도 예상치 못한 부작용을 줄일 수 있다. 이는 모듈을 개별적으로 업그레이드, 리팩토링 또는 교체할 수 있게 한다.</li>
+<li><strong>Reduced Coupling:</strong> 공유되는 의존성이나 전역 상태를 최소화하여 한 모듈의 변경이 다른 모듈에 영향을 주는 것을 방지한다. 각 모듈은 독립적으로 단위 테스트할 수 있다.</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20250226133909729.png" alt=""></p>
+<p>하지만 모듈성이 높아지면 다음과 같은 단점도 존재한다.</p>
+<ul>
+<li><strong>Deployment Complexity</strong>: 여러 모듈이나 서비스를 관리하려면 고도화된 CI/CD 파이프라인, 컨테이너 오케스트레이션, 모니터링이 필요하다.</li>
+<li><strong>Network Latency</strong>: 서비스 기반 환경에서는 모듈 간 호출이 추가적인 왕복 오버헤드를 발생시킬 수 있다.</li>
+<li><strong>Versioning and Compatibility</strong>: 여러 모듈 간 인터페이스나 API를 공유할 경우, 버전 관리가 복잡해질 수 있다.</li>
+<li><strong>Skill Requirements</strong>: 개발자와 운영팀은 분산 시스템, 오케스트레이션 도구, 고급 테스트 전략을 이해해야 한다.</li>
+</ul>
+<p>모듈화 개념을 수용하는 몇 가지 일반적인 아키텍처 스타일은 다음과 같다.</p>
+<ul>
+<li><strong>Microservices Architecture:</strong> 각 마이크로서비스는 독립형 구성 요소로, 일반적으로 독립적으로 배포 및 확장된다.</li>
+<li><strong>Plugin-Based Systems:</strong> 핵심 애플리케이션은 플러그인을 로드하기 위한 프레임워크를 제공하며, 각 플러그인은 개별적인 기능 또는 확장 기능을 제공한다.</li>
+<li><strong>Layered Architecture:</strong> 시스템을 여러 계층으로 분할한다(예: 프레젠테이션, 비즈니스 로직, 데이터 액세스). 각 계층은 애플리케이션의 특정 측면을 담당한다.</li>
+</ul>
+<h3 id="Testability"><a href="#Testability" class="headerlink" title="Testability"></a>Testability</h3><p>테스트 용이성은 소프트웨어 시스템의 기능과 동작을 얼마나 쉽게, 효율적으로 검증할 수 있는지를 나타낸다. 테스트는 수동 또는 자동 방식으로 진행될 수 있다. 테스트 용이성이 높은 시스템은 보통 컴포넌트 간 경계가 명확하고, 의존성이 최소화되어 있으며, 인터페이스가 잘 정의되어 있어 개별 부분을 쉽게 분리, 관찰, 검증할 수 있다. 즉, 모듈화는 테스트 용이성을 높이는 데 매우 중요한 특성이다.</p>
+<p>설계 결정은 테스트 용이성에 큰 영향을 미친다. 예를 들어, 의존성 주입(Dependency Injection, DI)은 실제 객체 대신 모의 객체(mock)를 주입할 수 있도록 하여 테스트 용이성을 높인다. 내부에서 직접 의존 객체를 생성하는 대신 외부에서 주입받음으로써 테스트 시 실제 객체 대신 대체 객체를 사용할 수 있다.</p>
+<p>또한, 관심사의 분리를 명확히 하여 독립적인 컴포넌트를 구축하면 각 모듈을 단위 테스트하기가 쉬워진다.</p>
+<p>마지막으로, 느슨한 결합과 높은 응집도는 한 부분의 변경이 다른 테스트에 영향을 미칠 위험을 줄여 시스템 전체를 예측 가능하게 만든다.</p>
+<p>테스트를 위한 몇 가지 모범 사례는 다음과 같다.</p>
+<ul>
+<li><strong>Unit Testing:</strong> 가장 작은 기능(메서드, 클래스 또는 모듈)을 개별적으로 검증하는 데 중점을 둔다. 테스트를 빠르고 결정적으로 유지하는 것이 목적이다.</li>
+<li><strong>Integration Testing:</strong> 모듈 또는 서비스가 올바르게 함께 작동하는지 확인한다. 목표는 가능한 경우 프로덕션 환경을 반영하는 테스트 환경에서 중요한 구성 요소 간의 상호 작용을 테스트하는 것이다.</li>
+<li><strong>System Testing (End-to-End):</strong>  전체 애플리케이션 흐름과 사용자 시나리오를 처음부터 끝까지 검증하는 작업이 포함된다. 오류 처리 및 엣지 케이스를 포함한 실제 사용자 경로를 테스트하는 것이 목적이다.</li>
+</ul>
+<h3 id="Code-Quality"><a href="#Code-Quality" class="headerlink" title="Code Quality"></a>Code Quality</h3><p>코드 품질은 코드가 얼마나 깔끔하고, 이해하기 쉬우며, 유지보수가 용이한지를 나타낸다. 높은 품질의 코드는 구조가 명확하고, 업계나 조직의 표준을 준수하며, 명백한 결함이 없고, 요구사항 변화에 따라 쉽게 수정될 수 있다. 이는 장기적으로 성능, 신뢰성 및 개발 비용에 큰 영향을 미친다. 코드 품질의 핵심 요소는 다음과 같다.</p>
+<ul>
+<li><strong>Readability:</strong> 새로운 팀원이나 기존 팀원이 코드를 쉽게 읽고 이해할 수 있도록 의미 있는 변수 및 함수 이름을 사용하며, 메서드와 클래스를 간결하게 유지한다.</li>
+<li><strong>Maintainability:</strong> 코드를 업데이트하거나 확장할 때 기존 기능에 영향을 주지 않도록 단일 책임 원칙을 준수하고, 논리적으로 코드가 조직되어야 한다.</li>
+<li><strong>Coding Standards:</strong> 일관된 스타일, 명명 규칙, 그리고 모범 사례를 준수하여 팀 간 협업을 원활하게 한다.</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20250226134415765.png" alt=""></p>
+<h3 id="Configurability"><a href="#Configurability" class="headerlink" title="Configurability"></a>Configurability</h3><p>설정 가능성은 데이터베이스 연결 문자열, API 키, 기능 플래그 등 환경에 따라 달라지는 다양한 설정 값을 코드와 분리하여 관리하는 것을 의미한다. 이를 통해 환경별(개발, 테스트, 스테이징, 프로덕션)로 소프트웨어의 동작을 변경할 수 있으며, 전체 애플리케이션을 재배포할 필요 없이 설정만 수정할 수 있다.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/SongHayoung/image@master/uPic/image-20250226134502882.png" alt=""></p>
+<p>설정을 분리할 경우 다음과 같은 이점이 있다.</p>
+<ul>
+<li><strong>Deployment Flexibility:</strong> 환경별 세부 정보를 코드 내부에 고정하지 않고 외부에서 주입함으로써, 환경 전환 시 새 릴리스를 생성할 필요가 없다.</li>
+<li><strong>Easier Maintenance:</strong> 중앙 집중식 설정 관리로 팀이 설정을 빠르게 확인하고 수정할 수 있으며, 코드에서 환경 정보를 찾느라 시간을 낭비하지 않는다.</li>
+<li><strong>Environment-Specific Settings:</strong> 테스트 환경에서는 디버깅을 위해 상세 로그를 남기고, 프로덕션 환경에서는 리소스 절약을 위해 로그를 제한하는 등, 환경에 따라 유연하게 설정할 수 있다.</li>
+</ul>
+<h3 id="Security"><a href="#Security" class="headerlink" title="Security"></a>Security</h3><p>보안은 무단 접근, 변조, 정보 유출로부터 시스템과 데이터를 보호하는 모든 활동을 포함한다. 보안은 한 번의 작업이 아니라 지속적으로 패치, 모니터링, 테스트, 규정 준수 검토가 필요한 영역이다. 보안은 인증 및 인가, 데이터 기밀성, 무결성, 감사 기능 등을 포괄한다. 주요 보안 고려사항은 다음과 같다.</p>
+<ul>
+<li><strong>Authentication:</strong> 사용자나 시스템의 신원을 확인한다 (예: 사용자 이름/비밀번호, 다중 요소 인증 등).</li>
+<li><strong>Authorization:</strong> 인증된 주체가 수행할 수 있는 작업을 제어한다 (역할 기반, 속성 기반 접근 제어).</li>
+<li><strong>Confidentiality:</strong> 데이터가 허가된 주체에게만 접근 가능하도록 보장한다.</li>
+<li><strong>Integrity:</strong> 데이터가 무단으로 변경되거나 훼손되지 않도록 보호한다.</li>
+<li><strong>Auditing and Logging:</strong> 보안 관련 활동을 기록하여 이상 징후 탐지 및 조사에 활용한다.</li>
+</ul>
+<p>보안은 성능, 사용성, 자원 활용과 균형을 이루어야 하며, 규제 요구사항에도 부합해야 한다.</p>
+<h3 id="Usability"><a href="#Usability" class="headerlink" title="Usability"></a>Usability</h3><p>사용성은 사용자가 소프트웨어와 얼마나 효과적, 효율적, 만족스럽게 상호작용할 수 있는지를 나타낸다. 비록 사용성이 “사용자가 폼을 제출할 수 있어야 한다”와 같은 구체적인 기능을 규정하지 않더라도, 전반적인 사용자 경험(UX)에 큰 영향을 미친다. 사용성은 시스템이 제공하는 기능보다는, 사용자와 상호작용할 때의 직관성, 접근성, 학습 용이성을 정의한다.</p>
+<p>개발자들은 사용성 개선을 위해 휴리스틱 평가, 사용자 테스트, A/B 실험 등을 활용하며, 이는 지원 비용 절감, 사용자 만족도 향상, 브랜드 이미지 개선으로 이어진다. 주요 고려 요소는 다음과 같다.</p>
+<ul>
+<li><strong>Intuitiveness:</strong> 사용자가 별다른 학습 없이 기능을 이해하고 사용할 수 있어야 한다.</li>
+<li><strong>Accessibility:</strong> 시각, 청각, 운동, 인지 장애가 있는 사용자도 문제없이 사용할 수 있도록 해야 한다 (예: WCAG 준수).</li>
+<li><strong>Ease of Learning</strong>: 신규 사용자가 시스템의 워크플로우를 빠르게 익힐 수 있어야 한다.</li>
+</ul>
+<h3 id="Interoperability"><a href="#Interoperability" class="headerlink" title="Interoperability"></a>Interoperability</h3><p>상호 운용성은 서로 다른 시스템, API, 서비스 간에 데이터를 원활하게 교환하거나 기능을 통합할 수 있는 능력을 의미한다. 이를 위해 개발자는 공통 표준(예: RESTful JSON, SOAP XML, OAuth)을 채택하고, 버전 관리 및 문서화를 통해 호환성을 유지해야 한다. 상호 운용성의 이점은 다음과 같다.</p>
+<ul>
+<li><strong>Smooth Data Exchange:</strong> 표준화된 인터페이스 덕분에 시스템 간 데이터 변환 과정의 오류 가능성이 줄어든다.</li>
+<li><strong>Reduced Integration Costs:</strong> OAuth, OpenAPI 등 표준을 활용하면 매번 커스텀 솔루션을 만들 필요가 없어 새로운 파트너나 제3자 개발자 온보딩이 수월해진다.</li>
+<li><strong>Future-Proofing:</strong> 전방 및 후방 호환성을 고려한 설계를 통해 시스템 업그레이드 시 기존 통합에 영향을 최소화할 수 있다.</li>
+</ul>
+<p>일부 방법론은 다음과 같다.</p>
+<ul>
+<li><strong>Build APIs with Versioning:</strong> REST 엔드포인트에 버전 번호를 포함하여 새로운 기능 도입 시 기존 소비자에게 영향을 주지 않도록 한다 (예: /v1/users, /v2/users).</li>
+<li><strong>Adopt Standard Protocols and Formats:</strong> JSON, XML, OAuth 등의 널리 사용되는 표준을 사용하여 외부 이해도를 높인다.</li>
+<li><strong>Document Deprecation Policies:</strong> 변경 시 마이그레이션 경로와 적절한 기간을 명시한다.</li>
+<li><strong>Validate and Test Integrations:</strong> 통합 테스트 환경과 샌드박스 API를 유지 관리해 파트너가 프로덕션에 적용하기 전에 변경 사항을 테스트할 수 있도록 한다.</li>
+<li><strong>Monitoring:</strong> 사용 패턴을 추적해 구형 엔드포인트가 여전히 많이 사용되는지 확인하여 중단 없이 지원 중단을 관리할 수 있다.</li>
+</ul>
+<!-- flag of hidden posts --></div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">Author: </span><span class="post-copyright-info"><a href="mailto:undefined">Song Hayoung</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">Link: </span><span class="post-copyright-info"><a href="https://songhayoung.github.io/2025/02/23/System%20Design/ByteByteGo/private/non-functional-requirements-part-2/">https://songhayoung.github.io/2025/02/23/System%20Design/ByteByteGo/private/non-functional-requirements-part-2/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/System-Design/">System Design</a></div><nav id="pagination"></nav><div id="gitalk-container"></div><script>var gitalk = new Gitalk({
+  clientID: '3604b61642355579f55e',
+  clientSecret: 'f552120f18ac5aee3f6297e05e97d94c0a25cd4b',
+  repo: 'SongHayoung.github.io',
+  owner: 'SongHayoung',
+  admin: 'SongHayoung',
+  id: md5(decodeURI(location.pathname)),
+  language: 'en'
+})
+gitalk.render('gitalk-container')</script></div></div><footer class="footer-bg" style="background-image: url(https://xxxx.jpg)"><div class="layout" id="footer"><div class="copyright">&copy;2020 - 2025 By Song Hayoung</div><div class="framework-info"><span>Driven - </span><a target="_blank" rel="noopener" href="http://hexo.io"><span>Hexo</span></a><span class="footer-separator">|</span><span>Theme - </span><a target="_blank" rel="noopener" href="https://github.com/Molunerfinn/hexo-theme-melody"><span>Melody</span></a></div><div class="footer_custom_text">Learning how to walk slowly to not miss important things</div><div class="busuanzi"><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><span id="busuanzi_container_page_pv"><i class="fa fa-file"></i><span id="busuanzi_value_page_pv"></span><span></span></span></div></div></footer><i class="fa fa-arrow-up" id="go-up" aria-hidden="true"></i><script src="https://cdn.jsdelivr.net/npm/animejs@latest/anime.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@latest/velocity.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-ui-pack@latest/velocity.ui.min.js"></script><script src="/js/utils.js?version=1.7.0"></script><script src="/js/fancybox.js?version=1.7.0"></script><script src="/js/sidebar.js?version=1.7.0"></script><script src="/js/copy.js?version=1.7.0"></script><script src="/js/fireworks.js?version=1.7.0"></script><script src="/js/transition.js?version=1.7.0"></script><script src="/js/scroll.js?version=1.7.0"></script><script src="/js/head.js?version=1.7.0"></script><script src="/js/search/algolia.js"></script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+    processEscapes: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  },
+  CommonHTML: {
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "HTML-CSS": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  },
+  "SVG": { 
+    linebreaks: { automatic: true, width: "90% container" }
+  }
+});
+</script><script type="text/x-mathjax-config">MathJax.Hub.Queue(function() {
+  var all = MathJax.Hub.getAllJax(), i;
+  for (i=0; i < all.length; i += 1) {
+    all[i].SourceElement().parentNode.className += ' has-jax';
+  }
+});
+</script><script src="https://cdn.jsdelivr.net/npm/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><script>if(/Android|webOS|iPhone|iPod|iPad|BlackBerry/i.test(navigator.userAgent)) {
+  $('#nav').addClass('is-mobile')
+  $('footer').addClass('is-mobile')
+  $('#top-container').addClass('is-mobile')
+}</script><div class="search-dialog" id="algolia-search"><div class="search-dialog__title" id="algolia-search-title">Algolia</div><div id="algolia-input-panel"><div id="algolia-search-input"></div></div><hr><div id="algolia-search-results"><div id="algolia-hits"></div><div id="algolia-pagination"></div><div id="algolia-stats"></div></div><span class="search-close-button"><i class="fa fa-times"></i></span></div><div class="search-mask"></div></body></html>
